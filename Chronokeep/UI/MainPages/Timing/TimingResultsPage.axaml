@@ -14,15 +14,6 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="CanUserResizeColumns" Value="True"/>
             <Setter Property="CanUserSortColumns" Value="False"/>
-            <Setter Property="CornerRadius" Value="8"/>
-        </Style>
-        <Style Selector="DataGridCell">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
-        </Style>
-        <Style Selector="DataGridColumnHeader">
-            <Setter Property="FontSize" Value="12"/>
         </Style>
     </UserControl.Styles>
     

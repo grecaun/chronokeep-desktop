@@ -83,6 +83,16 @@
             <Setter Property="Height" Value="35"/>
             <Setter Property="Width" Value="150"/>
         </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="-5,0"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
     </Application.Styles>
 
     <Application.Resources>

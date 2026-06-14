@@ -80,7 +80,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
         {
             foreach (Distance d in database.GetDistances(theEvent.Identifier))
             {
-                if (d.LinkedDistance == distanceId)
+                if (d.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER && d.LinkedDistance == distanceId)
                 {
                     Dictionary<int, List<Participant>> partDictLinked = database.GetDistanceParticipantsStatus(theEvent.Identifier, d.Identifier);
                     foreach (int status in partDictLinked.Keys)
