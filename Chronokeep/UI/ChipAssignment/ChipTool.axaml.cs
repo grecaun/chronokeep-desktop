@@ -22,10 +22,6 @@ public partial class ChipTool : Window
     public ChipTool()
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         correlationBox.Items.Add(new TagRangePart(correlationBox));
     }
 
@@ -39,10 +35,6 @@ public partial class ChipTool : Window
         MinWidth = 550;
         Width = 600;
         CanResize = false;
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(20, 0, 20, 20);
-        }
     }
 
     public static ChipTool NewWindow(IWindowCallback window, IDBInterface database)
@@ -109,11 +101,32 @@ public partial class ChipTool : Window
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         ImportComplete = false;
-        this.Close();
+        Close();
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
         window?.WindowFinalize(this);
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

@@ -241,19 +241,22 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Update="help\*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+	<AvaloniaResource Include="fonts\*" />
+  </ItemGroup>
+  <ItemGroup>
+	<None Update="help\*">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
     <None Update="help\*\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="help\*\*\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="changelog\*.json">
+    <None Update="sounds\*.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="sounds\*.wav">
+    <None Update="changelog\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="weasyprint.exe">

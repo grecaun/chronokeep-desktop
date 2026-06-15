@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
@@ -80,5 +82,26 @@ public partial class APIWindow : Window
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
         window?.WindowFinalize(this);
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

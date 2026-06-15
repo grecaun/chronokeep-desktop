@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
@@ -28,10 +29,6 @@ public partial class ChipReaderWindow : Window
     public ChipReaderWindow(IWindowCallback window, IDBInterface database)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         InstantiateSerialPortList();
         reader = new NewReader(this);
         this.window = window;
@@ -113,16 +110,12 @@ public partial class ChipReaderWindow : Window
         window?.WindowFinalize(this);
     }
 
-    private void EventNameHolder_ActualThemeVariantChanged(object? sender, System.EventArgs e)
-    {
-    }
-
-    private void RefreshBtn_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void RefreshBtn_Click(object? sender, RoutedEventArgs e)
     {
         InstantiateSerialPortList();
     }
 
-    private void ConnectBtn_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ConnectBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (connectBtn.Content!.Equals("Connect"))
         {
@@ -165,7 +158,7 @@ public partial class ChipReaderWindow : Window
         }
     }
 
-    private void BeautyBtn_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void BeautyBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (personWindow == null)
         {
@@ -179,5 +172,26 @@ public partial class ChipReaderWindow : Window
             personWindow.Close();
             personWindow = null;
         }
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

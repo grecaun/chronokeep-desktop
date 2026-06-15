@@ -85,10 +85,6 @@ namespace Chronokeep.UI
         public MainWindow()
         {
             InitializeComponent();
-            if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-            {
-                CurrentContent.Margin = new Thickness(0);
-            }
             mWindow = this;
 
             // Check that no other instance of this program are running.
@@ -179,15 +175,12 @@ namespace Chronokeep.UI
 
         public void UpdateTheme(string theme)
         {
-            if (Application.Current != null)
+            Application.Current?.RequestedThemeVariant = theme switch
             {
-                Application.Current.RequestedThemeVariant = theme switch
-                {
-                    Constants.Settings.THEME_SYSTEM => Utils.GetSystemTheme() == 0 ? ThemeVariant.Dark : ThemeVariant.Light,
-                    Constants.Settings.THEME_DARK => ThemeVariant.Dark,
-                    _ => ThemeVariant.Light,
-                };
-            }
+                Constants.Settings.THEME_SYSTEM => Utils.GetSystemTheme() == 0 ? ThemeVariant.Dark : ThemeVariant.Light,
+                Constants.Settings.THEME_DARK => ThemeVariant.Dark,
+                _ => ThemeVariant.Light,
+            };
         }
 
         private void Window_Closing(object sender, WindowClosingEventArgs e)
@@ -479,10 +472,30 @@ namespace Chronokeep.UI
             SwitchPage(new AboutPage(this, database!));
         }
 
-
         private void NavigationButton_Click(object sender, RoutedEventArgs e)
         {
             ParentSplitView.IsPaneOpen = !ParentSplitView.IsPaneOpen;
+        }
+
+        private void OnMinimize(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void OnMaximize(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        }
+
+        private void OnClose(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+            UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
         }
 
         private void UncheckAll()

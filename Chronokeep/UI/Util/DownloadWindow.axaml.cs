@@ -23,7 +23,6 @@ namespace Chronokeep.UI.Util
         private readonly string download_uri;
         private readonly string version;
 
-
         private CancellationTokenSource? cancellationToken = null;
 
         private readonly IMainWindow mWindow;
@@ -31,10 +30,6 @@ namespace Chronokeep.UI.Util
         public DownloadWindow(GithubRelease r, Updates.Version v, IMainWindow mWindow)
         {
             InitializeComponent();
-            if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-            {
-                MainPanel.Margin = new Thickness(0);
-            }
             Topmost = true;
             this.mWindow = mWindow;
             this.MinHeight = 0;
@@ -201,6 +196,27 @@ namespace Chronokeep.UI.Util
                     }
                 }
             }
+        }
+
+        private void OnMinimize(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void OnMaximize(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        }
+
+        private void OnClose(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+            UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
         }
     }
 }

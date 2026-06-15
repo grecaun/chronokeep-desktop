@@ -6,25 +6,65 @@
         x:Class="Chronokeep.UI.Timing.Windows.WaveWindow"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Set Wave Times"
         Width="300"
         CanResize="False"
         SizeToContent="Height"
         Topmost="True"
-        Closing="Window_Closing">
-    <Grid Margin="0,35,0,0" Name="MainPanel">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        Closing="Window_Closing"
+        PropertyChanged="Window_PropertyChanged"
+        >
+    <Grid RowDefinitions="32,*,auto,auto">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
         <ListBox Name="WaveList"
-                 Grid.Row="0"
+                 Grid.Row="1"
                  BorderThickness="0"
                  Margin="15,0,15,10"
                  KeyboardNavigation.TabNavigation="Continue"/>
-        <DockPanel Grid.Row="1"
+        <DockPanel Grid.Row="2"
                    HorizontalAlignment="Center"
                    Margin="5">
             <RadioButton Name="NetTimeButton"
@@ -44,7 +84,7 @@
                          Margin="0,0,0,0"
                          VerticalContentAlignment="Center"/>
         </DockPanel>
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">

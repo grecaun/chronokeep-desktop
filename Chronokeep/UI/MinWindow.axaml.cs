@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -43,10 +44,6 @@ public partial class MinWindow : Window, IMainWindow
     public MinWindow()
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         // Check that no other instance of this program are running.
         if (!OneWindow.WaitOne(TimeSpan.Zero, true))
         {
@@ -169,15 +166,12 @@ public partial class MinWindow : Window, IMainWindow
 
     public void UpdateTheme(string theme)
     {
-        if (Application.Current != null)
-        {
-            Application.Current.RequestedThemeVariant = theme switch
+        Application.Current?.RequestedThemeVariant = theme switch
             {
                 Constants.Settings.THEME_SYSTEM => Utils.GetSystemTheme() == 1 ? ThemeVariant.Dark : ThemeVariant.Light,
                 Constants.Settings.THEME_DARK => ThemeVariant.Dark,
                 _ => ThemeVariant.Light,
             };
-        }
     }
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
@@ -223,6 +217,27 @@ public partial class MinWindow : Window, IMainWindow
             }
         }
         page?.Closing();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 
     public bool StopTimingController()

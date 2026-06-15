@@ -24,10 +24,6 @@ public partial class ClockControl : Window
     private ClockControl(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         this.window = window;
         this.database = database;
         this.MinWidth = 10;
@@ -112,5 +108,26 @@ public partial class ClockControl : Window
             ClockDict[newClock.Identifier] = newClock;
         }
         UpdateView();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

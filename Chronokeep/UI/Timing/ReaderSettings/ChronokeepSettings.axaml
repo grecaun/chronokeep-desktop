@@ -6,12 +6,16 @@
         x:Class="Chronokeep.UI.Timing.ReaderSettings.ChronokeepSettings"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         SizeToContent="WidthAndHeight"
         Title=""
         Topmost="True"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        PropertyChanged="Window_PropertyChanged"
+        >
     <Window.Styles>
         <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
             <Setter Property="IsVisible" Value="True"/>
@@ -20,325 +24,369 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style> 
     </Window.Styles>
-    <StackPanel Grid.Row="1"
-                Margin="20,30,20,20"
-                VerticalAlignment="Center"
-                Name="MainPanel">
-        <StackPanel Margin="0,0,0,0">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Name"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"
-                           Width="120"
-                           Margin="5,5,5,5"/>
-                <TextBox Name="NameBox"
-                         Width="250"
-                         Margin="5,5,5,5"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Read Window"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"
-                           Width="120"
-                           Margin="5,5,5,5"/>
-                <TextBox Name="ReadWindowBox"
-                         Width="250"
-                         Margin="5,5,5,5"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Chip Type"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"
-                           Width="120"
-                           Margin="5,5,5,5"/>
-                <ComboBox Name="ChipTypeBox"
-                          Width="250"
-                          Margin="5,5,5,5"
-                          SelectedIndex="0">
-                    <ComboBoxItem Content="Base 10 (Dec)" Tag="DEC"/>
-                    <ComboBoxItem Content="Base 16 (Hex)" Tag="HEX"/>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <ToggleSwitch Name="SoundBox"
-                              OnContent=""
-                              OffContent=""
-                              Margin="5,0,-7,-7"
-                              VerticalContentAlignment="Center"/>
-                <Label Content="Play Sound on Read?" VerticalAlignment="Center" Margin="0,0,0,-7"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,-5">
-                <TextBlock Text="Volume"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"
-                           Width="120"
-                           Margin="5,0"/>
-                <Slider Name="VolumeSlider"
-                        ValueChanged="VolumeSlider_ValueChanged"
-                        Width="210"
-                        Minimum="0"
-                        Maximum="10"
-                        TickFrequency="1"
-                        Margin="10,0,5,0"
-                        IsSnapToTickEnabled="True"/>
-                <TextBlock Name="VolumeBlock"
-                           FontSize="14"
-                           Text="0"
-                           Width="30"
-                           Margin="0,0,5,0"
-                           TextAlignment="Center"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Voice"
-                           Width="120"
-                           Margin="5,5,5,5"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"/>
-                <ComboBox Name="VoiceBox"
-                          Width="250"
-                          Margin="5,5,5,5"
-                          SelectedIndex="0">
-                    <ComboBoxItem Content="Emily" Tag="emily"/>
-                    <ComboBoxItem Content="Michael" Tag="michael"/>
-                    <ComboBoxItem Content="Custom" Tag="custom"/>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Name="ScreenPanel" Orientation="Horizontal" IsVisible="False">
-                <TextBlock Text="Screen Type"
-                           Width="120"
-                           Margin="5,5,5,5"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"/>
-                <ComboBox Name="ScreenBox"
-                          Width="250"
-                          Margin="5,5,5,5"
-                          SelectedIndex="0">
-                    <ComboBoxItem Content="Adafruit" Tag="ADAFRUIT"/>
-                    <ComboBoxItem Content="PCF8574T" Tag="PCF8574T"/>
-                </ComboBox>
-            </StackPanel>
-            <Expander Name="ReaderExpander"
-                      Expanded="ReaderExpander_Changed"
-                      Collapsed="ReaderExpander_Changed"
-                      Margin="5,5,5,5"
-                      IsExpanded="False"
-                      ExpandDirection="Down"
-                      HorizontalAlignment="Stretch">
-                <Expander.Header>
-                    <DockPanel LastChildFill="False" VerticalAlignment="Center">
-                        <TextBlock Text="Readers"
-                                   Margin="5,0,0,0"
-                                   VerticalAlignment="Center" />
-                        <Button DockPanel.Dock="Right"
-                                Name="AddReaderButton"
-                                Click="AddReaderButton_Click"
-                                Margin="0,0,-10,0"
-                                IsVisible="False"
-                                VerticalAlignment="Center">
-                            <PathIcon Data="{StaticResource add_regular}"/>
-                        </Button>
-                    </DockPanel>
-                </Expander.Header>
-                <ListBox Name="ReaderListView"
-                         Height="160"
-                         Margin="0,-10,0,0"
-                         HorizontalAlignment="Center"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-            </Expander>
-            <Expander Name="ApiExpander"
-                      Expanded="APIExpander_Changed"
-                      Collapsed="APIExpander_Changed"
-                      MaxHeight="205"
-                      Margin="5,5,5,5"
-                      IsExpanded="False"
-                      ExpandDirection="Down"
-                      HorizontalAlignment="Stretch">
-                <Expander.Header>
-                    <DockPanel LastChildFill="False" VerticalAlignment="Center">
-                        <TextBlock Text="API Keys"
-                                   Margin="5,0,0,0"
-                                   VerticalAlignment="Center"/>
-                        <Button DockPanel.Dock="Right"
-                                Name="AddAPIButton"
-                                Click="AddAPIButton_Click"
-                                Margin="0,0,-10,0"
-                                IsVisible="False"
-                                VerticalAlignment="Center">
-                            <PathIcon Data="{StaticResource add_regular}" />
-                        </Button>
-                    </DockPanel>
-                </Expander.Header>
-                <ListBox Name="ApiListView"
-                         Height="145"
-                         Margin="0,-10,0,0"
-                         HorizontalAlignment="Center"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-            </Expander>
-            <Expander Header="ntfy"
-                      Margin="5,5,5,5"
-                      HorizontalAlignment="Stretch">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="URL"
-                                   Width="80"
-                                   Margin="5,5,5,5"
-                                   TextAlignment="Right"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Name="NtfyUrlBox"
-                                 Width="250"
-                                 Margin="5,5,5,5"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="Topic"
-                                   Width="80"
-                                   Margin="5,5,5,5"
-                                   TextAlignment="Right"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Name="NtfyTopicBox"
-                                 Width="250"
-                                 Margin="5,5,5,5"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="User"
-                                   Width="80"
-                                   Margin="5,5,5,5"
-                                   TextAlignment="Right"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Name="NtfyUserBox"
-                                 Width="250"
-                                 Margin="5,5,5,5"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="Password"
-                                   Width="80"
-                                   Margin="5,5,5,5"
-                                   TextAlignment="Right"
-                                   VerticalAlignment="Center"/>
-                        <TextBox Name="NtfyPassBox"
-                                 Width="250"
-                                 Margin="5,5,5,5"/>
-                    </StackPanel>
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+                <TextBlock Name="VersionBlock" Height="20" FontSize="16" VerticalAlignment="Center"/>
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel Grid.Row="1"
+                    Margin="20,0,20,20"
+                    VerticalAlignment="Center"
+                    Name="MainPanel">
+            <StackPanel Margin="0,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Name"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Width="120"
+                               Margin="5,5,5,5"/>
+                    <TextBox Name="NameBox"
+                             Width="250"
+                             Margin="5,5,5,5"/>
                 </StackPanel>
-            </Expander>
-            <StackPanel Orientation="Horizontal" Margin="0,-3,0,-8">
-                <TextBlock Text="Upload Interval"
-                           Width="120"
-                           Margin="5,0"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"/>
-                <Slider Name="UploadSlider"
-                        ValueChanged="UploadSlider_ValueChanged"
-                        Width="210"
-                        Minimum="10"
-                        Maximum="120"
-                        Margin="10,0,5,0"
-                        TickFrequency="5"
-                        IsSnapToTickEnabled="True"/>
-                <TextBlock Name="UploadBlock"
-                           FontSize="14"
-                           Text="10"
-                           Width="30"
-                           Margin="0,0,5,0"
-                           TextAlignment="Center"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,-8,0,5">
-                <TextBlock Text="Beep Interval"
-                           Width="120"
-                           Margin="5,0"
-                           TextAlignment="Right"
-                           VerticalAlignment="Center"/>
-                <Slider Name="BeepSlider"
-                        ValueChanged="BeepSlider_ValueChanged"
-                        Width="210"
-                        Minimum="0"
-                        Maximum="120"
-                        Margin="10,0,5,0"
-                        TickFrequency="5"
-                        IsSnapToTickEnabled="True"/>
-                <TextBlock Name="BeepBlock"
-                           FontSize="14"
-                           Text="10"
-                           Width="30"
-                           Margin="0,0,5,0"
-                           TextAlignment="Center"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <ToggleSwitch Name="AutoResultsSwitch"
-                              Click="AutoResultsSwitch_Checked"
-                              Height="35"
-                              OnContent=""
-                              OffContent=""
-                              Margin="5,-7,-7,0"/>
-                <Label Content="Auto Upload Results" VerticalAlignment="Center" Margin="0,-7,0,0"/>
-                <ToggleSwitch Name="EnableNTFYSwitch"
-                              Height="35"
-                              OnContent=""
-                              OffContent=""
-                              Margin="10,-7,-7,0"/>
-                <Label Content="Enable NTFY" VerticalAlignment="Center" Margin="0,-7,0,0"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Name="ManualResultsButton"
-                        Content="Manual Results Upload"
-                        Click="ManualResultsButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-                <Button Name="DeleteReadsButton"
-                        Content="Clear Reads"
-                        Click="DeleteReadsButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Name="UpdateServerButton"
-                        Content="Update Server"
-                        Click="UpdateServerButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-                <Button Name="RestartServerButton"
-                        Content="Restart Server"
-                        Click="RestartServerButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Name="StopServerButton"
-                        Content="Stop Server"
-                        Click="StopServerButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-                <Button Name="ShutdownServerButton"
-                        Content="Shutdown Server"
-                        Click="ShutdownServerButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Name="SaveButton"
-                        Content="Save Settings"
-                        Click="SaveButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
-                <Button Name="CloseButton"
-                        Content="Close"
-                        Click="CloseButton_Click"
-                        Width="185"
-                        Height="35"
-                        Margin="5,5,5,5"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Read Window"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Width="120"
+                               Margin="5,5,5,5"/>
+                    <TextBox Name="ReadWindowBox"
+                             Width="250"
+                             Margin="5,5,5,5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Chip Type"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Width="120"
+                               Margin="5,5,5,5"/>
+                    <ComboBox Name="ChipTypeBox"
+                              Width="250"
+                              Margin="5,5,5,5"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Base 10 (Dec)" Tag="DEC"/>
+                        <ComboBoxItem Content="Base 16 (Hex)" Tag="HEX"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <ToggleSwitch Name="SoundBox"
+                                  OnContent=""
+                                  OffContent=""
+                                  Margin="5,0,-7,-7"
+                                  VerticalContentAlignment="Center"/>
+                    <Label Content="Play Sound on Read?" VerticalAlignment="Center" Margin="0,0,0,-7"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,-5">
+                    <TextBlock Text="Volume"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Width="120"
+                               Margin="5,0"/>
+                    <Slider Name="VolumeSlider"
+                            ValueChanged="VolumeSlider_ValueChanged"
+                            Width="210"
+                            Minimum="0"
+                            Maximum="10"
+                            TickFrequency="1"
+                            Margin="10,0,5,0"
+                            IsSnapToTickEnabled="True"/>
+                    <TextBlock Name="VolumeBlock"
+                               FontSize="14"
+                               Text="0"
+                               Width="30"
+                               Margin="0,0,5,0"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Voice"
+                               Width="120"
+                               Margin="5,5,5,5"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Name="VoiceBox"
+                              Width="250"
+                              Margin="5,5,5,5"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Emily" Tag="emily"/>
+                        <ComboBoxItem Content="Michael" Tag="michael"/>
+                        <ComboBoxItem Content="Custom" Tag="custom"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Name="ScreenPanel" Orientation="Horizontal" IsVisible="False">
+                    <TextBlock Text="Screen Type"
+                               Width="120"
+                               Margin="5,5,5,5"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Name="ScreenBox"
+                              Width="250"
+                              Margin="5,5,5,5"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Adafruit" Tag="ADAFRUIT"/>
+                        <ComboBoxItem Content="PCF8574T" Tag="PCF8574T"/>
+                    </ComboBox>
+                </StackPanel>
+                <Expander Name="ReaderExpander"
+                          Expanded="ReaderExpander_Changed"
+                          Collapsed="ReaderExpander_Changed"
+                          Margin="5,5,5,5"
+                          IsExpanded="False"
+                          ExpandDirection="Down"
+                          HorizontalAlignment="Stretch">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="False" VerticalAlignment="Center">
+                            <TextBlock Text="Readers"
+                                       Margin="5,0,0,0"
+                                       VerticalAlignment="Center" />
+                            <Button DockPanel.Dock="Right"
+                                    Name="AddReaderButton"
+                                    Click="AddReaderButton_Click"
+                                    Margin="0,0,-10,0"
+                                    IsVisible="False"
+                                    VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource add_regular}"/>
+                            </Button>
+                        </DockPanel>
+                    </Expander.Header>
+                    <ListBox Name="ReaderListView"
+                             Height="160"
+                             Margin="0,-10,0,0"
+                             HorizontalAlignment="Center"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                </Expander>
+                <Expander Name="ApiExpander"
+                          Expanded="APIExpander_Changed"
+                          Collapsed="APIExpander_Changed"
+                          MaxHeight="205"
+                          Margin="5,5,5,5"
+                          IsExpanded="False"
+                          ExpandDirection="Down"
+                          HorizontalAlignment="Stretch">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="False" VerticalAlignment="Center">
+                            <TextBlock Text="API Keys"
+                                       Margin="5,0,0,0"
+                                       VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right"
+                                    Name="AddAPIButton"
+                                    Click="AddAPIButton_Click"
+                                    Margin="0,0,-10,0"
+                                    IsVisible="False"
+                                    VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource add_regular}" />
+                            </Button>
+                        </DockPanel>
+                    </Expander.Header>
+                    <ListBox Name="ApiListView"
+                             Height="145"
+                             Margin="0,-10,0,0"
+                             HorizontalAlignment="Center"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                </Expander>
+                <Expander Header="ntfy"
+                          Margin="5,5,5,5"
+                          HorizontalAlignment="Stretch">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="URL"
+                                       Width="80"
+                                       Margin="5,5,5,5"
+                                       TextAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Name="NtfyUrlBox"
+                                     Width="250"
+                                     Margin="5,5,5,5"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="Topic"
+                                       Width="80"
+                                       Margin="5,5,5,5"
+                                       TextAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Name="NtfyTopicBox"
+                                     Width="250"
+                                     Margin="5,5,5,5"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="User"
+                                       Width="80"
+                                       Margin="5,5,5,5"
+                                       TextAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Name="NtfyUserBox"
+                                     Width="250"
+                                     Margin="5,5,5,5"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="Password"
+                                       Width="80"
+                                       Margin="5,5,5,5"
+                                       TextAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Name="NtfyPassBox"
+                                     Width="250"
+                                     Margin="5,5,5,5"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+                <StackPanel Orientation="Horizontal" Margin="0,-3,0,-8">
+                    <TextBlock Text="Upload Interval"
+                               Width="120"
+                               Margin="5,0"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"/>
+                    <Slider Name="UploadSlider"
+                            ValueChanged="UploadSlider_ValueChanged"
+                            Width="210"
+                            Minimum="10"
+                            Maximum="120"
+                            Margin="10,0,5,0"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"/>
+                    <TextBlock Name="UploadBlock"
+                               FontSize="14"
+                               Text="10"
+                               Width="30"
+                               Margin="0,0,5,0"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,-8,0,5">
+                    <TextBlock Text="Beep Interval"
+                               Width="120"
+                               Margin="5,0"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"/>
+                    <Slider Name="BeepSlider"
+                            ValueChanged="BeepSlider_ValueChanged"
+                            Width="210"
+                            Minimum="0"
+                            Maximum="120"
+                            Margin="10,0,5,0"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"/>
+                    <TextBlock Name="BeepBlock"
+                               FontSize="14"
+                               Text="10"
+                               Width="30"
+                               Margin="0,0,5,0"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ToggleSwitch Name="AutoResultsSwitch"
+                                  Click="AutoResultsSwitch_Checked"
+                                  Height="35"
+                                  OnContent=""
+                                  OffContent=""
+                                  Margin="5,-7,-7,0"/>
+                    <Label Content="Auto Upload Results" VerticalAlignment="Center" Margin="0,-7,0,0"/>
+                    <ToggleSwitch Name="EnableNTFYSwitch"
+                                  Height="35"
+                                  OnContent=""
+                                  OffContent=""
+                                  Margin="10,-7,-7,0"/>
+                    <Label Content="Enable NTFY" VerticalAlignment="Center" Margin="0,-7,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Name="ManualResultsButton"
+                            Content="Manual Results Upload"
+                            Click="ManualResultsButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                    <Button Name="DeleteReadsButton"
+                            Content="Clear Reads"
+                            Click="DeleteReadsButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Name="UpdateServerButton"
+                            Content="Update Server"
+                            Click="UpdateServerButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                    <Button Name="RestartServerButton"
+                            Content="Restart Server"
+                            Click="RestartServerButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Name="StopServerButton"
+                            Content="Stop Server"
+                            Click="StopServerButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                    <Button Name="ShutdownServerButton"
+                            Content="Shutdown Server"
+                            Click="ShutdownServerButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Name="SaveButton"
+                            Content="Save Settings"
+                            Click="SaveButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                    <Button Name="CloseButton"
+                            Content="Close"
+                            Click="CloseButton_Click"
+                            Width="185"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

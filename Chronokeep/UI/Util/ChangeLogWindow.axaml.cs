@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
@@ -20,10 +21,6 @@ public partial class ChangeLogWindow : Window
     private ChangeLogWindow(IWindowCallback window, IDBInterface database)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            LogList.Margin = new Thickness(10, 10, 10, 0);
-        }
         this.window = window;
         this.database = database;
 
@@ -66,9 +63,30 @@ public partial class ChangeLogWindow : Window
         window.WindowFinalize(this);
     }
 
-    private void CancelButton_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.Notifications.ChangelogWindow", "Done button clicked.");
         Close();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

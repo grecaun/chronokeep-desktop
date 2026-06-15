@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System.Collections.Generic;
@@ -13,10 +14,6 @@ public partial class ParticipantConflicts : Window
     public ParticipantConflicts(IMainWindow window, List<Participant> participants)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            ParticipantsList.Margin = new Thickness(0);
-        }
         this.window = window;
 
         ParticipantsList.ItemsSource = participants;
@@ -30,5 +27,26 @@ public partial class ParticipantConflicts : Window
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
         window?.WindowFinalize(this);
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

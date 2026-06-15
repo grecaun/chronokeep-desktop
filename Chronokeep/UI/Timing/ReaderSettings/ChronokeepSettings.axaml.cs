@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Helpers;
 using Chronokeep.Objects.ChronokeepPortal;
 using Chronokeep.Timing.Interfaces;
@@ -22,10 +23,6 @@ public partial class ChronokeepSettings : Window
     internal ChronokeepSettings(ChronokeepInterface reader)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(20, 0, 20, 20);
-        }
         this.MinWidth = 100;
         this.MinHeight = 100;
         this.reader = reader;
@@ -43,7 +40,7 @@ public partial class ChronokeepSettings : Window
             }
             if (allSettings.Changes.Contains(PortalSettingsHolder.ChangeType.SETTINGS))
             {
-                Title = allSettings.PortalVersion;
+                VersionBlock.Text = allSettings.PortalVersion;
                 NameBox.Text = allSettings.Name;
                 ReadWindowBox.Text = allSettings.ReadWindow.ToString();
                 ChipTypeBox.SelectedIndex = allSettings.ChipType == PortalSettingsHolder.ChipTypeEnum.DEC ? 0 : 1;
@@ -392,5 +389,26 @@ public partial class ChronokeepSettings : Window
         {
             reader?.SendAutoUploadResults(Objects.ChronokeepPortal.Requests.AutoUploadQuery.START);
         }
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

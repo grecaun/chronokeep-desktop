@@ -8,6 +8,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Change Event"
         Width="600"
@@ -15,7 +16,9 @@
         MinWidth="600"
         MinHeight="500"
         Topmost="True"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        PropertyChanged="Window_PropertyChanged"
+        >
     <Window.Styles>
         <Style Selector="TextBlock.inner">
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -36,15 +39,52 @@
             <Setter Property="CornerRadius" Value="8"/>
         </Style>
     </Window.Styles>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="55" />
-        </Grid.RowDefinitions>
-		<ListBox Grid.Row="0"
-                 Name="LogList"
-                 Margin="10,30,10,0"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+    <Grid RowDefinitions="32,*,55">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+		<ListBox Grid.Row="1"
+                    Name="LogList"
+                    Margin="10,0,10,0"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="changelog:Entry">
                     <Expander HorizontalAlignment="Stretch" IsExpanded="{Binding IsExpanded}" CornerRadius="8" Margin="0,0,0,5">
@@ -61,19 +101,19 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <StackPanel Grid.Row="1"
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center">
             <ToggleSwitch Name="autoChangelogToggleSwitch"
-                          FontSize="14"
-                          OnContent=""
-                          OffContent=""
-                          Margin="10,-7,-7,-7"
-                          HorizontalAlignment="Left"
-                          VerticalContentAlignment="Center"/>
+                            FontSize="14"
+                            OnContent=""
+                            OffContent=""
+                            Margin="10,-7,-7,-7"
+                            HorizontalAlignment="Left"
+                            VerticalContentAlignment="Center"/>
             <Label Content="Show changelog after update"
-                   VerticalAlignment="Center"/>
+                    VerticalAlignment="Center"/>
             <Button Name="cancelButton"
                     Content="Done"
                     Click="CancelButton_Click"

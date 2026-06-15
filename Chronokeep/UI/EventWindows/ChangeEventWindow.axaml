@@ -6,12 +6,15 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
         x:Class="Chronokeep.UI.EventWindows.ChangeEventWindow"
         Background="{DynamicResource PrimaryBackground}"
-        Closing="Window_Closing"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing"
         Topmost="True"
         Height="400"
         Width="500"
+        PropertyChanged="Window_PropertyChanged"
         >
     <Window.Styles>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
@@ -31,83 +34,126 @@
             <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}"/>
         </Style> 
     </Window.Styles>
-    <Grid Margin="5,35,5,5" Name="MainPanel">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="60"/>
-        </Grid.RowDefinitions>
-            <TextBox Grid.Row="0"
-                     Name="searchBox"
-                     TextChanged="SearchBox_TextChanged"
-                     PlaceholderText="Search..."
-                     Margin="35,0,35,15"
-                     VerticalAlignment="Center"
-                     VerticalContentAlignment="Center">
-                <TextBox.InnerLeftContent>
-                    <PathIcon Data="{StaticResource search_regular}" Margin="10,0,5,0"/>
-                </TextBox.InnerLeftContent>
-            </TextBox>
-        <Grid Grid.Row="1" Margin="30,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" />
-                <ColumnDefinition Width="70" />
-                <ColumnDefinition Width="100" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Margin="8,4" Text="Name" />
-            <TextBlock Grid.Column="1" Margin="8,4" Text="Year" />
-            <TextBlock Grid.Column="2" Margin="8,4" Text="Date" />
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <Grid Margin="5,5,5,5" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="60"/>
+            </Grid.RowDefinitions>
+                <TextBox Grid.Row="0"
+                         Name="searchBox"
+                         TextChanged="SearchBox_TextChanged"
+                         PlaceholderText="Search..."
+                         Margin="35,0,35,15"
+                         VerticalAlignment="Center"
+                         VerticalContentAlignment="Center">
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Data="{StaticResource search_regular}" Margin="10,0,5,0"/>
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+            <Grid Grid.Row="1" Margin="30,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition Width="70" />
+                    <ColumnDefinition Width="100" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Margin="8,4" Text="Name" />
+                <TextBlock Grid.Column="1" Margin="8,4" Text="Year" />
+                <TextBlock Grid.Column="2" Margin="8,4" Text="Date" />
+            </Grid>
+            <ListBox Grid.Row="2"
+                     Name="eventList"
+                     DoubleTapped="EventList_MouseDoubleClick"
+                     Margin="30,0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="250" />
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Margin="8,4" Text="{Binding Name}" x:DataType="objects:Event"/>
+                            <TextBlock Grid.Column="1" Margin="8,4" Text="{Binding YearCode}" x:DataType="objects:Event"/>
+                            <TextBlock Grid.Column="2" Margin="8,4" Text="{Binding Date}" x:DataType="objects:Event"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+                <Button Name="ChangeButton"
+                        Content="Change"
+                        Click="ChangeButton_Click"
+                        Height="35"
+                        Width="150"
+                        FontSize="16"
+                        Margin="10,0,10,0"
+                        HorizontalAlignment="Center"/>
+                <Button Name="DeleteButton"
+                        Content="Delete"
+                        Click="DeleteButton_Click"
+                        Height="35"
+                        Width="150"
+                        FontSize="16"
+                        Margin="0,0,0,0"
+                        HorizontalAlignment="Center"/>
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Click="CancelButton_Click"
+                        Height="35"
+                        Width="150"
+                        FontSize="16"
+                        Margin="10,0,10,0"
+                        HorizontalAlignment="Center"/>
+            </StackPanel>
         </Grid>
-        <ListBox Grid.Row="2"
-                 Name="eventList"
-                 DoubleTapped="EventList_MouseDoubleClick"
-                 Margin="30,0"
-                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                 HorizontalAlignment="Stretch"
-                 VerticalAlignment="Stretch">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="250" />
-                            <ColumnDefinition Width="70" />
-                            <ColumnDefinition Width="100" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Margin="8,4" Text="{Binding Name}" x:DataType="objects:Event"/>
-                        <TextBlock Grid.Column="1" Margin="8,4" Text="{Binding YearCode}" x:DataType="objects:Event"/>
-                        <TextBlock Grid.Column="2" Margin="8,4" Text="{Binding Date}" x:DataType="objects:Event"/>
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center">
-            <Button Name="ChangeButton"
-                    Content="Change"
-                    Click="ChangeButton_Click"
-                    Height="35"
-                    Width="150"
-                    FontSize="16"
-                    Margin="10,0,10,0"
-                    HorizontalAlignment="Center"/>
-            <Button Name="DeleteButton"
-                    Content="Delete"
-                    Click="DeleteButton_Click"
-                    Height="35"
-                    Width="150"
-                    FontSize="16"
-                    Margin="0,0,0,0"
-                    HorizontalAlignment="Center"/>
-            <Button Name="CancelButton"
-                    Content="Cancel"
-                    Click="CancelButton_Click"
-                    Height="35"
-                    Width="150"
-                    FontSize="16"
-                    Margin="10,0,10,0"
-                    HorizontalAlignment="Center"/>
-        </StackPanel>
     </Grid>
 </Window>

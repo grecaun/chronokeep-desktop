@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
@@ -46,10 +47,6 @@ public partial class RemoteReadersWindow : Window
         }
         remoteAPIs = database.GetAllAPI();
         remoteAPIs.RemoveAll(x => x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE && x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF);
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         GetReaders();
     }
 
@@ -91,18 +88,21 @@ public partial class RemoteReadersWindow : Window
         Log.D("UI.API.RemoteReaders", "Close button clicked.");
         List<RemoteReader> readersToSave = [];
         List<RemoteReader> otherReaders = [];
-        foreach (APIExpanderPart? item in apiListView.Items)
+        foreach (object? item in apiListView.Items)
         {
-            var downDict = item!.GetAutoDownloadDictionary();
-            foreach (RemoteReader reader in downDict.Keys)
+            if (item is APIExpanderPart part)
             {
-                if (downDict[reader])
+                var downDict = part.GetAutoDownloadDictionary();
+                foreach (RemoteReader reader in downDict.Keys)
                 {
-                    readersToSave.Add(reader);
-                }
-                else
-                {
-                    otherReaders.Add(reader);
+                    if (downDict[reader])
+                    {
+                        readersToSave.Add(reader);
+                    }
+                    else
+                    {
+                        otherReaders.Add(reader);
+                    }
                 }
             }
         }
@@ -124,5 +124,26 @@ public partial class RemoteReadersWindow : Window
         // notify mainwindow to update/start remote reader thread
         RemoteReadersNotifier.GetRemoteReadersNotifier().Notify();
         Close();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

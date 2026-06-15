@@ -15,10 +15,6 @@ public partial class SetTimeWindow : Window
     public SetTimeWindow(ITimingPage parent, TimingSystem timingSystem)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(10, 0, 10, 10);
-        }
         this.parent = parent;
         this.timingSystem = timingSystem;
     }
@@ -69,5 +65,26 @@ public partial class SetTimeWindow : Window
     private void Done_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

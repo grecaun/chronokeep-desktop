@@ -7,105 +7,151 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Manual Entry"
         Width="300"
         SizeToContent="Height"
         Topmost="True"
-        Closing="Window_Closing">
-    <StackPanel VerticalAlignment="Center" Margin="0,30,0,15" Name="MainPanel">
-        <DockPanel>
-            <TextBlock Text="Bib"
-                       Width="80"
-                       FontSize="16"
-                       Margin="10,15,0,5"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <TextBox Name="BibBox"
-                     KeyUp="Enter_KeyDown"
-                     FontSize="16"
-                     Margin="5,15,10,5"
-                     TextWrapping="Wrap"
-                     VerticalContentAlignment="Center"
-                     HorizontalContentAlignment="Center"/>
-        </DockPanel>
-        <DockPanel>
-            <TextBlock Text="Time"
-                       Width="80"
-                       FontSize="16"
-                       Margin="10,5,0,5"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <MaskedTextBox Name="TimeBox"
-                           KeyUp="Enter_KeyDown"
-                           Height="35"
+        Closing="Window_Closing"
+        PropertyChanged="Window_PropertyChanged"
+        >
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,0,15" Grid.Row="1">
+            <DockPanel>
+                <TextBlock Text="Bib"
+                           Width="80"
                            FontSize="16"
-                           Mask="00:00:00.000"
-                           Margin="5,5,10,5"
-                           VerticalContentAlignment="Center"
-                           HorizontalContentAlignment="Center"/>
-        </DockPanel>
-        <DockPanel Name="DatePanel" IsVisible="False">
-            <TextBlock Text="Date"
-                       Width="80"
-                       FontSize="16"
-                       Margin="10,5,0,5"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <DatePicker Name="DateBox"
-                        FontSize="16"
-                        Margin="5,5,10,5"/>
-        </DockPanel>
-        <DockPanel Name="LocationPanel">
-            <TextBlock Text="Location"
-                       Width="80"
-                       FontSize="16"
-                       Margin="10,5,0,5"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <ComboBox Name="LocationBox"
-                      FontSize="16"
-                      Margin="5,5,10,5"
-                      HorizontalAlignment="Stretch"/>
-        </DockPanel>
-        <RadioButton Name="NetTimeButton"
-                     Content="Net Time"
-                     GroupName="TimeGroup"
-                     FontSize="14"
-                     Margin="95,0,0,0"
-                     VerticalContentAlignment="Center"/>
-        <RadioButton Name="ClockTimeButton"
-                     Content="Clock Time"
-                     GroupName="TimeGroup"
-                     FontSize="14"
-                     IsChecked="True"
-                     Margin="95,0,0,0"
-                     VerticalContentAlignment="Center"/>
-        <RadioButton Name="TimeofDayButton"
-                     Content="Time of Day"
-                     GroupName="TimeGroup"
-                     FontSize="14"
-                     Margin="95,0,0,0"
-                     VerticalContentAlignment="Center"/>
-        <StackPanel Margin="10,10,10,15"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center">
-            <Button Name="Add"
-                    Content="Add"
-                    Click="Add_Click"
-                    Width="100"
-                    Height="35"
-                    FontSize="14"
-                    Margin="10,0,10,0"
-                    HorizontalAlignment="Center"/>
-            <Button Name="Done"
-                    Content="Done"
-                    Click="Done_Click"
-                    Width="100"
-                    Height="35"
-                    FontSize="14"
-                    Margin="10,0,10,0"
-                    HorizontalAlignment="Center"/>
+                           Margin="10,15,0,5"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <TextBox Name="BibBox"
+                         KeyUp="Enter_KeyDown"
+                         FontSize="16"
+                         Margin="5,15,10,5"
+                         TextWrapping="Wrap"
+                         VerticalContentAlignment="Center"
+                         HorizontalContentAlignment="Center"/>
+            </DockPanel>
+            <DockPanel>
+                <TextBlock Text="Time"
+                           Width="80"
+                           FontSize="16"
+                           Margin="10,5,0,5"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <MaskedTextBox Name="TimeBox"
+                               KeyUp="Enter_KeyDown"
+                               Height="35"
+                               FontSize="16"
+                               Mask="00:00:00.000"
+                               Margin="5,5,10,5"
+                               VerticalContentAlignment="Center"
+                               HorizontalContentAlignment="Center"/>
+            </DockPanel>
+            <DockPanel Name="DatePanel" IsVisible="False">
+                <TextBlock Text="Date"
+                           Width="80"
+                           FontSize="16"
+                           Margin="10,5,0,5"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <DatePicker Name="DateBox"
+                            FontSize="16"
+                            Margin="5,5,10,5"/>
+            </DockPanel>
+            <DockPanel Name="LocationPanel">
+                <TextBlock Text="Location"
+                           Width="80"
+                           FontSize="16"
+                           Margin="10,5,0,5"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <ComboBox Name="LocationBox"
+                          FontSize="16"
+                          Margin="5,5,10,5"
+                          HorizontalAlignment="Stretch"/>
+            </DockPanel>
+            <RadioButton Name="NetTimeButton"
+                         Content="Net Time"
+                         GroupName="TimeGroup"
+                         FontSize="14"
+                         Margin="95,0,0,0"
+                         VerticalContentAlignment="Center"/>
+            <RadioButton Name="ClockTimeButton"
+                         Content="Clock Time"
+                         GroupName="TimeGroup"
+                         FontSize="14"
+                         IsChecked="True"
+                         Margin="95,0,0,0"
+                         VerticalContentAlignment="Center"/>
+            <RadioButton Name="TimeofDayButton"
+                         Content="Time of Day"
+                         GroupName="TimeGroup"
+                         FontSize="14"
+                         Margin="95,0,0,0"
+                         VerticalContentAlignment="Center"/>
+            <StackPanel Margin="10,10,10,15"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+                <Button Name="Add"
+                        Content="Add"
+                        Click="Add_Click"
+                        Width="100"
+                        Height="35"
+                        FontSize="14"
+                        Margin="10,0,10,0"
+                        HorizontalAlignment="Center"/>
+                <Button Name="Done"
+                        Content="Done"
+                        Click="Done_Click"
+                        Width="100"
+                        Height="35"
+                        FontSize="14"
+                        Margin="10,0,10,0"
+                        HorizontalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

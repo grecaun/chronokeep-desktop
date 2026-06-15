@@ -47,10 +47,6 @@ public partial class ExportResults : Window
     public ExportResults(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -575,9 +571,30 @@ public partial class ExportResults : Window
         this.Close();
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Export.ExportResults", "Cancel clicked.");
         this.Close();
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

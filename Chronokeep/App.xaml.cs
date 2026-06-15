@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Fonts;
 using Chronokeep.Helpers;
 using Chronokeep.UI;
 using Sentry;
@@ -84,7 +85,10 @@ namespace Chronokeep
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .WithInterFont()
+                .ConfigureFonts(fontManager =>
+                {
+                    fontManager.AddFontCollection(new ChronokeepFontCollection());
+                })
                 .LogToTrace();
 
         static void CaptureException(Exception ex)
@@ -108,5 +112,12 @@ namespace Chronokeep
             File.WriteAllText(logPath, ex.StackTrace);
             SentrySdk.CaptureException(ex);
         }
+    }
+
+    public sealed class ChronokeepFontCollection : EmbeddedFontCollection
+    {
+        public ChronokeepFontCollection() : base(
+            new Uri("fonts:ChronokeepFonts", UriKind.Absolute),
+            new Uri("avares://Chronokeep/fonts", UriKind.Absolute)) { }
     }
 }

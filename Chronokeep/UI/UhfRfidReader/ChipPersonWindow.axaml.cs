@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Chronokeep.Objects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,6 +84,11 @@ public partial class ChipPersonWindow : Window
     }
 
     private void Exit_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
     {
         Close();
     }

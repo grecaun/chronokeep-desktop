@@ -63,6 +63,17 @@
                     <PathIcon Data="{StaticResource toggle_right_regular}"></PathIcon>
                     <PathIcon Data="{StaticResource toggle_left_regular}"></PathIcon>
                 </StackPanel>
+                <StackPanel Spacing="5" Width="65" HorizontalAlignment="Center">
+                   <Label Content="Title Bar" HorizontalAlignment="Center" />
+                    <PathIcon Data="{StaticResource minimize_win_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource maximize_win_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource unmaximize_win_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource close_win_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource minimize_linux_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource maximize_linux_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource unmaximize_linux_regular}"></PathIcon>
+                    <PathIcon Data="{StaticResource close_linux_regular}"></PathIcon>
+                </StackPanel>
             </StackPanel>
         </Border>
     </Design.PreviewWith>
@@ -114,5 +125,12 @@
     <StreamGeometry x:Key="toggle_right_regular">M7 7a5 5 0 0 0 0 10h10a5 5 0 0 0 0-10H7Zm9.75 7.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z</StreamGeometry>
     <StreamGeometry x:Key="toggle_left_regular">M7.25 14.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z M22 12a5 5 0 0 0-5-5H7a5 5 0 0 0 0 10h10a5 5 0 0 0 5-5Zm-5-3.5a3.5 3.5 0 1 1 0 7H7a3.5 3.5 0 1 1 0-7h10Z</StreamGeometry>
     <StreamGeometry x:Key="save_regular">M3 5.75C3 4.23122 4.23122 3 5.75 3H15.7145C16.5764 3 17.4031 3.34241 18.0126 3.9519L20.0481 5.98744C20.6576 6.59693 21 7.42358 21 8.28553V18.25C21 19.7688 19.7688 21 18.25 21H5.75C4.23122 21 3 19.7688 3 18.25V5.75ZM5.75 4.5C5.05964 4.5 4.5 5.05964 4.5 5.75V18.25C4.5 18.9404 5.05964 19.5 5.75 19.5H6V14.25C6 13.0074 7.00736 12 8.25 12H15.75C16.9926 12 18 13.0074 18 14.25V19.5H18.25C18.9404 19.5 19.5 18.9404 19.5 18.25V8.28553C19.5 7.8214 19.3156 7.37629 18.9874 7.0481L16.9519 5.01256C16.6918 4.75246 16.3582 4.58269 16 4.52344V7.25C16 8.49264 14.9926 9.5 13.75 9.5H9.25C8.00736 9.5 7 8.49264 7 7.25V4.5H5.75ZM16.5 19.5V14.25C16.5 13.8358 16.1642 13.5 15.75 13.5H8.25C7.83579 13.5 7.5 13.8358 7.5 14.25V19.5H16.5ZM8.5 4.5V7.25C8.5 7.66421 8.83579 8 9.25 8H13.75C14.1642 8 14.5 7.66421 14.5 7.25V4.5H8.5Z</StreamGeometry>
-
+    <StreamGeometry x:Key="minimize_win_regular">M3.997 13H20a1 1 0 1 0 0-2H3.997a1 1 0 1 0 0 2Z</StreamGeometry>
+    <StreamGeometry x:Key="maximize_win_regular">M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H6Z</StreamGeometry>
+    <StreamGeometry x:Key="unmaximize_win_regular">M6.08539 4H5.05005C5.28168 2.85888 6.29056 2 7.50004 2H14C16.2092 2 18 3.79086 18 6V12.5C18 13.7095 17.1412 14.7184 16 14.95V13.9146C16.5826 13.7087 17 13.1531 17 12.5V6C17 4.34315 15.6569 3 14 3H7.50004C6.84693 3 6.29131 3.4174 6.08539 4ZM4.5 5C3.11929 5 2 6.11929 2 7.5V15.5C2 16.8807 3.11929 18 4.5 18H12.5C13.8807 18 15 16.8807 15 15.5V7.5C15 6.11929 13.8807 5 12.5 5H4.5ZM3 7.5C3 6.67157 3.67157 6 4.5 6H12.5C13.3284 6 14 6.67157 14 7.5V15.5C14 16.3284 13.3284 17 12.5 17H4.5C3.67157 17 3 16.3284 3 15.5V7.5Z</StreamGeometry>
+    <StreamGeometry x:Key="close_win_regular">m4.397 4.554.073-.084a.75.75 0 0 1 .976-.073l.084.073L12 10.939l6.47-6.47a.75.75 0 1 1 1.06 1.061L13.061 12l6.47 6.47a.75.75 0 0 1 .072.976l-.073.084a.75.75 0 0 1-.976.073l-.084-.073L12 13.061l-6.47 6.47a.75.75 0 0 1-1.06-1.061L10.939 12l-6.47-6.47a.75.75 0 0 1-.072-.976l.073-.084-.073.084Z</StreamGeometry>
+    <StreamGeometry x:Key="minimize_linux_regular">M4.293 8.293a1 1 0 0 1 1.414 0L12 14.586l6.293-6.293a1 1 0 1 1 1.414 1.414l-7 7a1 1 0 0 1-1.414 0l-7-7a1 1 0 0 1 0-1.414Z</StreamGeometry>
+    <StreamGeometry x:Key="maximize_linux_regular">M4.293 15.707a1 1 0 0 0 1.414 0L12 9.414l6.293 6.293a1 1 0 0 0 1.414-1.414l-7-7a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 0 1.414Z</StreamGeometry>
+    <StreamGeometry x:Key="unmaximize_linux_regular">M18.79 8.387a1 1 0 0 1-1.497 1.32L12 4.414 6.707 9.707l-.094.083a1 1 0 0 1-1.32-1.497l6-6 .094-.083a1 1 0 0 1 1.32.083l6 6 .083.094ZM5.21 15.613a1 1 0 0 1 1.497-1.32L12 19.586l5.293-5.293.094-.083a1 1 0 0 1 1.32 1.497l-6 6-.094.083a1 1 0 0 1-1.32-.083l-6-6-.083-.094Z</StreamGeometry>
+    <StreamGeometry x:Key="close_linux_regular">m4.397 4.554.073-.084a.75.75 0 0 1 .976-.073l.084.073L12 10.939l6.47-6.47a.75.75 0 1 1 1.06 1.061L13.061 12l6.47 6.47a.75.75 0 0 1 .072.976l-.073.084a.75.75 0 0 1-.976.073l-.084-.073L12 13.061l-6.47 6.47a.75.75 0 0 1-1.06-1.061L10.939 12l-6.47-6.47a.75.75 0 0 1-.072-.976l.073-.084-.073.084Z</StreamGeometry>
 </ResourceDictionary>

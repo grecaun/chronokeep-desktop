@@ -6,6 +6,8 @@
         x:Class="Chronokeep.UI.Util.DialogBox"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title=""
         Width="400"
@@ -13,37 +15,57 @@
         Topmost="True"
         SizeToContent="Height"
         >
-    <StackPanel VerticalAlignment="Center" Margin="0,25,0,0" Name="MainPanel">
-        <StackPanel VerticalAlignment="Center"
-                    HorizontalAlignment="Center">
-            <TextBlock Name="MessageBox"
-                       Text="This is some random text for testing purposes."
-                       Margin="15,15,15,0"
-                       FontSize="16"
-                       TextWrapping="Wrap"
-                       TextAlignment="Center"
-                       VerticalAlignment="Center"/>
-            <TextBox Name="CopyBox"
-                     Text=""
-                     TextChanged="CopyBox_TextChanged"
-                     FontSize="16"
-                     Margin="15,0,15,5"
-                     IsVisible="False"
-                     HorizontalAlignment="Stretch"/>
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel VerticalAlignment="Center" Margin="0" Grid.Row="1">
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <TextBlock Name="MessageBox"
+                           Text="This is some random text for testing purposes."
+                           Margin="15,15,15,0"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"/>
+                <TextBox Name="CopyBox"
+                         Text=""
+                         TextChanged="CopyBox_TextChanged"
+                         FontSize="16"
+                         Margin="15,0,15,5"
+                         IsVisible="False"
+                         HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="LeftButton"
+                        Content="Yes"
+                        Width="150"
+                        Height="35"
+                        Margin="15,15,5,15"
+                        HorizontalAlignment="Stretch"/>
+                <Button Name="RightButton"
+                        Content="No"
+                        Width="150"
+                        Height="35"
+                        Margin="5,15,15,15"
+                        HorizontalAlignment="Stretch"/>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="LeftButton"
-                    Content="Yes"
-                    Width="150"
-                    Height="35"
-                    Margin="15,15,5,15"
-                    HorizontalAlignment="Stretch"/>
-            <Button Name="RightButton"
-                    Content="No"
-                    Width="150"
-                    Height="35"
-                    Margin="5,15,15,15"
-                    HorizontalAlignment="Stretch"/>
-        </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

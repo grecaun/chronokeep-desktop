@@ -6,6 +6,8 @@
         x:Class="Chronokeep.UI.Timing.Windows.ClockControl"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Remote Readers"
         MinHeight="200"
@@ -13,36 +15,81 @@
         CanResize="False"
         Topmost="True"
         SizeToContent="WidthAndHeight"
-        Closed="Window_Closed">
-    <StackPanel Margin="0,30,0,0" Name="MainPanel">
-        <ListBox Name="clockListView" Margin="25,0,25,10"/>
-        <TextBlock Name="CurrentTimeLabel"
-                   FontSize="14"
-                   IsVisible="False"
-                   Margin="10,0,10,5"
-                   TextAlignment="Center"
-                   VerticalAlignment="Center"/>
-        <TextBlock Name="TimeLabel"
-                   FontSize="14"
-                   IsVisible="False"
-                   Margin="10,5,10,10"
-                   TextAlignment="Center"
-                   VerticalAlignment="Center"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="AddButton"
-                    Content="Add Clock"
-                    Click="AddButton_Click"
-                    Width="150"
-                    Height="35"
-                    Margin="0,0,5,10"
-                    HorizontalAlignment="Center"/>
-            <Button Name="CloseButton"
-                    Content="Close"
-                    Click="Close_Click"
-                    Width="150"
-                    Height="35"
-                    Margin="5,0,0,10"
-                    HorizontalAlignment="Center"/>
+        Closed="Window_Closed"
+        PropertyChanged="Window_PropertyChanged"
+        >
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel Margin="0" Grid.Row="1">
+            <ListBox Name="clockListView" Margin="25,0,25,10"/>
+            <TextBlock Name="CurrentTimeLabel"
+                       FontSize="14"
+                       IsVisible="False"
+                       Margin="10,0,10,5"
+                       TextAlignment="Center"
+                       VerticalAlignment="Center"/>
+            <TextBlock Name="TimeLabel"
+                       FontSize="14"
+                       IsVisible="False"
+                       Margin="10,5,10,10"
+                       TextAlignment="Center"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="AddButton"
+                        Content="Add Clock"
+                        Click="AddButton_Click"
+                        Width="150"
+                        Height="35"
+                        Margin="0,0,5,10"
+                        HorizontalAlignment="Center"/>
+                <Button Name="CloseButton"
+                        Content="Close"
+                        Click="Close_Click"
+                        Width="150"
+                        Height="35"
+                        Margin="5,0,0,10"
+                        HorizontalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

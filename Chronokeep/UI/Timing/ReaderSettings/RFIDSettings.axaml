@@ -6,212 +6,259 @@
         x:Class="Chronokeep.UI.Timing.ReaderSettings.RFIDSettings"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         SizeToContent="WidthAndHeight"
         Title=""
         Topmost="True"
-        Closed="Window_Closed">
-    <StackPanel Margin="20,30,20,20" Name="MainPanel">
-        <StackPanel Name="SettingsPanel" IsVisible="True" Margin="0,10,0,0">
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Ultra ID"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
+        Closed="Window_Closed"
+        PropertyChanged="Window_PropertyChanged"
+        >
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel Margin="20,0,20,20" Grid.Row="1">
+            <StackPanel Name="SettingsPanel" IsVisible="True" Margin="0,10,0,0">
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Ultra ID"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <Slider Name="IdSlider"
+                            ValueChanged="IdSlider_ValueChanged"
+                            Width="200"
+                            Minimum="1"
+                            Maximum="255"
+                            Margin="10,0,5,0"
+                            TickFrequency="1"
+                            IsSnapToTickEnabled="True"
                             VerticalAlignment="Center"/>
-                <Slider Name="IdSlider"
-                        ValueChanged="IdSlider_ValueChanged"
-                        Width="200"
-                        Minimum="1"
-                        Maximum="255"
-                        Margin="10,0,5,0"
-                        TickFrequency="1"
-                        IsSnapToTickEnabled="True"
-                        VerticalAlignment="Center"/>
-                <TextBlock Name="IdDisplay"
-                            Text="255"
-                            Width="35"
-                            Margin="5,5,5,5"
-                            TextAlignment="Left"
-                            VerticalAlignment="Center"/>
-                <Button Name="SaveID"
-                        Click="SaveID_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Chip Type"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <ComboBox Name="ChipBox"
-                            Width="250"
-                            Margin="5,5,5,5"
-                            VerticalAlignment="Center">
-                    <ComboBoxItem Content="Decimal" IsSelected="True" />
-                    <ComboBoxItem Content="Hexadecimal" />
-                </ComboBox>
-                <Button Name="SaveChip"
-                        Click="SaveChip_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Gating Mode"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <ComboBox Name="GatingModeBox"
-                            Width="250"
-                            Margin="5,5,5,5"
-                            VerticalAlignment="Center">
-                    <ComboBoxItem Content ="Per Reader" IsSelected="True"/>
-                    <ComboBoxItem Content ="Per Box" />
-                    <ComboBoxItem Content ="First Time Seen"/>
-                </ComboBox>
-                <Button Name="SaveGatingMode"
-                        Click="SaveGatingMode_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Gating Interval"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <Slider Name="GatingSlider"
-                        ValueChanged="GatingSlider_ValueChanged"
-                        Width="200"
-                        Minimum="0"
-                        Maximum="20"
-                        Margin="10,0,5,0"
-                        TickFrequency="1"
+                    <TextBlock Name="IdDisplay"
+                                Text="255"
+                                Width="35"
+                                Margin="5,5,5,5"
+                                TextAlignment="Left"
+                                VerticalAlignment="Center"/>
+                    <Button Name="SaveID"
+                            Click="SaveID_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Chip Type"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <ComboBox Name="ChipBox"
+                                Width="250"
+                                Margin="5,5,5,5"
+                                VerticalAlignment="Center">
+                        <ComboBoxItem Content="Decimal" IsSelected="True" />
+                        <ComboBoxItem Content="Hexadecimal" />
+                    </ComboBox>
+                    <Button Name="SaveChip"
+                            Click="SaveChip_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Gating Mode"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <ComboBox Name="GatingModeBox"
+                                Width="250"
+                                Margin="5,5,5,5"
+                                VerticalAlignment="Center">
+                        <ComboBoxItem Content ="Per Reader" IsSelected="True"/>
+                        <ComboBoxItem Content ="Per Box" />
+                        <ComboBoxItem Content ="First Time Seen"/>
+                    </ComboBox>
+                    <Button Name="SaveGatingMode"
+                            Click="SaveGatingMode_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Gating Interval"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <Slider Name="GatingSlider"
+                            ValueChanged="GatingSlider_ValueChanged"
+                            Width="200"
+                            Minimum="0"
+                            Maximum="20"
+                            Margin="10,0,5,0"
+                            TickFrequency="1"
+                            VerticalAlignment="Center"
+                            IsSnapToTickEnabled="True"/>
+                    <TextBlock
+                        Name="GatingDisplay"
+                        Text="20"
+                        TextAlignment="Left"
                         VerticalAlignment="Center"
-                        IsSnapToTickEnabled="True"/>
-                <TextBlock
-                    Name="GatingDisplay"
-                    Text="20"
-                    TextAlignment="Left"
-                    VerticalAlignment="Center"
-                    Width="35"
-                    Margin="5,5,5,5"
-                    />
-                <Button Name="SaveGatingInterval"
-                        Click="SaveGatingInterval_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="When to Beep"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <ComboBox Name="WhenBeepBox"
-                            Width="250"
-                            Margin="5,5,5,5"
-                            VerticalAlignment="Center">
-                    <ComboBoxItem Content="Always" IsSelected="True" />
-                    <ComboBoxItem Content="Only First Seen" />
-                </ComboBox>
-                <Button Name="SaveWhenBeep"
-                        Click="SaveWhenBeep_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Beeper Volume"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <ComboBox Name="VolumeBox"
-                            Width="250"
-                            Margin="5,5,5,5"
-                            VerticalAlignment="Center">
-                    <ComboBoxItem Content="Off" IsSelected="True" />
-                    <ComboBoxItem Content="Soft" />
-                    <ComboBoxItem Content="Loud" />
-                </ComboBox>
-                <Button Name="SaveVolume"
-                        Click="SaveVolume_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="45">
-                <TextBlock Text="Time Zone"
-                            Width="100"
-                            Margin="5,5,5,5"
-                            TextAlignment="Right"
-                            VerticalAlignment="Center"/>
-                <Slider Name="TimeZoneSlider"
-                        ValueChanged="TimeZoneSlider_ValueChanged"
-                        Width="200"
-                        Minimum="-23"
-                        Maximum="23"
-                        Margin="10,0,5,0"
-                        TickFrequency="1"
+                        Width="35"
+                        Margin="5,5,5,5"
+                        />
+                    <Button Name="SaveGatingInterval"
+                            Click="SaveGatingInterval_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="When to Beep"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <ComboBox Name="WhenBeepBox"
+                                Width="250"
+                                Margin="5,5,5,5"
+                                VerticalAlignment="Center">
+                        <ComboBoxItem Content="Always" IsSelected="True" />
+                        <ComboBoxItem Content="Only First Seen" />
+                    </ComboBox>
+                    <Button Name="SaveWhenBeep"
+                            Click="SaveWhenBeep_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Beeper Volume"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <ComboBox Name="VolumeBox"
+                                Width="250"
+                                Margin="5,5,5,5"
+                                VerticalAlignment="Center">
+                        <ComboBoxItem Content="Off" IsSelected="True" />
+                        <ComboBoxItem Content="Soft" />
+                        <ComboBoxItem Content="Loud" />
+                    </ComboBox>
+                    <Button Name="SaveVolume"
+                            Click="SaveVolume_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Height="45">
+                    <TextBlock Text="Time Zone"
+                                Width="100"
+                                Margin="5,5,5,5"
+                                TextAlignment="Right"
+                                VerticalAlignment="Center"/>
+                    <Slider Name="TimeZoneSlider"
+                            ValueChanged="TimeZoneSlider_ValueChanged"
+                            Width="200"
+                            Minimum="-23"
+                            Maximum="23"
+                            Margin="10,0,5,0"
+                            TickFrequency="1"
+                            VerticalAlignment="Center"
+                            IsSnapToTickEnabled="True"/>
+                    <TextBlock Name="TimeZoneDisplay"
+                                Text="10"
+                                Width="35"
+                                Margin="5,5,5,5"
+                                TextAlignment="Left"
+                                VerticalAlignment="Center"/>
+                    <Button Name="SaveTimezone"
+                            Click="SaveTimezone_Click"
+                            Margin="5,5,5,5">
+                        <PathIcon Data="{StaticResource save_regular}"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Height="35"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <ToggleSwitch
+                        Name="SetGPSSwitch"
+                        Click="SetGPSSwitch_Click"
+                        OnContent=""
+                        OffContent=""
+                        Margin="5,-7,-7,-7"
                         VerticalAlignment="Center"
-                        IsSnapToTickEnabled="True"/>
-                <TextBlock Name="TimeZoneDisplay"
-                            Text="10"
-                            Width="35"
-                            Margin="5,5,5,5"
-                            TextAlignment="Left"
-                            VerticalAlignment="Center"/>
-                <Button Name="SaveTimezone"
-                        Click="SaveTimezone_Click"
-                        Margin="5,5,5,5">
-                    <PathIcon Data="{StaticResource save_regular}"/>
-                </Button>
-            </StackPanel>
-            <StackPanel Height="35"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
-                <ToggleSwitch
-                    Name="SetGPSSwitch"
-                    Click="SetGPSSwitch_Click"
-                    OnContent=""
-                    OffContent=""
-                    Margin="5,-7,-7,-7"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"/>
-                <Label Content="Set Time From GPS?" VerticalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Height="35"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
-                <ToggleSwitch Name="ReadingSwitch"
-                                Click="ReadingSwitch_Click"
-                                OnContent=""
-                                OffContent=""
-                                Margin="5,-7,-7,-7"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Center"/>
-                <Label Content="Reading?" VerticalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Height="45"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center">
-                <Button Name="CloseButton"
-                        Content="Close"
-                        Click="CloseButton_Click"
-                        Width="165"
-                        Height="35"
-                        Margin="5,5,5,5"/>
+                        HorizontalAlignment="Center"/>
+                    <Label Content="Set Time From GPS?" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Height="35"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <ToggleSwitch Name="ReadingSwitch"
+                                    Click="ReadingSwitch_Click"
+                                    OnContent=""
+                                    OffContent=""
+                                    Margin="5,-7,-7,-7"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                    <Label Content="Reading?" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Height="45"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center">
+                    <Button Name="CloseButton"
+                            Content="Close"
+                            Click="CloseButton_Click"
+                            Width="165"
+                            Height="35"
+                            Margin="5,5,5,5"/>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

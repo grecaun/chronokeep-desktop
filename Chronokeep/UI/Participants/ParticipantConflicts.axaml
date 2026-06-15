@@ -8,12 +8,15 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Participant Conflicts"
         Height="450"
         Width="800"
         Topmost="True"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        PropertyChanged="Window_PropertyChanged"
+        >
     <Window.Styles>
         <Style Selector="DataGrid">
             <Setter Property="IsReadOnly" Value="True"/>
@@ -25,29 +28,72 @@
             <Setter Property="CanUserSortColumns" Value="False"/>
         </Style>
     </Window.Styles>
-    <DataGrid Margin="0,30,0,0" Name="ParticipantsList" CanUserSortColumns="False" IsReadOnly="True">
-        <DataGrid.Columns>
-            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="45" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Distance" Binding="{Binding Distance}" MinWidth="125" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="175" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="75" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Birthday" Binding="{Binding Birthdate}" MinWidth="100" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Goodies" Binding="{Binding Apparel}" MinWidth="150" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="120" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="120" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="EC Name" Binding="{Binding ECName}" MinWidth="150" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="EC Phone" Binding="{Binding ECPhone}" MinWidth="150" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Anon" Binding="{Binding PrettyAnonymous}" MinWidth="35" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Comments" Binding="{Binding Comments}" MinWidth="200" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Other" Binding="{Binding Other}" MinWidth="150" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Email" Binding="{Binding Email}" MinWidth="200" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Street" Binding="{Binding Street}" MinWidth="175" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Apt" Binding="{Binding Street2}" MinWidth="50" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="City" Binding="{Binding City}" MinWidth="120" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="State" Binding="{Binding State}" MinWidth="50" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Zip" Binding="{Binding Zip}" MinWidth="70" x:DataType="objects:Participant"/>
-            <DataGridTextColumn Header="Country" Binding="{Binding Country}" MinWidth="60" x:DataType="objects:Participant"/>
-        </DataGrid.Columns>
-    </DataGrid>
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <DataGrid Margin="0" Name="ParticipantsList" CanUserSortColumns="False" IsReadOnly="True" Grid.Row="1">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="45" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Distance" Binding="{Binding Distance}" MinWidth="125" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="175" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="75" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Birthday" Binding="{Binding Birthdate}" MinWidth="100" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Goodies" Binding="{Binding Apparel}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="120" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="120" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="EC Name" Binding="{Binding ECName}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="EC Phone" Binding="{Binding ECPhone}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Anon" Binding="{Binding PrettyAnonymous}" MinWidth="35" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Comments" Binding="{Binding Comments}" MinWidth="200" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Other" Binding="{Binding Other}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Email" Binding="{Binding Email}" MinWidth="200" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Street" Binding="{Binding Street}" MinWidth="175" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Apt" Binding="{Binding Street2}" MinWidth="50" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="City" Binding="{Binding City}" MinWidth="120" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="State" Binding="{Binding State}" MinWidth="50" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Zip" Binding="{Binding Zip}" MinWidth="70" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="Country" Binding="{Binding Country}" MinWidth="60" x:DataType="objects:Participant"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
 </Window>

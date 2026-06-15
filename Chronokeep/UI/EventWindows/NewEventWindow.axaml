@@ -5,82 +5,128 @@
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="400"
         x:Class="Chronokeep.UI.EventWindows.NewEventWindow"
         Background="{DynamicResource PrimaryBackground}"
-        Closing="Window_Closing"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing"
         SizeToContent="Height"
         Width="400"
         Topmost="True"
+        PropertyChanged="Window_PropertyChanged"
         >
     <Window.Styles>
        <Style Selector="ListBoxItem">
           <Setter Property="Padding" Value="10"/> 
        </Style> 
     </Window.Styles>
-    <StackPanel Margin="5,30,5,5" Name="MainPanel">
-        <DockPanel Margin="10,0,10,0">
-            <TextBlock Text="Name"
-                       Margin="10,10,5,10"
-                       FontSize="16"
-                       Width="80"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <TextBox Name="nameBox"
-                     FontSize="16"
-                     Margin="5,10,10,10"
-                     TextWrapping="Wrap"
-                     KeyUp="Keyboard_Up"/>
-        </DockPanel>
-        <DockPanel Margin="10,0,10,0">
-            <TextBlock Text="Year Code"
-                       Margin="10,10,5,10"
-                       FontSize="16"
-                       Width="80"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <TextBox Name="yearCodeBox"
-                     FontSize="16"
-                     Margin="5,10,10,10"
-                     KeyUp="Keyboard_Up"/>
-        </DockPanel>
-        <DockPanel Margin="10,0,10,0">
-            <TextBlock Text="Date"
-                       Margin="10,10,5,10"
-                       FontSize="16"
-                       Width="80"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"/>
-            <MaskedTextBox Name="datePicker"
-                           Mask="90/90/0000"
-                           KeyUp="Keyboard_Up"
-                           Margin="5,10,10,10"
-                           FontSize="16"/>
-        </DockPanel>
-        <AutoCompleteBox Name="oldEvent"
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel Margin="5" Grid.Row="1">
+            <DockPanel Margin="10,0,10,0">
+                <TextBlock Text="Name"
+                           Margin="10,10,5,10"
+                           FontSize="16"
+                           Width="80"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <TextBox Name="nameBox"
                          FontSize="16"
-                         Width="250"
-                         HorizontalAlignment="Center"
-                         Margin="20,10,20,10"
-                         PlaceholderText="Copy from old event?"
-                         FilterMode="Contains"
-                         >
-            <AutoCompleteBox.InnerLeftContent>
-               <PathIcon Data="{StaticResource search_regular}" Margin="7"/> 
-            </AutoCompleteBox.InnerLeftContent>
-        </AutoCompleteBox>
-        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-            <Button Content="Submit"
-                    Click="Submit_Click"
-                    Margin="20,10,10,15"
-                    Width="120"
-                    FontSize="16"
-                    Height="35"/>
-            <Button Content="Cancel"
-                    Click="Cancel_Click"
-                    Margin="10,10,20,15"
-                    Width="120"
-                    FontSize="16"
-                    Height="35"/>
+                         Margin="5,10,10,10"
+                         TextWrapping="Wrap"
+                         KeyUp="Keyboard_Up"/>
+            </DockPanel>
+            <DockPanel Margin="10,0,10,0">
+                <TextBlock Text="Year Code"
+                           Margin="10,10,5,10"
+                           FontSize="16"
+                           Width="80"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <TextBox Name="yearCodeBox"
+                         FontSize="16"
+                         Margin="5,10,10,10"
+                         KeyUp="Keyboard_Up"/>
+            </DockPanel>
+            <DockPanel Margin="10,0,10,0">
+                <TextBlock Text="Date"
+                           Margin="10,10,5,10"
+                           FontSize="16"
+                           Width="80"
+                           TextAlignment="Right"
+                           VerticalAlignment="Center"/>
+                <MaskedTextBox Name="datePicker"
+                               Mask="90/90/0000"
+                               KeyUp="Keyboard_Up"
+                               Margin="5,10,10,10"
+                               FontSize="16"/>
+            </DockPanel>
+            <AutoCompleteBox Name="oldEvent"
+                             FontSize="16"
+                             Width="250"
+                             HorizontalAlignment="Center"
+                             Margin="20,10,20,10"
+                             PlaceholderText="Copy from old event?"
+                             FilterMode="Contains"
+                             >
+                <AutoCompleteBox.InnerLeftContent>
+                   <PathIcon Data="{StaticResource search_regular}" Margin="7"/> 
+                </AutoCompleteBox.InnerLeftContent>
+            </AutoCompleteBox>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button Content="Submit"
+                        Click="Submit_Click"
+                        Margin="20,10,10,15"
+                        Width="120"
+                        FontSize="16"
+                        Height="35"/>
+                <Button Content="Cancel"
+                        Click="Cancel_Click"
+                        Margin="10,10,20,15"
+                        Width="120"
+                        FontSize="16"
+                        Height="35"/>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

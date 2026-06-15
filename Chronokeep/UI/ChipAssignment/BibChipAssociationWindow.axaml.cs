@@ -38,10 +38,6 @@ public partial class BibChipAssociationWindow : Window
         this.Height = 300;
         this.Width = 300;
         this.Topmost = true;
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         if (importer.Data!.Type == ImportData.FileType.EXCEL)
         {
             SheetsContainer.IsVisible = true;
@@ -221,5 +217,26 @@ public partial class BibChipAssociationWindow : Window
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
         window?.WindowFinalize(this);
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

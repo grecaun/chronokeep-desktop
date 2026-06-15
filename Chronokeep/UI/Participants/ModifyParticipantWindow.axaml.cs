@@ -26,10 +26,6 @@ public partial class ModifyParticipantWindow : Window
     public ModifyParticipantWindow(IMainWindow window, IDBInterface database, Participant? person)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         this.window = window;
         this.tPage = null;
         this.database = database;
@@ -56,10 +52,6 @@ public partial class ModifyParticipantWindow : Window
     public ModifyParticipantWindow(TimingPage tPage, IDBInterface database, int EventSpecificId, string Bib)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         this.window = null;
         this.tPage = tPage;
         this.database = database;
@@ -233,18 +225,12 @@ public partial class ModifyParticipantWindow : Window
 
     private void ShowOtherGender()
     {
-        if (otherGenderBox != null)
-        {
-            otherGenderBox.IsVisible = true;
-        }
+        otherGenderBox?.IsVisible = true;
     }
 
     private void DismissOtherGender()
     {
-        if (otherGenderBox != null)
-        {
-            otherGenderBox.IsVisible = false;
-        }
+        otherGenderBox?.IsVisible = false;
     }
 
     private Participant? FromFields()
@@ -536,5 +522,26 @@ public partial class ModifyParticipantWindow : Window
             Clear();
             BibBox.Focus();
         }
+    }
+
+    private void OnMinimize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximize(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }

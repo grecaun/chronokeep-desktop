@@ -7,6 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Chronokeep Update"
         Height="200"
@@ -14,55 +15,99 @@
         CanResize="False"
         Closing="Window_Closing"
         Topmost="True"
+        PropertyChanged="Window_PropertyChanged"
         >
-    <StackPanel VerticalAlignment="Center" Margin="0,30,0,0" Name="MainPanel">
-        <StackPanel Name="UpdatePanel">
-            <TextBlock Name="DownloadLabel"
-                       Text="Update Available"
-                       FontSize="15"
-                       VerticalAlignment="Center"
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel VerticalAlignment="Center" Margin="0,32,0,0" Grid.Row="1">
+            <StackPanel Name="UpdatePanel">
+                <TextBlock Name="DownloadLabel"
+                           Text="Update Available"
+                           FontSize="15"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           />
+                <ProgressBar Name="DownloadProgress"
+                             Height="20"
+                             Margin="10,0,10,0"
+                             />
+            </StackPanel>
+            <Button Name="BackupDatabaseButton"
+                    Content="Backup Database"
+                    Height="30" Width="170"
+                    HorizontalAlignment="Center"
+                    IsVisible="False"
+                    Margin="0,10,0,0"
+                    Click="BackupDatabaseButton_Click"
+                    />
+            <ScrollViewer Name="BackupPanel"
+                          IsVisible="False"
+                          Height="100"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="10" VerticalScrollBarVisibility="Auto">
+                <TextBlock Name="BackupBlock"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           />
+            </ScrollViewer>
+            <DockPanel VerticalAlignment="Center"
                        HorizontalAlignment="Center"
-                       />
-            <ProgressBar Name="DownloadProgress"
-                         Height="20"
-                         Margin="10,0,10,0"
-                         />
+                       Margin="0,10,0,10">
+                <Button Name="InstallButton"
+                        Content="Download"
+                        Height="30"
+                        Width="100"
+                        Margin="10,0,10,0"
+                        Click="InstallButton_Click"
+                        />
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Height="30"
+                        Width="100"
+                        Margin="10,0,10,0"
+                        Click="CancelButton_Click"
+                        />
+            </DockPanel>
         </StackPanel>
-        <Button Name="BackupDatabaseButton"
-                Content="Backup Database"
-                Height="30" Width="170"
-                HorizontalAlignment="Center"
-                IsVisible="False"
-                Margin="0,10,0,0"
-                Click="BackupDatabaseButton_Click"
-                />
-        <ScrollViewer Name="BackupPanel"
-                      IsVisible="False"
-                      Height="100"
-                      HorizontalScrollBarVisibility="Disabled"
-                      Padding="10" VerticalScrollBarVisibility="Auto">
-            <TextBlock Name="BackupBlock"
-                       TextAlignment="Center"
-                       TextWrapping="Wrap"
-                       />
-        </ScrollViewer>
-        <DockPanel VerticalAlignment="Center"
-                   HorizontalAlignment="Center"
-                   Margin="0,10,0,10">
-            <Button Name="InstallButton"
-                    Content="Download"
-                    Height="30"
-                    Width="100"
-                    Margin="10,0,10,0"
-                    Click="InstallButton_Click"
-                    />
-            <Button Name="CancelButton"
-                    Content="Cancel"
-                    Height="30"
-                    Width="100"
-                    Margin="10,0,10,0"
-                    Click="CancelButton_Click"
-                    />
-        </DockPanel>
-    </StackPanel>
+    </Grid>
 </Window>

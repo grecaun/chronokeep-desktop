@@ -312,14 +312,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             if (api.Type == APIConstants.CHRONOKEEP_REMOTE_SELF || api.Type == APIConstants.CHRONOKEEP_REMOTE)
             {
-                if (RemoteControllerSwitch != null)
-                {
-                    RemoteControllerSwitch.IsVisible = true;
-                }
-                if (RemoteReadersButton != null)
-                {
-                    RemoteReadersButton.IsVisible = ReaderExpander.IsExpanded;
-                }
+                RemoteControllerSwitch?.IsVisible = true;
+                RemoteReadersButton?.IsVisible = ReaderExpander.IsExpanded;
                 remote_api = true;
                 break;
             }

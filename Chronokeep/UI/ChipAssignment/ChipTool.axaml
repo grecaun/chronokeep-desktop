@@ -6,62 +6,109 @@
         x:Class="Chronokeep.UI.ChipAssignment.ChipTool"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         SizeToContent="Height"
         Topmost="True"
-        Closing="Window_Closing">
-    <Grid Margin="20,30,20,20" Name="MainPanel">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,0">
-            <Button Content="Add Range"
-                    Click="AddRange_Click"
-                    Width="100"
-                    Height="35"
-                    Margin="10,10,0,10"
-                    TabIndex="1"/>
-            <Button Content="Save"
-                    Click="Save_Click"
-                    Width="80"
-                    Height="35"
-                    Margin="10,10,0,10"
-                    TabIndex="2"/>
-            <Button Content="Cancel"
-                    Click="Cancel_Click"
-                    Width="80"
-                    Height="35"
-                    Margin="10,10,10,10"
-                    TabIndex="3"/>
-        </StackPanel>
-        <Grid Grid.Row="1" Margin="5,0,5,5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="50" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"
-                       Margin="10,0,0,0"
-                       Text="Start Bib #"/>
-            <TextBlock Grid.Column="1"
-                       Margin="10,0,0,0"
-                       Text="End Bib #"/>
-            <TextBlock Grid.Column="2"
-                       Margin="10,0,0,0"
-                       Text="Start Tag #"/>
-            <TextBlock Grid.Column="3"
-                       Margin="10,0,0,0"
-                       Text="End Tag #"/>
-        </Grid>
-        <Grid Name="itemsWindow" Grid.Row="2">
-            <ListBox Name="correlationBox" KeyboardNavigation.TabNavigation="Continue"/>
+        Closing="Window_Closing"
+        PropertyChanged="Window_PropertyChanged"
+        >
+    <Grid RowDefinitions="32,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
+                            Name="MinimizeButton"
+                            Click="OnMinimize"
+                            Classes="title">
+                       <PathIcon Classes="title"
+                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                 />
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
+                            Name="MaximizeButton"
+                            Click="OnMaximize"
+                            Classes="title">
+                        <Panel>   
+                            <PathIcon Name="MaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
+                                      IsVisible="True"/>
+                            <PathIcon Name="UnMaximizeIcon"
+                                      Classes="title"
+                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
+                                      IsVisible="False"/>
+                        </Panel>
+                    </Button>
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <Grid Margin="20,0,20,20" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,0">
+                <Button Content="Add Range"
+                        Click="AddRange_Click"
+                        Width="100"
+                        Height="35"
+                        Margin="10,10,0,10"
+                        TabIndex="1"/>
+                <Button Content="Save"
+                        Click="Save_Click"
+                        Width="80"
+                        Height="35"
+                        Margin="10,10,0,10"
+                        TabIndex="2"/>
+                <Button Content="Cancel"
+                        Click="Cancel_Click"
+                        Width="80"
+                        Height="35"
+                        Margin="10,10,10,10"
+                        TabIndex="3"/>
+            </StackPanel>
+            <Grid Grid.Row="1" Margin="5,0,5,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Margin="10,0,0,0"
+                           Text="Start Bib #"/>
+                <TextBlock Grid.Column="1"
+                           Margin="10,0,0,0"
+                           Text="End Bib #"/>
+                <TextBlock Grid.Column="2"
+                           Margin="10,0,0,0"
+                           Text="Start Tag #"/>
+                <TextBlock Grid.Column="3"
+                           Margin="10,0,0,0"
+                           Text="End Tag #"/>
+            </Grid>
+            <Grid Name="itemsWindow" Grid.Row="2">
+                <ListBox Name="correlationBox" KeyboardNavigation.TabNavigation="Continue"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

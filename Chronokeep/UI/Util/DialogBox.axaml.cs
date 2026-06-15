@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.Util;
 
@@ -12,10 +13,6 @@ public partial class DialogBox : Window
     public DialogBox(string Message, string LeftButtonContent, string RightButtonContent, bool ShowLeftButton, LeftClickDelegate LeftClick)
     {
         InitializeComponent();
-        if (!App.IsWindows && !IsExtendedIntoWindowDecorations)
-        {
-            MainPanel.Margin = new Thickness(0);
-        }
         MessageBox.Text = Message;
         LeftButton.Content = LeftButtonContent;
         RightButton.Content = RightButtonContent;
@@ -87,5 +84,10 @@ public partial class DialogBox : Window
     private void CopyBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         CopyText = CopyBox.Text!;
+    }
+
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }
