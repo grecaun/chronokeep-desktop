@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -496,6 +497,19 @@ namespace Chronokeep.UI
         {
             MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
             UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
+        }
+
+        private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                BeginMoveDrag(e);
+            }
+        }
+
+        private void OnTitleBarDoubleTapped(object? sender, TappedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
         }
 
         private void UncheckAll()

@@ -20,33 +20,90 @@
         PropertyChanged="Window_PropertyChanged"
         >
     <Window.Styles>
-        <!-- Custom color for separator -->
-        <Style Selector="Separator">
-			<Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
-            <Setter Property="Height" Value="1"/>
-            <Setter Property="CornerRadius" Value="1"/>
-            <Setter Property="Margin" Value="0,3"/>
-        </Style>
         <!-- Disable Label view when SplitView closed. -->
         <Style Selector="SplitView:closed ToggleButton Label">
 			<Setter Property="IsVisible" Value="False" />
+        </Style>
+        <!-- Button (Nav) -->
+		<Style Selector="Button.nav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.nav:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <!-- ToggleButton -->
+		<Style Selector="ToggleButton.nav">
+            <Setter Property="Padding" Value="4,0"/>
+            <Setter Property="Background" Value="{x:Null}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="2,0"/>
+        </Style>
+        <Style Selector="ToggleButton.nav Rectangle">
+			<Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:checked Rectangle">
+			<Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:checked AccessText">
+			<Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.nav:checked PathIcon">
+			<Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <!-- Toggle Button Side Indicator -->
+        <Style Selector="Rectangle.nav">
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/>
+			<Setter Property="Height" Value="16"/>
+			<Setter Property="Width" Value="3"/>
+			<Setter Property="RadiusX" Value="2"/>
+			<Setter Property="RadiusY" Value="2"/>
+			<Setter Property="Margin" Value="0,0,5,0"/>
+        </Style>
+        <!-- Icon for Buttons -->
+        <Style Selector="PathIcon.nav">
+			<Setter Property="Height" Value="14"/>
+			<Setter Property="Margin" Value="0,0,2,0"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Styles>
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
-               <StackPanel DockPanel.Dock="Right"
-                           Orientation="Horizontal"
-                           HorizontalAlignment="Right">
+			    <Button Name="NavigationButton" Click="NavigationButton_Click" Width="52" Height="32" Classes="nav" WindowDecorationProperties.ElementRole="User">
+                    <PathIcon Data="{StaticResource navigation_regular}" Margin="0,4,0,0" Width="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right">
                     <Button WindowDecorationProperties.ElementRole="MinimizeButton"
                             Name="MinimizeButton"
                             Click="OnMinimize"
                             Classes="title">
-                       <PathIcon Classes="title"
-                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
-                                 />
+                        <PathIcon Classes="title"
+                                  Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
+                                  />
                     </Button>
                     <Button WindowDecorationProperties.ElementRole="MaximizeButton"
                             Name="MaximizeButton"
@@ -70,8 +127,8 @@
                     <PathIcon Classes="title"
                               Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
                               />
-                   </Button>
-               </StackPanel> 
+                    </Button>
+                </StackPanel> 
             </DockPanel>
         </Border>
         <SplitView IsPaneOpen="True"
@@ -80,142 +137,71 @@
                    Name="ParentSplitView"
                    CornerRadius="8"
                    Margin="0,0,0,0"
-                   Grid.RowSpan="2"
+                   Grid.Row="1"
                    >
 		    <SplitView.Pane>
                 <Grid RowDefinitions="*,auto" Background="{DynamicResource SecondaryBackground}">
-                    <Grid.Styles>
-                        <!-- Button (Nav) -->
-		                <Style Selector="Button.nav">
-                            <Setter Property="Padding" Value="4,0"/>
-                            <Setter Property="Background" Value="{x:Null}"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="FontSize" Value="14"/>
-                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                            <Setter Property="Height" Value="40"/>
-                            <Setter Property="Margin" Value="2,2,2,0"/>
-                        </Style>
-                        <Style Selector="Button.nav:pressed /template/ ContentPresenter">
-			                <Setter Property="Background" Value="{x:Null}"/>
-                        </Style>
-                        <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
-			                <Setter Property="Background" Value="{x:Null}"/>
-                        </Style>
-                        <!-- ToggleButton -->
-		                <Style Selector="ToggleButton.nav">
-                            <Setter Property="Padding" Value="4,0"/>
-                            <Setter Property="Background" Value="{x:Null}"/>
-                            <Setter Property="FontSize" Value="14"/>
-                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                            <Setter Property="Height" Value="40"/>
-                            <Setter Property="Margin" Value="2,0"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav Rectangle">
-			                <Setter Property="Opacity" Value="0"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:checked /template/ ContentPresenter">
-			                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:pointerover /template/ ContentPresenter">
-			                <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:checked Rectangle">
-			                <Setter Property="Opacity" Value="1"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:pressed /template/ ContentPresenter">
-			                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:checked AccessText">
-			                <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-                        </Style>
-                        <Style Selector="ToggleButton.nav:checked PathIcon">
-			                <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-                        </Style>
-                        <!-- Toggle Button Side Indicator -->
-                        <Style Selector="Rectangle">
-			                <Setter Property="VerticalAlignment" Value="Center"/>
-			                <Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/>
-			                <Setter Property="Height" Value="16"/>
-			                <Setter Property="Width" Value="3"/>
-			                <Setter Property="RadiusX" Value="2"/>
-			                <Setter Property="RadiusY" Value="2"/>
-			                <Setter Property="Margin" Value="0,0,5,0"/>
-                        </Style>
-                        <!-- Icon for Buttons -->
-                        <Style Selector="PathIcon">
-			                <Setter Property="Height" Value="14"/>
-			                <Setter Property="Margin" Value="0,0,2,0"/>
-			                <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </Grid.Styles>
                     <StackPanel Grid.Row="0">
-			            <Button Name="NavigationButton" Click="NavigationButton_Click" Classes="nav">
-                            <PathIcon Data="{StaticResource navigation_regular}" Margin="7,0,0,0" HorizontalAlignment="Left"/>
-                        </Button>
-                        <Separator/>
-			            <ToggleButton Name="DashboardButton" Click="DashboardButton_Click" Classes="nav" IsChecked="True">
+			            <ToggleButton Name="DashboardButton" Click="DashboardButton_Click" Classes="nav" IsChecked="True" Margin="2,5,2,0">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource home_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource home_regular}" Classes="nav"/>
                                 <Label>Dashboard</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="TimingButton" Click="TimingButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource timer_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource timer_regular}" Classes="nav"/>
                                 <Label>Timing</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="AnnouncerButton" Click="Announcer_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource alert_urgent_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource alert_urgent_regular}" Classes="nav"/>
                                 <Label>Announcer</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="ParticipantsButton" Click="ParticipantsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource person_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource person_regular}" Classes="nav"/>
                                 <Label>Participants</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="ChipsButton" Click="ChipsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource developer_board_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource developer_board_regular}" Classes="nav"/>
                                 <Label>Chips</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="LocationsButton" Click="LocationsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource location_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource location_regular}" Classes="nav"/>
                                 <Label>Locations</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="DistancesButton" Click="DistancesButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource ruler_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource ruler_regular}" Classes="nav"/>
                                 <Label>Distances</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="SegmentsButton" Click="SegmentsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource organization_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource organization_regular}" Classes="nav"/>
                                 <Label>Segments</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="AgeGroupsButton" Click="AgeGroupsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource trophy_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource trophy_regular}" Classes="nav"/>
                                 <Label>Age Groups</Label>
                             </StackPanel>
                         </ToggleButton>
@@ -223,15 +209,15 @@
                     <StackPanel Grid.Row="1" Margin="0,0,0,2">
 			            <ToggleButton Name="SettingsButton" Click="SettingsButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource settings_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource settings_regular}" Classes="nav"/>
                                 <Label>Settings</Label>
                             </StackPanel>
                         </ToggleButton>
 			            <ToggleButton Name="AboutButton" Click="AboutButton_Click" Classes="nav">
                             <StackPanel Orientation="Horizontal">
-                                <Rectangle/>
-                                <PathIcon Data="{StaticResource question_circle_regular}" />
+                                <Rectangle Classes="nav"/>
+                                <PathIcon Data="{StaticResource question_circle_regular}" Classes="nav"/>
                                 <Label>About</Label>
                             </StackPanel>
                         </ToggleButton>
@@ -239,7 +225,7 @@
                 </Grid>
             </SplitView.Pane>
             <SplitView.Content>
-               <ContentControl Margin="0,30,0,0" Name="CurrentContent"/> 
+               <ContentControl Margin="0" Name="CurrentContent"/> 
             </SplitView.Content>
         </SplitView>
     </Grid>
