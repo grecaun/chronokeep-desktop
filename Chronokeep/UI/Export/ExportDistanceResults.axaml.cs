@@ -55,10 +55,6 @@ public partial class ExportDistanceResults : Window
             }
         }
         this.type = type;
-        this.MinWidth = 300;
-        this.MinHeight = 200;
-        this.Width = 300;
-        this.Height = 220;
         this.CanResize = false;
         bool supported = false;
         if (OutputType.Boston == type)
@@ -862,7 +858,7 @@ public partial class ExportDistanceResults : Window
         window?.WindowFinalize(this);
     }
 
-    private void Done_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Done_Click(object? sender, RoutedEventArgs e)
     {
         Distance selected;
         // Ensure we've selected a distance and that distance is either known
@@ -923,31 +919,15 @@ public partial class ExportDistanceResults : Window
         Close();
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Export.ExportDistanceResults", "Cancel clicked.");
         this.Close();
     }
 
-    private void OnMinimize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void OnMaximize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
-    }
-
     private void OnClose(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-    {
-        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }
 public enum OutputType

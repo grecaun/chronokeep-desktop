@@ -10,15 +10,20 @@
         WindowDecorations="BorderOnly"
         WindowStartupLocation="CenterScreen"
         Title="Export Ultrasignup Results"
-        Height="220"
         Width="300"
-        MinWidth="300"
-        MaxWidth="300"
+        CanResize="False"
         Topmost="True"
+        SizeToContent="Height"
         Closing="Window_Closing"
-        PropertyChanged="Window_PropertyChanged"
         >
-    <Grid RowDefinitions="32,25,*,55">
+    <Grid RowDefinitions="32,15,*,55">
+        <TextBlock Grid.Row="0"
+                   Grid.RowSpan="2"
+                   Text="Distance to Export"
+                   FontSize="16"
+                   VerticalAlignment="Top"
+                   TextAlignment="Center"
+                   Margin="0,15,0,0"/>
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar">
@@ -26,29 +31,6 @@
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
                            HorizontalAlignment="Right">
-                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
-                            Name="MinimizeButton"
-                            Click="OnMinimize"
-                            Classes="title">
-                       <PathIcon Classes="title"
-                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
-                                 />
-                    </Button>
-                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
-                            Name="MaximizeButton"
-                            Click="OnMaximize"
-                            Classes="title">
-                        <Panel>   
-                            <PathIcon Name="MaximizeIcon"
-                                      Classes="title"
-                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
-                                      IsVisible="True"/>
-                            <PathIcon Name="UnMaximizeIcon"
-                                      Classes="title"
-                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
-                                      IsVisible="False"/>
-                        </Panel>
-                    </Button>
                     <Button WindowDecorationProperties.ElementRole="CloseButton"
                             Name="CloseButton"
                             Click="OnClose"
@@ -60,16 +42,12 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <TextBlock Grid.Row="1"
-                   Text="Distance to Export"
-                   FontSize="16"
-                   VerticalAlignment="Center"
-                   TextAlignment="Center"
-                   Margin="0,0,0,0"/>
         <ComboBox Grid.Row="2"
                   Name="distanceBox"
                   VerticalAlignment="Center"
-                  Margin="20,20,20,20"/>
+                  Margin="20"
+                  HorizontalAlignment="Stretch"
+                  />
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
