@@ -15,7 +15,6 @@
         CanResize="False"
         Closing="Window_Closing"
         Topmost="True"
-        PropertyChanged="Window_PropertyChanged"
         >
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
@@ -25,29 +24,6 @@
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
                            HorizontalAlignment="Right">
-                    <Button WindowDecorationProperties.ElementRole="MinimizeButton"
-                            Name="MinimizeButton"
-                            Click="OnMinimize"
-                            Classes="title">
-                       <PathIcon Classes="title"
-                                 Data="{OnPlatform Linux={StaticResource minimize_linux_regular}, Default={StaticResource minimize_win_regular}}"
-                                 />
-                    </Button>
-                    <Button WindowDecorationProperties.ElementRole="MaximizeButton"
-                            Name="MaximizeButton"
-                            Click="OnMaximize"
-                            Classes="title">
-                        <Panel>   
-                            <PathIcon Name="MaximizeIcon"
-                                      Classes="title"
-                                      Data="{OnPlatform Linux={StaticResource maximize_linux_regular}, Default={StaticResource maximize_win_regular}}"
-                                      IsVisible="True"/>
-                            <PathIcon Name="UnMaximizeIcon"
-                                      Classes="title"
-                                      Data="{OnPlatform Linux={StaticResource unmaximize_linux_regular}, Default={StaticResource unmaximize_win_regular}}"
-                                      IsVisible="False"/>
-                        </Panel>
-                    </Button>
                     <Button WindowDecorationProperties.ElementRole="CloseButton"
                             Name="CloseButton"
                             Click="OnClose"

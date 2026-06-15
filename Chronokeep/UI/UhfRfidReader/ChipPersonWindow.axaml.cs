@@ -83,7 +83,7 @@ public partial class ChipPersonWindow : Window
         readerWindow.PersonWindowClosing();
     }
 
-    private void Exit_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Exit_Click(object sender, RoutedEventArgs e)
     {
         Close();
     }

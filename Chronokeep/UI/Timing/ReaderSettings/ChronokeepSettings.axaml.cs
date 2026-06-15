@@ -391,24 +391,8 @@ public partial class ChronokeepSettings : Window
         }
     }
 
-    private void OnMinimize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void OnMaximize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
-    }
-
     private void OnClose(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-    {
-        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }
