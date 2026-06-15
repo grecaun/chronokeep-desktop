@@ -147,7 +147,7 @@ public partial class ImportFileWindow : Window
         if (theEvent == null || theEvent.Identifier < 0)
         {
             Log.E("IO.ImportFileWindow", "No event selected.");
-            this.Close();
+            Close();
         }
         List<Distance> distancesFromDatabase = database.GetDistances(theEvent!.Identifier);
         page = new ImportFilePage2Alt(distancesFromFile, distancesFromDatabase, no_distance);
@@ -516,7 +516,7 @@ public partial class ImportFileWindow : Window
         database.ResetTimingResultsEvent(theEvent!.Identifier);
         window?.NetworkClearResults();
         window?.NotifyTimingWorker();
-        this.Close();
+        Close();
     }
 
     internal static int GetHeaderBoxIndex(string s)
@@ -676,7 +676,7 @@ public partial class ImportFileWindow : Window
         }
     }
 
-    private void Done_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Done_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("ImportFileWindow", "Import - Done button clicked.");
         Done.IsEnabled = false;
@@ -742,30 +742,14 @@ public partial class ImportFileWindow : Window
         Cancel.IsEnabled = true;
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("ImportFileWindow", "Import - Cancel button clicked.");
-        this.Close();
-    }
-
-    private void OnMinimize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void OnMaximize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        Close();
     }
 
     private void OnClose(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-    {
-        MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
     }
 }
