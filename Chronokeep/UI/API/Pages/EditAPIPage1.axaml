@@ -12,11 +12,10 @@
 			<Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
     </UserControl.Styles>
-
     <StackPanel Grid.ColumnSpan="2"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Margin="0,35,0,10"
+                Margin="0,5,0,10"
                 >
         <Button Content="Unlink"
                 Click="Unlink_Click"/>
