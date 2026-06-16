@@ -20,7 +20,10 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -37,7 +40,7 @@
             </DockPanel>
         </Border>
         <StackPanel Margin="0" Grid.Row="1">
-            <ListBox Name="clockListView" Margin="25,0,25,10"/>
+            <ListBox Name="ClockListView" Margin="25,0,25,10"/>
             <TextBlock Name="CurrentTimeLabel"
                        FontSize="14"
                        IsVisible="False"
@@ -58,8 +61,7 @@
                         Height="35"
                         Margin="0,0,5,10"
                         HorizontalAlignment="Center"/>
-                <Button Name="CloseButton"
-                        Content="Close"
+                <Button Content="Close"
                         Click="Close_Click"
                         Width="150"
                         Height="35"

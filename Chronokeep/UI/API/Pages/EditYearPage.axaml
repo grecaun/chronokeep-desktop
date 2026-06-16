@@ -3,11 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Chronokeep.UI.API.EditYearPage">
+             x:Class="Chronokeep.UI.API.Pages.EditYearPage">
     <StackPanel HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Margin="0,5,0,10">
-        <TextBlock Name="holdingLabel"
+        <TextBlock Name="HoldingLabel"
                    Text="Retrieving Year, Please Hold."
                    FontSize="18"
                    VerticalAlignment="Center"
@@ -15,7 +15,7 @@
                    HorizontalAlignment="Center"
                    TextWrapping="Wrap"
                    Margin="0,10,0,0"/>
-        <StackPanel Name="yearPanel"
+        <StackPanel Name="YearPanel"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Margin="5,0"
@@ -27,7 +27,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="yearBox"
+                <TextBox Name="YearBox"
                          FontSize="15"
                          Width="220"
                          VerticalAlignment="Center"
@@ -41,7 +41,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <MaskedTextBox Name="dateBox"
+                <MaskedTextBox Name="DateBox"
                                Mask="90/90/0000"
                                FontSize="15"
                                Width="220"
@@ -55,7 +55,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <ComboBox Name="rankBox"
+                <ComboBox Name="RankBox"
                           FontSize="15"
                           Width="220"
                           VerticalAlignment="Center"

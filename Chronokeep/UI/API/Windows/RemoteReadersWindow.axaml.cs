@@ -12,22 +12,23 @@ using Chronokeep.UI.API.Parts;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.UI.API.Windows;
 
-public partial class RemoteReadersWindow : Window
+public partial class RemoteReadersWindow : ChronokeepWindow
 {
-    private static RemoteReadersWindow? theOne = null;
+    private static RemoteReadersWindow? theOne;
 
     private readonly IMainWindow window;
     private readonly IDBInterface database;
     private readonly Event? theEvent;
 
-    private readonly List<APIObject> remoteAPIs = [];
+    private readonly List<ApiObject> remoteApIs = [];
 
     public static RemoteReadersWindow CreateWindow(IMainWindow window, IDBInterface database)
     {
-        theOne ??= new(window, database);
+        theOne ??= new RemoteReadersWindow(window, database);
         return theOne;
     }
 
@@ -36,17 +37,17 @@ public partial class RemoteReadersWindow : Window
         InitializeComponent();
         this.window = window;
         this.database = database;
-        this.MinWidth = 10;
-        this.MinHeight = 10;
+        MinWidth = 10;
+        MinHeight = 10;
         theEvent = database.GetCurrentEvent();
         if (theEvent == null || theEvent.Identifier < 0)
         {
             DialogBox.Show("Unable to get event information.");
-            this.Close();
+            Close();
             return;
         }
-        remoteAPIs = database.GetAllAPI();
-        remoteAPIs.RemoveAll(x => x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE && x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF);
+        remoteApIs = database.GetAllAPI();
+        remoteApIs.RemoveAll(x => x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE && x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF);
         GetReaders();
     }
 
@@ -54,26 +55,33 @@ public partial class RemoteReadersWindow : Window
     {
         try
         {
-            Dictionary<(int, string), RemoteReader> savedReaders = [];
-            foreach (RemoteReader reader in database.GetRemoteReaders(theEvent!.Identifier))
+            try
             {
-                savedReaders[(reader.APIIDentifier, reader.Name)] = reader;
+                Dictionary<(int, string), RemoteReader> savedReaders = [];
+                foreach (RemoteReader reader in database.GetRemoteReaders(theEvent!.Identifier))
+                {
+                    savedReaders[(reader.ApiiDentifier, reader.Name)] = reader;
+                }
+                // fetch all readers from the remote apis
+                foreach (ApiObject api in remoteApIs)
+                {
+                    List<RemoteReader> readers = await api.GetReaders();
+                    ApiListView.Items.Add(new ApiExpanderPart(api, readers, savedReaders, database, window));
+                }
             }
-            // fetch all readers from the remote apis
-            foreach (APIObject api in remoteAPIs)
+            catch (ApiException ex)
             {
-                var readers = await api.GetReaders();
-                apiListView.Items.Add(new APIExpanderPart(api, readers, savedReaders, database, window));
+                DialogBox.Show(ex.Message);
+                Close();
+                return;
             }
+            LoadingPanel.IsVisible = false;
+            ApiListView.IsVisible = true;
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            Close();
-            return;
+            Log.D("UI.API.RemoteReaders", "Error getting readers.");
         }
-        loadingPanel.IsVisible = false;
-        apiListView.IsVisible = true;
     }
 
     private void Window_Closed(object sender, EventArgs e)
@@ -83,26 +91,24 @@ public partial class RemoteReadersWindow : Window
         window.WindowFinalize(this);
     }
 
-    private void Close_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Close_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.API.RemoteReaders", "Close button clicked.");
         List<RemoteReader> readersToSave = [];
         List<RemoteReader> otherReaders = [];
-        foreach (object? item in apiListView.Items)
+        foreach (object? item in ApiListView.Items)
         {
-            if (item is APIExpanderPart part)
+            if (item is not ApiExpanderPart part) continue;
+            Dictionary<RemoteReader, bool> downDict = part.GetAutoDownloadDictionary();
+            foreach (RemoteReader reader in downDict.Keys)
             {
-                var downDict = part.GetAutoDownloadDictionary();
-                foreach (RemoteReader reader in downDict.Keys)
+                if (downDict[reader])
                 {
-                    if (downDict[reader])
-                    {
-                        readersToSave.Add(reader);
-                    }
-                    else
-                    {
-                        otherReaders.Add(reader);
-                    }
+                    readersToSave.Add(reader);
+                }
+                else
+                {
+                    otherReaders.Add(reader);
                 }
             }
         }
@@ -110,15 +116,10 @@ public partial class RemoteReadersWindow : Window
         HashSet<(int, string)> readerNames = [];
         foreach (RemoteReader reader in database.GetRemoteReaders(theEvent!.Identifier))
         {
-            readerNames.Add((reader.APIIDentifier, reader.Name));
+            readerNames.Add((reader.ApiiDentifier, reader.Name));
         }
-        foreach (RemoteReader reader in otherReaders)
-        {
-            if (readerNames.Contains((reader.APIIDentifier, reader.Name)))
-            {
-                deleteReaders.Add(reader);
-            }
-        }
+
+        deleteReaders.AddRange(otherReaders.Where(reader => readerNames.Contains((reader.ApiiDentifier, reader.Name))));
         database.DeleteRemoteReaders(theEvent.Identifier, deleteReaders);
         database.AddRemoteReaders(theEvent.Identifier, readersToSave);
         // notify mainwindow to update/start remote reader thread
@@ -126,8 +127,8 @@ public partial class RemoteReadersWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

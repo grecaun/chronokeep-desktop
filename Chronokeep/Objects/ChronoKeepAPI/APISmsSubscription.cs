@@ -2,15 +2,15 @@
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APISmsSubscription
+    public class ApiSmsSubscription
     {
         [JsonPropertyName("bib")]
-        public string Bib { get; set; } = "";
+        public string Bib { get; init; } = "";
         [JsonPropertyName("first")]
-        public string First { get; set; } = "";
+        public string First { get; init; } = "";
         [JsonPropertyName("last")]
-        public string Last { get; set; } = "";
+        public string Last { get; init; } = "";
         [JsonPropertyName("phone")]
-        public string Phone { get; set; } = "";
+        public string Phone { get; init; } = "";
     }
 }

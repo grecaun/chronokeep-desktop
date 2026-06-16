@@ -16,10 +16,10 @@ public partial class ImportLogPage1 : UserControl
         InitializeComponent();
         this.parent = parent;
         TypeHolder.Items.Clear();
-        ComboBoxItem? current, selected = null, custom = null;
+        ComboBoxItem? selected = null, custom = null;
         foreach (LogImporter.Type type in Enum.GetValues<LogImporter.Type>())
         {
-            current = new ComboBoxItem()
+            ComboBoxItem current = new()
             {
                 Content = type.ToString(),
                 Tag = type.ToString()
@@ -48,10 +48,10 @@ public partial class ImportLogPage1 : UserControl
             locationId = Convert.ToInt32(((ComboBoxItem)LocationHolder.SelectedItem).Tag);
         }
         LocationHolder.Items.Clear();
-        ComboBoxItem? current, selected = null;
+        ComboBoxItem? selected = null;
         foreach (TimingLocation loc in locations)
         {
-            current = new ComboBoxItem()
+            ComboBoxItem current = new ComboBoxItem()
             {
                 Content = loc.Name,
                 Tag = loc.Identifier.ToString()
@@ -75,22 +75,15 @@ public partial class ImportLogPage1 : UserControl
     private void TypeHolder_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.Timing.ImportLog", "Type changed.");
-        if (((ComboBoxItem)TypeHolder.SelectedItem!).Tag!.ToString() == LogImporter.Type.CUSTOM.ToString())
-        {
-            NextButton.Content = "Next";
-        }
-        else
-        {
-            NextButton.Content = "Import";
-        }
+        NextButton.Content = ((ComboBoxItem)TypeHolder.SelectedItem!).Tag!.ToString() == nameof(LogImporter.Type.CUSTOM) ? "Next" : "Import";
     }
 
     private void NextButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.ImportLog", "Next Button Clicked.");
         int locationId = Convert.ToInt32(((ComboBoxItem)LocationHolder.SelectedItem!).Tag);
-        Log.D("UI.Timing.ImportLog", "Location ID is: " + locationId + " name of: " + ((ComboBoxItem)LocationHolder.SelectedItem).Content!.ToString());
-        if (((ComboBoxItem)TypeHolder.SelectedItem!).Tag!.ToString() == LogImporter.Type.CUSTOM.ToString())
+        Log.D("UI.Timing.ImportLog", "Location ID is: " + locationId + " name of: " + ((ComboBoxItem)LocationHolder.SelectedItem).Content);
+        if (((ComboBoxItem)TypeHolder.SelectedItem!).Tag!.ToString() == nameof(LogImporter.Type.CUSTOM))
         {
             parent.Next(locationId);
             return;

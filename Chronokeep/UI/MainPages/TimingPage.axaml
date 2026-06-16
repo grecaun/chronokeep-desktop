@@ -156,11 +156,7 @@
                             Margin="1,5,0,0"
                             />
                     </Grid>
-                    <Grid Width="250">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                    <Grid Width="250" ColumnDefinitions="*,*">
                         <Button
                             Grid.Column="0"
                             Content="Manual Entry"
@@ -168,10 +164,10 @@
                             IsEnabled="True"
                             Classes="tim"
                             Margin="0,5,1,0"
-                            />
+                        />
                         <Button
                             Grid.Column="1"
-                            Name="DNFButton"
+                            Name="DnfButton"
                             Content="Add DNF"
                             Click="AddDNF_Click"
                             Classes="tim"
@@ -298,8 +294,8 @@
                                       DoubleTapped="StatsListView_MouseDoubleClick">
 								<DataGrid.Columns>
                                     <DataGridTextColumn FontSize="12" Width="80" Header="Distance" Binding="{Binding DistanceName}" x:DataType="objects:DistanceStat"/>
-                                    <DataGridTextColumn FontSize="12" Width="42" Header="DNS" Binding="{Binding DNS}" x:DataType="objects:DistanceStat"/>
-                                    <DataGridTextColumn FontSize="12" Width="42" Header="DNF" Binding="{Binding DNF}" x:DataType="objects:DistanceStat"/>
+                                    <DataGridTextColumn FontSize="12" Width="42" Header="DNS" Binding="{Binding Dns}" x:DataType="objects:DistanceStat"/>
+                                    <DataGridTextColumn FontSize="12" Width="42" Header="DNF" Binding="{Binding Dnf}" x:DataType="objects:DistanceStat"/>
                                     <DataGridTextColumn FontSize="12" Width="42" Header="Fin" Binding="{Binding Finished}" x:DataType="objects:DistanceStat"/>
                                     <DataGridTextColumn FontSize="12" Width="42" Header="Act" Binding="{Binding Active}" x:DataType="objects:DistanceStat"/>
                                     <DataGridTextColumn FontSize="12" Width="42" Header="Tot" Binding="{Binding Total}" x:DataType="objects:DistanceStat"/>
@@ -320,33 +316,24 @@
                                 Classes="tim"
                                 Margin="0,0,0,0" 
                                 />
-                            <Grid Name="ApiPanel">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*" />
-                                    <ColumnDefinition Width="1*" />
-                                </Grid.ColumnDefinitions>
+                            <Grid Name="ApiPanel" ColumnDefinitions="1*,1*">
                                 <Button
                                     Grid.Column="0"
-                                    Name="AutoAPIButton"
+                                    Name="AutoApiButton"
                                     Content="Auto Upload"
                                     Click="AutoAPI_Click" 
                                     Classes="tim"
                                     Margin="0,5,5,0"
-                                    />
+                                />
                                 <Button 
                                     Grid.Column="1"
-                                    Name="ManualAPIButton"
+                                    Name="ManualApiButton"
                                     Content="Manual Upload"
                                     Click="ManualAPI_Click"
                                     Classes="tim"
-                                    Margin="5,5,0,0" 
-                                    />
+                                    Margin="5,5,0,0" x:FieldModifier="public" />
                             </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*" />
-                                    <ColumnDefinition Width="1*" />
-                                </Grid.ColumnDefinitions>
+                            <Grid ColumnDefinitions="1*,1*">
                                 <StackPanel Grid.Column="0">
                                     <Button
                                         Name="SendEmailsButton" 
@@ -356,7 +343,7 @@
                                         Margin="0,5,5,0" 
                                         />
                                     <Button
-                                        Name="ModifySMSButton" 
+                                        Name="ModifySmsButton" 
                                         Content="Modify SMS"
                                         Click="ModifySMSButton_Click"
                                         Classes="tim"

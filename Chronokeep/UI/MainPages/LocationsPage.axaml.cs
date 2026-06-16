@@ -16,8 +16,8 @@ public partial class LocationsPage : UserControl, IMainPage
     private readonly IMainWindow mWindow;
     private readonly IDBInterface database;
     private readonly Event? theEvent;
-    private int LocationCount = 1;
-    private bool UpdateTimingWorker = false;
+    private int locationCount = 1;
+    private bool updateTimingWorker;
 
     public LocationsPage(IMainWindow mWindow, IDBInterface database)
     {
@@ -35,15 +35,15 @@ public partial class LocationsPage : UserControl, IMainPage
             return;
         }
         LocationsBox.Items.Clear();
-        LocationsBox.Items.Add(new LocationPart(this, new(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", theEvent.StartMaxOccurrences, theEvent.StartWindow), theEvent));
-        LocationsBox.Items.Add(new LocationPart(this, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin), theEvent));
+        LocationsBox.Items.Add(new LocationPart(this, new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", theEvent.StartMaxOccurrences, theEvent.StartWindow), theEvent));
+        LocationsBox.Items.Add(new LocationPart(this, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin), theEvent));
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
-        LocationCount = 1;
+        locationCount = 1;
         locations.Sort();
         foreach (TimingLocation loc in locations)
         {
             LocationsBox.Items.Add(new LocationPart(this, loc, theEvent));
-            LocationCount = loc.Identifier > LocationCount - 1 ? loc.Identifier + 1 : LocationCount;
+            locationCount = loc.Identifier > locationCount - 1 ? loc.Identifier + 1 : locationCount;
         }
     }
 
@@ -62,45 +62,38 @@ public partial class LocationsPage : UserControl, IMainPage
         {
             database.RemoveTimingLocation(location);
         }
-        UpdateTimingWorker = true;
+        updateTimingWorker = true;
         UpdateView();
     }
 
-    public void UpdateDatabase()
+    private void UpdateDatabase()
     {
         foreach (LocationPart? locItem in LocationsBox.Items.Cast<LocationPart?>())
         {
             locItem!.UpdateLocation();
-            if (locItem.myLocation.Identifier == Constants.Timing.LOCATION_FINISH)
+            if (locItem.MyLocation.Identifier == Constants.Timing.LOCATION_FINISH)
             {
-                if (theEvent!.FinishMaxOccurrences != locItem.myLocation.MaxOccurrences
-                    || theEvent.FinishIgnoreWithin != locItem.myLocation.IgnoreWithin)
-                {
-                    theEvent.FinishMaxOccurrences = locItem.myLocation.MaxOccurrences;
-                    theEvent.FinishIgnoreWithin = locItem.myLocation.IgnoreWithin;
-                    database.SetFinishOptions(theEvent);
-                    UpdateTimingWorker = true;
-                }
+                if (theEvent!.FinishMaxOccurrences == locItem.MyLocation.MaxOccurrences
+                    && theEvent.FinishIgnoreWithin == locItem.MyLocation.IgnoreWithin) continue;
+                theEvent.FinishMaxOccurrences = locItem.MyLocation.MaxOccurrences;
+                theEvent.FinishIgnoreWithin = locItem.MyLocation.IgnoreWithin;
+                database.SetFinishOptions(theEvent);
             }
-            else if (locItem.myLocation.Identifier == Constants.Timing.LOCATION_START)
+            else if (locItem.MyLocation.Identifier == Constants.Timing.LOCATION_START)
             {
-                if (theEvent!.StartWindow != locItem.myLocation.IgnoreWithin
-                    || theEvent.StartMaxOccurrences != locItem.myLocation.MaxOccurrences)
-                {
-                    theEvent.StartWindow = locItem.myLocation.IgnoreWithin;
-                    theEvent.StartMaxOccurrences = locItem.myLocation.MaxOccurrences;
-                    database.SetStartOptions(theEvent);
-                    UpdateTimingWorker = true;
-                }
+                if (theEvent!.StartWindow == locItem.MyLocation.IgnoreWithin
+                    && theEvent.StartMaxOccurrences == locItem.MyLocation.MaxOccurrences) continue;
+                theEvent.StartWindow = locItem.MyLocation.IgnoreWithin;
+                theEvent.StartMaxOccurrences = locItem.MyLocation.MaxOccurrences;
+                database.SetStartOptions(theEvent);
             }
             else
             {
-                if (locItem.IsUpdated())
-                {
-                    database.UpdateTimingLocation(locItem.myLocation);
-                    UpdateTimingWorker = true;
-                }
+                if (!locItem.IsUpdated()) continue;
+                database.UpdateTimingLocation(locItem.MyLocation);
             }
+
+            updateTimingWorker = true;
         }
         if (database is SQLiteInterface)
         {
@@ -131,13 +124,11 @@ public partial class LocationsPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        if (UpdateTimingWorker)
-        {
-            Log.D("UI.MainPages.LocationsPage", "Resetting results.");
-            database.ResetTimingResultsEvent(theEvent!.Identifier);
-            mWindow.NetworkClearResults();
-            mWindow.NotifyTimingWorker();
-        }
+        if (!updateTimingWorker) return;
+        Log.D("UI.MainPages.LocationsPage", "Resetting results.");
+        database.ResetTimingResultsEvent(theEvent!.Identifier);
+        mWindow.NetworkClearResults();
+        mWindow.NotifyTimingWorker();
     }
 
     private void Add_Click(object? sender, RoutedEventArgs? e)
@@ -147,8 +138,8 @@ public partial class LocationsPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddTimingLocation(new(theEvent!.Identifier, "Location " + LocationCount));
-        UpdateTimingWorker = true;
+        database.AddTimingLocation(new TimingLocation(theEvent!.Identifier, "Location " + locationCount));
+        updateTimingWorker = true;
         UpdateView();
     }
 

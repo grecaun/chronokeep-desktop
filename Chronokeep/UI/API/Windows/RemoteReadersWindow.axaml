@@ -17,7 +17,9 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -34,7 +36,7 @@
             </DockPanel>
         </Border>
         <StackPanel Width="1100" Margin="0" Grid.Row="1">
-            <StackPanel Name="loadingPanel"
+            <StackPanel Name="LoadingPanel"
                         Width="300"
                         Height="300"
                         Margin="20,20,10,20"
@@ -47,7 +49,7 @@
                 <ProgressBar IsIndeterminate="True" Margin="5,5,5,5"/>
             </StackPanel>
             <ListBox
-                Name="apiListView"
+                Name="ApiListView"
                 IsVisible="False"
                 Margin="10,0,10,10"
                 HorizontalAlignment="Center"

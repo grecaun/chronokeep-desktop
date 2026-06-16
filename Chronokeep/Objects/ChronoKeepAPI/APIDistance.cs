@@ -2,7 +2,7 @@
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APIDistance
+    public class ApiDistance
     {
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";

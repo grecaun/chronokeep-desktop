@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Timing.Interfaces
 {
-    partial class IpicoInterface(IDBInterface database, int locationId, string type, IMainWindow window) : ITimingSystemInterface
+    internal partial class IpicoInterface(IDBInterface database, int locationId, string type, IMainWindow window) : ITimingSystemInterface
     {
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly Dictionary<Socket, StringBuilder> bufferDict = [];
@@ -30,18 +30,18 @@ namespace Chronokeep.Timing.Interfaces
         [GeneratedRegex(@"^[^\n]+\n")]
         private static partial Regex Msg();
 
-        public List<Socket>? Connect(string IpAddress, int Port)
+        public List<Socket>? Connect(string ipAddress, int port)
         {
-            this.ipadd = IpAddress;
+            this.ipadd = ipAddress;
             List<Socket> output = [];
-            controlSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            streamSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            controlSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            streamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             if (type != Constants.Readers.SYSTEM_IPICO_LITE)
             {
                 try
                 {
-                    Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + IpAddress + ":" + Constants.Readers.IPICO_CONTROL_PORT);
-                    IAsyncResult result = controlSocket.BeginConnect(IpAddress, Constants.Readers.IPICO_CONTROL_PORT, null, null);
+                    Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + ipAddress + ":" + Constants.Readers.IPICO_CONTROL_PORT);
+                    IAsyncResult result = controlSocket.BeginConnect(ipAddress, Constants.Readers.IPICO_CONTROL_PORT, null, null);
                     result.AsyncWaitHandle.WaitOne(Constants.Readers.TIMEOUT, true);
                     if (controlSocket.Connected)
                     {
@@ -67,8 +67,8 @@ namespace Chronokeep.Timing.Interfaces
             }
             try
             {
-                Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + IpAddress + ":" + Constants.Readers.IPICO_DEFAULT_PORT);
-                IAsyncResult result = streamSocket.BeginConnect(IpAddress, Constants.Readers.IPICO_DEFAULT_PORT, null, null);
+                Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + ipAddress + ":" + Constants.Readers.IPICO_DEFAULT_PORT);
+                IAsyncResult result = streamSocket.BeginConnect(ipAddress, Constants.Readers.IPICO_DEFAULT_PORT, null, null);
                 result.AsyncWaitHandle.WaitOne(Constants.Readers.TIMEOUT, true);
                 if (streamSocket.Connected)
                 {
@@ -93,7 +93,7 @@ namespace Chronokeep.Timing.Interfaces
             return output;
         }
 
-        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket sock)
+        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket? sock)
         {
             Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- parsing message.");
             Dictionary<MessageType, List<string>> output = [];
@@ -103,7 +103,7 @@ namespace Chronokeep.Timing.Interfaces
             }
             if (!bufferDict.TryGetValue(sock, out StringBuilder? buff))
             {
-                buff = new();
+                buff = new StringBuilder();
                 bufferDict[sock] = buff;
             }
 
@@ -120,7 +120,8 @@ namespace Chronokeep.Timing.Interfaces
             int count = 1;
             while (m.Success)
             {
-                Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- message " + count++);
+                Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- message " + count);
+                count++;
                 buff.Remove(m.Index, m.Length);
                 string message = m.Value;
                 Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- message is : " + message);
@@ -163,7 +164,7 @@ namespace Chronokeep.Timing.Interfaces
                     int dayVal = int.Parse(day);
                     string time = message.Substring(16, 8);
                     string year = message.Substring(29, 4);
-                    string dateStr = string.Format("{0:D2} {1} {2}  {3}", dayVal, month, year, time);
+                    string dateStr = $"{dayVal:D2} {month} {year}  {time}";
                     Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- date string is " + dateStr);
                     output[MessageType.TIME] =
                     [
@@ -204,7 +205,7 @@ namespace Chronokeep.Timing.Interfaces
         public void GetRewind()
         {
             Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- connecting to rewind socket");
-            rewindSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            rewindSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 rewindSocket.Connect(ipadd, 10300);
@@ -220,13 +221,13 @@ namespace Chronokeep.Timing.Interfaces
             try
             {
                 rewindSocket.Send(Encoding.ASCII.GetBytes("\n"));
-                int num_recvd = rewindSocket.Receive(recvd);
-                while (num_recvd > 0)
+                int numRecvd = rewindSocket.Receive(recvd);
+                while (numRecvd > 0)
                 {
-                    string msg = Encoding.UTF8.GetString(recvd, 0, num_recvd);
+                    string msg = Encoding.UTF8.GetString(recvd, 0, numRecvd);
                     Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- Rewind -- message :" + msg);
-                    Dictionary<MessageType, List<string>> messageTypes = ParseMessages(msg, rewindSocket);
-                    num_recvd = rewindSocket.Receive(recvd);
+                    ParseMessages(msg, rewindSocket);
+                    numRecvd = rewindSocket.Receive(recvd);
                 }
             }
             catch
@@ -262,19 +263,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(int reader = 1)
         {
-            if (reader == 1)
-            {
-                SendMessage("replay_start file.ttyS0 port.10300");
-            }
-            else
-            {
-                SendMessage("replay_start file.ttyS1 port.10300");
-            }
+            SendMessage(reader == 1 ? "replay_start file.ttyS0 port.10300" : "replay_start file.ttyS1 port.10300");
         }
 
-        public void SetMainSocket(Socket sock)
+        public void SetMainSocket(Socket iSock)
         {
-            streamSocket = sock;
+            streamSocket = iSock;
         }
 
         public void SetSettingsSocket(Socket sock)
@@ -284,7 +278,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Disconnect() { }
 
-        public void SendMessage(string msg)
+        private void SendMessage(string msg)
         {
             Log.D("Timing.Interfaces.IpicoInterface", "Sending message '" + msg + "'");
             controlSocket?.Send(Encoding.ASCII.GetBytes(msg + "\n"));

@@ -22,7 +22,9 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -46,7 +48,7 @@
                            Width="80"
                            TextAlignment="Right"
                            VerticalAlignment="Center"/>
-                <TextBox Name="nameBox"
+                <TextBox Name="NameBox"
                          FontSize="16"
                          Margin="5,10,10,10"
                          TextWrapping="Wrap"
@@ -59,7 +61,7 @@
                            Width="80"
                            TextAlignment="Right"
                            VerticalAlignment="Center"/>
-                <TextBox Name="yearCodeBox"
+                <TextBox Name="YearCodeBox"
                          FontSize="16"
                          Margin="5,10,10,10"
                          KeyUp="Keyboard_Up"/>
@@ -71,13 +73,13 @@
                            Width="80"
                            TextAlignment="Right"
                            VerticalAlignment="Center"/>
-                <MaskedTextBox Name="datePicker"
+                <MaskedTextBox Name="DatePicker"
                                Mask="90/90/0000"
                                KeyUp="Keyboard_Up"
                                Margin="5,10,10,10"
                                FontSize="16"/>
             </DockPanel>
-            <AutoCompleteBox Name="oldEvent"
+            <AutoCompleteBox Name="OldEvent"
                              FontSize="16"
                              Width="250"
                              HorizontalAlignment="Center"

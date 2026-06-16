@@ -5,84 +5,71 @@ using System.Threading;
 
 namespace Chronokeep.UI.UhfRfidReader
 {
-    class RFIDSerial(string ComPort, int BaudRate)
+    internal class RfidSerial(string comPort, int baudRate)
     {
-        private string ComPort = ComPort;
-        private int BaudRate = BaudRate;
-        private SerialPort Port = new();
+        private SerialPort port = new();
 
-        public RFIDError DeviceInit(string ComPort, int BaudRate)
+        private RfidError DeviceInit()
         {
-            this.ComPort = ComPort;
-            this.BaudRate = BaudRate;
-            return DeviceInit();
-        }
-
-        public RFIDError DeviceInit()
-        {
-            if (ComPort == "N/A" || BaudRate == 0)
+            if (comPort == "N/A" || baudRate == 0)
             {
-                return RFIDError.BADSETTINGS;
+                return RfidError.BADSETTINGS;
             }
             try
             {
-                Port = new(ComPort, BaudRate)
+                port = new SerialPort(comPort, baudRate)
                 {
                     ReadTimeout = 500,
                     WriteTimeout = 500
                 };
             }
-            catch (IOException Exc)
+            catch (IOException exc)
             {
-                Console.WriteLine(Exc.StackTrace);
-                return RFIDError.UNABLETOCONNECT;
+                Console.WriteLine(exc.StackTrace);
+                return RfidError.UNABLETOCONNECT;
             }
-            return RFIDError.NOERR;
+            return RfidError.NOERR;
         }
 
-        public RFIDError DeviceConnect()
+        private RfidError DeviceConnect()
         {
             try
             {
-                Port.Open();
-                byte[] OutMsg = [0xA0, 0x03, 0x50, 0x00, 0x0D];
-                byte[] InMsg = new byte[56];
-                OutMsg[4] = CheckSum(OutMsg, 4);
-                Port.BaseStream.Write(OutMsg, 0, 5);
+                port.Open();
+                byte[] outMsg = [0xA0, 0x03, 0x50, 0x00, 0x0D];
+                byte[] inMsg = new byte[56];
+                outMsg[4] = CheckSum(outMsg, 4);
+                port.BaseStream.Write(outMsg, 0, 5);
                 Thread.Sleep(20); // Need to give it time or we won't get the whole message.
-                int recvd = Port.Read(InMsg, 0, 56);
+                int recvd = port.Read(inMsg, 0, 56);
                 while (recvd < 6)
                 {
                     Thread.Sleep(20);
-                    recvd = Port.Read(InMsg, recvd, 56 - recvd);
+                    recvd = port.Read(inMsg, recvd, 56 - recvd);
                 }
-                if (InMsg[0] != 0xE4 || InMsg[InMsg[1] + 1] != CheckSum(InMsg, InMsg[1] + 1) || InMsg[1] < 0x04 || InMsg[4] != 0x00)
+                if (inMsg[0] != 0xE4 || inMsg[inMsg[1] + 1] != CheckSum(inMsg, inMsg[1] + 1) || inMsg[1] < 0x04 || inMsg[4] != 0x00)
                 {
-                    return RFIDError.UNABLETOCONNECT;
+                    return RfidError.UNABLETOCONNECT;
                 }
             }
             catch
             {
-                return RFIDError.UNABLETOCONNECT;
+                return RfidError.UNABLETOCONNECT;
             }
-            return RFIDError.NOERR;
+            return RfidError.NOERR;
         }
 
-        public void DeviceDisconnect()
+        private void DeviceDisconnect()
         {
-            Port.Close();
+            port.Close();
         }
 
-        public static void DeviceDeinit() { }
+        private static void DeviceDeinit() { }
 
-        public RFIDError Connect()
+        public RfidError Connect()
         {
-            RFIDError err = DeviceInit();
-            if (err != RFIDError.NOERR)
-            {
-                return err;
-            }
-            return DeviceConnect();
+            RfidError err = DeviceInit();
+            return err != RfidError.NOERR ? err : DeviceConnect();
         }
 
         public void Disconnect()
@@ -104,80 +91,73 @@ namespace Chronokeep.UI.UhfRfidReader
             return sum;
         }
 
-        public RFIDInfo ReadData()
+        public RfidInfo ReadData()
         {
-            byte[] OutMsg = [0xA0, 0x03, 0x82, 0x00, 0xDB];
-            byte[] InMsg = new byte[256];
+            byte[] outMsg = [0xA0, 0x03, 0x82, 0x00, 0xDB];
+            byte[] inMsg = new byte[256];
             try
             {
-                Port.BaseStream.Write(OutMsg, 0, 5);
+                port.BaseStream.Write(outMsg, 0, 5);
                 Thread.Sleep(50); // Need to give it time or we won't get the whole message.
-                int recvd = Port.Read(InMsg, 0, 256);
+                int recvd = port.Read(inMsg, 0, 256);
                 int pos = 0;
-                while (pos < recvd && InMsg[pos] != 0xE4 && InMsg[pos] != 0xE0)
+                while (pos < recvd && inMsg[pos] != 0xE4 && inMsg[pos] != 0xE0)
                 {
                     pos++;
                 }
-                if (pos > 0 && pos < 256)
+                switch (pos)
                 {
-                    for (int i = 0; i < 256 - pos; i++)
+                    case > 0 and < 256:
                     {
-                        InMsg[i] = InMsg[i + pos];
+                        for (int i = 0; i < 256 - pos; i++)
+                        {
+                            inMsg[i] = inMsg[i + pos];
+                        }
+
+                        break;
                     }
+                    case > 255:
+                        return new RfidInfo
+                        {
+                            ErrorCode = RfidError.NODATA
+                        };
                 }
-                else if (pos > 255)
-                {
-                    return new()
-                    {
-                        ErrorCode = RFIDError.NODATA
-                    };
-                }
-                return new(InMsg);
+                return new RfidInfo(inMsg);
             }
             catch
             {
-                return new()
+                return new RfidInfo
                 {
-                    ErrorCode = RFIDError.CONERROR
+                    ErrorCode = RfidError.CONERROR
                 };
             }
         }
 
     }
-    public class RFIDInfo
+    public class RfidInfo
     {
         public long DecNumber { get; set; }
         public int DeviceNumber { get; set; }
         public int AntennaNumber { get; set; }
         public string HexNumber { get; set; } = "";
-        public byte[] Data { get; set; }
-        public string DataRep { get => BitConverter.ToString(Data); }
+        private byte[] Data { get; }
+        public string DataRep => BitConverter.ToString(Data);
         public int ReadNumber { get; set; }
-        public RFIDError ErrorCode { get; set; }
+        public RfidError ErrorCode { get; init; }
 
-        public RFIDInfo(int DecChip, string HexChip, int DeviceNo, int AntennaNo, byte[] Data)
+        public RfidInfo() => Data = [0x00];
+
+        public RfidInfo(byte[] inData)
         {
-            this.DecNumber = DecChip;
-            this.HexNumber = HexChip;
-            this.DeviceNumber = DeviceNo;
-            this.AntennaNumber = AntennaNo;
-            this.Data = Data;
-            this.ErrorCode = RFIDError.NOERR;
-        }
-
-        public RFIDInfo() => Data = [0x00];
-
-        public RFIDInfo(byte[] inData)
-        {
-            ErrorCode = RFIDError.NOERR;
+            ErrorCode = RfidError.NOERR;
             Data = new byte[inData[1] + 2];
             for (int i = 0; i < this.Data.Length; i++)
             {
                 Data[i] = inData[i];
             }
-            if (Data[^1] != RFIDSerial.CheckSum(Data, Data.Length - 1))
+            if (Data[^1] != RfidSerial.CheckSum(Data, Data.Length - 1))
             {
-                ErrorCode = RFIDError.BADDATA;
+                ErrorCode = RfidError.BADDATA;
             }
             if (Data.Length == 18)
             {
@@ -193,16 +173,16 @@ namespace Chronokeep.UI.UhfRfidReader
             }
             else if (Data.Length == 6)
             {
-                ErrorCode = RFIDError.NODATA;
+                ErrorCode = RfidError.NODATA;
             }
             else
             {
-                ErrorCode = RFIDError.BADDATA;
+                ErrorCode = RfidError.BADDATA;
             }
         }
     }
 
-    public enum RFIDError
+    public enum RfidError
     {
         UNABLETOCONNECT, NOERR, UNKNOWNERR, BADSETTINGS, NODATA, BADDATA, CONERROR
     };

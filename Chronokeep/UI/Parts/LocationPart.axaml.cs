@@ -13,8 +13,8 @@ namespace Chronokeep.UI.Parts;
 public partial class LocationPart : UserControl
 {
     private const string TimeFormat = "{0:D2}:{1:D2}:{2:D2}";
-    readonly LocationsPage page;
-    public TimingLocation myLocation;
+    private readonly LocationsPage page;
+    public readonly TimingLocation MyLocation;
 
     [GeneratedRegex("[^0-9]+")]
     private static partial Regex AllowedChars();
@@ -23,12 +23,12 @@ public partial class LocationPart : UserControl
     {
         InitializeComponent();
         this.page = page;
-        this.myLocation = location;
-        LocationName.Text = myLocation.Name;
-        MaxOccurrences.Text = myLocation.MaxOccurrences.ToString();
-        string labelLabel = myLocation.Identifier == Constants.Timing.LOCATION_START ? "Start Window" : "Ignore Within";
+        MyLocation = location;
+        LocationName.Text = MyLocation.Name;
+        MaxOccurrences.Text = MyLocation.MaxOccurrences.ToString();
+        string labelLabel = MyLocation.Identifier == Constants.Timing.LOCATION_START ? "Start Window" : "Ignore Within";
         if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType
-            || (Constants.Timing.LOCATION_START == myLocation.Identifier && theEvent.CommonStartFinish))
+            || (Constants.Timing.LOCATION_START == MyLocation.Identifier && theEvent.CommonStartFinish))
         {
             OccPanel.IsVisible = false;
             OccPanel.Height = 0;
@@ -36,10 +36,10 @@ public partial class LocationPart : UserControl
         }
         IgnoreWithinLabel.Text = labelLabel;
         IgnoreWithinLabel.Width = 120;
-        string ignStr = string.Format(TimeFormat, myLocation.IgnoreWithin / 3600, (myLocation.IgnoreWithin % 3600) / 60, myLocation.IgnoreWithin % 60);
+        string ignStr = string.Format(TimeFormat, MyLocation.IgnoreWithin / 3600, (MyLocation.IgnoreWithin % 3600) / 60, MyLocation.IgnoreWithin % 60);
         IgnoreWithin.Text = ignStr;
         if (Constants.Timing.EVENT_TYPE_TIME != theEvent.EventType
-            && !(Constants.Timing.LOCATION_START == myLocation.Identifier && theEvent.CommonStartFinish))
+            && !(Constants.Timing.LOCATION_START == MyLocation.Identifier && theEvent.CommonStartFinish))
         {
             Grid.SetColumnSpan(IgnorePanel, 1);
         }
@@ -47,13 +47,12 @@ public partial class LocationPart : UserControl
         {
             Grid.SetColumnSpan(IgnorePanel, 2);
         }
-        if (myLocation.Identifier == Constants.Timing.LOCATION_FINISH
-            || myLocation.Identifier == Constants.Timing.LOCATION_START)
-        {
-            LocationName.IsEnabled = false;
-            Remove.IsEnabled = false;
-            Remove.IsVisible = false;
-        }
+
+        if (MyLocation.Identifier != Constants.Timing.LOCATION_FINISH
+            && MyLocation.Identifier != Constants.Timing.LOCATION_START) return;
+        LocationName.IsEnabled = false;
+        Remove.IsEnabled = false;
+        Remove.IsVisible = false;
     }
 
     public bool IsUpdated()
@@ -62,7 +61,7 @@ public partial class LocationPart : UserControl
         {
             string[] parts = IgnoreWithin.Text!.Replace('_', '0').Split(':');
             int hours = Convert.ToInt32(parts[0]), minutes = Convert.ToInt32(parts[1]), seconds = Convert.ToInt32(parts[2]);
-            return myLocation.MaxOccurrences != Convert.ToInt32(MaxOccurrences) && myLocation.IgnoreWithin != (hours * 3600) + (minutes * 60) + seconds;
+            return MyLocation.MaxOccurrences != Convert.ToInt32(MaxOccurrences) && MyLocation.IgnoreWithin != (hours * 3600) + (minutes * 60) + seconds;
         }
         catch
         {
@@ -75,16 +74,15 @@ public partial class LocationPart : UserControl
         Log.D("UI.MainPages.LocationsPage", "Updating location.");
         try
         {
-            myLocation.Name = LocationName.Text!;
-            myLocation.MaxOccurrences = Convert.ToInt32(MaxOccurrences.Text);
+            MyLocation.Name = LocationName.Text!;
+            MyLocation.MaxOccurrences = Convert.ToInt32(MaxOccurrences.Text);
             string[] parts = IgnoreWithin.Text!.Replace('_', '0').Split(':');
             int hours = Convert.ToInt32(parts[0]), minutes = Convert.ToInt32(parts[1]), seconds = Convert.ToInt32(parts[2]);
-            myLocation.IgnoreWithin = (hours * 3600) + (minutes * 60) + seconds;
+            MyLocation.IgnoreWithin = (hours * 3600) + (minutes * 60) + seconds;
         }
         catch
         {
             DialogBox.Show("Error with values given.");
-            return;
         }
     }
 
@@ -102,6 +100,6 @@ public partial class LocationPart : UserControl
     private void Remove_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.LocationsPage", "Removing an item.");
-        this.page.RemoveLocation(myLocation);
+        this.page.RemoveLocation(MyLocation);
     }
 }

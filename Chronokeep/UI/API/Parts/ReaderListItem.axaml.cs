@@ -8,19 +8,20 @@ using Chronokeep.Objects.ChronokeepRemote;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.API.Parts;
 
 public partial class ReaderListItem : UserControl
 {
     private readonly RemoteReader reader;
-    private readonly APIObject api;
+    private readonly ApiObject api;
     private readonly IDBInterface database;
     private readonly IMainWindow mWindow;
 
     public ReaderListItem(
         RemoteReader reader,
-        APIObject api,
+        ApiObject api,
         Dictionary<(int, string), RemoteReader> savedReaders,
         IDBInterface database,
         IMainWindow mWindow
@@ -36,7 +37,7 @@ public partial class ReaderListItem : UserControl
         {
             return;
         }
-        this.reader.EventID = theEvent.Identifier;
+        this.reader.EventId = theEvent.Identifier;
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
         locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
         if (!theEvent.CommonStartFinish)
@@ -48,24 +49,24 @@ public partial class ReaderListItem : UserControl
         {
             locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
         }
-        autoFetch.IsChecked = savedReaders.ContainsKey((reader.APIIDentifier, reader.Name));
-        nameBlock.Text = reader.Name;
+        AutoFetch.IsChecked = savedReaders.ContainsKey((reader.ApiiDentifier, reader.Name));
+        NameBlock.Text = reader.Name;
         foreach (TimingLocation loc in locations)
         {
-            locationBox.Items.Add(new ComboBoxItem()
+            LocationBox.Items.Add(new ComboBoxItem()
             {
                 Content = loc.Name,
                 Tag = loc.Identifier.ToString(),
-                IsSelected = reader.LocationID == loc.Identifier,
+                IsSelected = reader.LocationId == loc.Identifier,
             });
         }
-        if (locationBox.SelectedItem == null)
+        if (LocationBox.SelectedItem == null)
         {
-            locationBox.SelectedIndex = 0;
+            LocationBox.SelectedIndex = 0;
         }
         string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
-        startDatePicker.Text = dateStr;
-        endDatePicker.Text = dateStr;
+        StartDatePicker.Text = dateStr;
+        EndDatePicker.Text = dateStr;
     }
 
     public RemoteReader GetUpdatedReader()
@@ -73,92 +74,97 @@ public partial class ReaderListItem : UserControl
         RemoteReader output = new()
         {
             Name = reader.Name,
-            EventID = reader.EventID,
-            APIIDentifier = api!.Identifier
+            EventId = reader.EventId,
+            ApiiDentifier = api.Identifier
         };
-        if (locationBox.SelectedItem != null && int.TryParse((string)((ComboBoxItem)locationBox.SelectedItem).Tag!, out var locId))
+        if (LocationBox.SelectedItem != null && int.TryParse((string)((ComboBoxItem)LocationBox.SelectedItem).Tag!, out int locId))
         {
-            output.LocationID = locId;
+            output.LocationId = locId;
         }
         else
         {
-            output.LocationID = Constants.Timing.LOCATION_FINISH;
+            output.LocationId = Constants.Timing.LOCATION_FINISH;
         }
         return output;
     }
 
     public bool AutoDownloadReads()
     {
-        return autoFetch.IsChecked == true;
+        return AutoFetch.IsChecked == true;
     }
 
-    private async void Rewind_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Rewind_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Rewind clicked.");
-        if (!DateTime.TryParse(string.Format("{0} {1}", startDatePicker.Text, startTimeBox.Text!.Replace('_', '0')), out DateTime startDate))
-        {
-            startDate = DateTime.Now;
-        }
-        if (!DateTime.TryParse(string.Format("{0} {1}", endDatePicker.Text, endTimeBox.Text!.Replace('_', '0')), out DateTime endDate))
-        {
-            endDate = DateTime.Now;
-        }
         try
         {
-            var theEvent = database!.GetCurrentEvent();
-            if (theEvent == null || theEvent.Identifier < 1)
+            Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Rewind clicked.");
+            if (!DateTime.TryParse($"{StartDatePicker.Text} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
             {
-                return;
+                startDate = DateTime.Now;
             }
-            this.reader.EventID = theEvent.Identifier;
-            if (locationBox.SelectedItem == null)
+            if (!DateTime.TryParse($"{EndDatePicker.Text} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
             {
-                this.reader.LocationID = Constants.Timing.LOCATION_FINISH;
+                endDate = DateTime.Now;
             }
-            else
+            try
             {
-                this.reader.LocationID = Convert.ToInt32(((ComboBoxItem)locationBox.SelectedItem).Tag);
+                Event? theEvent = database.GetCurrentEvent();
+                if (theEvent == null || theEvent.Identifier < 1)
+                {
+                    return;
+                }
+                reader.EventId = theEvent.Identifier;
+                reader.LocationId = LocationBox.SelectedItem == null ? Constants.Timing.LOCATION_FINISH : Convert.ToInt32(((ComboBoxItem)LocationBox.SelectedItem).Tag);
+                (List<ChipRead> reads, RemoteNotification _) = await api.GetReads(reader, startDate, endDate);
+                database.AddChipReads(reads);
+                mWindow.UpdateTimingFromController();
+                DialogBox.Show("Rewind complete.");
             }
-            (var reads, var note) = await api!.GetReads(this.reader, startDate, endDate);
-            this.database.AddChipReads(reads);
-            mWindow.UpdateTimingFromController();
-            DialogBox.Show("Rewind complete.");
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            return;
+            Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Error rewinding.");
         }
     }
 
-    private void Delete_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Delete_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Delete clicked.");
         DialogBox.Show(
             "Warning!\n\nThis will delete every read uploaded to the remote api. That data cannot be recoverred once deleted.",
             "Delete",
             "Cancel",
-            async () =>
+            async void () =>
             {
-                Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "User requests deletion.");
-                if (!DateTime.TryParse(string.Format("{0} {1}", startDatePicker.Text, startTimeBox.Text!.Replace('_', '0')), out DateTime startDate))
-                {
-                    startDate = DateTime.Now;
-                }
-                if (!DateTime.TryParse(string.Format("{0} {1}", endDatePicker.Text, endTimeBox.Text!.Replace('_', '0')), out DateTime endDate))
-                {
-                    endDate = DateTime.Now;
-                }
                 try
                 {
-                    long count = await api.DeleteReads(this.reader, startDate, endDate);
-                    mWindow.UpdateTimingFromController();
-                    DialogBox.Show(string.Format("Successfully deleted\n\n{0}\n\nreads.", count));
+                    Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "User requests deletion.");
+                    if (!DateTime.TryParse($"{StartDatePicker.Text} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
+                    {
+                        startDate = DateTime.Now;
+                    }
+                    if (!DateTime.TryParse($"{EndDatePicker.Text} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
+                    {
+                        endDate = DateTime.Now;
+                    }
+                    try
+                    {
+                        long count = await api.DeleteReads(reader, startDate, endDate);
+                        mWindow.UpdateTimingFromController();
+                        DialogBox.Show($"Successfully deleted\n\n{count}\n\nreads.");
+                    }
+                    catch (ApiException ex)
+                    {
+                        DialogBox.Show(ex.Message);
+                    }
                 }
-                catch (APIException ex)
+                catch (Exception)
                 {
-                    DialogBox.Show(ex.Message);
-                    return;
+                    Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Error deleting reads.");
                 }
             });
     }

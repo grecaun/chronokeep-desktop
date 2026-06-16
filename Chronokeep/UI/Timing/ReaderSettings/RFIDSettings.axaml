@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Chronokeep.UI.Timing.ReaderSettings.RFIDSettings"
+        x:Class="Chronokeep.UI.Timing.ReaderSettings.RfidSettings"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
@@ -18,7 +18,10 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -57,7 +60,7 @@
                                 Margin="5,5,5,5"
                                 TextAlignment="Left"
                                 VerticalAlignment="Center"/>
-                    <Button Name="SaveID"
+                    <Button Name="SaveId"
                             Click="SaveID_Click"
                             Margin="5,5,5,5">
                         <PathIcon Data="{StaticResource save_regular}"/>
@@ -202,7 +205,7 @@
                             VerticalAlignment="Center"
                             HorizontalAlignment="Center">
                     <ToggleSwitch
-                        Name="SetGPSSwitch"
+                        Name="SetGpsSwitch"
                         Click="SetGPSSwitch_Click"
                         OnContent=""
                         OffContent=""
@@ -227,8 +230,7 @@
                 <StackPanel Height="45"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center">
-                    <Button Name="CloseButton"
-                            Content="Close"
+                    <Button Content="Close"
                             Click="CloseButton_Click"
                             Width="165"
                             Height="35"

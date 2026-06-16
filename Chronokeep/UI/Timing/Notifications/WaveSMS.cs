@@ -1,9 +1,9 @@
 ﻿namespace Chronokeep.UI.Timing.Notifications
 {
-    internal class WaveSMS
+    internal class WaveSms
     {
-        public int Wave { get; set; }
-        public string WaveName { get => string.Format("Wave {0}", Wave); }
-        public bool SMSEnabled { get; set; }
+        public int Wave { get; init; }
+        public string WaveName => $"Wave {Wave}";
+        public bool SmsEnabled { get; set; }
     }
 }

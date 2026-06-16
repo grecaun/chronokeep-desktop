@@ -37,7 +37,7 @@ namespace Chronokeep.MemStore
                             read.ChipBib = Constants.Timing.CHIPREAD_DUMMYBIB;
                         }
                         read.ReadBib ??= Constants.Timing.CHIPREAD_DUMMYBIB;
-                        if (locations.TryGetValue(read.LocationID, out TimingLocation? loc))
+                        if (locations.TryGetValue(read.LocationId, out TimingLocation? loc))
                         {
                             read.LocationName = loc.Name;
                         }
@@ -116,7 +116,7 @@ namespace Chronokeep.MemStore
                                 read.ChipBib = Constants.Timing.CHIPREAD_DUMMYBIB;
                             }
                             read.ReadBib ??= Constants.Timing.CHIPREAD_DUMMYBIB;
-                            if (locations.TryGetValue(read.LocationID, out TimingLocation? loc))
+                            if (locations.TryGetValue(read.LocationId, out TimingLocation? loc))
                             {
                                 read.LocationName = loc.Name;
                             }
@@ -219,7 +219,7 @@ namespace Chronokeep.MemStore
                     {
                         foreach (ChipRead read in chipReads.Values)
                         {
-                            if (Constants.Timing.LOCATION_ANNOUNCER == read.LocationID
+                            if (Constants.Timing.LOCATION_ANNOUNCER == read.LocationId
                                 && Constants.Timing.CHIPREAD_STATUS_NONE == read.Status)
                             {
                                 output.Add(read);
@@ -252,7 +252,7 @@ namespace Chronokeep.MemStore
                     {
                         foreach (ChipRead read in chipReads.Values)
                         {
-                            if (Constants.Timing.LOCATION_ANNOUNCER == read.LocationID
+                            if (Constants.Timing.LOCATION_ANNOUNCER == read.LocationId
                                 && Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED == read.Status)
                             {
                                 output.Add(read);
@@ -369,7 +369,7 @@ namespace Chronokeep.MemStore
                     {
                         foreach (ChipRead read in chipReads.Values)
                         {
-                            if (read.IsUseful() && Constants.Timing.LOCATION_ANNOUNCER != read.LocationID)
+                            if (read.IsUseful() && Constants.Timing.LOCATION_ANNOUNCER != read.LocationId)
                             {
                                 output.Add(read);
                             }

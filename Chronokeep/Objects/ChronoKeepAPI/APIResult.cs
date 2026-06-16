@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APIResult
+    public class ApiResult
     {
-        public APIResult(Event theEvent, TimeResult result, DateTime start, string unique_pad)
+        public ApiResult(Event theEvent, TimeResult result, DateTime start, string uniquePad)
         {
-            PersonId = string.Format("{0}-{1}", result.EventSpecificId, unique_pad);
+            PersonId = $"{result.EventSpecificId}-{uniquePad}";
             Bib = result.Bib.ToString();
             First = result.Anonymous ? "" : result.First;
             Last = result.Anonymous ? "" : result.Last;
@@ -40,33 +40,22 @@ namespace Chronokeep.Objects.ChronoKeepAPI
             {
                 string[] split1 = result.Time.Split('.');
                 string[] split2 = split1[0].Split(':');
-                Log.D("Objects.API.APIResult", string.Format("Time is {0} - Split1 {1} - Split2 length {2}", result.Time, split1[0], split2.Length));
-                switch (split2.Length)
+                Log.D("Objects.API.APIResult", $"Time is {result.Time} - Split1 {split1[0]} - Split2 length {split2.Length}");
+                Seconds = split2.Length switch
                 {
-                    case 3:
+                    3 =>
                         // HOURS : MINUTES : SECONDS -- Seconds * 1 + Minutes * 60 + Hours * 60 * 60
-                        Seconds = Convert.ToInt32(split2[2]) + Convert.ToInt32(split2[1]) * 60 + Convert.ToInt32(split2[0]) * 60 * 60;
-                        break;
-                    case 2:
+                        Convert.ToInt32(split2[2]) + Convert.ToInt32(split2[1]) * 60 +
+                        Convert.ToInt32(split2[0]) * 60 * 60,
+                    2 =>
                         // MINUTES : SECONDS -- Seconds * 1 + Minutes * 60
-                        Seconds = Convert.ToInt32(split2[1]) + Convert.ToInt32(split2[0]) * 60;
-                        break;
-                    case 1:
+                        Convert.ToInt32(split2[1]) + Convert.ToInt32(split2[0]) * 60,
+                    1 =>
                         // SECONDS
-                        Seconds = Convert.ToInt32(split2[0]);
-                        break;
-                    default:
-                        Seconds = 0;
-                        break;
-                }
-                if (split1.Length == 2)
-                {
-                    Milliseconds = Convert.ToInt32(split1[1]);
-                }
-                else
-                {
-                    Milliseconds = 0;
-                }
+                        Convert.ToInt32(split2[0]),
+                    _ => 0
+                };
+                Milliseconds = split1.Length == 2 ? Convert.ToInt32(split1[1]) : 0;
             }
         }
 

@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Chronokeep.UI.API.Parts.APIExpanderPart"
+             x:Class="Chronokeep.UI.API.Parts.ApiExpanderPart"
              IsTabStop="False">
     <Expander IsExpanded="True"
               Margin="5"
@@ -12,8 +12,8 @@
               HorizontalContentAlignment="Center"
               >
         <Expander.Header>
-           <TextBlock Name="APINameBlock" Margin="5,0,0,0"/> 
+           <TextBlock Name="ApiNameBlock" Margin="5,0,0,0"/> 
         </Expander.Header>
-        <ListBox Name="readerListView" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <ListBox Name="ReaderListView" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Expander>
 </UserControl>

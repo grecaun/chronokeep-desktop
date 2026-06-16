@@ -36,7 +36,9 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -52,36 +54,25 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <Grid Margin="5,5,5,5" Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="30"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="60"/>
-            </Grid.RowDefinitions>
-                <TextBox Grid.Row="0"
-                         Name="searchBox"
-                         TextChanged="SearchBox_TextChanged"
-                         PlaceholderText="Search..."
-                         Margin="35,0,35,15"
-                         VerticalAlignment="Center"
-                         VerticalContentAlignment="Center">
+        <Grid Margin="5,5,5,5" Grid.Row="1" RowDefinitions="Auto,30,*,60">
+            <TextBox Grid.Row="0"
+                     Name="SearchBox"
+                     TextChanged="SearchBox_TextChanged"
+                     PlaceholderText="Search..."
+                     Margin="35,0,35,15"
+                     VerticalAlignment="Center"
+                     VerticalContentAlignment="Center">
                     <TextBox.InnerLeftContent>
                         <PathIcon Data="{StaticResource search_regular}" Margin="10,0,5,0"/>
                     </TextBox.InnerLeftContent>
                 </TextBox>
-            <Grid Grid.Row="1" Margin="30,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250" />
-                    <ColumnDefinition Width="70" />
-                    <ColumnDefinition Width="100" />
-                </Grid.ColumnDefinitions>
+            <Grid Grid.Row="1" Margin="30,0" ColumnDefinitions="250,70,100">
                 <TextBlock Grid.Column="0" Margin="8,4" Text="Name" />
                 <TextBlock Grid.Column="1" Margin="8,4" Text="Year" />
                 <TextBlock Grid.Column="2" Margin="8,4" Text="Date" />
             </Grid>
             <ListBox Grid.Row="2"
-                     Name="eventList"
+                     Name="EventList"
                      DoubleTapped="EventList_MouseDoubleClick"
                      Margin="30,0"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -89,12 +80,7 @@
                      VerticalAlignment="Stretch">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="250" />
-                                <ColumnDefinition Width="70" />
-                                <ColumnDefinition Width="100" />
-                            </Grid.ColumnDefinitions>
+                        <Grid ColumnDefinitions="250,70,100">
                             <TextBlock Grid.Column="0" Margin="8,4" Text="{Binding Name}" x:DataType="objects:Event"/>
                             <TextBlock Grid.Column="1" Margin="8,4" Text="{Binding YearCode}" x:DataType="objects:Event"/>
                             <TextBlock Grid.Column="2" Margin="8,4" Text="{Binding Date}" x:DataType="objects:Event"/>

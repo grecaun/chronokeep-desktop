@@ -12,30 +12,28 @@ using System.Threading;
 
 namespace Chronokeep.Timing
 {
-    class TimingController(IMainWindow mainWindow, IDBInterface database)
+    internal class TimingController(IMainWindow mainWindow, IDBInterface database)
     {
-        readonly List<Socket> TimingSystemSockets = [], readList = [];
-        readonly Dictionary<Socket, TimingSystem> TimingSystemDict = [];
+        private readonly List<Socket> timingSystemSockets = [], readList = [];
+        private readonly Dictionary<Socket, TimingSystem> timingSystemDict = [];
 
-        private static readonly Lock timingLock = new();
-        private static readonly Lock readsLock = new();
-        private static bool Running = false;
-        private static bool NewReads = false;
+        private static readonly Lock TimingLock = new();
+        private static readonly Lock ReadsLock = new();
+        private static bool running;
+        private static bool newReads;
 
         public static bool IsRunning()
         {
             bool output = false;
             Log.D("Timing.TimingController", "Lock Wait 01");
-            if (timingLock.TryEnter(6000))
+            if (!TimingLock.TryEnter(6000)) return output;
+            try
             {
-                try
-                {
-                    output = Running;
-                }
-                finally
-                {
-                    timingLock.Exit();
-                }
+                output = running;
+            }
+            finally
+            {
+                TimingLock.Exit();
             }
             return output;
         }
@@ -44,24 +42,22 @@ namespace Chronokeep.Timing
         {
             bool output = false;
             Log.D("Timing.TimingController", "Lock Wait 02");
-            if (readsLock.TryEnter(3000))
+            if (!ReadsLock.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    output = NewReads;
-                    NewReads = false;
-                }
-                finally
-                {
-                    readsLock.Exit();
-                }
+                output = newReads;
+                newReads = false;
+            }
+            finally
+            {
+                ReadsLock.Exit();
             }
             return output;
         }
 
         public List<TimingSystem> GetConnectedSystems()
         {
-            List<TimingSystem> output = [.. TimingSystemDict.Values];
+            List<TimingSystem> output = [.. timingSystemDict.Values];
             return output;
         }
 
@@ -80,19 +76,20 @@ namespace Chronokeep.Timing
                 int i = 1;
                 foreach (Socket sock in sockets)
                 {
-                    Log.D("Timing.TimingController", "Socket " + i++);
-                    TimingSystemDict[sock] = system;
+                    Log.D("Timing.TimingController", $"Socket {i}");
+                    i++;
+                    timingSystemDict[sock] = system;
                     if (sock.Connected)
                     {
-                        Log.D("Timing.TimingController", "Connected to " + system.IPAddress);
-                        TimingSystemSockets.Add(sock);
-                        TimingSystemDict[sock].SetLastCommunicationTime();
-                        TimingSystemDict[sock].Status = SYSTEM_STATUS.CONNECTED;
+                        Log.D("Timing.TimingController", "Connected to " + system.IpAddress);
+                        timingSystemSockets.Add(sock);
+                        timingSystemDict[sock].SetLastCommunicationTime();
+                        timingSystemDict[sock].Status = SYSTEM_STATUS.CONNECTED;
                     }
                     else
                     {
-                        TimingSystemDict.Remove(sock);
-                        if (!TimingSystemDict.ContainsValue(system))
+                        timingSystemDict.Remove(sock);
+                        if (!timingSystemDict.ContainsValue(system))
                         {
                             system.Status = SYSTEM_STATUS.DISCONNECTED;
                         }
@@ -103,7 +100,7 @@ namespace Chronokeep.Timing
 
         public void Shutdown()
         {
-            foreach (Socket sock in TimingSystemSockets)
+            foreach (Socket sock in timingSystemSockets)
             {
                 sock.Close();
             }
@@ -114,8 +111,8 @@ namespace Chronokeep.Timing
             system.Disconnect();
             foreach (Socket sock in system.Sockets!)
             {
-                TimingSystemSockets.Remove(sock);
-                TimingSystemDict.Remove(sock);
+                timingSystemSockets.Remove(sock);
+                timingSystemDict.Remove(sock);
             }
             system.Status = SYSTEM_STATUS.DISCONNECTED;
         }
@@ -123,20 +120,20 @@ namespace Chronokeep.Timing
         public void Run()
         {
             Log.D("Timing.TimingController", "Timing Controller is now running.");
-            if (timingLock.TryEnter(3000))
+            if (TimingLock.TryEnter(3000))
             {
                 try
                 {
-                    if (Running == true)
+                    if (running)
                     {
                         Log.D("Timing.TimingController", "Timing Controller Thread already running.");
                         return;
                     }
-                    Running = true;
+                    running = true;
                 }
                 finally
                 {
-                    timingLock.Exit();
+                    TimingLock.Exit();
                 }
             }
             else
@@ -144,52 +141,53 @@ namespace Chronokeep.Timing
                 Log.D("Timing.TimingController", "Unable to acquire lock.");
                 return;
             }
-            bool UpdateTiming = false;
-            bool ChipRead = false;
-            while (TimingSystemSockets.Count > 0)
+            while (timingSystemSockets.Count > 0)
             {
                 Log.D("Timing.TimingController", "Loop start.");
                 readList.Clear();
-                readList.AddRange(TimingSystemSockets);
+                readList.AddRange(timingSystemSockets);
                 try
                 {
                     Socket.Select(readList, null, null, 3000000);
                 }
-                catch { }
+                catch
+                {
+                    Log.D("Timing.TimingController", "Socket select not working.");
+                }
                 foreach (Socket sock in readList)
                 {
                     Log.D("Timing.TimingController", "Reading from socket.");
-                    ChipRead = false;
-                    UpdateTiming = false;
+                    bool chipRead = false;
+                    bool updateTiming = false;
                     byte[] recvd = new byte[4112];
                     try
                     {
-                        int num_recvd = sock.Receive(recvd);
-                        if (num_recvd == 0)
+                        int numRecvd = sock.Receive(recvd);
+                        if (numRecvd == 0)
                         {
                             Log.D("Timing.TimingController", "No longer connected to Timing System");
-                            TimingSystem disconnected = TimingSystemDict[sock];
-                            TimingSystemSockets.Remove(sock);
-                            TimingSystemDict.Remove(sock);
+                            TimingSystem disconnected = timingSystemDict[sock];
+                            timingSystemSockets.Remove(sock);
+                            timingSystemDict.Remove(sock);
                             mainWindow.TimingSystemDisconnected(disconnected);
                         }
                         else
                         {
-                            string msg = Encoding.UTF8.GetString(recvd, 0, num_recvd);
+                            string msg = Encoding.UTF8.GetString(recvd, 0, numRecvd);
                             Log.D("Timing.TimingController", "Timing System - Message is :" + msg.Trim());
-                            Dictionary<MessageType, List<string>> messageTypes = TimingSystemDict[sock].SystemInterface!.ParseMessages(msg, sock);
+                            Dictionary<MessageType, List<string>> messageTypes = timingSystemDict[sock].SystemInterface!.ParseMessages(msg, sock);
                             foreach (MessageType type in messageTypes.Keys)
                             {
                                 switch (type)
                                 {
                                     case MessageType.CONNECTED:
                                         Log.D("Timing.TimingController", "Timing system successfully connected.");
-                                        TimingSystemDict[sock].Status = SYSTEM_STATUS.CONNECTED;
-                                        UpdateTiming = true;
+                                        timingSystemDict[sock].Status = SYSTEM_STATUS.CONNECTED;
+                                        updateTiming = true;
                                         break;
                                     case MessageType.CHIPREAD:
                                         Log.D("Timing.TimingController", "Chipreads found");
-                                        ChipRead = true;
+                                        chipRead = true;
                                         break;
                                     case MessageType.SETTINGCHANGE:
                                         Log.D("Timing.TimingController", "Setting value changed.");
@@ -205,38 +203,43 @@ namespace Chronokeep.Timing
                                         break;
                                     case MessageType.TIME:
                                         Log.D("Timing.TimingController", "Time value received.");
-                                        TimingSystemDict[sock].SystemTime = messageTypes[MessageType.TIME].First<string>();
-                                        UpdateTiming = true;
+                                        timingSystemDict[sock].SystemTime = messageTypes[MessageType.TIME].First();
+                                        updateTiming = true;
                                         break;
                                     case MessageType.STATUS:
                                         Log.D("Timing.TimingController", "Status message received.");
-                                        TimingSystemDict[sock].SystemStatus = messageTypes[MessageType.STATUS].Last<string>();
-                                        UpdateTiming = true;
+                                        timingSystemDict[sock].SystemStatus = messageTypes[MessageType.STATUS].Last();
+                                        updateTiming = true;
                                         break;
                                     case MessageType.ERROR:
                                         Log.D("Timing.TimingController", "Error from timing system.");
                                         break;
+                                    case MessageType.UNKNOWN:
+                                    case MessageType.NONE:
+                                    case MessageType.SUCCESS:
+                                    case MessageType.DISCONNECT:
+                                    default:
+                                        break;
                                 }
                             }
                         }
-                        if (UpdateTiming && !sock.Poll(100, SelectMode.SelectRead))
+                        if (updateTiming && !sock.Poll(100, SelectMode.SelectRead))
                         {
-                            UpdateTiming = false;
                             mainWindow.UpdateTimingFromController();
                         }
-                        if (ChipRead)
+                        if (chipRead)
                         {
                             Log.D("Timing.TimingController", "Lock Wait 05");
-                            if (readsLock.TryEnter(3000))
+                            if (ReadsLock.TryEnter(3000))
                             {
                                 try
                                 {
-                                    NewReads = true;
+                                    newReads = true;
                                     mainWindow.NotifyTimingWorker();
                                 }
                                 finally
                                 {
-                                    readsLock.Exit();
+                                    ReadsLock.Exit();
                                 }
                             }
                         }
@@ -244,7 +247,7 @@ namespace Chronokeep.Timing
                     catch (Exception e)
                     {
                         Log.E("Timing.TimingController", "Error trying to parse messages. " + e.Message);
-                        if (TimingSystemDict.TryGetValue(sock, out TimingSystem? system))
+                        if (timingSystemDict.TryGetValue(sock, out TimingSystem? system))
                         {
                             Log.D("Timing.TimingController", "Socket errored on us.");
                             try
@@ -255,8 +258,8 @@ namespace Chronokeep.Timing
                             {
                                 Log.E("Timing.TimingController", "Error attempting to close settings. " + ex.Message);
                             }
-                            TimingSystemSockets.Remove(sock);
-                            TimingSystemDict.Remove(sock);
+                            timingSystemSockets.Remove(sock);
+                            timingSystemDict.Remove(sock);
                             mainWindow.TimingSystemDisconnected(system);
                         }
                         else
@@ -269,43 +272,32 @@ namespace Chronokeep.Timing
                 List<Socket> toRemove = [];
                 try
                 {
-                    foreach (Socket sock in TimingSystemSockets)
+                    foreach (Socket sock in timingSystemSockets)
                     {
-                        TimingSystem sys = TimingSystemDict[sock];
-                        if (sys != null)
-                        {
-                            if (sys.Status != SYSTEM_STATUS.CONNECTED && sys.TimedOut()) // Not connected & Timed out.
-                            {
-                                sys.Status = SYSTEM_STATUS.DISCONNECTED;
-                                mainWindow.UpdateTimingFromController();
-                                TimingSystemDict.Remove(sock);
-                                toRemove.Add(sock);
-                            }
-                        }
-                        else // Socket not found in dictionary.
-                        {
-                            toRemove.Add(sock);
-                        }
+                        TimingSystem sys = timingSystemDict[sock];
+                        if (sys.Status == SYSTEM_STATUS.CONNECTED || !sys.TimedOut()) continue; // Not connected & Timed out.
+                        sys.Status = SYSTEM_STATUS.DISCONNECTED;
+                        mainWindow.UpdateTimingFromController();
+                        timingSystemDict.Remove(sock);
+                        toRemove.Add(sock);
                     }
                 }
                 catch (Exception e)
                 {
                     Log.E("Timing.TimingController", "Something went wrong trying to remove a socket. " + e.Message);
                 }
-                TimingSystemSockets.RemoveAll(i => toRemove.Contains(i));
+                timingSystemSockets.RemoveAll(toRemove.Contains);
                 Log.D("Timing.TimingController", "Loop end.");
             }
             Log.D("Timing.TimingController", "Lock Wait 06");
-            if (timingLock.TryEnter(6000))
+            if (!TimingLock.TryEnter(6000)) return;
+            try
             {
-                try
-                {
-                    Running = false;
-                }
-                finally
-                {
-                    timingLock.Exit();
-                }
+                running = false;
+            }
+            finally
+            {
+                TimingLock.Exit();
             }
         }
     }

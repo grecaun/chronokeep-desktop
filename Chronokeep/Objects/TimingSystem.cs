@@ -6,6 +6,7 @@ using Chronokeep.Timing.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Chronokeep.Constants;
 
 namespace Chronokeep.Objects
 {
@@ -17,55 +18,51 @@ namespace Chronokeep.Objects
         public const string READING_STATUS_UNKNOWN = "UNKNOWN";
 
         public int SystemIdentifier { get; set; } = Constants.Timing.TIMINGSYSTEM_UNKNOWN;
-        public string IPAddress { get; set; }
+        public string IpAddress { get; set; }
         public int Port { get; set; }
-        public int LocationID { get; set; } = Constants.Timing.LOCATION_FINISH;
+        public int LocationId { get; set; } = Constants.Timing.LOCATION_FINISH;
         public string LocationName { get; set; } = "Unknown";
-        public string Type { get; set; } = Constants.Readers.SYSTEM_RFID;
-        public SYSTEM_STATUS Status { get; set; } = SYSTEM_STATUS.DISCONNECTED;
+        public string Type { get; private set; }
+        public SYSTEM_STATUS Status { get; set; }
         public List<Socket>? Sockets { get; private set; }
         public ITimingSystemInterface? SystemInterface;
-        private DateTime ConnectedAt;
+        private DateTime connectedAt;
 
         public string SystemTime { get; set; } = "";
         public string SystemStatus { get; set; } = "";
 
         public TimingSystem(string ip, string type)
         {
-            this.IPAddress = ip;
-            this.Status = SYSTEM_STATUS.DISCONNECTED;
-            this.Type = type;
-            if (type == Constants.Readers.SYSTEM_RFID)
+            IpAddress = ip;
+            Status = SYSTEM_STATUS.DISCONNECTED;
+            Type = type;
+            Port = type switch
             {
-                this.Port = Constants.Readers.RFID_DEFAULT_PORT;
-            }
-            else if (type == Constants.Readers.SYSTEM_IPICO || type == Constants.Readers.SYSTEM_IPICO_LITE)
-            {
-                this.Port = Constants.Readers.IPICO_DEFAULT_PORT;
-            }
-            else if (type == Constants.Readers.SYSTEM_CHRONOKEEP_PORTAL)
-            {
-                this.Port = Constants.Network.CHRONOKEEP_ZCONF_PORT;
-            }
+                Readers.SYSTEM_RFID => Readers.RFID_DEFAULT_PORT,
+                Readers.SYSTEM_IPICO or Readers.SYSTEM_IPICO_LITE => Readers
+                    .IPICO_DEFAULT_PORT,
+                Readers.SYSTEM_CHRONOKEEP_PORTAL => Constants.Network.CHRONOKEEP_ZCONF_PORT,
+                _ => Port
+            };
         }
 
         public TimingSystem(string ip, int locId, string locName, SYSTEM_STATUS status, string type)
         {
-            this.IPAddress = ip;
-            this.LocationID = locId;
-            this.LocationName = locName;
-            this.Status = status;
-            this.Type = type;
+            IpAddress = ip;
+            LocationId = locId;
+            LocationName = locName;
+            Status = status;
+            Type = type;
         }
 
         public TimingSystem(int sysId, string ip, int port, int location, string type)
         {
-            this.SystemIdentifier = sysId;
-            this.IPAddress = ip;
-            this.Port = port;
-            this.Type = type;
-            this.LocationID = location;
-            this.Status = SYSTEM_STATUS.DISCONNECTED;
+            SystemIdentifier = sysId;
+            IpAddress = ip;
+            Port = port;
+            Type = type;
+            LocationId = location;
+            Status = SYSTEM_STATUS.DISCONNECTED;
         }
 
         public List<Socket>? Connect()
@@ -75,7 +72,7 @@ namespace Chronokeep.Objects
                 return null;
             }
             Log.D("Objects.TimingSystem", "TimingSystem class calling connect on interface.");
-            Sockets = SystemInterface.Connect(IPAddress, Port);
+            Sockets = SystemInterface.Connect(IpAddress, Port);
             Log.D("Objects.TimingSystem", "TimingSystem class returning output from Connect.");
             return Sockets;
         }
@@ -83,85 +80,78 @@ namespace Chronokeep.Objects
         public void Disconnect()
         {
             SystemInterface?.Disconnect();
-            if (Sockets != null)
+            if (Sockets == null) return;
+            foreach (Socket sock in Sockets)
             {
-                foreach (Socket sock in Sockets)
-                {
-                    sock.Disconnect(false);
-                }
+                sock.Disconnect(false);
             }
         }
 
         public void UpdateSystemType(string type)
         {
-            this.Type = type;
-            if (type == Constants.Readers.SYSTEM_RFID)
+            Type = type;
+            Port = type switch
             {
-                this.Port = Constants.Readers.RFID_DEFAULT_PORT;
-            }
-            else if (type == Constants.Readers.SYSTEM_IPICO || type == Constants.Readers.SYSTEM_IPICO_LITE)
-            {
-                this.Port = Constants.Readers.IPICO_DEFAULT_PORT;
-            }
-            else if (type == Constants.Readers.SYSTEM_CHRONOKEEP_PORTAL)
-            {
-                this.Port = Constants.Network.CHRONOKEEP_ZCONF_PORT;
-            }
+                Readers.SYSTEM_RFID => Readers.RFID_DEFAULT_PORT,
+                Readers.SYSTEM_IPICO or Readers.SYSTEM_IPICO_LITE => Readers.IPICO_DEFAULT_PORT,
+                Readers.SYSTEM_CHRONOKEEP_PORTAL => Constants.Network.CHRONOKEEP_ZCONF_PORT,
+                _ => Port
+            };
         }
 
         public void CopyFrom(TimingSystem other)
         {
-            this.IPAddress = other.IPAddress;
-            this.LocationID = other.LocationID;
-            this.LocationName = other.LocationName;
-            this.Port = other.Port;
-            this.Type = other.Type;
+            IpAddress = other.IpAddress;
+            LocationId = other.LocationId;
+            LocationName = other.LocationName;
+            Port = other.Port;
+            Type = other.Type;
         }
 
         public void CreateTimingSystemInterface(IDBInterface database, IMainWindow window)
         {
-            if (this.Type == Constants.Readers.SYSTEM_RFID)
+            switch (Type)
             {
-                Log.D("Objects.TimingSystem", "System interface is RFID.");
-                SystemInterface = new RFIDUltraInterface(database, LocationID, window);
-            }
-            else if (this.Type == Constants.Readers.SYSTEM_IPICO || this.Type == Constants.Readers.SYSTEM_IPICO_LITE)
-            {
-                Log.D("Objects.TimingSystem", "System interface is IPICO.");
-                SystemInterface = new IpicoInterface(database, LocationID, this.Type, window);
-            }
-            else if (this.Type == Constants.Readers.SYSTEM_CHRONOKEEP_PORTAL)
-            {
-                Log.D("Objects.TimingSystem", "System interface is CHRONOKEEP_PORTAL.");
-                SystemInterface = new ChronokeepInterface(database, LocationID, window);
-            }
-            else
-            {
-                Log.E("Objects.TimingSystem", "Unknown interface selected.");
-                SystemInterface = null;
+                case Readers.SYSTEM_RFID:
+                    Log.D("Objects.TimingSystem", "System interface is RFID.");
+                    SystemInterface = new RfidUltraInterface(database, LocationId, window);
+                    break;
+                case Readers.SYSTEM_IPICO:
+                case Readers.SYSTEM_IPICO_LITE:
+                    Log.D("Objects.TimingSystem", "System interface is IPICO.");
+                    SystemInterface = new IpicoInterface(database, LocationId, Type, window);
+                    break;
+                case Readers.SYSTEM_CHRONOKEEP_PORTAL:
+                    Log.D("Objects.TimingSystem", "System interface is CHRONOKEEP_PORTAL.");
+                    SystemInterface = new ChronokeepInterface(database, LocationId, window);
+                    break;
+                default:
+                    Log.E("Objects.TimingSystem", "Unknown interface selected.");
+                    SystemInterface = null;
+                    break;
             }
         }
 
         public void SetLastCommunicationTime()
         {
-            this.ConnectedAt = DateTime.Now;
+            connectedAt = DateTime.Now;
         }
 
         public bool TimedOut()
         {
-            TimeSpan ellapsed = DateTime.Now - ConnectedAt;
+            TimeSpan ellapsed = DateTime.Now - connectedAt;
             return ellapsed.Seconds > 5;
         }
 
         public bool Equals(TimingSystem? other)
         {
-            return other != null && this.IPAddress.Trim().Equals(other.IPAddress.Trim()) && this.Port == other.Port
-                && this.LocationID == other.LocationID && this.Type.Equals(other.Type);
+            return other != null && IpAddress.Trim().Equals(other.IpAddress.Trim()) && Port == other.Port
+                && LocationId == other.LocationId && Type.Equals(other.Type);
         }
 
         public bool Saved()
         {
-            return this.SystemIdentifier != Constants.Timing.TIMINGSYSTEM_UNKNOWN;
+            return SystemIdentifier != Constants.Timing.TIMINGSYSTEM_UNKNOWN;
         }
     }
 

@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -23,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,50 +30,50 @@ using static Chronokeep.Helpers.Globals;
 
 namespace Chronokeep.UI
 {
-    public partial class MainWindow : Window, IMainWindow
+    public partial class MainWindow : ChronokeepWindow, IMainWindow
     {
-        internal static Window? mWindow;
-        internal IMainPage? CurrentPage;
-        internal static bool ForceClose = false;
+        internal static Window? MWindow;
+        private IMainPage? currentPage;
+        private static bool forceClose;
 
         private readonly MemStore.MemStore? database;
         internal static string DatabaseFileName = "Chronokeep.sqlite";
 
         // Network objects
-        private HttpServer? httpServer = null;
-        private readonly int httpServerPort = 6933;
+        private HttpServer? httpServer;
+        private const int HttpServerPort = 6933;
 
         // Zero Conf/Registration objects.
-        private Thread? ZConfThread = null;
-        private ZeroConf? ZConfServer = null;
-        private Thread? RegistrationThread = null;
-        private RegistrationWorker? RegistrationWorker = null;
+        private Thread? zConfThread;
+        private ZeroConf? zConfServer;
+        private Thread? registrationThread;
+        private RegistrationWorker? registrationWorker;
 
         // Timing objects.
-        private Thread? TimingControllerThread = null;
-        private TimingController? TimingController = null;
-        private Thread? TimingWorkerThread = null;
-        private TimingWorker? TimingWorker = null;
+        private Thread? timingControllerThread;
+        private TimingController? timingController;
+        private Thread? timingWorkerThread;
+        private TimingWorker? timingWorker;
 
         // API objects.
-        private Thread? APIControllerThread = null;
-        private APIController? APIController = null;
+        private Thread? apiControllerThread;
+        private ApiController? apiController;
 
         // Remote Reads objects
-        private Thread? RemoteThread = null;
-        private RemoteReadsController? RemoteController = null;
+        private Thread? remoteThread;
+        private RemoteReadsController? remoteController;
 
         // Announcer objects
-        private AnnouncerWindow? announcerWindow = null;
+        private AnnouncerWindow? announcerWindow;
 
         private readonly List<Window> openWindows = [];
 
         // Setting to allow the user to enter a mode where we can record DNS chips.
-        private bool didNotStartMode = false;
+        private bool didNotStartMode;
         private readonly Lock dnsLock = new();
 
         // Setup a timer for updating the view
-        private readonly DispatcherTimer TimingUpdater = new();
+        private readonly DispatcherTimer timingUpdater = new();
 
         // Set up a mutex that will be unique for this program to ensure we only ever have a single instance of it running.
         // Allow for a debug version and non-debug version to run at the same time.
@@ -86,7 +86,7 @@ namespace Chronokeep.UI
         public MainWindow()
         {
             InitializeComponent();
-            mWindow = this;
+            MWindow = this;
 
             // Check that no other instance of this program are running.
             if (!OneWindow.WaitOne(TimeSpan.Zero, true))
@@ -122,7 +122,8 @@ namespace Chronokeep.UI
             }
             catch (InvalidDatabaseVersion db)
             {
-                DialogBox.Show(string.Format("Database version greater than the max known by this client. Please update the client. Database version {0}. Max version for this client {1}", db.FoundVersion, db.MaxVersion));
+                DialogBox.Show(
+                    $"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
                 Close();
                 return;
             }
@@ -134,8 +135,8 @@ namespace Chronokeep.UI
             // Setup AgeGroup static variables
             Event? theEvent = database.GetCurrentEvent();
 
-            CurrentPage = new DashboardPage(this, database);
-            CurrentContent.Content = CurrentPage;
+            currentPage = new DashboardPage(this, database);
+            CurrentContent.Content = currentPage;
 
             UpdateStatus();
 
@@ -148,9 +149,9 @@ namespace Chronokeep.UI
             DataContext = this;
 
             // Set timing update to every two tenths of a second.
-            TimingUpdater.Tick += UpdateTimingTick;
-            TimingUpdater.Interval = new TimeSpan(0, 0, 0, 0, 200);
-            TimingUpdater.Start();
+            timingUpdater.Tick += UpdateTimingTick;
+            timingUpdater.Interval = new TimeSpan(0, 0, 0, 0, 200);
+            timingUpdater.Start();
 
             // Set the global upload interval.
             if (!int.TryParse(database.GetAppSetting(Constants.Settings.UPLOAD_INTERVAL)!.Value, out Globals.UploadInterval))
@@ -190,7 +191,7 @@ namespace Chronokeep.UI
             {
                 return;
             }
-            if (!ForceClose && database.GetAppSetting(Constants.Settings.EXIT_NO_PROMPT)!.Value == Constants.Settings.SETTING_FALSE &&
+            if (!forceClose && database.GetAppSetting(Constants.Settings.EXIT_NO_PROMPT)!.Value == Constants.Settings.SETTING_FALSE &&
                 (BackgroundProcessesRunning()))
             {
                 DialogBox.Show(
@@ -199,8 +200,8 @@ namespace Chronokeep.UI
                     "No",
                     () =>
                         {
-                            ForceClose = true;
-                            mWindow?.Close();
+                            forceClose = true;
+                            MWindow?.Close();
                         }
                     );
                 e.Cancel = true;
@@ -211,32 +212,50 @@ namespace Chronokeep.UI
             {
                 StopTimingController();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping timing controller.");    
+            }
             try
             {
                 StopTimingWorker();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping timing worker.");    
+            }
             try
             {
                 StopAPIController();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping api controller.");    
+            }
             try
             {
                 StopAnnouncer();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping announcer.");    
+            }
             try
             {
                 StopRegistration();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping registration.");    
+            }
             try
             {
                 httpServer?.Stop();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping http server.");    
+            }
             foreach (Window w in openWindows)
             {
                 try
@@ -250,22 +269,28 @@ namespace Chronokeep.UI
             }
             try
             {
-                CurrentPage?.Closing();
+                currentPage?.Closing();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error closing current page.");    
+            }
             try
             {
-                TimingUpdater.Stop();
+                timingUpdater.Stop();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping timing updater.");    
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            TimingController = new TimingController(this, database!);
-            TimingWorker = TimingWorker.NewWorker(this, database!);
-            TimingWorkerThread = new Thread(new ThreadStart(TimingWorker.Run));
-            TimingWorkerThread.Start();
+            timingController = new TimingController(this, database!);
+            timingWorker = TimingWorker.NewWorker(this, database!);
+            timingWorkerThread = new Thread(timingWorker.Run);
+            timingWorkerThread.Start();
             TimingWorker.Notify();
             // Check for current theme color and apply it.
             AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);
@@ -276,12 +301,12 @@ namespace Chronokeep.UI
             // Check for hardware changes.
             Log.D("UI.MainWindow", "Starting hardware checker.");
             HardwareChecker hwCheck = new(database);
-            Thread hardwareThread = new(new ThreadStart(hwCheck.Run));
+            Thread hardwareThread = new(hwCheck.Run);
             hardwareThread.Start();
             UpdateTimingBadge();
             // Check last known program version
             Log.D("UI.MainWindow", "Starting changelog version checker.");
-            string gitVersion = "";
+            string gitVersion;
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
             {
                 using StreamReader reader = new(stream);
@@ -292,9 +317,9 @@ namespace Chronokeep.UI
                 gitVersion = gitVersion.Split('-')[0];
             }
             Log.D("UI.MainWindow", "Version.txt read.");
-            AppSetting programVers = database.GetAppSetting(Constants.Settings.PROGRAM_VERSION)!;
-            AppSetting showChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG)!;
-            if (programVers == null && showChangelog != null && showChangelog.Value == Constants.Settings.SETTING_TRUE)
+            AppSetting? programVers = database.GetAppSetting(Constants.Settings.PROGRAM_VERSION);
+            AppSetting? showChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG);
+            if (programVers == null && showChangelog is { Value: Constants.Settings.SETTING_TRUE })
             {
                 Log.D("UI.MainWindow", "AppSetting not set.");
                 // Program version was not set, thus this is an upgraded program.
@@ -321,7 +346,7 @@ namespace Chronokeep.UI
                         (newMajor == oldMajor && (newMinor > oldMinor       // The Major versions match but the new Minor version is greater than the old Minor version (1.9.0 -> 1.10.0)
                         || (newMinor == oldMinor && newPatch > oldPatch)))) // The Major and Minor versions match but the new Patch version is greater than the old Patch version (1.10.0 -> 1.10.1)
                     {
-                        if (showChangelog != null && showChangelog.Value == Constants.Settings.SETTING_TRUE)
+                        if (showChangelog is { Value: Constants.Settings.SETTING_TRUE })
                         {
                             ChangeLogWindow clw = ChangeLogWindow.NewWindow(this, database);
                             clw.Show();
@@ -338,15 +363,15 @@ namespace Chronokeep.UI
 
         public void SwitchPage(IMainPage iPage)
         {
-            CurrentPage?.Closing();
-            CurrentPage = iPage;
-            CurrentContent.Content = CurrentPage;
+            currentPage?.Closing();
+            currentPage = iPage;
+            CurrentContent.Content = currentPage;
         }
 
         private void DashboardButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Dashboard button clicked.");
-            if (CurrentPage is DashboardPage)
+            if (currentPage is DashboardPage)
             {
                 Log.D("UI.MainWindow", "Dashboard page already displayed.");
                 return;
@@ -359,7 +384,7 @@ namespace Chronokeep.UI
         private void TimingButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Timing button clicked.");
-            if (CurrentPage is TimingPage page)
+            if (currentPage is TimingPage page)
             {
                 Log.D("UI.MainWindow", "Timing page already displayed.");
                 page.LoadMainDisplay();
@@ -373,7 +398,7 @@ namespace Chronokeep.UI
         private void ParticipantsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Participants button clicked.");
-            if (CurrentPage is ParticipantsPage)
+            if (currentPage is ParticipantsPage)
             {
                 Log.D("UI.MainWindow", "Participants page already displayed.");
                 return;
@@ -386,7 +411,7 @@ namespace Chronokeep.UI
         private void ChipsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Chips button clicked.");
-            if (CurrentPage is ChipAssignmentPage)
+            if (currentPage is ChipAssignmentPage)
             {
                 Log.D("UI.MainWindow", "Chips page already displayed.");
                 return;
@@ -399,7 +424,7 @@ namespace Chronokeep.UI
         private void LocationsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Locations button clicked.");
-            if (CurrentPage is LocationsPage)
+            if (currentPage is LocationsPage)
             {
                 Log.D("UI.MainWindow", "Locations page already displayed.");
                 return;
@@ -411,7 +436,7 @@ namespace Chronokeep.UI
         private void DistancesButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Distances button clicked.");
-            if (CurrentPage is DistancesPage)
+            if (currentPage is DistancesPage)
             {
                 Log.D("UI.MainWindow", "Distances page already displayed.");
                 return;
@@ -424,7 +449,7 @@ namespace Chronokeep.UI
         private void SegmentsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Segments button clicked.");
-            if (CurrentPage is SegmentsPage)
+            if (currentPage is SegmentsPage)
             {
                 Log.D("UI.MainWindow", "Segments page already displayed.");
                 return;
@@ -437,7 +462,7 @@ namespace Chronokeep.UI
         private void AgeGroupsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Age Groups button clicked.");
-            if (CurrentPage is AgeGroupsPage)
+            if (currentPage is AgeGroupsPage)
             {
                 Log.D("UI.MainWindow", "Age groups page already displayed.");
                 return;
@@ -450,7 +475,7 @@ namespace Chronokeep.UI
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Settings button clicked.");
-            if (CurrentPage is SettingsPage)
+            if (currentPage is SettingsPage)
             {
                 Log.D("UI.MainWindow", "Settings page already displayed.");
                 return;
@@ -463,7 +488,7 @@ namespace Chronokeep.UI
         private void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "About button clicked.");
-            if (CurrentPage is AboutPage)
+            if (currentPage is AboutPage)
             {
                 Log.D("UI.MainWindow", "About page already displayed.");
                 return;
@@ -478,36 +503,13 @@ namespace Chronokeep.UI
             ParentSplitView.IsPaneOpen = !ParentSplitView.IsPaneOpen;
         }
 
-        private void OnMinimize(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        private void OnMaximize(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
-        }
-
-        private void OnClose(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        protected override void SetMaximizeIcon()
         {
             MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-            UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
+            UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;        
         }
 
-        private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
-        {
-            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            {
-                BeginMoveDrag(e);
-            }
-        }
-
-        private void OnTitleBarDoubleTapped(object? sender, TappedEventArgs e)
+        protected override void Maximize()
         {
             WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
         }
@@ -528,7 +530,7 @@ namespace Chronokeep.UI
 
         public bool IsRegistrationRunning()
         {
-            return (RegistrationWorker != null && RegistrationWorker.IsRunning()) && (ZConfServer != null && ZeroConf.IsRunning());
+            return (registrationWorker != null && registrationWorker.IsRunning()) && (zConfServer != null && ZeroConf.IsRunning());
         }
 
         public bool StopRegistration()
@@ -537,7 +539,7 @@ namespace Chronokeep.UI
             try
             {
                 Log.D("UI.MainWindow", "Stopping zero conf.");
-                ZConfServer?.Stop();
+                zConfServer?.Stop();
             }
             catch
             {
@@ -546,7 +548,7 @@ namespace Chronokeep.UI
             try
             {
                 Log.D("UI.MainWindow", "Stopping registration.");
-                RegistrationWorker?.Stop();
+                registrationWorker?.Stop();
             }
             catch
             {
@@ -562,9 +564,9 @@ namespace Chronokeep.UI
             {
                 Log.D("UI.MainWindow", "Starting zero conf.");
                 AppSetting? zconfName = database!.GetAppSetting(Constants.Settings.SERVER_NAME);
-                ZConfServer = new ZeroConf(zconfName != null && zconfName.Value != null ? zconfName.Value : null);
-                ZConfThread = new Thread(new ThreadStart(ZConfServer.Run));
-                ZConfThread.Start();
+                zConfServer = new ZeroConf(zconfName?.Value);
+                zConfThread = new Thread(zConfServer.Run);
+                zConfThread.Start();
             }
             catch
             {
@@ -573,9 +575,9 @@ namespace Chronokeep.UI
             try
             {
                 Log.D("UI.MainWindow", "Starting registration.");
-                RegistrationWorker = new RegistrationWorker(database!, this);
-                RegistrationThread = new Thread(new ThreadStart(RegistrationWorker.Run));
-                RegistrationThread.Start();
+                registrationWorker = new RegistrationWorker(database!, this);
+                registrationThread = new Thread(registrationWorker.Run);
+                registrationThread.Start();
             }
             catch
             {
@@ -586,10 +588,10 @@ namespace Chronokeep.UI
 
         public void UpdateRegistrationDistances()
         {
-            RegistrationWorker?.UpdateDistances();
+            registrationWorker?.UpdateDistances();
         }
 
-        private static bool StopTimingWorker()
+        private static void StopTimingWorker()
         {
             try
             {
@@ -599,23 +601,21 @@ namespace Chronokeep.UI
             }
             catch
             {
-                return false;
+                Log.D("UI.MainWindow", "Error stopping Timing Worker.");
             }
-            return true;
         }
 
-        public bool StopTimingController()
+        private void StopTimingController()
         {
             try
             {
                 Log.D("UI.MainWindow", "Stopping Timing Controller.");
-                TimingController?.Shutdown();
+                timingController?.Shutdown();
             }
             catch
             {
-                return false;
+                Log.D("UI.MainWindow", "Error stopping Timing Controller.");
             }
-            return true;
         }
 
         public bool StopAPIController()
@@ -623,66 +623,71 @@ namespace Chronokeep.UI
             try
             {
                 Log.D("UI.MainWindow", "Stopping API Controller");
-                if (APIController != null)
+                if (apiController != null)
                 {
-                    APIController.Shutdown();
+                    ApiController.Shutdown();
                 }
-                APIController = null;
+                apiController = null;
             }
             catch
             {
                 return false;
             }
-            CurrentPage?.UpdateView();
+            currentPage?.UpdateView();
             return true;
         }
 
         public async void StartAPIController()
         {
-            await Task.Run(() =>
+            try
             {
-                if (!APIController.IsRunning())
+                await Task.Run(() =>
                 {
-                    APIController = new APIController(this, database!);
-                    APIControllerThread = new Thread(new ThreadStart(APIController.Run));
-                    APIControllerThread.Start();
-                }
-            });
+                    if (ApiController.IsRunning()) return;
+                    apiController = new ApiController(this, database!);
+                    apiControllerThread = new Thread(apiController.Run);
+                    apiControllerThread.Start();
+                });
+            }
+            catch (Exception)
+            {
+                Log.D("UI.MainWindow", "Error starting api controller.");
+            }
         }
 
         public bool IsAPIControllerRunning()
         {
-            return APIController != null && APIController.IsRunning();
+            return apiController != null && ApiController.IsRunning();
         }
 
         public int APIErrors()
         {
-            return APIController != null ? APIController.Errors : 0;
+            return apiController?.Errors ?? 0;
         }
 
         public void UpdateParticipantsFromRegistration()
         {
-            Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
-                if (CurrentPage is ParticipantsPage)
+                if (currentPage is ParticipantsPage)
                 {
-                    CurrentPage.UpdateView();
+                    currentPage.UpdateView();
                 }
-            }));
+            });
         }
 
         public void UpdateTimingFromController()
         {
             TimingWorker.Notify();
-            Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
-                if (CurrentPage is TimingPage timingPage)
+                if (currentPage is TimingPage timingPage)
                 {
                     timingPage.UpdateView();
                     timingPage.NewMessage();
                 }
                 announcerWindow?.UpdateView();
-            }));
+            });
         }
 
         public void StartRemote()
@@ -690,13 +695,11 @@ namespace Chronokeep.UI
             Task.Run(() =>
             {
                 Log.D("UI.MainWindow", "Checking Remote Thread");
-                if (RemoteReadsController.IsRunning() == RemoteReadsController.RemoteStatus.STOPPED)
-                {
-                    Log.D("UI.MainWindow", "Starting Remote Thread");
-                    RemoteController = new RemoteReadsController(this, database!);
-                    RemoteThread = new Thread(new ThreadStart(RemoteController.Run));
-                    RemoteThread.Start();
-                }
+                if (RemoteReadsController.IsRunning() != RemoteReadsController.RemoteStatus.STOPPED) return;
+                Log.D("UI.MainWindow", "Starting Remote Thread");
+                remoteController = new RemoteReadsController(this, database!);
+                remoteThread = new Thread(remoteController.Run);
+                remoteThread.Start();
             });
         }
 
@@ -706,7 +709,7 @@ namespace Chronokeep.UI
             {
                 Log.D("UI.MainWindow", "Stopping Remote Controller");
                 RemoteReadsController.Shutdown();
-                RemoteController = null;
+                remoteController = null;
             });
         }
 
@@ -717,76 +720,71 @@ namespace Chronokeep.UI
 
         public int RemoteErrors()
         {
-            return RemoteController != null ? RemoteController.Errors : 0;
+            return remoteController?.Errors ?? 0;
         }
 
         public void UpdateAnnouncerWindow()
         {
             // Let the announcer window know that it has new information.
-            Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
                 announcerWindow?.UpdateView();
-            }));
+            });
         }
 
         public void UpdateTiming()
         {
             // Let the timing page know that it has new information.
-            Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
-                if (CurrentPage is TimingPage)
+                if (currentPage is TimingPage)
                 {
-                    CurrentPage.UpdateView();
+                    currentPage.UpdateView();
                 }
-            }));
+            });
         }
 
-        public void UpdateTimingNonBlocking()
+        private void UpdateTimingNonBlocking()
         {
             Log.D("UI.MainWindow", "UpdateTimingNonBlocking called.");
             List<ReaderMessage> toShow = [];
             List<ReaderMessage> readerMsgs = GetReaderMessages();
-            foreach (ReaderMessage message in readerMsgs)
+            foreach (ReaderMessage message in readerMsgs.Where(message => message is { Severity: ReaderMessage.SeverityLevel.High, Notified: false }))
             {
-                if (message.Severity == ReaderMessage.SeverityLevel.High && !message.Notified)
-                {
-                    toShow.Add(message);
-                    message.Notified = true;
-                    UpdateReaderMessage(message);
-                }
+                toShow.Add(message);
+                message.Notified = true;
+                UpdateReaderMessage(message);
             }
-            Thread newThread = new(new ThreadStart(() =>
+            Thread newThread = new(() =>
             {
                 // show any dialogboxes that need to be shown due to importance
                 foreach (ReaderMessage message in toShow)
                 {
-                    Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+                    Application.Current!.Dispatcher.Invoke(delegate
                     {
                         DialogBox.Show(message.DialogBoxString);
-                    }));
+                    });
                 }
                 // Let the announcer window know that it has new information.
-                Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+                Application.Current!.Dispatcher.Invoke(delegate
                 {
-                    if (CurrentPage is TimingPage)
+                    if (currentPage is TimingPage)
                     {
-                        CurrentPage.UpdateView();
+                        currentPage.UpdateView();
                     }
-                }));
-            }));
+                });
+            });
             newThread.Start();
         }
 
-        public void UpdateTimingTick(object? sender, EventArgs e)
+        private void UpdateTimingTick(object? sender, EventArgs e)
         {
-            if (TimingWorker.NewResultsExist())
+            if (!TimingWorker.NewResultsExist()) return;
+            if (currentPage is TimingPage timingPage)
             {
-                if (CurrentPage is TimingPage timingPage)
-                {
-                    timingPage.UpdateSubView();
-                }
-                announcerWindow?.UpdateTiming();
+                timingPage.UpdateSubView();
             }
+            announcerWindow?.UpdateTiming();
         }
 
         public void AddWindow(Window w)
@@ -841,73 +839,81 @@ namespace Chronokeep.UI
                 // Pull alarms from the database.
                 Alarm.AddAlarms(database.GetAlarms(theEvent.Identifier));
             }
-            DashboardButton.IsChecked = CurrentPage is DashboardPage;
-            TimingButton.IsChecked = CurrentPage is TimingPage;
+            DashboardButton.IsChecked = currentPage is DashboardPage;
+            TimingButton.IsChecked = currentPage is TimingPage;
             AnnouncerButton.IsChecked = announcerWindow != null;
-            ParticipantsButton.IsChecked = CurrentPage is ParticipantsPage;
-            ChipsButton.IsChecked = CurrentPage is ChipAssignmentPage;
-            LocationsButton.IsChecked = CurrentPage is LocationsPage;
-            DistancesButton.IsChecked = CurrentPage is DistancesPage;
-            SegmentsButton.IsChecked = CurrentPage is SegmentsPage;
-            AgeGroupsButton.IsChecked = CurrentPage is AgeGroupsPage;
-            SettingsButton.IsChecked = CurrentPage is SettingsPage;
-            AboutButton.IsChecked = CurrentPage is AboutPage;
+            ParticipantsButton.IsChecked = currentPage is ParticipantsPage;
+            ChipsButton.IsChecked = currentPage is ChipAssignmentPage;
+            LocationsButton.IsChecked = currentPage is LocationsPage;
+            DistancesButton.IsChecked = currentPage is DistancesPage;
+            SegmentsButton.IsChecked = currentPage is SegmentsPage;
+            AgeGroupsButton.IsChecked = currentPage is AgeGroupsPage;
+            SettingsButton.IsChecked = currentPage is SettingsPage;
+            AboutButton.IsChecked = currentPage is AboutPage;
             UpdateTimingBadge();
         }
 
-        public void UpdateTimingBadge()
+        private void UpdateTimingBadge()
         {
-            if (CurrentPage is not TimingPage)
+            if (currentPage is not TimingPage)
             {
                 List<ReaderMessage> messages = GetReaderMessages();
                 messages.RemoveAll(x => x.Notified);
                 if (messages.Count > 0)
                 { }
-                else
-                { }
             }
-            else
-            { }
         }
 
         public async void ConnectTimingSystem(TimingSystem system)
         {
-            await Task.Run(() =>
+            try
             {
-                TimingController!.ConnectTimingSystem(system);
-            });
-            UpdateTiming();
-            announcerWindow?.UpdateView();
-            await Task.Run(() =>
-            {
-                if (!TimingController.IsRunning())
+                await Task.Run(() =>
                 {
-                    TimingControllerThread = new Thread(new ThreadStart(TimingController!.Run));
-                    TimingControllerThread.Start();
-                }
-            });
+                    timingController!.ConnectTimingSystem(system);
+                });
+                UpdateTiming();
+                announcerWindow?.UpdateView();
+                await Task.Run(() =>
+                {
+                    if (TimingController.IsRunning()) return;
+                    timingControllerThread = new Thread(timingController!.Run);
+                    timingControllerThread.Start();
+                });
+            }
+            catch (Exception)
+            {
+                Log.D("UI.MainWindow", "Error starting timing system.");
+            }
         }
 
         public async void DisconnectTimingSystem(TimingSystem system)
         {
-            await Task.Run(() =>
+            try
             {
-                TimingController!.DisconnectTimingSystem(system);
-            });
-            UpdateTiming();
-            announcerWindow?.UpdateView();
+                await Task.Run(() =>
+                {
+                    timingController!.DisconnectTimingSystem(system);
+                });
+                UpdateTiming();
+                announcerWindow?.UpdateView();
+            }
+            catch (Exception)
+            {
+                Log.D("UI.MainWindow", "Error disconnecting from timing system.");
+            }
         }
 
         public void ShutdownTimingController()
         {
-            TimingController!.Shutdown();
+            timingController!.Shutdown();
         }
 
         public List<TimingSystem> GetConnectedSystems()
         {
-            List<TimingSystem> connected = TimingController!.GetConnectedSystems();
+            List<TimingSystem> connected = timingController!.GetConnectedSystems();
             List<TimingSystem> saved = database!.GetTimingSystems();
-            saved.RemoveAll(x => connected.Contains(x));
+            saved.RemoveAll(connected.Contains);
             saved.InsertRange(0, connected);
             return saved;
         }
@@ -916,24 +922,25 @@ namespace Chronokeep.UI
         {
             try
             {
-                Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+                Application.Current!.Dispatcher.Invoke(delegate
                 {
                     if (system.SystemInterface != null)
                     {
                         if (!system.SystemInterface.WasShutdown())
                         {
-                            DialogBox.Show(string.Format("Reader at {0} has unexpectedly disconnected. IP Address was {1}.", system.LocationName, system.IPAddress));
+                            DialogBox.Show(
+                                $"Reader at {system.LocationName} has unexpectedly disconnected. IP Address was {system.IpAddress}.");
                         }
                     }
                     system.Status = SYSTEM_STATUS.DISCONNECTED;
                     UpdateTiming();
                     announcerWindow?.UpdateView();
-                }));
+                });
             }
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Log.E("UI.MainWindow", string.Format("Exception occurred trying to update disconnected timing system. {0}", e));
+                Log.E("UI.MainWindow", $"Exception occurred trying to update disconnected timing system. {e}");
             }
         }
 
@@ -949,7 +956,7 @@ namespace Chronokeep.UI
         private void Announcer_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Announer window button clicked.");
-            Log.E("UI.MainWindow", string.Format("announcerWindow is null? {0}", announcerWindow == null));
+            Log.E("UI.MainWindow", $"announcerWindow is null? {announcerWindow == null}");
             if (announcerWindow != null)
             {
                 announcerWindow.Hide();
@@ -957,7 +964,7 @@ namespace Chronokeep.UI
                 UpdateStatus();
                 return;
             }
-            Log.E("UI.MainWindow", string.Format("beep boop"));
+            Log.E("UI.MainWindow", "beep boop");
             announcerWindow = new AnnouncerWindow(this, database!);
             announcerWindow.Show();
             UpdateStatus();
@@ -968,8 +975,6 @@ namespace Chronokeep.UI
             httpServer?.UpdateInformation();
         }
 
-        public static void NetworkAddResults() { }
-
         public void NetworkClearResults()
         {
             httpServer?.UpdateInformation();
@@ -978,7 +983,7 @@ namespace Chronokeep.UI
         public void StartHttpServer()
         {
             httpServer?.Stop();
-            httpServer = new HttpServer(database!, httpServerPort);
+            httpServer = new HttpServer(database!, HttpServerPort);
         }
 
         public void StopHttpServer()
@@ -994,9 +999,9 @@ namespace Chronokeep.UI
 
         public bool AnnouncerConnected()
         {
-            foreach (TimingSystem system in TimingController!.GetConnectedSystems())
+            foreach (TimingSystem system in timingController!.GetConnectedSystems())
             {
-                if (system.LocationID == Constants.Timing.LOCATION_ANNOUNCER)
+                if (system.LocationId == Constants.Timing.LOCATION_ANNOUNCER)
                 {
                     return true;
                 }
@@ -1060,85 +1065,93 @@ namespace Chronokeep.UI
             {
                 StopTimingController();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping Timing Controller.");
+            }
             try
             {
                 StopAnnouncer();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping announcer.");
+            }
             try
             {
                 StopRegistration();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping registration.");
+            }
             try
             {
                 StopAPIController();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping api controller.");
+            }
             try
             {
                 StopRemote();
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.MainWindow", "Error stopping remote.");
+            }
         }
 
         public bool StartDidNotStartMode()
         {
-            if (dnsLock.TryEnter(3000))
+            if (!dnsLock.TryEnter(3000)) return false;
+            try
             {
-                try
-                {
-                    didNotStartMode = true;
-                    return true;
-                }
-                finally
-                {
-                    dnsLock.Exit();
-                }
+                didNotStartMode = true;
+                return true;
             }
-            return false;
+            finally
+            {
+                dnsLock.Exit();
+            }
         }
 
         public bool StopDidNotStartMode()
         {
-            if (dnsLock.TryEnter(3000))
+            if (!dnsLock.TryEnter(3000)) return false;
+            try
             {
-                try
-                {
-                    didNotStartMode = false;
-                    return true;
-                }
-                finally
-                {
-                    dnsLock.Exit();
-                }
+                didNotStartMode = false;
+                return true;
             }
-            return false;
+            finally
+            {
+                dnsLock.Exit();
+            }
         }
 
-        public void NotifyAlarm(string Bib, string Chip)
+        public void NotifyAlarm(string bib, string chip)
         {
             Event? theEvent = database!.GetCurrentEvent();
-            Application.Current!.Dispatcher.Invoke(new Action(async delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
                 Alarm? alarm = null;
-                if (Bib.Length > 0)
+                if (bib.Length > 0)
                 {
-                    alarm = Alarm.GetAlarmByBib(Bib);
+                    alarm = Alarm.GetAlarmByBib(bib);
                 }
-                else if (Chip.Length > 0)
+                else if (chip.Length > 0)
                 {
-                    alarm = Alarm.GetAlarmByChip(Chip);
+                    alarm = Alarm.GetAlarmByChip(chip);
                 }
-                if (alarm != null && alarm.Enabled)
+                if (alarm is { Enabled: true })
                 {
                     alarm.Enabled = false;
                     Alarm.SaveAlarm(theEvent!.Identifier, database, alarm);
-                    string soundFile = Environment.CurrentDirectory;
                     int sound = alarm.AlarmSound;
                     // Any value not between 1-10 (inclusive both) is defined to be the default sound.
-                    if (sound < 1 || sound > 11)
+                    if (sound is < 1 or > 11)
                     {
                         // If for some reason we can't parse the value into integer, set it to 1.
                         if (!int.TryParse(database.GetAppSetting(Constants.Settings.ALARM_SOUND)!.Value, out sound))
@@ -1152,21 +1165,21 @@ namespace Chronokeep.UI
                     }
                     AudioPlaybackEngine.PlaySound(sound);
                 }
-                if (CurrentPage is TimingPage page)
+                if (currentPage is TimingPage page)
                 {
                     page.UpdateAlarms();
                 }
-            }));
+            });
         }
 
-        public void ShowNotificationDialog(string ReaderName, string Address, RemoteNotification notification)
+        public void ShowNotificationDialog(string readerName, string address, RemoteNotification notification)
         {
-            Log.D("UI.MainWindow", $"Show Notification Dialog called. When '{notification.When}' - Type '{notification.Type}' - ReaderName '{ReaderName}' - Address '{Address}'");
+            Log.D("UI.MainWindow", $"Show Notification Dialog called. When '{notification.When}' - Type '{notification.Type}' - ReaderName '{readerName}' - Address '{address}'");
             ReaderMessage msg = new()
             {
                 Message = notification,
-                SystemName = ReaderName,
-                Address = Address,
+                SystemName = readerName,
+                Address = address,
                 Severity = notification.Type switch
                 {
                     // All of the portal errors should display a dialogbox
@@ -1208,7 +1221,7 @@ namespace Chronokeep.UI
 
         public void WindowFinalize(Window? w)
         {
-            CurrentPage?.UpdateView();
+            currentPage?.UpdateView();
             UpdateStatus();
         }
     }

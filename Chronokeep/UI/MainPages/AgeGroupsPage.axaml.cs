@@ -17,7 +17,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
     private readonly IDBInterface database;
     private readonly Event? theEvent;
 
-    private bool touched = false;
+    private bool touched;
 
     public AgeGroupsPage(IMainWindow mWindow, IDBInterface database)
     {
@@ -73,9 +73,9 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         ageGroups.RemoveAll(x => Constants.Timing.AGEGROUPS_CUSTOM_DISTANCEID == x.DistanceId);
         if (!theEvent.CommonAgeGroups)
         {
-            if (int.TryParse(((ComboBoxItem)DistancesBox.SelectedItem!).Tag!.ToString(), out int distanceID))
+            if (int.TryParse(((ComboBoxItem)DistancesBox.SelectedItem!).Tag!.ToString(), out int distanceId))
             {
-                ageGroups.RemoveAll(x => x.DistanceId != distanceID);
+                ageGroups.RemoveAll(x => x.DistanceId != distanceId);
             }
             else
             {
@@ -95,7 +95,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         AgeGroupsBox.Items.Remove(group);
     }
 
-    public void UpdateDatabase()
+    private void UpdateDatabase()
     {
         Update_Click(null, null);
     }
@@ -126,54 +126,51 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         {
             return;
         }
-        if (touched)
+        if (!touched) return;
+        // Setup AgeGroup static variables
+        Dictionary<(int, int), AgeGroup> ageGroups = [];
+        Dictionary<int, AgeGroup> lastAgeGroup = [];
+        foreach (AgeGroup g in database.GetAgeGroups(theEvent.Identifier))
         {
-            // Setup AgeGroup static variables
-            Dictionary<(int, int), AgeGroup> AgeGroups = [];
-            Dictionary<int, AgeGroup> LastAgeGroup = [];
-            foreach (AgeGroup g in database.GetAgeGroups(theEvent.Identifier))
+            for (int i = g.StartAge; i <= g.EndAge; i++)
             {
-                for (int i = g.StartAge; i <= g.EndAge; i++)
-                {
-                    AgeGroups[(g.DistanceId, i)] = g;
-                }
-                if (!LastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? lastAg) || lastAg.StartAge < g.StartAge)
-                {
-                    lastAg = g;
-                    LastAgeGroup[g.DistanceId] = lastAg;
-                }
+                ageGroups[(g.DistanceId, i)] = g;
             }
-            List<Participant> participants = database.GetParticipants(theEvent.Identifier);
-            foreach (Participant person in participants)
-            {
-                int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : person.EventSpecific.DistanceIdentifier;
-                int age = person.GetAge(theEvent.Date);
-                if (age < 0)
-                {
-                    person.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                    person.EventSpecific.AgeGroupName = "";
-                }
-                else if (AgeGroups.TryGetValue((agDivId, age), out AgeGroup? group))
-                {
-                    person.EventSpecific.AgeGroupId = group.GroupId;
-                    person.EventSpecific.AgeGroupName = group.PrettyName();
-                }
-                else if (LastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
-                {
-                    person.EventSpecific.AgeGroupId = lGroup.GroupId;
-                    person.EventSpecific.AgeGroupName = lGroup.PrettyName();
-                }
-                else
-                {
-                    person.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                    person.EventSpecific.AgeGroupName = "";
-                }
-            }
-            database.UpdateParticipants(participants);
-            database.ResetTimingResultsEvent(theEvent.Identifier);
-            mWindow.NetworkClearResults();
-            mWindow.NotifyTimingWorker();
+            if (lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? lastAg) &&
+                lastAg.StartAge >= g.StartAge) continue;
+            lastAg = g;
+            lastAgeGroup[g.DistanceId] = lastAg;
         }
+        List<Participant> participants = database.GetParticipants(theEvent.Identifier);
+        foreach (Participant person in participants)
+        {
+            int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : person.EventSpecific.DistanceIdentifier;
+            int age = person.GetAge(theEvent.Date);
+            if (age < 0)
+            {
+                person.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+                person.EventSpecific.AgeGroupName = "";
+            }
+            else if (ageGroups.TryGetValue((agDivId, age), out AgeGroup? group))
+            {
+                person.EventSpecific.AgeGroupId = group.GroupId;
+                person.EventSpecific.AgeGroupName = group.PrettyName();
+            }
+            else if (lastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
+            {
+                person.EventSpecific.AgeGroupId = lGroup.GroupId;
+                person.EventSpecific.AgeGroupName = lGroup.PrettyName();
+            }
+            else
+            {
+                person.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+                person.EventSpecific.AgeGroupName = "";
+            }
+        }
+        database.UpdateParticipants(participants);
+        database.ResetTimingResultsEvent(theEvent.Identifier);
+        mWindow.NetworkClearResults();
+        mWindow.NotifyTimingWorker();
     }
 
     private void Revert_Click(object? sender, RoutedEventArgs? e)
@@ -209,21 +206,18 @@ public partial class AgeGroupsPage : UserControl, IMainPage
                     conflict = true;
                     break;
                 }
-                else if (previous.EndAge != current.StartAge - 1)
+                if (previous.EndAge != current.StartAge - 1)
                 {
-                    toAdd.Add(new(current.EventId, current.DistanceId, previous.EndAge + 1, current.StartAge - 1));
+                    toAdd.Add(new AgeGroup(current.EventId, current.DistanceId, previous.EndAge + 1, current.StartAge - 1));
                 }
             }
             else if (current.StartAge > 1)
             {
-                toAdd.Add(new(current.EventId, current.DistanceId, 0, current.StartAge - 1));
+                toAdd.Add(new AgeGroup(current.EventId, current.DistanceId, 0, current.StartAge - 1));
             }
             previous = current;
         }
-        if (previous != null)
-        {
-            previous.LastGroup = true;
-        }
+        previous?.LastGroup = true;
         if (conflict)
         {
             DialogBox.Show("There is a conflict in the age groups. Unable to save.");
@@ -256,7 +250,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         {
             divId = Convert.ToInt32((string)((ComboBoxItem)DistancesBox.SelectedItem!).Tag!);
         }
-        AgeGroupsBox.Items.Add(new AgeGroupPart(this, new(theEvent.Identifier, divId, 0, 0)));
+        AgeGroupsBox.Items.Add(new AgeGroupPart(this, new AgeGroup(theEvent.Identifier, divId, 0, 0)));
     }
 
     private void Distances_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -286,17 +280,17 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         switch (DefaultGroupsBox.SelectedIndex)
         {
             case 2:
-                database.AddAgeGroup(new(theEvent.Identifier, divId, 0, 39));
-                database.AddAgeGroup(new(theEvent.Identifier, divId, 40, 59));
-                database.AddAgeGroup(new(theEvent.Identifier, divId, 60, 99));
+                database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, 0, 39));
+                database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, 40, 59));
+                database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, 60, 99));
                 break;
             case 3:
-                database.AddAgeGroup(new(theEvent.Identifier, divId, 0, 19));
+                database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, 0, 19));
                 for (int i = 20; i < 80; i += increment)
                 {
-                    database.AddAgeGroup(new(theEvent.Identifier, divId, i, i + increment - 1));
+                    database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, i, i + increment - 1));
                 }
-                database.AddAgeGroup(new(theEvent.Identifier, divId, 80, 99));
+                database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, 80, 99));
                 break;
             case 0:
                 increment = 10;
@@ -304,7 +298,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
             default:
                 for (int i = 0; i < 100; i += increment)
                 {
-                    database.AddAgeGroup(new(theEvent.Identifier, divId, i, i + increment - 1));
+                    database.AddAgeGroup(new AgeGroup(theEvent.Identifier, divId, i, i + increment - 1));
                 }
                 break;
         }

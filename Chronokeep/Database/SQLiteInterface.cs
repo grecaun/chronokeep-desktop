@@ -2664,7 +2664,7 @@ namespace Chronokeep.Database
          * Results API Functions
          */
 
-        public int AddAPI(APIObject anAPI)
+        public int AddAPI(ApiObject anAPI)
         {
             int output = -1;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 125");
@@ -2687,7 +2687,7 @@ namespace Chronokeep.Database
             return output;
         }
 
-        public void UpdateAPI(APIObject anAPI)
+        public void UpdateAPI(ApiObject anAPI)
         {
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 126");
             if (!dbLock.TryEnter(3000))
@@ -2729,9 +2729,9 @@ namespace Chronokeep.Database
             }
         }
 
-        public APIObject? GetAPI(int identifier)
+        public ApiObject? GetAPI(int identifier)
         {
-            APIObject? output = null;
+            ApiObject? output = null;
             if (identifier < 0)
             {
                 return output;
@@ -2756,9 +2756,9 @@ namespace Chronokeep.Database
             return output;
         }
 
-        public List<APIObject> GetAllAPI()
+        public List<ApiObject> GetAllAPI()
         {
-            List<APIObject> output = [];
+            List<ApiObject> output = [];
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 129");
             if (!dbLock.TryEnter(3000))
             {
@@ -3257,9 +3257,9 @@ namespace Chronokeep.Database
             }
         }
 
-        public List<APISmsSubscription> GetSmsSubscriptions(int eventId)
+        public List<ApiSmsSubscription> GetSmsSubscriptions(int eventId)
         {
-            List<APISmsSubscription> output = [];
+            List<ApiSmsSubscription> output = [];
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 159");
             if (!dbLock.TryEnter(3000))
             {
@@ -3280,7 +3280,7 @@ namespace Chronokeep.Database
             return output;
         }
 
-        public void AddSmsSubscriptions(int eventId, List<APISmsSubscription> subscriptions)
+        public void AddSmsSubscriptions(int eventId, List<ApiSmsSubscription> subscriptions)
         {
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 160");
             if (!dbLock.TryEnter(3000))
@@ -3294,7 +3294,7 @@ namespace Chronokeep.Database
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    foreach (APISmsSubscription sub in subscriptions)
+                    foreach (ApiSmsSubscription sub in subscriptions)
                     {
                         SmsSubscriptions.AddSmsSubscription(eventId, sub, connection);
                     }

@@ -18,7 +18,7 @@ public partial class ImportFilePage1 : UserControl
         this.importer = importer;
         for (int i = 1; i < importer.Data!.GetNumHeaders(); i++)
         {
-            headerListBox.Items.Add(new HeaderPart(importer.Data.Headers[i], i));
+            HeaderListBox.Items.Add(new HeaderPart(importer.Data.Headers[i], i));
         }
     }
 
@@ -27,16 +27,17 @@ public partial class ImportFilePage1 : UserControl
         Log.D("UI.ImportFilePage1", "Checking for required fields.");
         List<string> output = [];
         bool first = false, last = false;
-        foreach (HeaderPart item in headerListBox.Items.Cast<HeaderPart>())
+        foreach (HeaderPart item in HeaderListBox.Items.Cast<HeaderPart>())
         {
             int val = item.HeaderBox.SelectedIndex;
-            if (val == ImportFileWindow.FIRST)
+            switch (val)
             {
-                first = true;
-            }
-            else if (val == ImportFileWindow.LAST)
-            {
-                last = true;
+                case ImportFileWindow.FIRST:
+                    first = true;
+                    break;
+                case ImportFileWindow.LAST:
+                    last = true;
+                    break;
             }
         }
         if (!first && !last)
@@ -49,34 +50,32 @@ public partial class ImportFilePage1 : UserControl
     internal List<string> RepeatHeaders()
     {
         Log.D("UI.ImportFilePage1", "Checking for repeat headers in user selection.");
-        int[] check = new int[ImportFileWindow.human_fields.Length];
+        int[] check = new int[ImportFileWindow.HUMAN_FIELDS.Length];
         bool repeat = false;
         List<string> output = [];
-        foreach (HeaderPart item in headerListBox.Items.Cast<HeaderPart>())
+        foreach (HeaderPart item in HeaderListBox.Items.Cast<HeaderPart>())
         {
             int val = item.HeaderBox.SelectedIndex;
-            if (val > 0)
+            if (val <= 0) continue;
+            if (check[val] > 0)
             {
-                if (check[val] > 0)
-                {
-                    output.Add(item.HeaderBox.SelectedItem!.ToString()!);
-                    repeat = true;
-                }
-                else
-                {
-                    check[val] = 1;
-                }
+                output.Add(item.HeaderBox.SelectedItem!.ToString()!);
+                repeat = true;
+            }
+            else
+            {
+                check[val] = 1;
             }
         }
-        return repeat == true ? output : [];
+        return repeat ? output : [];
     }
 
     internal HeaderPart[] GetListBoxItems()
     {
-        HeaderPart[] output = new HeaderPart[headerListBox.Items.Count];
-        for (int i = 0; i < headerListBox.Items.Count; i++)
+        HeaderPart[] output = new HeaderPart[HeaderListBox.Items.Count];
+        for (int i = 0; i < HeaderListBox.Items.Count; i++)
         {
-            output[i] = (HeaderPart)headerListBox.Items[i]!;
+            output[i] = (HeaderPart)HeaderListBox.Items[i]!;
         }
         return output;
     }
@@ -87,10 +86,10 @@ public partial class ImportFilePage1 : UserControl
         ExcelImporter excelImporter = (ExcelImporter)importer;
         excelImporter.ChangeSheet(selection);
         excelImporter.FetchHeaders();
-        headerListBox.Items.Clear();
+        HeaderListBox.Items.Clear();
         for (int i = 1; i < importer.Data!.GetNumHeaders(); i++)
         {
-            headerListBox.Items.Add(new HeaderPart(importer.Data.Headers[i], i));
+            HeaderListBox.Items.Add(new HeaderPart(importer.Data.Headers[i], i));
         }
     }
 }

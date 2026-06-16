@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -8,21 +10,19 @@ using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.Util;
-using System;
-using System.Collections.Generic;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
-public partial class APIPage2 : UserControl
+public partial class ApiPage2 : UserControl
 {
-    private readonly APIWindow window;
+    private readonly ApiWindow window;
     private readonly IDBInterface database;
-    private readonly APIObject api;
+    private readonly ApiObject api;
     private readonly Event theEvent;
 
     private GetEventsResponse? events;
 
-    public APIPage2(APIWindow window, IDBInterface database, APIObject api, Event theEvent)
+    public ApiPage2(ApiWindow window, IDBInterface database, ApiObject api, Event theEvent)
     {
         InitializeComponent();
         this.window = window;
@@ -36,88 +36,65 @@ public partial class APIPage2 : UserControl
     {
         try
         {
-            events = await APIHandlers.GetEvents(api);
-        }
-        catch (APIException ex)
-        {
-            DialogBox.Show(ex.Message);
-            window.Close();
-            return;
-        }
-        Log.D("UI.API.APIPage2", "Adding events to combo box.");
-        events.Events.Sort((a, b) => b.CompareTo(a));
-        events.Events ??= [];
-        events.Events.Insert(0, new APIEvent
-        {
-            Name = "New Event"
-        });
-        List<APIEvent> ev = [.. events.Events];
-        eventList.ItemsSource = ev;
-        APIEvent maybeEvent = ev.Find(x => x.Name.Equals(theEvent.Name, StringComparison.OrdinalIgnoreCase))!;
-        if (maybeEvent != null)
-        {
+            try
+            {
+                events = await ApiHandlers.GetEvents(api);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+                window.Close();
+                return;
+            }
+            Log.D("UI.API.APIPage2", "Adding events to combo box.");
+            events.Events.Sort((a, b) => b.CompareTo(a));
+            events.Events.Insert(0, new ApiEvent
+            {
+                Name = "New Event"
+            });
+            List<ApiEvent> ev = [.. events.Events];
+            EventList.ItemsSource = ev;
+            ApiEvent maybeEvent = ev.Find(x => x.Name.Equals(theEvent.Name, StringComparison.OrdinalIgnoreCase))!;
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                eventList.SelectedItem = maybeEvent;
-                eventList.ScrollIntoView(maybeEvent);
+                EventList.SelectedItem = maybeEvent;
+                EventList.ScrollIntoView(maybeEvent);
             });
+            NameBox.Text = theEvent.Name;
+            SlugBox.Text = theEvent.Name.Replace(' ', '-').Replace("'", "").Replace("/", "").Replace("\\", "").ToLower();
+            ContactBox.Text = database.GetAppSetting(Constants.Settings.CONTACT_EMAIL)!.Value;
+            EventPanel.IsVisible = true;
+            HoldingLabel.IsVisible = false;
         }
-        else
+        catch (Exception)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                eventList.SelectedIndex = 0;
-                eventList.ScrollIntoView(ev[0]);
-            });
+            Log.D("UI.API.Pages.ApiPage2", "Error getting events.");
         }
-        nameBox.Text = theEvent.Name;
-        slugBox.Text = theEvent.Name.Replace(' ', '-').Replace("'", "").Replace("/", "").Replace("\\", "").ToLower();
-        contactBox.Text = database.GetAppSetting(Constants.Settings.CONTACT_EMAIL)!.Value;
-        eventPanel.IsVisible = true;
-        holdingLabel.IsVisible = false;
     }
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
-        List<APIEvent> ev = [.. events!.Events];
-        if (searchBox.Text!.Trim().Length > 0)
+        List<ApiEvent> ev = [.. events!.Events];
+        if (SearchBox.Text!.Trim().Length > 0)
         {
-            Log.D("UI.API.APIPage2", $"searchBox.Text {searchBox.Text}");
+            Log.D("UI.API.APIPage2", $"searchBox.Text {SearchBox.Text}");
             ev.RemoveAll(x =>
-                !x.Name.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase)
+                !x.Name.Contains(SearchBox.Text, StringComparison.OrdinalIgnoreCase)
                 && !x.Name.Contains("New Event", StringComparison.OrdinalIgnoreCase)
             );
         }
-        eventList.ItemsSource = ev;
-        APIEvent maybeEvent = ev.Find(x => x.Name.Equals(theEvent.Name, StringComparison.OrdinalIgnoreCase))!;
-        if (maybeEvent != null)
+        EventList.ItemsSource = ev;
+        ApiEvent maybeEvent = ev.Find(x => x.Name.Equals(theEvent.Name, StringComparison.OrdinalIgnoreCase))!;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                eventList.SelectedItem = maybeEvent;
-                eventList.ScrollIntoView(maybeEvent);
-            });
-        }
-        else
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                eventList.SelectedIndex = 0;
-                eventList.ScrollIntoView(ev[0]);
-            });
-        }
+            EventList.SelectedItem = maybeEvent;
+            EventList.ScrollIntoView(maybeEvent);
+        });
     }
 
     private void EventBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (eventList.SelectedIndex < 1)
-        {
-            newPanel.IsVisible = true;
-        }
-        else
-        {
-            newPanel.IsVisible = false;
-        }
+        NewPanel.IsVisible = EventList.SelectedIndex < 1;
     }
 
     private void EventList_MouseDoubleClick(object? sender, TappedEventArgs e)
@@ -128,54 +105,61 @@ public partial class APIPage2 : UserControl
 
     private async void Next_Click(object? sender, RoutedEventArgs? e)
     {
-        if (eventList == null)
+        try
         {
-            window.Close();
-            return;
-        }
-        string slug;
-        if (eventList.SelectedItem == null || ((APIEvent)eventList.SelectedItem).Slug == null || ((APIEvent)eventList.SelectedItem).Slug.Length < 1)
-        {
-            try
+            if (EventList == null)
             {
-                string type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
-                if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
-                {
-                    type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
-                }
-                else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
-                {
-                    type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
-                }
-                else if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
-                {
-                    type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
-                }
-
-                ModifyEventResponse addResponse = await APIHandlers.AddEvent(api, new APIEvent
-                {
-                    Name = nameBox.Text!,
-                    CertificateName = certNameBox.Text!,
-                    Slug = slugBox.Text!,
-                    Website = websiteBox.Text!,
-                    Image = imageBox.Text!,
-                    ContactEmail = contactBox.Text!,
-                    AccessRestricted = (bool)restrictBox.IsChecked!,
-                    Type = type
-                });
-                slug = addResponse.Event.Slug;
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
+                window.Close();
                 return;
             }
+            string slug;
+            if (((ApiEvent?)EventList.SelectedItem)?.Slug == null || ((ApiEvent)EventList.SelectedItem).Slug.Length < 1)
+            {
+                try
+                {
+                    string type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
+                    if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
+                    {
+                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
+                    }
+                    else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
+                    {
+                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
+                    }
+                    else if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
+                    {
+                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
+                    }
+
+                    ModifyEventResponse addResponse = await ApiHandlers.AddEvent(api, new ApiEvent
+                    {
+                        Name = NameBox.Text!,
+                        CertificateName = CertNameBox.Text!,
+                        Slug = SlugBox.Text!,
+                        Website = WebsiteBox.Text!,
+                        Image = ImageBox.Text!,
+                        ContactEmail = ContactBox.Text!,
+                        AccessRestricted = (bool)RestrictBox.IsChecked!,
+                        Type = type
+                    });
+                    slug = addResponse.Event.Slug;
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                    return;
+                }
+            }
+            else
+            {
+                slug = ((ApiEvent)EventList.SelectedItem).Slug;
+            }
+            window.GotoPage3(slug);
         }
-        else
+        catch (Exception)
         {
-            slug = ((APIEvent)eventList.SelectedItem).Slug;
+            Log.D("UI.API.Pages.ApiPage2", "Error proceeding.");
         }
-        window.GotoPage3(slug);
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)

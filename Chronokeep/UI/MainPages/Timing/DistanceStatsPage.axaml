@@ -16,104 +16,99 @@
            <Setter Property="FontSize" Value="12"/> 
         </Style>
     </UserControl.Styles>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="55"/>
-        </Grid.RowDefinitions>
-        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Name="mainScroll">
+    <Grid RowDefinitions="*,55">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Name="MainScroll">
             <StackPanel>
                 <TextBlock Name="DistanceName" Text="Distance Name" HorizontalAlignment="Center" FontSize="18" Margin="0,10,0,10"/>
-                <Expander Name="activePanel" Header="Active" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="ActivePanel" Header="Active" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
                     <DataGrid
-                        Grid.Row="0"
-                        Name="activeListView"
+                        Name="ActiveListView"
                         SelectionMode="Single"
                         FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
-                        >
+                        x:DataType="objects:StatsParticipant">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="Where" Binding="{Binding LastSeen}" MinWidth="100" x:DataType="objects:StatsParticipant"/>
-                            <DataGridTextColumn Header="When" Binding="{Binding LastSeenTime}" MinWidth="150" x:DataType="objects:StatsParticipant"/>
+                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60"/>
+                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60"/>
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Where" Binding="{Binding LastSeen}" MinWidth="100"/>
+                            <DataGridTextColumn Header="When" Binding="{Binding LastSeenTime}" MinWidth="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="dnfPanel" Header="Did Not Finish" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="DnfPanel" Header="Did Not Finish" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
                     <DataGrid
-                        Name="dnfListView"
+                        Name="DnfListView"
                         SelectionMode="Single"
                         FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
-                        >
+                        x:DataType="objects:Participant">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140" x:DataType="objects:Participant"/>
+                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60"/>
+                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60"/>
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="dnsPanel" Header="Did Not Start" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="DnsPanel" Header="Did Not Start" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
                     <DataGrid
-                        Name="dnsListView"
+                        Name="DnsListView"
                         SelectionMode="Single"
                         FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
-                        >
+                        x:DataType="objects:Participant">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140" x:DataType="objects:Participant"/>
+                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60"/>
+                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60"/>
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="unknownPanel" Header="Unknown" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="UnknownPanel" Header="Unknown" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
                     <DataGrid
-                        Name="unknownListView"
+                        Name="UnknownListView"
                         SelectionMode="Single"
                         FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
-                        >
+                        x:DataType="objects:Participant">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140" x:DataType="objects:Participant"/>
+                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60"/>
+                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60"/>
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="finishedPanel" Header="Finished" Margin="0,0,0,0" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="FinishedPanel" Header="Finished" Margin="0,0,0,0" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
                     <DataGrid
-                        Name="finishedListView"
+                        Name="FinishedListView"
                         SelectionMode="Single"
                         FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
-                        >
+                        x:DataType="objects:Participant">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140" x:DataType="objects:Participant"/>
-                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140" x:DataType="objects:Participant"/>
+                            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" MinWidth="60"/>
+                            <DataGridTextColumn Header="First" Binding="{Binding FirstName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="100"/>
+                            <DataGridTextColumn Header="Age" Binding="{Binding CurrentAge}" MinWidth="30"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="60"/>
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="140"/>
+                            <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="140"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>

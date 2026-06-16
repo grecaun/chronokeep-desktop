@@ -5,15 +5,15 @@
              mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="450"
-             x:Class="Chronokeep.UI.Timing.ReaderSettings.Parts.APIPart">
+             x:Class="Chronokeep.UI.Timing.ReaderSettings.Parts.ApiPart">
     <StackPanel Orientation="Vertical"
                 HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <TextBox Name="nameBox"
+            <TextBox Name="NameBox"
                      Width="170"
                      Margin="5"/>
-            <ComboBox Name="kindBox"
+            <ComboBox Name="KindBox"
                       Width="140"
                       Margin="5"
                       SelectionChanged="KindBox_ValueChanged">
@@ -23,25 +23,25 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <TextBox Name="tokenBox"
+            <TextBox Name="TokenBox"
                      Width="320"
                      Margin="5"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <TextBox Name="uriBox"
+            <TextBox Name="UriBox"
                      Width="220"
                      Margin="5"/>
             <Button Width="40"
                     Height="35"
                     Margin="5"
-                    Click="SaveAPI">
+                    Click="SaveApi">
 			    <PathIcon Data="{StaticResource save_regular}"/>
             </Button>
             <Button Width="40"
                     Height="35"
                     Margin="5"
-                    Click="DeleteAPI">
+                    Click="DeleteApi">
 			    <PathIcon Data="{StaticResource delete_regular}"/>
             </Button>
         </StackPanel>

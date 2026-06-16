@@ -13,20 +13,14 @@
         </Style>
     </UserControl.Styles>
     <StackPanel IsTabStop="False">
-	    <Grid>
-		    <Grid.ColumnDefinitions>
-			    <ColumnDefinition Width="*"/>
-			    <ColumnDefinition Width="50"/>
-			    <ColumnDefinition Width="50"/>
-			    <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Name="distanceName"
-                       FontSize="20"
-                       Margin="10,5,0,5"
-                       VerticalAlignment="Center"
-                       Classes="TeBlock"
-                       Grid.Column="0"/>
-            <TextBox Name="numAdd"
+	    <Grid ColumnDefinitions="*,50,50,auto">
+		    <TextBlock Name="DistanceName"
+		               FontSize="20"
+		               Margin="10,5,0,5"
+		               VerticalAlignment="Center"
+		               Classes="TeBlock"
+		               Grid.Column="0"/>
+            <TextBox Name="NumAdd"
                      Text="1"
                      FontSize="16"
                      VerticalAlignment="Center"
@@ -48,7 +42,7 @@
                     Grid.Column="2">
                 <PathIcon Data="{StaticResource add_regular}"/>
             </Button>
-            <DockPanel Name="copyPanel" Grid.Column="3" LastChildFill="True">
+            <DockPanel Name="CopyPanel" Grid.Column="3" LastChildFill="True">
 			    <TextBlock Text="Copy from"
                            FontSize="14"
                            VerticalAlignment="Center"
@@ -56,7 +50,7 @@
                            Classes="TeBlock"
                            Margin="10,0,2,0"
                            />
-                <ComboBox Name="copyFromDistance"
+                <ComboBox Name="CopyFromDistance"
                           FontSize="14"
                           Height="35"
                           Width="150"

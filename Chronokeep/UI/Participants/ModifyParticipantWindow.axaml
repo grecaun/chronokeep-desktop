@@ -128,7 +128,7 @@
                     <ComboBoxItem Content="Non-Binary"/>
                     <ComboBoxItem Content="Other"/>
                 </ComboBox>
-                <TextBox Name="otherGenderBox"
+                <TextBox Name="OtherGenderBox"
                             KeyDown="Box_KeyDown"
                             FontSize="16"
                             Margin="0,5,15,5"
@@ -259,7 +259,7 @@
                             FontSize="16"
                             Margin="15,0,5,0"
                             VerticalAlignment="Center"/>
-                <TextBox Name="ECNameBox"
+                <TextBox Name="EcNameBox"
                             KeyDown="Box_KeyDown"
                             Width="140"
                             FontSize="16"
@@ -269,7 +269,7 @@
                             FontSize="16"
                             Margin="0,0,0,0"
                             VerticalAlignment="Center"/>
-                <TextBox Name="ECPhoneBox"
+                <TextBox Name="EcPhoneBox"
                             KeyDown="Box_KeyDown"
                             FontSize="16"
                             Margin="0,5,15,5"/>

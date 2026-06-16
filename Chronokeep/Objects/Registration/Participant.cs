@@ -5,23 +5,23 @@ namespace Chronokeep.Objects.Registration
     public class Participant
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; } = "";
+        public string Id { get; init; } = "";
         [JsonPropertyName("bib")]
-        public string Bib { get; set; } = "";
+        public string Bib { get; init; } = "";
         [JsonPropertyName("first")]
-        public string FirstName { get; set; } = "";
+        public string FirstName { get; init; } = "";
         [JsonPropertyName("last")]
-        public string LastName { get; set; } = "";
+        public string LastName { get; init; } = "";
         [JsonPropertyName("birthdate")]
-        public string Birthdate { get; set; } = "";
+        public string Birthdate { get; init; } = "";
         [JsonPropertyName("gender")]
-        public string Gender { get; set; } = "";
+        public string Gender { get; init; } = "";
         [JsonPropertyName("distance")]
-        public string Distance { get; set; } = "";
+        public string Distance { get; init; } = "";
         [JsonPropertyName("mobile")]
-        public string Mobile { get; set; } = "";
+        public string Mobile { get; init; } = "";
         [JsonPropertyName("sms")]
-        public bool SMSEnabled { get; set; }
+        public bool SmsEnabled { get; init; }
         [JsonPropertyName("apparel")]
         public string Apparel { get; set; } = "";
     }

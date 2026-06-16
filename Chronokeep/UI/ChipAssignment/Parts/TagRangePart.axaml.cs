@@ -7,8 +7,8 @@ namespace Chronokeep.UI.ChipAssignment.Parts;
 
 public partial class TagRangePart : UserControl
 {
-    public string EndBibVal { get => EndBib.Text!; }
-    public string EndChipVal { get => EndChip.Text!; }
+    private string EndBibVal => EndBib.Text!;
+    private string EndChipVal => EndChip.Text!;
 
     private readonly ListBox parent;
 
@@ -25,12 +25,15 @@ public partial class TagRangePart : UserControl
                 _ = int.TryParse(lastItem!.EndBibVal, out lastEndBib);
                 _ = int.TryParse(lastItem.EndChipVal, out lastEndChip);
             }
-            catch { }
+            catch
+            {
+                Log.D("UI.ChipAssignment.ChipTool", "Error parsing values.");
+            }
         }
-        StartBib.Text = string.Format("{0}", lastEndBib + 1);
-        EndBib.Text = string.Format("{0}", lastEndBib + 1);
-        StartChip.Text = string.Format("{0}", lastEndChip + 1);
-        EndChip.Text = string.Format("{0}", lastEndChip + 1);
+        StartBib.Text = $"{lastEndBib + 1}";
+        EndBib.Text = $"{lastEndBib + 1}";
+        StartChip.Text = $"{lastEndChip + 1}";
+        EndChip.Text = $"{lastEndChip + 1}";
     }
 
     private void UpdateEndChip()
@@ -49,7 +52,10 @@ public partial class TagRangePart : UserControl
         {
             parent.Items.Remove(this);
         }
-        catch { }
+        catch
+        {
+            Log.D("UI.ChipAssignment.ChipTool", "Error removing an item.");
+        }
     }
 
     private void StartBib_TextChanged(object sender, TextChangedEventArgs e)
@@ -95,12 +101,15 @@ public partial class TagRangePart : UserControl
 
     private void KeyPressHandler(object sender, KeyEventArgs e)
     {
-        if (e.Key >= Key.D0 && e.Key <= Key.D9) { }
-        else if (e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9) { }
-        else if (e.Key == Key.Tab) { }
-        else
+        switch (e.Key)
         {
-            e.Handled = true;
+            case >= Key.D0 and <= Key.D9:
+            case >= Key.NumPad0 and <= Key.NumPad9:
+            case Key.Tab:
+                break;
+            default:
+                e.Handled = true;
+                break;
         }
     }
 }

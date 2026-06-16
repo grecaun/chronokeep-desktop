@@ -8,9 +8,9 @@ namespace Chronokeep.UI.Parts;
 
 public partial class WavePart : UserControl
 {
-    public int Wave { get; private set; }
-    public string WaveStr { get => string.Format("{0}", Wave); }
-    public bool PlusWave { get; set; }
+    private int Wave { get; set; }
+    private string WaveStr => $"{Wave}";
+    private bool PlusWave { get; set; }
 
     private const string TimeFormat = "{0:D2}:{1:D2}:{2:D2}.{3:D3}";
 
@@ -60,12 +60,10 @@ public partial class WavePart : UserControl
                 seconds = Convert.ToInt32(secondparts[0]),
                 milliseconds = Convert.ToInt32(secondparts[1]);
             seconds = (hours * 3600) + (minutes * 60) + seconds;
-            if (!PlusWave)
-            {
-                Log.D("UI.Timing.WaveWindow", "Negative wave, setting values to match.");
-                seconds *= -1;
-                milliseconds *= -1;
-            }
+            if (PlusWave) return (Wave, seconds, milliseconds);
+            Log.D("UI.Timing.WaveWindow", "Negative wave, setting values to match.");
+            seconds *= -1;
+            milliseconds *= -1;
             return (Wave, seconds, milliseconds);
         }
         catch

@@ -16,7 +16,9 @@
     <Grid RowDefinitions="32,auto,*,auto">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -47,7 +49,7 @@
                       HorizontalAlignment="Stretch"/>
         </StackPanel>
         <ListBox Grid.Row="2"
-                 Name="headerListBox"
+                 Name="HeaderListBox"
                  Margin="20,3"
                  KeyboardNavigation.TabNavigation="Continue"></ListBox>
         <StackPanel Grid.Row="3">

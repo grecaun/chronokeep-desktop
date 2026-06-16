@@ -2,58 +2,61 @@
 
 namespace Chronokeep.Objects
 {
-    public class AgeGroup : IEquatable<AgeGroup>, IComparable<AgeGroup>
+    public class AgeGroup(
+        int groupId,
+        int eventId,
+        int distanceId,
+        int startAge,
+        int endAge,
+        int lastGroup,
+        string customName)
+        : IEquatable<AgeGroup>, IComparable<AgeGroup>
     {
-        private int group_id, event_id, distance_id, start_age, end_age, last_group = Constants.Timing.AGEGROUPS_LASTGROUP_FALSE;
-        private string custom_name;
+        private int lastGroup = lastGroup;
 
-        public AgeGroup(int eventId, int distanceId, int startAge, int endAge, string custom_name = "")
-        {
-            this.group_id = -1;
-            this.event_id = eventId;
-            this.distance_id = distanceId;
-            this.start_age = startAge;
-            this.end_age = endAge;
-            this.last_group = Constants.Timing.AGEGROUPS_LASTGROUP_FALSE;
-            this.custom_name = custom_name;
-        }
+        public AgeGroup(
+            int eventId,
+            int distanceId,
+            int startAge,
+            int endAge,
+            string customName = ""
+            ) : this(
+                -1,
+                eventId,
+                distanceId,
+                startAge,
+                endAge,
+                Constants.Timing.AGEGROUPS_LASTGROUP_FALSE,
+                customName
+                ) { }
 
-        public AgeGroup(int groupId, int eventId, int distanceId, int startAge, int endAge, int last_group, string custom_name)
-        {
-            this.group_id = groupId;
-            this.event_id = eventId;
-            this.distance_id = distanceId;
-            this.start_age = startAge;
-            this.end_age = endAge;
-            this.last_group = last_group;
-            this.custom_name = custom_name;
-        }
+        public int EventId { get; set; } = eventId;
+        public int DistanceId { get; set; } = distanceId;
+        public int StartAge { get; set; } = startAge;
+        public int EndAge { get; set; } = endAge;
+        public int GroupId { get; set; } = groupId;
 
-        public int EventId { get => event_id; set => event_id = value; }
-        public int DistanceId { get => distance_id; set => distance_id = value; }
-        public int StartAge { get => start_age; set => start_age = value; }
-        public int EndAge { get => end_age; set => end_age = value; }
-        public int GroupId { get => group_id; set => group_id = value; }
         public bool LastGroup
         {
-            get => last_group == Constants.Timing.AGEGROUPS_LASTGROUP_TRUE;
-            set => last_group = value ? Constants.Timing.AGEGROUPS_LASTGROUP_TRUE : Constants.Timing.AGEGROUPS_LASTGROUP_FALSE;
+            get => lastGroup == Constants.Timing.AGEGROUPS_LASTGROUP_TRUE;
+            set => lastGroup = value ? Constants.Timing.AGEGROUPS_LASTGROUP_TRUE : Constants.Timing.AGEGROUPS_LASTGROUP_FALSE;
         }
-        public string Name { get => LastGroup ? string.Format("Over {0}", start_age) : string.Format("{0}-{1}", start_age, end_age); }
-        public string CustomName { get => custom_name; set => custom_name = value; }
+        private string Name => LastGroup ? $"Over {StartAge}" : $"{StartAge}-{EndAge}";
+        public string CustomName { get; set; } = customName;
+
         public string PrettyName()
         {
-            if (custom_name.Length > 0)
+            if (CustomName.Length > 0)
             {
-                return custom_name;
+                return CustomName;
             }
-            if (start_age < 1 && end_age > 0)
+            if (StartAge < 1 && EndAge > 0)
             {
-                return string.Format("Under {0}", end_age + 1);
+                return $"Under {EndAge + 1}";
             }
-            else if (end_age >= 99)
+            else if (EndAge >= 99)
             {
-                return string.Format("Over {0}", start_age);
+                return $"Over {StartAge}";
             }
             return Name;
         }
@@ -61,21 +64,17 @@ namespace Chronokeep.Objects
         public int CompareTo(AgeGroup? other)
         {
             if (other == null) return 1;
-            if (event_id != other.event_id)
+            if (EventId != other.EventId)
             {
-                return event_id.CompareTo(other.event_id);
+                return EventId.CompareTo(other.EventId);
             }
-            if (distance_id != other.distance_id)
-            {
-                return distance_id.CompareTo(other.distance_id);
-            }
-            return start_age.CompareTo(other.start_age);
+            return DistanceId != other.DistanceId ? DistanceId.CompareTo(other.DistanceId) : StartAge.CompareTo(other.StartAge);
         }
 
         public bool Equals(AgeGroup? that)
         {
             if (that == null) return false;
-            return event_id == that.event_id && distance_id == that.distance_id && start_age == that.start_age && end_age == that.start_age;
+            return EventId == that.EventId && DistanceId == that.DistanceId && StartAge == that.StartAge && EndAge == that.StartAge;
         }
     }
 }

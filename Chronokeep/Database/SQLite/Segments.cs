@@ -23,7 +23,7 @@ namespace Chronokeep.Database.SQLite
                 new("@dseg",seg.SegmentDistance),
                 new("@dcum",seg.CumulativeDistance),
                 new("@dunit",seg.DistanceUnit),
-                new("@gps",seg.GPS),
+                new("@gps",seg.Gps),
                 new("@map",seg.MapLink)
             ]);
             command.ExecuteNonQuery();
@@ -75,7 +75,7 @@ namespace Chronokeep.Database.SQLite
                 new("@dcum",seg.CumulativeDistance),
                 new("@dunit",seg.DistanceUnit),
                 new("@id",seg.Identifier),
-                new("@gps",seg.GPS),
+                new("@gps",seg.Gps),
                 new("@map",seg.MapLink)
             ]);
             command.ExecuteNonQuery();

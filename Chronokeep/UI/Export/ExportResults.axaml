@@ -23,7 +23,9 @@
                    Margin="0,15,0,0"/>
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -40,15 +42,11 @@
             </DockPanel>
         </Border>
         <ListBox Grid.Row="2"
-                 Name="headersList"
+                 Name="HeadersList"
                  Margin="5,0,5,5"
                  BorderThickness="0">
         </ListBox>
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
-            </Grid.ColumnDefinitions>
+        <Grid Grid.Row="3" ColumnDefinitions="1*,1*">
             <Button Grid.Column="0"
                     Name="Done"
                     Content="Submit"

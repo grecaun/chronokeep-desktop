@@ -7,32 +7,35 @@ using Chronokeep.Timing.Interfaces;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using Avalonia.Controls.Primitives;
+using Chronokeep.UI.Timing.ReaderSettings.Parts;
 
 namespace Chronokeep.UI.Timing.ReaderSettings;
 
-public partial class ChronokeepSettings : Window
+public partial class ChronokeepSettings : ChronokeepWindow
 {
-    private readonly ChronokeepInterface? reader = null;
+    private readonly ChronokeepInterface reader;
 
-    private bool saving = false;
+    private bool saving;
 
-    private Dictionary<long, Parts.ReaderSubPart> readerDict = [];
-    private Dictionary<long, Parts.APIPart> apiDict = [];
+    private Dictionary<long, ReaderSubPart> readerDict = [];
+    private Dictionary<long, ApiPart> apiDict = [];
 
     internal ChronokeepSettings(ChronokeepInterface reader)
     {
         InitializeComponent();
-        this.MinWidth = 100;
-        this.MinHeight = 100;
+        MinWidth = 100;
+        MinHeight = 100;
         this.reader = reader;
-        reader?.SendGetSettings();
+        reader.SendGetSettings();
     }
 
     internal void UpdateView(PortalSettingsHolder allSettings)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "UpdateView.");
-        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current!.Dispatcher.Invoke(delegate
         {
             if (saving)
             {
@@ -60,25 +63,25 @@ public partial class ChronokeepSettings : Window
                         VoiceBox.SelectedIndex = 2;
                         break;
                 }
-                NtfyUrlBox.Text = allSettings.NtfyURL;
+                NtfyUrlBox.Text = allSettings.NtfyUrl;
                 NtfyTopicBox.Text = allSettings.NtfyTopic;
                 NtfyUserBox.Text = allSettings.NtfyUser;
                 NtfyPassBox.Text = allSettings.NtfyPass;
-                EnableNTFYSwitch.IsChecked = allSettings.EnableNTFY;
-                if (allSettings.ScreenType == Constants.Readers.CHRONOKEEP_SCREEN_ADAFRUIT)
+                EnableNTFYSwitch.IsChecked = allSettings.EnableNtfy;
+                switch (allSettings.ScreenType)
                 {
-                    ScreenPanel.IsVisible = true;
-                    ScreenBox.SelectedIndex = 0;
-                }
-                else if (allSettings.ScreenType == Constants.Readers.CHRONOKEEP_SCREEN_PCF8574T)
-                {
-                    ScreenPanel.IsVisible = true;
-                    ScreenBox.SelectedIndex = 1;
-                }
-                else
-                {
-                    ScreenPanel.IsVisible = false;
-                    ScreenBox.SelectedIndex = -1;
+                    case Constants.Readers.CHRONOKEEP_SCREEN_ADAFRUIT:
+                        ScreenPanel.IsVisible = true;
+                        ScreenBox.SelectedIndex = 0;
+                        break;
+                    case Constants.Readers.CHRONOKEEP_SCREEN_PCF8574T:
+                        ScreenPanel.IsVisible = true;
+                        ScreenBox.SelectedIndex = 1;
+                        break;
+                    default:
+                        ScreenPanel.IsVisible = false;
+                        ScreenBox.SelectedIndex = -1;
+                        break;
                 }
             }
             // add readers and apis to views
@@ -90,20 +93,20 @@ public partial class ChronokeepSettings : Window
                 {
                     found.Add(read.Id);
                     // update if we know about them
-                    if (readerDict.TryGetValue(read.Id, out Parts.ReaderSubPart? oReaderItem))
+                    if (readerDict.TryGetValue(read.Id, out ReaderSubPart? oReaderItem))
                     {
                         oReaderItem.UpdateReader(read);
                     }
                     // otherwise add new
                     else
                     {
-                        readerDict[read.Id] = new(read, reader!);
+                        readerDict[read.Id] = new ReaderSubPart(read, reader);
                     }
                 }
-                var newDictionary = readerDict.Where(pair => found.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
+                Dictionary<long, ReaderSubPart> newDictionary = readerDict.Where(pair => found.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
                 readerDict = newDictionary;
                 ReaderListView.Items.Clear();
-                foreach (Parts.ReaderSubPart item in readerDict.Values)
+                foreach (ReaderSubPart item in readerDict.Values)
                 {
                     ReaderListView.Items.Add(item);
                 }
@@ -112,39 +115,34 @@ public partial class ChronokeepSettings : Window
             {
                 // keep track of which apis we are already displaying
                 HashSet<long> found = [];
-                foreach (PortalAPI api in allSettings.APIs)
+                foreach (PortalApi api in allSettings.ApIs)
                 {
                     found.Add(api.Id);
                     // update if we know about them
-                    if (apiDict.TryGetValue(api.Id, out Parts.APIPart? oAPIItem))
+                    if (apiDict.TryGetValue(api.Id, out ApiPart? oApiItem))
                     {
-                        oAPIItem.UpdateAPI(api);
+                        oApiItem.UpdateApi(api);
                     }
                     else
                     {
-                        apiDict[api.Id] = new(api, reader!);
+                        apiDict[api.Id] = new ApiPart(api, reader);
                     }
                 }
-                var newDictionary = apiDict.Where(pair => found.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
+                Dictionary<long, ApiPart> newDictionary = apiDict.Where(pair => found.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
                 apiDict = newDictionary;
                 ApiListView.Items.Clear();
-                foreach (Parts.APIPart item in apiDict.Values)
+                foreach (ApiPart item in apiDict.Values)
                 {
                     ApiListView.Items.Add(item);
                 }
             }
             if (allSettings.Changes.Contains(PortalSettingsHolder.ChangeType.ANTENNAS))
             {
-                Dictionary<string, Parts.ReaderSubPart> readerNameDict = [];
-                foreach (Parts.ReaderSubPart reader in readerDict.Values)
+                foreach (ReaderSubPart readerSubPart in readerDict.Values.Where(readerSubPart => readerSubPart.GetReaderName().Equals(allSettings.Antennas.ReaderName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (reader.GetReaderName().Equals(allSettings.Antennas.ReaderName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        reader?.UpdateAntennas(allSettings.Antennas.Antennas);
-                        break;
-                    }
+                    readerSubPart.UpdateAntennas(allSettings.Antennas.Antennas);
+                    break;
                 }
-
             }
             switch (allSettings.AutoUpload)
             {
@@ -162,114 +160,100 @@ public partial class ChronokeepSettings : Window
                     AutoResultsSwitch.IsChecked = true;
                     break;
             }
-        }));
+        });
     }
 
     public void CloseWindow()
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "CloseWindow.");
-        Application.Current!.Dispatcher.Invoke(new Action(Close));
+        Application.Current!.Dispatcher.Invoke(Close);
     }
 
     private void Window_Closed(object sender, EventArgs e)
     {
-        reader?.SettingsWindowFinalize();
+        reader.SettingsWindowFinalize();
     }
 
-    private void VolumeSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void VolumeSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         if (VolumeSlider != null && VolumeBlock != null)
         {
-            VolumeBlock.Text = VolumeSlider.Value.ToString();
+            VolumeBlock.Text = VolumeSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
-    private void ReaderExpander_Changed(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ReaderExpander_Changed(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Reader expander expanding/contracting.");
-        if (ReaderExpander.IsExpanded)
-        {
-            AddReaderButton.IsVisible = true;
-        }
-        else
-        {
-            AddReaderButton.IsVisible = false;
-        }
+        AddReaderButton.IsVisible = ReaderExpander.IsExpanded;
     }
 
-    private void AddReaderButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void AddReaderButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Adding new reader.");
-        reader?.SendSaveReader(new()
+        reader.SendSaveReader(new PortalReader
         {
             Id = -1,
             Name = "New Reader",
             Kind = PortalReader.READER_KIND_ZEBRA,
-            IPAddress = "192.168.1.0",
+            IpAddress = "192.168.1.0",
             Port = uint.Parse(PortalReader.READER_DEFAULT_PORT_ZEBRA),
             AutoConnect = true,
         });
     }
 
-    private void APIExpander_Changed(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void APIExpander_Changed(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "API expander expanding/contracting.");
-        if (ApiExpander.IsExpanded)
-        {
-            AddAPIButton.IsVisible = true;
-        }
-        else
-        {
-            AddAPIButton.IsVisible = false;
-        }
+        AddAPIButton.IsVisible = ApiExpander.IsExpanded;
     }
 
-    private void AddAPIButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void AddAPIButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Add API button clicked.");
-        reader?.SendSaveApi(new()
+        reader.SendSaveApi(new PortalApi
         {
             Id = -1,
             Nickname = "New API",
-            Kind = PortalAPI.API_TYPE_CHRONOKEEP_REMOTE,
+            Kind = PortalApi.API_TYPE_CHRONOKEEP_REMOTE,
             Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
-            Uri = PortalAPI.API_URI_CHRONOKEEP_REMOTE,
+            Uri = PortalApi.API_URI_CHRONOKEEP_REMOTE,
         });
     }
 
-    private void UploadSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void UploadSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         if (UploadSlider != null && UploadBlock != null)
         {
-            UploadBlock.Text = UploadSlider.Value.ToString();
+            UploadBlock.Text = UploadSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
-    private void BeepSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void BeepSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         if (BeepSlider != null && BeepBlock != null)
         {
-            BeepBlock.Text = BeepSlider.Value.ToString();
+            BeepBlock.Text = BeepSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
-    private void ManualResultsButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ManualResultsButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Manually uploading results.");
-        reader?.SendManualResultsUpload();
+        reader.SendManualResultsUpload();
     }
 
-    private void DeleteReadsButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void DeleteReadsButton_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "User requests deletion of reader chip reads.");
         DialogBox.Show("This will delete all of the chip reads from the reader.  This action is not reversible. Continue?", "Yes", "No", () =>
         {
             Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Clearing chip reads from reader.");
-            reader?.SendDeleteAllReads();
+            reader.SendDeleteAllReads();
         });
     }
 
-    private void UpdateServerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void UpdateServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Update button clicked.");
         DialogBox.Show(
@@ -279,13 +263,13 @@ public partial class ChronokeepSettings : Window
             () =>
             {
                 // send update command
-                reader?.SendUpdate();
-                this.Close();
+                reader.SendUpdate();
+                Close();
             }
             );
     }
 
-    private void RestartServerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void RestartServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Restart button clicked.");
         DialogBox.Show(
@@ -295,13 +279,13 @@ public partial class ChronokeepSettings : Window
             () =>
             {
                 // send restart command
-                reader?.SendRestart();
-                this.Close();
+                reader.SendRestart();
+                Close();
             }
             );
     }
 
-    private void StopServerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void StopServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Stop button clicked.");
         DialogBox.Show(
@@ -311,13 +295,13 @@ public partial class ChronokeepSettings : Window
             () =>
             {
                 // send stop command
-                reader?.SendQuit();
-                this.Close();
+                reader.SendQuit();
+                Close();
             }
             );
     }
 
-    private void ShutdownServerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ShutdownServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Shutdown button clicked.");
         DialogBox.Show(
@@ -327,13 +311,13 @@ public partial class ChronokeepSettings : Window
             () =>
             {
                 // send shutdown command
-                reader?.SendShutdown();
-                this.Close();
+                reader.SendShutdown();
+                Close();
             }
             );
     }
 
-    private void SaveButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Save button clicked.");
         saving = true;
@@ -352,14 +336,14 @@ public partial class ChronokeepSettings : Window
                 Voice = VoiceBox.SelectedIndex == 0 ? PortalSettingsHolder.VoiceType.EMILY
                     : VoiceBox.SelectedIndex == 1 ? PortalSettingsHolder.VoiceType.MICHAEL
                     : PortalSettingsHolder.VoiceType.CUSTOM,
-                NtfyURL = NtfyUrlBox.Text!.Trim(),
+                NtfyUrl = NtfyUrlBox.Text!.Trim(),
                 NtfyTopic = NtfyTopicBox.Text!.Trim(),
                 NtfyUser = NtfyUserBox.Text!.Trim(),
                 NtfyPass = NtfyPassBox.Text!.Trim(),
-                EnableNTFY = EnableNTFYSwitch.IsChecked == true,
+                EnableNtfy = EnableNTFYSwitch.IsChecked == true,
                 ScreenType = ScreenBox.SelectedItem != null ? (string)((ComboBoxItem)ScreenBox.SelectedItem).Tag! : ""
             };
-            reader?.SendSetSettings(sett);
+            reader.SendSetSettings(sett);
         }
         catch (Exception ex)
         {
@@ -368,31 +352,26 @@ public partial class ChronokeepSettings : Window
         }
     }
 
-    private void CloseButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Close button clicked.");
-        this.Close();
+        Close();
     }
 
-    private void AutoResultsSwitch_Checked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void AutoResultsSwitch_Checked(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Auto upload switched.");
-        if (AutoResultsSwitch.IsEnabled == false)
+        if (!AutoResultsSwitch.IsEnabled)
         {
             return;
         }
-        if (AutoResultsSwitch.IsChecked == false)
-        {
-            reader?.SendAutoUploadResults(Objects.ChronokeepPortal.Requests.AutoUploadQuery.STOP);
-        }
-        else
-        {
-            reader?.SendAutoUploadResults(Objects.ChronokeepPortal.Requests.AutoUploadQuery.START);
-        }
+        reader.SendAutoUploadResults(AutoResultsSwitch.IsChecked == false
+            ? AutoUploadQuery.STOP
+            : AutoUploadQuery.START);
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

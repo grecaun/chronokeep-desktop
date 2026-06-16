@@ -6,7 +6,11 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.UI.Util;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.MainPages;
 
@@ -15,8 +19,7 @@ public partial class SettingsPage : UserControl, IMainPage
     private readonly IMainWindow mWindow;
     private readonly IDBInterface database;
 
-    private readonly int SystemTheme = -1;
-    private readonly int ThemeOffset = -1;
+    private readonly int themeOffset = -1;
 
     public SettingsPage(IMainWindow mainWindow, IDBInterface database)
     {
@@ -44,10 +47,10 @@ public partial class SettingsPage : UserControl, IMainPage
             Content = Constants.Readers.SYSTEM_NAMES[Constants.Readers.SYSTEM_IPICO_LITE],
             Tag = Constants.Readers.SYSTEM_IPICO_LITE
         });
-        SystemTheme = Utils.GetSystemTheme();
-        if (SystemTheme != -1)
+        int systemTheme = Utils.GetSystemTheme();
+        if (systemTheme != -1)
         {
-            ThemeOffset = 0;
+            themeOffset = 0;
             ThemeColorBox.Items.Add(new ComboBoxItem()
             {
                 Content = "System",
@@ -85,50 +88,50 @@ public partial class SettingsPage : UserControl, IMainPage
         CheckUpdates.IsChecked = database.GetAppSetting(Constants.Settings.CHECK_UPDATES)!.Value == Constants.Settings.SETTING_TRUE;
         AutoChangelog.IsChecked = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG)!.Value == Constants.Settings.SETTING_TRUE;
         AppSetting themeSetting = database.GetAppSetting(Constants.Settings.CURRENT_THEME)!;
-        Log.D("UI.MainPages.SettingsPage", "Current theme set to " + themeSetting.Value + " Theme Offset is " + ThemeOffset);
-        if (themeSetting.Value == Constants.Settings.THEME_SYSTEM)
+        Log.D("UI.MainPages.SettingsPage", "Current theme set to " + themeSetting.Value + " Theme Offset is " + themeOffset);
+        switch (themeSetting.Value)
         {
-            Log.D("UI.MainPages.SettingsPage", "Setting selected theme to System.");
-            ThemeColorBox.SelectedIndex = 0;
+            case Constants.Settings.THEME_SYSTEM:
+                Log.D("UI.MainPages.SettingsPage", "Setting selected theme to System.");
+                ThemeColorBox.SelectedIndex = 0;
+                break;
+            case Constants.Settings.THEME_LIGHT:
+                Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Light. " + (themeOffset + 1));
+                ThemeColorBox.SelectedIndex = themeOffset + 1;
+                break;
+            default:
+                Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Dark. " + (themeOffset + 2));
+                ThemeColorBox.SelectedIndex = themeOffset + 2;
+                break;
         }
-        else if (themeSetting.Value == Constants.Settings.THEME_LIGHT)
+        if (int.TryParse(database.GetAppSetting(Constants.Settings.UPLOAD_INTERVAL)!.Value, out int uploadInt) && uploadInt is > 0 and < 60)
         {
-            Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Light. " + (ThemeOffset + 1));
-            ThemeColorBox.SelectedIndex = ThemeOffset + 1;
+            UploadSlider.Value = uploadInt;
+            UploadBlock.Text = uploadInt.ToString();
         }
-        else
+        if (int.TryParse(database.GetAppSetting(Constants.Settings.DOWNLOAD_INTERVAL)!.Value, out int downloadInt) && downloadInt is > 0 and < 60)
         {
-            Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Dark. " + (ThemeOffset + 2));
-            ThemeColorBox.SelectedIndex = ThemeOffset + 2;
+            DownloadSlider.Value = downloadInt;
+            DownloadBlock.Text = downloadInt.ToString();
         }
-        if (int.TryParse(database.GetAppSetting(Constants.Settings.UPLOAD_INTERVAL)!.Value, out int uploadInt) && uploadInt > 0 && uploadInt < 60)
+        if (int.TryParse(database.GetAppSetting(Constants.Settings.ANNOUNCER_WINDOW)!.Value, out int announcerWindow) && announcerWindow is >= 15 and <= 180)
         {
-            uploadSlider.Value = uploadInt;
-            uploadBlock.Text = uploadInt.ToString();
-        }
-        if (int.TryParse(database.GetAppSetting(Constants.Settings.DOWNLOAD_INTERVAL)!.Value, out int downloadInt) && downloadInt > 0 && downloadInt < 60)
-        {
-            downloadSlider.Value = downloadInt;
-            downloadBlock.Text = downloadInt.ToString();
-        }
-        if (int.TryParse(database.GetAppSetting(Constants.Settings.ANNOUNCER_WINDOW)!.Value, out int announcerWindow) && announcerWindow >= 15 && announcerWindow <= 180)
-        {
-            announcerSlider.Value = announcerWindow;
-            announcerBlock.Text = announcerWindow.ToString();
+            AnnouncerSlider.Value = announcerWindow;
+            AnnouncerBlock.Text = announcerWindow.ToString();
         }
         if (int.TryParse(database.GetAppSetting(Constants.Settings.ALARM_SOUND)!.Value, out int alarm))
         {
             AlarmSoundBox.SelectedIndex = alarm;
         }
         RegistrationServerNameBox.Text = database.GetAppSetting(Constants.Settings.SERVER_NAME)!.Value;
-        TwilioAccountSIDBox.Text = database.GetAppSetting(Constants.Settings.TWILIO_ACCOUNT_SID)!.Value;
+        TwilioAccountSidBox.Text = database.GetAppSetting(Constants.Settings.TWILIO_ACCOUNT_SID)!.Value;
         TwilioAuthTokenBox.Text = database.GetAppSetting(Constants.Settings.TWILIO_AUTH_TOKEN)!.Value;
         TwilioPhoneNumberBox.Text = database.GetAppSetting(Constants.Settings.TWILIO_PHONE_NUMBER)!.Value;
         MailgunFromNameBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_NAME)!.Value;
         MailgunFromEmailBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_EMAIL)!.Value;
-        MailgunAPIKeyBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!.Value;
-        MailgunAPIURLBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!.Value;
-        UniqueProgramID.Text = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!.Value;
+        MailgunApiKeyBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!.Value;
+        MailgunApiUrlBox.Text = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!.Value;
+        UniqueProgramId.Text = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!.Value;
     }
 
     private void SaveSettings()
@@ -143,24 +146,24 @@ public partial class SettingsPage : UserControl, IMainPage
         database.SetAppSetting(Constants.Settings.EXIT_NO_PROMPT, ExitNoPrompt.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
         database.SetAppSetting(Constants.Settings.CHECK_UPDATES, CheckUpdates.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
         database.SetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG, AutoChangelog.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
-        database.SetAppSetting(Constants.Settings.UPLOAD_INTERVAL, Convert.ToInt32(uploadSlider.Value).ToString());
-        Globals.UploadInterval = Convert.ToInt32(uploadSlider.Value);
-        database.SetAppSetting(Constants.Settings.DOWNLOAD_INTERVAL, Convert.ToInt32(downloadSlider.Value).ToString());
-        Globals.DownloadInterval = Convert.ToInt32(downloadSlider.Value);
-        database.SetAppSetting(Constants.Settings.ANNOUNCER_WINDOW, Convert.ToInt32(announcerSlider.Value).ToString());
-        Globals.AnnouncerWindow = Convert.ToInt32(announcerSlider.Value);
+        database.SetAppSetting(Constants.Settings.UPLOAD_INTERVAL, Convert.ToInt32(UploadSlider.Value).ToString());
+        Globals.UploadInterval = Convert.ToInt32(UploadSlider.Value);
+        database.SetAppSetting(Constants.Settings.DOWNLOAD_INTERVAL, Convert.ToInt32(DownloadSlider.Value).ToString());
+        Globals.DownloadInterval = Convert.ToInt32(DownloadSlider.Value);
+        database.SetAppSetting(Constants.Settings.ANNOUNCER_WINDOW, Convert.ToInt32(AnnouncerSlider.Value).ToString());
+        Globals.AnnouncerWindow = Convert.ToInt32(AnnouncerSlider.Value);
         database.SetAppSetting(Constants.Settings.ALARM_SOUND, AlarmSoundBox.SelectedIndex.ToString());
         database.SetAppSetting(Constants.Settings.SERVER_NAME, RegistrationServerNameBox.Text!.Trim());
 
-        Constants.GlobalVars.SetTwilioCredentials(TwilioAccountSIDBox.Text!.Trim(), TwilioAuthTokenBox.Text!.Trim(), TwilioPhoneNumberBox.Text!.Trim());
-        database.SetAppSetting(Constants.Settings.TWILIO_ACCOUNT_SID, Constants.GlobalVars.TwilioCredentials.AccountSID);
+        Constants.GlobalVars.SetTwilioCredentials(TwilioAccountSidBox.Text!.Trim(), TwilioAuthTokenBox.Text!.Trim(), TwilioPhoneNumberBox.Text!.Trim());
+        database.SetAppSetting(Constants.Settings.TWILIO_ACCOUNT_SID, Constants.GlobalVars.TwilioCredentials.AccountSid);
         database.SetAppSetting(Constants.Settings.TWILIO_AUTH_TOKEN, Constants.GlobalVars.TwilioCredentials.AuthToken);
         database.SetAppSetting(Constants.Settings.TWILIO_PHONE_NUMBER, Constants.GlobalVars.TwilioCredentials.PhoneNumber);
 
         database.SetAppSetting(Constants.Settings.MAILGUN_FROM_NAME, MailgunFromNameBox.Text!.Trim());
         database.SetAppSetting(Constants.Settings.MAILGUN_FROM_EMAIL, MailgunFromEmailBox.Text!.Trim());
-        database.SetAppSetting(Constants.Settings.MAILGUN_API_KEY, MailgunAPIKeyBox.Text!.Trim());
-        database.SetAppSetting(Constants.Settings.MAILGUN_API_URL, MailgunAPIURLBox.Text!.Trim());
+        database.SetAppSetting(Constants.Settings.MAILGUN_API_KEY, MailgunApiKeyBox.Text!.Trim());
+        database.SetAppSetting(Constants.Settings.MAILGUN_API_URL, MailgunApiUrlBox.Text!.Trim());
     }
 
     public static void UpdateDatabase() { }
@@ -186,59 +189,69 @@ public partial class SettingsPage : UserControl, IMainPage
         }
     }
 
-    private async void ResetDB_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ResetDB_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.SettingsPage", "Reset button clicked.");
-        bool YesClicked = false;
-        DialogBox.Show(
-            "This deletes all of the data stored in the database.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
-            "Yes",
-            "No",
-            () =>
-            {
-                YesClicked = true;
-            });
-        if (YesClicked)
+        try
         {
-            ResetDB.IsEnabled = false;
+            Log.D("UI.MainPages.SettingsPage", "Reset button clicked.");
+            bool yesClicked = false;
+            DialogBox.Show(
+                "This deletes all of the data stored in the database.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
+                "Yes",
+                "No",
+                () =>
+                {
+                    yesClicked = true;
+                });
+            if (!yesClicked) return;
+            ResetDb.IsEnabled = false;
             await Task.Run(() =>
             {
                 database.ResetDatabase();
                 Constants.Settings.SetupSettings(database);
             });
             UpdateView();
-            ResetDB.IsEnabled = true;
+            ResetDb.IsEnabled = true;
             mWindow.UpdateStatus();
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.SettingsPage", "Error resetting database.");
         }
     }
 
-    private async void RebuildDB_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void RebuildDB_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.SettingsPage", "Rebuild button clicked.");
-        bool YesClicked = false;
-        DialogBox.Show(
-            "This deletes all of the tables and values in the database, then rebuilds all of the tables.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
-            "Yes",
-            "No",
-            () =>
-            {
-                YesClicked = true;
-            });
-        if (YesClicked)
+        try
         {
-            RebuildDB.IsEnabled = false;
+            Log.D("UI.MainPages.SettingsPage", "Rebuild button clicked.");
+            bool yesClicked = false;
+            DialogBox.Show(
+                "This deletes all of the tables and values in the database, then rebuilds all of the tables.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
+                "Yes",
+                "No",
+                () =>
+                {
+                    yesClicked = true;
+                });
+            if (!yesClicked) return;
+            RebuildDb.IsEnabled = false;
             await Task.Run(() =>
             {
                 database.HardResetDatabase();
                 Constants.Settings.SetupSettings(database);
             });
             UpdateView();
-            RebuildDB.IsEnabled = true;
+            RebuildDb.IsEnabled = true;
             mWindow.UpdateStatus();
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.SettingsPage", "Error rebuilding database.");
         }
     }
 
-    private void Save_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs? e)
+    private void Save_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.SettingsPage", "Save button clicked.");
         SaveSettings();
@@ -247,20 +260,19 @@ public partial class SettingsPage : UserControl, IMainPage
 
     private void ThemeColorBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (ThemeColorBox.SelectedItem is ComboBoxItem selectedItem)
-        {
-            database.SetAppSetting(Constants.Settings.CURRENT_THEME, (string)((ComboBoxItem)ThemeColorBox.SelectedItem!).Tag!);
-            string theme = selectedItem.Tag != null ? (string)selectedItem.Tag : "light";
-            mWindow.UpdateTheme(theme);
-        }
+        if (ThemeColorBox.SelectedItem is not ComboBoxItem selectedItem) return;
+        database.SetAppSetting(Constants.Settings.CURRENT_THEME, (string)((ComboBoxItem)ThemeColorBox.SelectedItem!).Tag!);
+        string theme = selectedItem.Tag != null ? (string)selectedItem.Tag : "light";
+        mWindow.UpdateTheme(theme);
     }
 
-    private async void ChangeExport_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ChangeExport_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.SettingsPage", "Change export directory button clicked.");
-        var topLevel = TopLevel.GetTopLevel((Window)mWindow);
-        if (topLevel != null)
+        try
         {
+            Log.D("UI.MainPages.SettingsPage", "Change export directory button clicked.");
+            TopLevel? topLevel = TopLevel.GetTopLevel((Window)mWindow);
+            if (topLevel == null) return;
             IStorageFolder? oldFold;
             try
             {
@@ -270,7 +282,7 @@ public partial class SettingsPage : UserControl, IMainPage
             {
                 oldFold = null;
             }
-            var folder = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            IReadOnlyList<IStorageFolder> folder = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 Title = "Default Export Directory",
                 SuggestedStartLocation = oldFold,
@@ -280,33 +292,37 @@ public partial class SettingsPage : UserControl, IMainPage
                 DefaultExportDirBox.Text = folder[0].Path.ToString();
             }
         }
-    }
-
-    private void UploadSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-    {
-        if (uploadSlider != null && uploadBlock != null)
+        catch (Exception)
         {
-            uploadBlock.Text = uploadSlider.Value.ToString();
+            Log.D("UI.MainPages.SettingsPage", "Error changing export directory.");
         }
     }
 
-    private void DownloadSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void UploadSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        if (downloadSlider != null && downloadBlock != null)
+        if (UploadSlider != null && UploadBlock != null)
         {
-            downloadBlock.Text = downloadSlider.Value.ToString();
+            UploadBlock.Text = UploadSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
-    private void AnnouncerSlider_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void DownloadSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        if (announcerSlider != null && announcerBlock != null)
+        if (DownloadSlider != null && DownloadBlock != null)
         {
-            announcerBlock.Text = announcerSlider.Value.ToString();
+            DownloadBlock.Text = DownloadSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
-    private void PlayBtn_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void AnnouncerSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (AnnouncerSlider != null && AnnouncerBlock != null)
+        {
+            AnnouncerBlock.Text = AnnouncerSlider.Value.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    private void PlayBtn_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.SettingsPage", "Play alarm sound clicked.");
         try
@@ -320,7 +336,7 @@ public partial class SettingsPage : UserControl, IMainPage
         }
     }
 
-    private void RegenerateUniqueProgramIDButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void RegenerateUniqueProgramIDButton_Click(object? sender, RoutedEventArgs e)
     {
         string randomMod = Constants.Settings.AlphaNum().Replace(Guid.NewGuid().ToString("N"), "").ToUpper()[0..3];
         database.SetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER, randomMod);

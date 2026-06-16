@@ -6,17 +6,17 @@ using Chronokeep.UI.MainPages.Dashboard;
 
 namespace Chronokeep.UI.Parts;
 
-public partial class APIPart : UserControl
+public partial class ApiPart : UserControl
 {
-    readonly APIPage page;
-    public APIObject theAPI;
+    private readonly ApiPage page;
+    public readonly ApiObject TheApi;
 
-    public APIPart(APIPage page, APIObject api)
+    public ApiPart(ApiPage page, ApiObject api)
     {
         InitializeComponent();
-        theAPI = api;
+        TheApi = api;
         this.page = page;
-        APINickname.Text = api.Nickname;
+        ApiNickname.Text = api.Nickname;
         ComboBoxItem? selected = null;
         foreach (string uid in Constants.APIConstants.API_TYPE_NAMES.Keys)
         {
@@ -24,43 +24,43 @@ public partial class APIPart : UserControl
             {
                 Content = Constants.APIConstants.API_TYPE_NAMES[uid],
                 Tag = uid,
-                IsSelected = theAPI.Type.Equals(uid),
+                IsSelected = TheApi.Type.Equals(uid),
             };
-            if (theAPI.Type.Equals(uid))
+            if (TheApi.Type.Equals(uid))
             {
                 selected = newItem;
             }
-            APIType.Items.Add(newItem);
+            ApiType.Items.Add(newItem);
         }
-        APIURL.Text = api.URL;
-        APIURL.IsEnabled = Constants.APIConstants.API_SELF_HOSTED[theAPI.Type];
-        APIToken.Text = api.AuthToken;
-        APIWebURL.Text = api.WebURL;
+        ApiUrl.Text = api.Url;
+        ApiUrl.IsEnabled = Constants.APIConstants.API_SELF_HOSTED[TheApi.Type];
+        ApiToken.Text = api.AuthToken;
+        ApiWebUrl.Text = api.WebUrl;
         if (selected != null)
         {
-            APIType.SelectedItem = selected;
+            ApiType.SelectedItem = selected;
         }
         else
         {
-            APIType.SelectedIndex = 0;
+            ApiType.SelectedIndex = 0;
         }
     }
 
-    public void UpdateResultsAPI()
+    public void UpdateResultsApi()
     {
         Log.D("UI.MainPages.APIPage", "Updating api.");
-        theAPI.Nickname = APINickname.Text!;
-        theAPI.URL = APIURL.Text!;
-        if (!theAPI.URL!.EndsWith('/'))
+        TheApi.Nickname = ApiNickname.Text!;
+        TheApi.Url = ApiUrl.Text!;
+        if (!TheApi.Url.EndsWith('/'))
         {
-            theAPI.URL += "/";
+            TheApi.Url += "/";
         }
-        theAPI.AuthToken = APIToken.Text!;
-        theAPI.Type = (string)((ComboBoxItem)APIType.SelectedItem!).Tag!;
-        theAPI.WebURL = APIWebURL.Text!;
-        if (theAPI.WebURL!.Length > 0 && !theAPI.WebURL.EndsWith('/'))
+        TheApi.AuthToken = ApiToken.Text!;
+        TheApi.Type = (string)((ComboBoxItem)ApiType.SelectedItem!).Tag!;
+        TheApi.WebUrl = ApiWebUrl.Text!;
+        if (TheApi.WebUrl.Length > 0 && !TheApi.WebUrl.EndsWith('/'))
         {
-            theAPI.WebURL += "/";
+            TheApi.WebUrl += "/";
         }
     }
 
@@ -68,35 +68,33 @@ public partial class APIPart : UserControl
     {
         Log.D("UI.MainPages.APIPage", "Changing API Type!");
         // Ensure we've got something selected, and then change the URL if they've selected Chronokeep.
-        if (APIType.SelectedItem != null)
+        if (ApiType.SelectedItem == null) return;
+        string type = (string)((ComboBoxItem)ApiType.SelectedItem).Tag!;
+        if (!Constants.APIConstants.API_SELF_HOSTED[type])
         {
-            string type = (string)((ComboBoxItem)APIType.SelectedItem).Tag!;
-            if (!Constants.APIConstants.API_SELF_HOSTED[type])
-            {
-                theAPI.URL = Constants.APIConstants.API_URL[type];
-                APIURL.Text = theAPI.URL;
-                APIURL.IsEnabled = false;
-            }
-            else
-            {
-                APIURL.IsEnabled = true;
-            }
-            if (Constants.APIConstants.API_RESULTS[type])
-            {
-                APIWebURL.Text = theAPI.WebURL;
-                APIWebURL.IsEnabled = true;
-            }
-            else
-            {
-                APIWebURL.Text = "";
-                APIWebURL.IsEnabled = false;
-            }
+            TheApi.Url = Constants.APIConstants.API_URL[type];
+            ApiUrl.Text = TheApi.Url;
+            ApiUrl.IsEnabled = false;
+        }
+        else
+        {
+            ApiUrl.IsEnabled = true;
+        }
+        if (Constants.APIConstants.API_RESULTS[type])
+        {
+            ApiWebUrl.Text = TheApi.WebUrl;
+            ApiWebUrl.IsEnabled = true;
+        }
+        else
+        {
+            ApiWebUrl.Text = "";
+            ApiWebUrl.IsEnabled = false;
         }
     }
 
     private void Remove_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.APIPage", "Removing api.");
-        page.RemoveAPI(theAPI);
+        page.RemoveApi(TheApi);
     }
 }

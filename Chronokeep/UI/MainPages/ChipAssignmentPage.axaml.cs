@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     private readonly Event? theEvent;
     private AppSetting chipType;
 
-    private bool BibsChanged = false;
+    private bool bibsChanged;
 
     [GeneratedRegex("[^0-9]")]
     private static partial Regex AllowedChars();
@@ -41,14 +42,12 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         this.mWindow = mWindow;
         this.database = database;
         chipType = database.GetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE)!;
-        if (chipType.Value == Constants.Settings.CHIP_TYPE_DEC)
+        ChipTypeBox.SelectedIndex = chipType.Value switch
         {
-            ChipTypeBox.SelectedIndex = 0;
-        }
-        else if (chipType.Value == Constants.Settings.CHIP_TYPE_HEX)
-        {
-            ChipTypeBox.SelectedIndex = 1;
-        }
+            Constants.Settings.CHIP_TYPE_DEC => 0,
+            Constants.Settings.CHIP_TYPE_HEX => 1,
+            _ => ChipTypeBox.SelectedIndex
+        };
         ChipTypeBox.SelectionChanged += ChipTypeBox_SelectionChanged;
         theEvent = database.GetCurrentEvent();
         UpdateView();
@@ -56,82 +55,95 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     public async void UpdateView()
     {
-        if (theEvent == null)
+        try
         {
-            return;
-        }
-        List<BibChipAssociation> list = [];
-        List<BibChipAssociation> ignored = [];
-        await Task.Run(() =>
-        {
-            list = database.GetBibChips(theEvent.Identifier);
-            list.Sort();
-            ignored = database.GetBibChips(-1);
-            ignored.Sort();
-        });
-        bibChipList.ItemsSource = list;
-        ignoredChipList.ItemsSource = ignored;
-        long maxChip = 0;
-        long chip = -1;
-        // check if hex before using a convert
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
-        {
-            foreach (BibChipAssociation b in list)
+            if (theEvent == null)
             {
-                _ = long.TryParse(b.Chip, out chip);
-                maxChip = chip > maxChip ? chip : maxChip;
+                return;
             }
-        }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            foreach (BibChipAssociation b in list)
+            List<BibChipAssociation> list = [];
+            List<BibChipAssociation> ignored = [];
+            await Task.Run(() =>
             {
-                long.TryParse(b.Chip, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
-                maxChip = chip > maxChip ? chip : maxChip;
+                list = database.GetBibChips(theEvent.Identifier);
+                list.Sort();
+                ignored = database.GetBibChips(-1);
+                ignored.Sort();
+            });
+            BibChipList.ItemsSource = list;
+            IgnoredChipList.ItemsSource = ignored;
+            long maxChip = 0;
+            long chip;
+            switch (chipType.Value)
+            {
+                // check if hex before using a convert
+                case Constants.Settings.CHIP_TYPE_DEC:
+                {
+                    foreach (BibChipAssociation b in list)
+                    {
+                        _ = long.TryParse(b.Chip, out chip);
+                        maxChip = chip > maxChip ? chip : maxChip;
+                    }
+
+                    break;
+                }
+                case Constants.Settings.CHIP_TYPE_HEX:
+                {
+                    foreach (BibChipAssociation b in list)
+                    {
+                        long.TryParse(b.Chip, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
+                        maxChip = chip > maxChip ? chip : maxChip;
+                    }
+
+                    break;
+                }
             }
-        }
-        maxChip += 1;
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
-        {
-            SingleChipBox.Text = maxChip.ToString();
-            RangeStartChipBox.Text = maxChip.ToString();
-        }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            SingleChipBox.Text = maxChip.ToString("X");
-            RangeStartChipBox.Text = maxChip.ToString("X");
-        }
-        List<Event> events = [];
-        await Task.Run(() =>
-        {
-            events = database.GetEvents();
-            events.Sort();
-        });
-        previousEvents.Items.Clear();
-        ComboBoxItem boxItem = new()
-        {
-            Content = "None",
-            Tag = "-1"
-        };
-        previousEvents.Items.Add(boxItem);
-        foreach (Event e in events)
-        {
-            if (!e.Equals(theEvent))
+            maxChip += 1;
+            switch (chipType.Value)
             {
+                case Constants.Settings.CHIP_TYPE_DEC:
+                    SingleChipBox.Text = maxChip.ToString();
+                    RangeStartChipBox.Text = maxChip.ToString();
+                    break;
+                case Constants.Settings.CHIP_TYPE_HEX:
+                    SingleChipBox.Text = maxChip.ToString("X");
+                    RangeStartChipBox.Text = maxChip.ToString("X");
+                    break;
+            }
+            List<Event> events = [];
+            await Task.Run(() =>
+            {
+                events = database.GetEvents();
+                events.Sort();
+            });
+            PreviousEvents.Items.Clear();
+            ComboBoxItem boxItem = new()
+            {
+                Content = "None",
+                Tag = "-1"
+            };
+            PreviousEvents.Items.Add(boxItem);
+            foreach (Event e in events)
+            {
+                if (e.Equals(theEvent)) continue;
                 string name = e.YearCode + " " + e.Name;
                 name = name.Trim();
-                boxItem = new()
+                boxItem = new ComboBoxItem
                 {
                     Content = name,
                     Tag = e.Identifier.ToString()
                 };
-                previousEvents.Items.Add(boxItem);
+                PreviousEvents.Items.Add(boxItem);
             }
+            PreviousEvents.SelectedIndex = 0;
         }
-        previousEvents.SelectedIndex = 0;
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ChipAssignmentPage", "Error updating views.");
+        }
     }
 
-    public static void UpdateDatabase() { }
+    private static void UpdateDatabase() { }
 
     public void Keyboard_Ctrl_A()
     {
@@ -151,7 +163,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        if (BibsChanged)
+        if (bibsChanged)
         {
             database.ResetTimingResultsEvent(theEvent!.Identifier);
             mWindow.NetworkClearResults();
@@ -163,12 +175,12 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Delete clicked.");
         List<BibChipAssociation> items = [];
-        foreach (BibChipAssociation b in bibChipList.SelectedItems)
+        foreach (BibChipAssociation b in BibChipList.SelectedItems)
         {
             items.Add(b);
         }
         database.RemoveBibChipAssociations(items);
-        BibsChanged = true;
+        bibsChanged = true;
         UpdateView();
     }
 
@@ -180,8 +192,8 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             "No",
             () =>
             {
-                database.RemoveBibChipAssociations((List<BibChipAssociation>)bibChipList.ItemsSource);
-                BibsChanged = true;
+                database.RemoveBibChipAssociations((List<BibChipAssociation>)BibChipList.ItemsSource);
+                bibsChanged = true;
                 UpdateView();
             }
             );
@@ -191,12 +203,9 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Delete ignored clicked.");
         List<BibChipAssociation> items = [];
-        foreach (BibChipAssociation b in ignoredChipList.SelectedItems)
-        {
-            items.Add(b);
-        }
+        items.AddRange(IgnoredChipList.SelectedItems.Cast<BibChipAssociation>());
         database.RemoveBibChipAssociations(items);
-        BibsChanged = true;
+        bibsChanged = true;
         UpdateView();
     }
 
@@ -208,8 +217,8 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             "No",
             () =>
             {
-                database.RemoveBibChipAssociations((List<BibChipAssociation>)ignoredChipList.ItemsSource);
-                BibsChanged = true;
+                database.RemoveBibChipAssociations((List<BibChipAssociation>)IgnoredChipList.ItemsSource);
+                bibsChanged = true;
                 UpdateView();
             }
             );
@@ -231,17 +240,15 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     private void ChipValidation(object? sender, TextInputEventArgs e)
     {
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
+        e.Handled = chipType.Value switch
         {
-            e.Handled = e.Text != null && AllowedChars().IsMatch(e.Text);
-        }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            e.Handled = e.Text != null && AllowedHexChars().IsMatch(e.Text);
-        }
+            Constants.Settings.CHIP_TYPE_DEC => e.Text != null && AllowedChars().IsMatch(e.Text),
+            Constants.Settings.CHIP_TYPE_HEX => e.Text != null && AllowedHexChars().IsMatch(e.Text),
+            _ => e.Handled
+        };
     }
 
-    private void SaveSingleButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs? e)
+    private void SaveSingleButton_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Save Single clicked.");
         long chip = -1;
@@ -249,13 +256,14 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         {
             bib = -1;
         }
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
+        switch (chipType.Value)
         {
-            _ = long.TryParse(SingleChipBox.Text, out chip);
-        }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            long.TryParse(SingleChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
+            case Constants.Settings.CHIP_TYPE_DEC:
+                _ = long.TryParse(SingleChipBox.Text, out chip);
+                break;
+            case Constants.Settings.CHIP_TYPE_HEX:
+                long.TryParse(SingleChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
+                break;
         }
         Log.D("UI.MainPages.ChipAssignmentPage", "Bib " + bib + " Chip " + chip);
         if (chip == -1)
@@ -272,26 +280,20 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                 }
         ];
         database.AddBibChipAssociation(theEvent!.Identifier, bibChips);
-        BibsChanged = true;
+        bibsChanged = true;
         UpdateView();
-        if (bib > -1)
-        {
-            SingleBibBox.Text = (bib + 1).ToString();
-        }
-        else
-        {
-            SingleBibBox.Text = "";
-        }
+        SingleBibBox.Text = bib > -1 ? (bib + 1).ToString() : "";
         SingleBibBox.Focus();
     }
 
     private async void FileImport_Click(object? sender, RoutedEventArgs? e)
     {
-        Log.D("UI.MainPages.ChipAssignmentPage", "Import from file clicked.");
-
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            Log.D("UI.MainPages.ChipAssignmentPage", "Import from file clicked.");
+
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
@@ -301,48 +303,47 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             {
                 startingFolder = null;
             }
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 FileTypeFilter = [Utils.ExcelType, FilePickerFileTypes.All],
                 AllowMultiple = false,
                 SuggestedStartLocation = startingFolder,
             });
-            if (files.Count > 0)
+            if (files.Count <= 0) return;
+            string ext = Path.GetExtension(files[0].Name);
+            try
             {
-                string ext = Path.GetExtension(files[0].Name);
-                try
+                string? filePath = files[0].TryGetLocalPath();
+                IDataImporter importer;
+                if (ext is ".xlsx" or ".xls")
                 {
-                    string? filePath = files[0].TryGetLocalPath();
-                    IDataImporter importer;
-                    if (ext == ".xlsx" || ext == ".xls")
-                    {
-                        importer = new ExcelImporter(filePath!);
-                    }
-                    else
-                    {
-                        importer = new CSVImporter(filePath!);
-                    }
-                    await Task.Run(() =>
-                    {
-                        importer.FetchHeaders();
-                    });
-                    BibChipAssociationWindow bcWindow = BibChipAssociationWindow.NewWindow(mWindow, importer, database);
-                    if (bcWindow != null)
-                    {
-                        mWindow.AddWindow(bcWindow);
-                        await bcWindow.ShowDialog((Window)mWindow);
-                        if (bcWindow.ImportComplete)
-                        {
-                            BibsChanged = true;
-                        }
-                    }
+                    importer = new ExcelImporter(filePath!);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log.E("UI.MainPages.ChipAssignmentPage", $"Something went wrong when trying to read the CSV file. {ex.StackTrace}");
-                    DialogBox.Show("Unable to open file.");
+                    importer = new CSVImporter(filePath!);
+                }
+                await Task.Run(() =>
+                {
+                    importer.FetchHeaders();
+                });
+                BibChipAssociationWindow bcWindow = BibChipAssociationWindow.NewWindow(mWindow, importer, database);
+                mWindow.AddWindow(bcWindow);
+                await bcWindow.ShowDialog((Window)mWindow);
+                if (bcWindow.ImportComplete)
+                {
+                    bibsChanged = true;
                 }
             }
+            catch (Exception ex)
+            {
+                Log.E("UI.MainPages.ChipAssignmentPage", $"Something went wrong when trying to read the CSV file. {ex.StackTrace}");
+                DialogBox.Show("Unable to open file.");
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ChipAssignmentPage", "Error importing.");
         }
     }
 
@@ -350,23 +351,21 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Use Tool clicked.");
         ChipTool chipTool = ChipTool.NewWindow(mWindow, database);
-        if (chipTool != null)
+        mWindow.AddWindow(chipTool);
+        chipTool.ShowDialog((Window)mWindow);
+        if (chipTool.ImportComplete)
         {
-            mWindow.AddWindow(chipTool);
-            chipTool.ShowDialog((Window)mWindow);
-            if (chipTool.ImportComplete)
-            {
-                BibsChanged = true;
-            }
+            bibsChanged = true;
         }
     }
 
     private async void Export_Click(object? sender, RoutedEventArgs? e)
     {
-        Log.D("UI.MainPages.ChipAssignmentPage", "Export clicked.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            Log.D("UI.MainPages.ChipAssignmentPage", "Export clicked.");
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
@@ -376,50 +375,49 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = string.Format("{0} {1} Chips.{2}", theEvent!.YearCode, theEvent.Name, "xlsx"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Chips.xlsx",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            List<object[]> data = [];
+            List<BibChipAssociation> associations = database.GetBibChips(theEvent.Identifier);
+            associations.Sort();
+            foreach (BibChipAssociation association in associations)
             {
-                List<object[]> data = [];
-                List<BibChipAssociation> associations = database.GetBibChips(theEvent.Identifier);
-                associations.Sort();
-                foreach (BibChipAssociation association in associations)
-                {
-                    Log.D("UI.MainPages.ChipAssignmentPage", "Checking associations ... Bib " + association.Bib + " Chip " + association.Chip);
-                }
-                string[] headers = ["Bib", "Chip"];
-                foreach (BibChipAssociation bca in associations)
-                {
-                    data.Add([bca.Bib, bca.Chip]);
-                }
-                IDataExporter exporter;
-                string extension = Path.GetExtension(file.Name);
-                Log.D("UI.MainPages.ChipAssignmentPage", string.Format("Extension is '{0}'", extension));
-                if (extension.Contains("xls", StringComparison.CurrentCulture))
-                {
-                    exporter = new ExcelExporter();
-                }
-                else
-                {
-                    StringBuilder format = new();
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        format.Append("\"{");
-                        format.Append(i);
-                        format.Append("}\",");
-                    }
-                    format.Remove(format.Length - 1, 1);
-                    Log.D("UI.MainPages.ChipAssignmentPage", string.Format("The format is '{0}'", format.ToString()));
-                    exporter = new CSVExporter(format.ToString());
-                }
-                exporter.SetData(headers, data);
-                exporter.ExportData(file.TryGetLocalPath()!);
-                DialogBox.Show("File saved.");
+                Log.D("UI.MainPages.ChipAssignmentPage", "Checking associations ... Bib " + association.Bib + " Chip " + association.Chip);
             }
+            string[] headers = ["Bib", "Chip"];
+            data.AddRange(associations.Select(bca => (object[])[bca.Bib, bca.Chip]));
+            IDataExporter exporter;
+            string extension = Path.GetExtension(file.Name);
+            Log.D("UI.MainPages.ChipAssignmentPage", $"Extension is '{extension}'");
+            if (extension.Contains("xls", StringComparison.CurrentCulture))
+            {
+                exporter = new ExcelExporter();
+            }
+            else
+            {
+                StringBuilder format = new();
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    format.Append("\"{");
+                    format.Append(i);
+                    format.Append("}\",");
+                }
+                format.Remove(format.Length - 1, 1);
+                Log.D("UI.MainPages.ChipAssignmentPage", $"The format is '{format}'");
+                exporter = new CSVExporter(format.ToString());
+            }
+            exporter.SetData(headers, data);
+            exporter.ExportData(file.TryGetLocalPath()!);
+            DialogBox.Show("File saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ChipAssignmentPage", "Error exporting.");
         }
     }
 
@@ -433,35 +431,23 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     private void UpdateEndChip(object? sender, TextChangedEventArgs e)
     {
-        long startChip = -1, endChip;
+        long startChip = -1;
         _ = long.TryParse(RangeStartBibBox.Text, out long startBib);
         _ = long.TryParse(RangeEndBibBox.Text, out long endBib);
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
+        switch (chipType.Value)
         {
-            if (!long.TryParse(RangeStartChipBox.Text, out startChip))
-            {
+            case Constants.Settings.CHIP_TYPE_DEC when !long.TryParse(RangeStartChipBox.Text, out startChip):
+            case Constants.Settings.CHIP_TYPE_HEX when !long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip):
                 return;
-            }
         }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
+        long endChip = endBib - startBib + startChip;
+        if (startBib <= -1 || endBib <= -1 || startChip <= -1) return;
+        RangeEndChipLabel.Text = chipType.Value switch
         {
-            if (!long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip))
-            {
-                return;
-            }
-        }
-        endChip = endBib - startBib + startChip;
-        if (startBib > -1 && endBib > -1 && startChip > -1)
-        {
-            if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
-            {
-                RangeEndChipLabel.Text = endChip.ToString();
-            }
-            else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-            {
-                RangeEndChipLabel.Text = endChip.ToString("X");
-            }
-        }
+            Constants.Settings.CHIP_TYPE_DEC => endChip.ToString(),
+            Constants.Settings.CHIP_TYPE_HEX => endChip.ToString("X"),
+            _ => RangeEndChipLabel.Text
+        };
     }
 
     private void SaveRangeButton_Click(object? sender, RoutedEventArgs? e)
@@ -473,24 +459,14 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             DialogBox.Show("Invalid bibs for range based assignment.");
             return;
         }
-            ;
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
+        switch (chipType.Value)
         {
-            if (!long.TryParse(RangeStartChipBox.Text, out startChip) ||
-                !long.TryParse(RangeEndChipLabel.Text!.ToString(), out endChip))
-            {
+            case Constants.Settings.CHIP_TYPE_DEC when !long.TryParse(RangeStartChipBox.Text, out startChip) ||
+                                                       !long.TryParse(RangeEndChipLabel.Text!, out endChip):
+            case Constants.Settings.CHIP_TYPE_HEX when !long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip) ||
+                                                       !long.TryParse(RangeEndChipLabel.Text!, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out endChip):
                 DialogBox.Show("Invalid chip values.");
                 return;
-            }
-        }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            if (!long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip) ||
-                !long.TryParse(RangeEndChipLabel.Text!.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out endChip))
-            {
-                DialogBox.Show("Invalid chip values.");
-                return;
-            }
         }
         Log.D("UI.MainPages.ChipAssignmentPage", "StartBib " + startBib + " EndBib " + endBib + " StartChip " + startChip + " EndChip " + endChip);
         if (startChip == -1 || endChip == -1 || startBib == -1 || endBib == -1)
@@ -501,14 +477,14 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         List<BibChipAssociation> bibChips = [];
         for (long bib = startBib, tag = startChip; bib <= endBib && tag <= endChip; bib++, tag++)
         {
-            bibChips.Add(new()
+            bibChips.Add(new BibChipAssociation
             {
                 Bib = bib.ToString(),
                 Chip = Constants.Settings.CHIP_TYPE_HEX == chipType.Value ? tag.ToString("X") : tag.ToString()
             });
         }
         database.AddBibChipAssociation(theEvent!.Identifier, bibChips);
-        BibsChanged = true;
+        bibsChanged = true;
         UpdateView();
         RangeStartBibBox.Text = (endBib + 1).ToString();
         RangeEndBibBox.Text = (endBib + 1).ToString();
@@ -518,13 +494,13 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     private void Copy_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Copy clicked.");
-        int oldEventId = Convert.ToInt32((string)((ComboBoxItem)previousEvents.SelectedItem!).Tag!);
+        int oldEventId = Convert.ToInt32((string)((ComboBoxItem)PreviousEvents.SelectedItem!).Tag!);
         Log.D("UI.MainPages.ChipAssignmentPage", "Old event Id is " + oldEventId);
         if (oldEventId > 0)
         {
             List<BibChipAssociation> assocs = database.GetBibChips(oldEventId);
             database.AddBibChipAssociation(theEvent!.Identifier, assocs);
-            BibsChanged = true;
+            bibsChanged = true;
             UpdateView();
         }
     }
@@ -540,16 +516,19 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     private void SaveIgnored_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Save Ignored clicked.");
-        long chip = -1, bib = -1;
-        if (Constants.Settings.CHIP_TYPE_DEC == chipType.Value)
+        long chip = -1;
+        if (Constants.Settings.CHIP_TYPE_DEC != chipType.Value)
+        {
+            if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
+            {
+                _ = long.TryParse(IgnoredChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
+            }
+        }
+        else
         {
             _ = long.TryParse(IgnoredChipBox.Text, out chip);
         }
-        else if (Constants.Settings.CHIP_TYPE_HEX == chipType.Value)
-        {
-            _ = long.TryParse(IgnoredChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
-        }
-        Log.D("UI.MainPages.ChipAssignmentPage", "Bib " + bib + " Chip " + chip);
+        Log.D("UI.MainPages.ChipAssignmentPage", $" Chip {chip}");
         if (chip == -1)
         {
             DialogBox.Show("The chip is not valid.");
@@ -565,30 +544,24 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         ];
         database.AddBibChipAssociation(-1, bibChips);
         Globals.UpdateIgnoredChips(database);
-        BibsChanged = true;
+        bibsChanged = true;
         UpdateView();
-        if (bib > -1)
-        {
-            IgnoredChipBox.Text = (bib + 1).ToString();
-        }
-        else
-        {
-            IgnoredChipBox.Text = "";
-        }
+        IgnoredChipBox.Text = "";
         IgnoredChipBox.Focus();
     }
 
     private void ChipTypeBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (0 == ChipTypeBox.SelectedIndex)
+        switch (ChipTypeBox.SelectedIndex)
         {
-            database.SetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE, Constants.Settings.CHIP_TYPE_DEC);
-            SingleChipBox.Text = "0";
-            RangeStartChipBox.Text = "0";
-        }
-        else if (1 == ChipTypeBox.SelectedIndex)
-        {
-            database.SetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE, Constants.Settings.CHIP_TYPE_HEX);
+            case 0:
+                database.SetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE, Constants.Settings.CHIP_TYPE_DEC);
+                SingleChipBox.Text = "0";
+                RangeStartChipBox.Text = "0";
+                break;
+            case 1:
+                database.SetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE, Constants.Settings.CHIP_TYPE_HEX);
+                break;
         }
         chipType = database.GetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE)!;
     }

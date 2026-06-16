@@ -5,48 +5,34 @@ namespace Chronokeep.Objects.Notifications
     public class MailgunCredentials
     {
         public string Username { get; set; } = "api";
-        public string APIKey { get; set; } = "";
-        public string FromName { get; set; } = "";
-        public string FromEmail { get; set; } = "";
-        public string Domain { get; set; } = "";
+        public string ApiKey { get; private init; } = "";
+        private string FromName { get; init; } = "";
+        private string FromEmail { get; init; } = "";
+        public string Domain { get; private init; } = "";
 
         public bool Valid()
         {
-            return APIKey.Length > 0 && Domain.Length > 0 && FromEmail.Length > 0;
+            return ApiKey.Length > 0 && Domain.Length > 0 && FromEmail.Length > 0;
         }
 
         public string From()
         {
-            if (FromName.Length > 0)
-            {
-                return string.Format("{0} <{1}>", FromName, FromEmail);
-            }
-            return FromEmail;
+            return FromName.Length > 0 ? $"{FromName} <{FromEmail}>" : FromEmail;
         }
 
         public static MailgunCredentials GetCredentials(IDBInterface database)
         {
-            AppSetting APIKey = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!;
-            AppSetting Domain = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!;
-            AppSetting FromEmail = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_EMAIL)!;
-            AppSetting FromName = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_NAME)!;
-            MailgunCredentials output = new();
-            if (APIKey != null)
+            AppSetting apiKey = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!;
+            AppSetting domain = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!;
+            AppSetting fromEmail = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_EMAIL)!;
+            AppSetting fromName = database.GetAppSetting(Constants.Settings.MAILGUN_FROM_NAME)!;
+            MailgunCredentials output = new()
             {
-                output.APIKey = APIKey.Value;
-            }
-            if (Domain != null)
-            {
-                output.Domain = Domain.Value;
-            }
-            if (FromEmail != null)
-            {
-                output.FromEmail = FromEmail.Value;
-            }
-            if (FromName != null)
-            {
-                output.FromName = FromName.Value;
-            }
+                ApiKey = apiKey.Value,
+                Domain = domain.Value,
+                FromEmail = fromEmail.Value,
+                FromName = fromName.Value
+            };
             return output;
         }
     }

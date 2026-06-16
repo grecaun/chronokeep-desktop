@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -40,18 +41,15 @@ public partial class AwardPage : UserControl, ISubPage
             Log.E("UI.Timing.AwardPage", "Something went wrong and no proper event was returned.");
             return;
         }
-        customGroupsListView.ItemsSource = customAgeGroups;
+        CustomGroupsListView.ItemsSource = customAgeGroups;
         List<Distance> distances = database.GetDistances(theEvent.Identifier);
-        distances.Sort((x1, x2) => x1.Name.CompareTo(x2.Name));
-        foreach (Distance d in distances)
+        distances.Sort((x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
+        foreach (Distance d in distances.Where(d => d.LinkedDistance <= 0))
         {
-            if (d.LinkedDistance <= 0)
+            DistancesBox.Items.Add(new ListBoxItem()
             {
-                DistancesBox.Items.Add(new ListBoxItem()
-                {
-                    Content = d.Name
-                });
-            }
+                Content = d.Name
+            });
         }
         parent.SetReaders([], false);
         UpdateView();
@@ -59,17 +57,17 @@ public partial class AwardPage : UserControl, ISubPage
 
     private AwardOptions GetOptions()
     {
-        return new()
+        return new AwardOptions
         {
-            PrintOverall = overallYes.IsChecked == true,
-            PrintAgeGroups = agYes.IsChecked == true,
-            PrintCustom = customYes.IsChecked == true,
-            NumOverall = overallNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(overallNumberParticipants.Text),
-            NumAgeGroups = agNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(agNumberParticipants.Text),
-            NumCustom = customNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(customNumberParticipants.Text),
-            ExcludeOverallAG = overallExcludeAG.IsChecked == true,
-            ExcludeOverallCustom = overallExcludeCustom.IsChecked == true,
-            ExcludeAgeGroupsCustom = agExcludeCustom.IsChecked == true
+            PrintOverall = OverallYes.IsChecked == true,
+            PrintAgeGroups = AgYes.IsChecked == true,
+            PrintCustom = CustomYes.IsChecked == true,
+            NumOverall = OverallNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(OverallNumberParticipants.Text),
+            NumAgeGroups = AgNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(AgNumberParticipants.Text),
+            NumCustom = CustomNumberParticipants.Text!.Length == 0 ? 3 : Convert.ToInt32(CustomNumberParticipants.Text),
+            ExcludeOverallAg = OverallExcludeAg.IsChecked == true,
+            ExcludeOverallCustom = OverallExcludeCustom.IsChecked == true,
+            ExcludeAgeGroupsCustom = AgExcludeCustom.IsChecked == true
         };
     }
 
@@ -123,19 +121,13 @@ public partial class AwardPage : UserControl, ISubPage
         foreach (TimeResult result in results)
         {
             // Gather the gender and modify it to what we want for use in results.
-            string gend = result.Gender;
-            if (result.Gender == "Woman")
+            string gend = result.Gender switch
             {
-                gend = "Women";
-            }
-            else if (result.Gender == "Man")
-            {
-                gend = "Men";
-            }
-            else if (result.Gender == "Not Specified")
-            {
-                gend = "";
-            }
+                "Woman" => "Women",
+                "Man" => "Men",
+                "Not Specified" => "",
+                _ => result.Gender
+            };
             bool addedToAgeGroupResults = false;
             if (!resultsDictionary.TryGetValue(result.DistanceName, out Dictionary<string, List<TimeResult>>? distResultsDict))
             {
@@ -146,7 +138,7 @@ public partial class AwardPage : UserControl, ISubPage
             if (result.GenderPlace <= options.NumOverall)
             {
                 // Check if we're printing the overall results.
-                if (options.PrintOverall == true)
+                if (options.PrintOverall)
                 {
                     if (!distResultsDict.TryGetValue(gend, out List<TimeResult>? ovResults))
                     {
@@ -159,16 +151,13 @@ public partial class AwardPage : UserControl, ISubPage
                 // Also ensure we've been told to print age groups and that the person is in the age group results.
                 // The place check is easy here because we can check the result.GenderPlace value.
                 // Exclude any genders we don't know about.
-                if (options.ExcludeOverallAG == false
+                if (!options.ExcludeOverallAg
                     && result.GenderPlace <= options.NumAgeGroups
                     && gend != "")
                 {
-                    string ageGroup = string.Format("{0} {1}", gend, result.AgeGroupName);
-                    if (!ageGroupCounter.TryGetValue((result.DistanceName, ageGroup), out int oAGCount))
-                    {
-                        oAGCount = 0;
-                    }
-                    if (options.PrintAgeGroups == true)
+                    string ageGroup = $"{gend} {result.AgeGroupName}";
+                    int oAgCount = ageGroupCounter.GetValueOrDefault((result.DistanceName, ageGroup), 0);
+                    if (options.PrintAgeGroups)
                     {
                         if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
                         {
@@ -177,7 +166,7 @@ public partial class AwardPage : UserControl, ISubPage
                         }
                         oResList.Add(result);
                     }
-                    ageGroupCounter[(result.DistanceName, ageGroup)] = oAGCount + 1;
+                    ageGroupCounter[(result.DistanceName, ageGroup)] = oAgCount + 1;
                     addedToAgeGroupResults = true;
                 }
                 // This is almost the same as the age groups category.
@@ -187,27 +176,25 @@ public partial class AwardPage : UserControl, ISubPage
                 // check if we were told to exclude age group winners from custom winners, if so only include ones we didn't add above
                 // this will exclude any that would have won an age group award even if we didn't actually print it
                 // this is the behavior we want and should work the same for overall as well
-                if (options.ExcludeOverallCustom == false
-                    && options.PrintCustom == true
-                    && gend != ""
-                    && (options.ExcludeAgeGroupsCustom == false || addedToAgeGroupResults == false))
+                if (options.ExcludeOverallCustom
+                    || !options.PrintCustom
+                    || gend == ""
+                    || (options.ExcludeAgeGroupsCustom && addedToAgeGroupResults)) continue;
                 {
                     int age = result.Age(theEvent.Date);
                     foreach (AgeGroup group in customAgeGroups)
                     {
-                        if (age >= group.StartAge && age <= group.EndAge)
+                        if (age < group.StartAge || age > group.EndAge) continue;
+                        string ageGroup = $"{gend} {group.PrettyName()}";
+                        if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
                         {
-                            string ageGroup = string.Format("{0} {1}", gend, group.PrettyName());
-                            if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
-                            {
-                                oResList = [];
-                                distResultsDict[ageGroup] = oResList;
-                            }
-                            // only add to the results if we're under the number of results we can print
-                            if (oResList.Count < options.NumCustom)
-                            {
-                                oResList.Add(result);
-                            }
+                            oResList = [];
+                            distResultsDict[ageGroup] = oResList;
+                        }
+                        // only add to the results if we're under the number of results we can print
+                        if (oResList.Count < options.NumCustom)
+                        {
+                            oResList.Add(result);
                         }
                     }
                 }
@@ -216,43 +203,36 @@ public partial class AwardPage : UserControl, ISubPage
             {
                 // We're not in the overall results.
                 // Check for age groups.
-                string ageGroup = string.Format("{0} {1}", gend, result.AgeGroupName);
+                string ageGroup = $"{gend} {result.AgeGroupName}";
                 if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
                 {
                     oResList = [];
                     distResultsDict[ageGroup] = oResList;
                 }
                 // We're doing it this way so we can exclude people from custom if we want even if we don't print the age group.
-                if (!ageGroupCounter.TryGetValue((result.DistanceName, ageGroup), out int oAGCount))
+                int oAgCount = ageGroupCounter.GetValueOrDefault((result.DistanceName, ageGroup), 0);
+                if (oAgCount < options.NumAgeGroups)
                 {
-                    oAGCount = 0;
-                }
-                if (oAGCount < options.NumAgeGroups)
-                {
-                    if (options.PrintAgeGroups == true)
+                    if (options.PrintAgeGroups)
                     {
                         oResList.Add(result);
                     }
-                    ageGroupCounter[(result.DistanceName, ageGroup)] = oAGCount + 1;
+                    ageGroupCounter[(result.DistanceName, ageGroup)] = oAgCount + 1;
                     addedToAgeGroupResults = true;
                 }
                 // Check for custom groups.
                 // Ensure we don't care about excluding age group winners, or they didn't actually win
-                if (options.PrintCustom == true && (options.ExcludeAgeGroupsCustom == false || addedToAgeGroupResults == false))
+                if (!options.PrintCustom ||
+                    (options.ExcludeAgeGroupsCustom && addedToAgeGroupResults)) continue;
+                Log.D("UI.Timing.AwardPage", "Checking to add to custom award group.");
+                int age = result.Age(theEvent.Date);
+                foreach (AgeGroup group in customAgeGroups)
                 {
-                    Log.D("UI.Timing.AwardPage", "Checking to add to custom award group.");
-                    int age = result.Age(theEvent.Date);
-                    foreach (AgeGroup group in customAgeGroups)
+                    if (age < group.StartAge || age > group.EndAge) continue;
+                    // only add to the results if we're under the number of results we can print
+                    if (oResList.Count < options.NumCustom)
                     {
-                        if (age >= group.StartAge && age <= group.EndAge)
-                        {
-                            ageGroup = string.Format("{0} {1}", gend, group.PrettyName());
-                            // only add to the results if we're under the number of results we can print
-                            if (oResList.Count < options.NumCustom)
-                            {
-                                oResList.Add(result);
-                            }
-                        }
+                        oResList.Add(result);
                     }
                 }
             }
@@ -263,33 +243,29 @@ public partial class AwardPage : UserControl, ISubPage
         foreach (string dist in resultsDictionary.Keys)
         {
             Dictionary<string, List<TimeResult>> distResultsDictionary = resultsDictionary[dist];
-            foreach (string group in distResultsDictionary.Keys)
+            foreach (string group in distResultsDictionary.Keys.Where(group => distResultsDictionary[group].Count > 0))
             {
-                // only add to our list if they actually have results in them
-                if (distResultsDictionary[group].Count > 0)
+                if (!distanceGroups.TryGetValue(dist, out List<string>? distGroupList))
                 {
-                    if (!distanceGroups.TryGetValue(dist, out List<string>? distGroupList))
-                    {
-                        distGroupList = [];
-                        distanceGroups[dist] = distGroupList;
-                    }
-                    if (!distGroupList.Contains(group))
-                    {
-                        distGroupList.Add(group);
-                    }
+                    distGroupList = [];
+                    distanceGroups[dist] = distGroupList;
+                }
+                if (!distGroupList.Contains(group))
+                {
+                    distGroupList.Add(group);
                 }
             }
         }
         // sort our lists
         foreach (string dist in distanceGroups.Keys)
         {
-            distanceGroups[dist].Sort((x1, x2) => CompareGroups(x1, x2));
+            distanceGroups[dist].Sort(CompareGroups);
         }
         AwardsPrintable output = new(theEvent, distanceGroups, resultsDictionary);
         return output.TransformText();
     }
 
-    public static int CompareGroups(string group1, string group2)
+    private static int CompareGroups(string group1, string group2)
     {
         if (group1 == "Overall")
         {
@@ -305,12 +281,12 @@ public partial class AwardPage : UserControl, ISubPage
         string[] firstSplit2 = group2.Split(' ');
         if (firstSplit1.Length < 2 || firstSplit2.Length < 2)
         {
-            return group1.CompareTo(group2);
+            return string.Compare(group1, group2, StringComparison.Ordinal);
         }
         // if genders are not equal, sort by gender
         if (firstSplit1[0] != firstSplit2[0])
         {
-            return firstSplit1[0].CompareTo(firstSplit2[0]);
+            return string.Compare(firstSplit1[0], firstSplit2[0], StringComparison.Ordinal);
         }
         if (firstSplit1[1].Equals("Under", StringComparison.OrdinalIgnoreCase))
         {
@@ -336,13 +312,13 @@ public partial class AwardPage : UserControl, ISubPage
         string[] secondSplit2 = firstSplit2[0].Split('-');
         if (secondSplit1.Length < 2 || secondSplit2.Length < 2)
         {
-            return firstSplit1[1].CompareTo(firstSplit2[1]);
+            return string.Compare(firstSplit1[1], firstSplit2[1], StringComparison.Ordinal);
         }
         bool sOneOkay = int.TryParse(secondSplit1[0], out int start1);
         bool sTwoOkay = int.TryParse(secondSplit2[0], out int start2);
         if (!sOneOkay || !sTwoOkay)
         {
-            return firstSplit1[1].CompareTo(firstSplit2[1]);
+            return string.Compare(firstSplit1[1], firstSplit2[1], StringComparison.Ordinal);
         }
         return start1.CompareTo(start2);
     }
@@ -383,24 +359,23 @@ public partial class AwardPage : UserControl, ISubPage
         Log.D("UI.Timing.AwardPage", "Add custom group clicked.");
         try
         {
-            int start = Convert.ToInt32(startCustom.Text);
-            int end = Convert.ToInt32(endCustom.Text);
-            string custom = customNameBox.Text!;
-            custom ??= "";
+            int start = Convert.ToInt32(StartCustom.Text);
+            int end = Convert.ToInt32(EndCustom.Text);
+            string custom = CustomNameBox.Text!;
             if (start > -1 || end < 101)
             {
                 database.AddAgeGroup(
-                    new(theEvent!.Identifier,
+                    new AgeGroup(theEvent!.Identifier,
                         Constants.Timing.AGEGROUPS_CUSTOM_DISTANCEID,
                         start,
                         end,
                         custom
                         ));
                 UpdateView();
-                startCustom.Text = "";
-                endCustom.Text = "";
-                customNameBox.Text = "";
-                startCustom.Focus();
+                StartCustom.Text = "";
+                EndCustom.Text = "";
+                CustomNameBox.Text = "";
+                StartCustom.Focus();
             }
             else
             {
@@ -418,48 +393,46 @@ public partial class AwardPage : UserControl, ISubPage
     {
         Log.D("UI.Timing.AwardPage", "Deleting some entries... maybe.");
         List<AgeGroup> items = [];
-        IList selected = customGroupsListView.SelectedItems;
+        IList selected = CustomGroupsListView.SelectedItems;
         if (selected.Count < 1)
         {
             return;
         }
-        foreach (AgeGroup ag in selected)
-        {
-            items.Add(ag);
-        }
+        items.AddRange(selected.Cast<AgeGroup>());
         database.RemoveAgeGroups(items);
         UpdateView();
     }
 
     private async void SaveButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.Timing.AwardPage", "Save clicked.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
-            IStorageFolder? startingFolder;
-            try
+            Log.D("UI.Timing.AwardPage", "Save clicked.");
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-            }
-            catch
-            {
-                startingFolder = null;
-            }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                FileTypeChoices = [Utils.PDFType],
-                SuggestedFileName = string.Format("{0}-{1}-Awards.{2}", theEvent!.YearCode, theEvent.Name, "pdf").Replace(' ', '-'),
-                SuggestedStartLocation = startingFolder,
-            });
-            AwardOptions options = GetOptions();
-            List<string> divsToPrint = [];
-            if (DistancesBox.SelectedItems != null)
-            {
-                foreach (object? divItem in DistancesBox.SelectedItems)
+                IStorageFolder? startingFolder;
+                try
                 {
-                    if (divItem is ListBoxItem div && div.Content != null)
+                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                }
+                catch
+                {
+                    startingFolder = null;
+                }
+                var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    FileTypeChoices = [Utils.PDFType],
+                    SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Awards.pdf".Replace(' ', '-'),
+                    SuggestedStartLocation = startingFolder,
+                });
+                AwardOptions options = GetOptions();
+                List<string> divsToPrint = [];
+                if (DistancesBox.SelectedItems != null)
+                {
+                    foreach (object? divItem in DistancesBox.SelectedItems)
                     {
+                        if (divItem is not ListBoxItem div || div.Content == null) continue;
                         if (div.Content.Equals("All"))
                         {
                             divsToPrint.Clear();
@@ -468,17 +441,16 @@ public partial class AwardPage : UserControl, ISubPage
                         divsToPrint.Add(div.Content.ToString()!);
                     }
                 }
-            }
-            if (options.PrintCustom != true && options.PrintAgeGroups != true && options.PrintOverall != true)
-            {
-                DialogBox.Show("No awards group selected to print/save.");
-                return;
-            }
-            if (file is not null)
-            {
+                if (options is { PrintCustom: false, PrintAgeGroups: false, PrintOverall: false })
+                {
+                    DialogBox.Show("No awards group selected to print/save.");
+                    return;
+                }
+
+                if (file is null) return;
                 try
                 {
-                    string HTML_String = GetPrintableAwards(divsToPrint, options);
+                    string htmlString = GetPrintableAwards(divsToPrint, options);
                     string weasyName;
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
@@ -487,13 +459,13 @@ public partial class AwardPage : UserControl, ISubPage
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
                         weasyName = "weasyprint";
-                        using Process test_weasy = new();
-                        test_weasy.StartInfo.FileName = "which";
-                        test_weasy.StartInfo.Arguments = weasyName;
-                        test_weasy.Start();
-                        await test_weasy.WaitForExitAsync();
-                        test_weasy.Close();
-                        if (test_weasy.ExitCode != 0)
+                        using Process testWeasy = new();
+                        testWeasy.StartInfo.FileName = "which";
+                        testWeasy.StartInfo.Arguments = weasyName;
+                        testWeasy.Start();
+                        await testWeasy.WaitForExitAsync();
+                        testWeasy.Close();
+                        if (testWeasy.ExitCode != 0)
                         {
                             DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
                                 "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
@@ -507,24 +479,24 @@ public partial class AwardPage : UserControl, ISubPage
                     }
                     // Write HTML to a temp file.
                     string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
-                    using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
-                    streamwriter.Write(HTML_String);
+                    await using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
+                    await streamwriter.WriteAsync(htmlString);
                     streamwriter.Close();
                     // Delete old file if it exists.
-                    var filePath = file.TryGetLocalPath()!.Replace(' ', '-');
+                    string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
                     if (File.Exists(filePath))
                     {
                         File.Delete(filePath);
                     }
                     // Use weasyprint to convert our temp html file to a saved pdf file.
-                    using Process create_pdf = new();
-                    create_pdf.StartInfo.FileName = weasyName;
-                    create_pdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
-                    create_pdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    create_pdf.Start();
+                    using Process createPdf = new();
+                    createPdf.StartInfo.FileName = weasyName;
+                    createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
+                    createPdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    createPdf.Start();
                     // wait for it to exit then kill it, even if the wait timed out
-                    await create_pdf.WaitForExitAsync();
-                    create_pdf.Close();
+                    await createPdf.WaitForExitAsync();
+                    createPdf.Close();
                     // delete old file
                     File.Delete(tmpFile);
                     DialogBox.Show("File saved.");
@@ -534,6 +506,10 @@ public partial class AwardPage : UserControl, ISubPage
                     DialogBox.Show("Unable to save file.");
                 }
             }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.AwardPage", "Error saving.");
         }
     }
 
@@ -545,17 +521,17 @@ public partial class AwardPage : UserControl, ISubPage
 
     private class AwardOptions
     {
-        public bool PrintOverall { get; set; } = true;
-        public int NumOverall { get; set; } = 3;
+        public bool PrintOverall { get; init; } = true;
+        public int NumOverall { get; init; } = 3;
         // Exclude overall winners from age group awards.
-        public bool ExcludeOverallAG { get; set; } = false;
+        public bool ExcludeOverallAg { get; init; }
         // Exclude overall winners from custom group awards.
-        public bool ExcludeOverallCustom { get; set; } = false;
-        public bool PrintAgeGroups { get; set; } = true;
-        public int NumAgeGroups { get; set; } = 3;
+        public bool ExcludeOverallCustom { get; init; }
+        public bool PrintAgeGroups { get; init; } = true;
+        public int NumAgeGroups { get; init; } = 3;
         // Exclude winners in the Age Groups sections from custom sections.
-        public bool ExcludeAgeGroupsCustom { get; set; } = false;
-        public bool PrintCustom { get; set; } = true;
-        public int NumCustom { get; set; } = 3;
+        public bool ExcludeAgeGroupsCustom { get; init; }
+        public bool PrintCustom { get; init; } = true;
+        public int NumCustom { get; init; } = 3;
     }
 }

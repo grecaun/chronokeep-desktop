@@ -1,19 +1,19 @@
 using Avalonia.Controls;
 using Chronokeep.UI.API.Windows;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
-public partial class EditAPIErrorPage : UserControl
+public partial class EditApiErrorPage : UserControl
 {
-    private readonly EditAPIWindow window;
+    private readonly EditApiWindow window;
 
-    public EditAPIErrorPage(EditAPIWindow window, bool noAPI)
+    public EditApiErrorPage(EditApiWindow window, bool noApi)
     {
         InitializeComponent();
         this.window = window;
-        if (noAPI)
+        if (noApi)
         {
-            errorLabel.Text = "Unable to find linked api/event.";
+            ErrorLabel.Text = "Unable to find linked api/event.";
         }
     }
 

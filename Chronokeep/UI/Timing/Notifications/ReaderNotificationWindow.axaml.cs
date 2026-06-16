@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Helpers;
@@ -8,7 +7,7 @@ using static Chronokeep.Helpers.Globals;
 
 namespace Chronokeep.UI.Timing.Notifications;
 
-public partial class ReaderNotificationWindow : Window
+public partial class ReaderNotificationWindow : ChronokeepWindow
 {
     private readonly IWindowCallback window;
 
@@ -24,7 +23,7 @@ public partial class ReaderNotificationWindow : Window
         return new ReaderNotificationWindow(window);
     }
 
-    internal void UpdateNotificatonsBox()
+    private void UpdateNotificatonsBox()
     {
         List<ReaderMessage> messages = GetReaderMessages();
         messages.Sort();
@@ -32,7 +31,7 @@ public partial class ReaderNotificationWindow : Window
         {
             msg.Notified = true;
         }
-        notificationsList.ItemsSource = messages;
+        NotificationsList.ItemsSource = messages;
         UpdateReaderMessages(messages);
     }
 
@@ -47,8 +46,8 @@ public partial class ReaderNotificationWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

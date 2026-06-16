@@ -5,54 +5,39 @@ using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 
 namespace Chronokeep.Network
 {
-    class HttpServer
+    internal class HttpServer
     {
-        private Thread? _serverThread;
-        private HttpListener? _listener;
-        private int _port;
+        private Thread? serverThread;
+        private HttpListener? listener;
+        private int port;
         private IDBInterface? database;
         private Event? theEvent;
         private readonly List<TimeResult> finishResults = [];
         private readonly Dictionary<string, TimeResult> finishDictionary = [];
         private readonly Dictionary<string, List<TimeResult>> participantResults = [];
 
-        private byte[]? resultsCache = null;
+        private byte[]? resultsCache;
         private readonly Dictionary<string, byte[]> participantCache = [];
         private readonly Dictionary<string, byte[]> emailCache = [];
 
         private readonly Dictionary<string, Participant> participantDictionary = [];
         private readonly HashSet<string> distanceNames = [];
-        private readonly Dictionary<int, APIObject> apiDictionary = [];
+        private readonly Dictionary<int, ApiObject> apiDictionary = [];
 
         private readonly Lock infoLock = new();
 
         private bool keepAlive = true;
 
-        public int Port
-        {
-            get { return _port; }
-            private set { }
-        }
-
         public HttpServer(IDBInterface database, int port)
         {
-            Initialize(database, port);
-        }
-
-        public HttpServer(IDBInterface database)
-        {
-            TcpListener l = new(IPAddress.Loopback, 0);
-            l.Start();
-            int port = ((IPEndPoint)l.LocalEndpoint).Port;
-            l.Stop();
             Initialize(database, port);
         }
 
@@ -72,11 +57,7 @@ namespace Chronokeep.Network
                 participantResults.Clear();
                 foreach (TimeResult r in database.GetTimingResults(theEvent!.Identifier))
                 {
-                    if (!finishDictionary.TryGetValue(r.Bib, out TimeResult? finRes))
-                    {
-                        finishDictionary[r.Bib] = r;
-                    }
-                    else if (finRes.SystemTime.CompareTo(r.SystemTime) < 0)
+                    if (!finishDictionary.TryGetValue(r.Bib, out TimeResult? finRes) || finRes.SystemTime.CompareTo(r.SystemTime) < 0)
                     {
                         finishDictionary[r.Bib] = r;
                     }
@@ -89,12 +70,9 @@ namespace Chronokeep.Network
                     pResList.Add(r);
                 }
                 distanceNames.Clear();
-                foreach (Distance d in database.GetDistances(theEvent.Identifier))
+                foreach (Distance d in database.GetDistances(theEvent.Identifier).Where(d => d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID))
                 {
-                    if (d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
-                    {
-                        distanceNames.Add(d.Name);
-                    }
+                    distanceNames.Add(d.Name);
                 }
                 finishResults.AddRange(finishDictionary.Values);
                 finishResults.RemoveAll(r => string.IsNullOrEmpty(r.Bib));
@@ -108,7 +86,7 @@ namespace Chronokeep.Network
                     participantDictionary[p.Identifier.ToString()] = p;
                 }
                 apiDictionary.Clear();
-                foreach (APIObject api in database.GetAllAPI())
+                foreach (ApiObject api in database.GetAllAPI())
                 {
                     apiDictionary[api.Identifier] = api;
                 }
@@ -122,7 +100,7 @@ namespace Chronokeep.Network
         public void Stop()
         {
             keepAlive = false;
-            _listener?.Stop();
+            listener?.Stop();
         }
 
         private void Listen()
@@ -131,7 +109,7 @@ namespace Chronokeep.Network
             {
                 try
                 {
-                    HttpListenerContext context = _listener!.GetContext();
+                    HttpListenerContext context = listener!.GetContext();
                     Process(context);
                 }
                 catch (Exception ex)
@@ -224,7 +202,7 @@ namespace Chronokeep.Network
                 // Serve up HtmlParticipantTemplate
                 if (!infoLock.TryEnter(3000))
                 {
-                    Log.D("Network.HttpServer", string.Format("Unable to get lock for outputting participant page for bib {0}.", partBib));
+                    Log.D("Network.HttpServer", $"Unable to get lock for outputting participant page for bib {partBib}.");
                     message = Encoding.Default.GetBytes("");
                 }
                 else
@@ -258,7 +236,7 @@ namespace Chronokeep.Network
                 // Serve up the HtmlCertificateEmailTemplate
                 if (!infoLock.TryEnter(3000))
                 {
-                    Log.D("Network.HttpServer", string.Format("Unable to get lock for outputting email page for bib {0}.", partBib));
+                    Log.D("Network.HttpServer", $"Unable to get lock for outputting email page for bib {partBib}.");
                     message = Encoding.Default.GetBytes("");
                 }
                 else
@@ -275,7 +253,7 @@ namespace Chronokeep.Network
                                     finishResult,
                                     finPart.Email,
                                     distanceNames.Count == 1,
-                                    apiDictionary.TryGetValue(theEvent!.API_ID, out APIObject? api) ? api! : null
+                                    apiDictionary.GetValueOrDefault(theEvent!.ApiId)
                                     );
                                 cachedEmail = Encoding.Default.GetBytes(email.TransformText());
                                 emailCache[emailBib] = cachedEmail;
@@ -312,20 +290,20 @@ namespace Chronokeep.Network
             }
         }
 
-        private void Initialize(IDBInterface database, int port)
+        private void Initialize(IDBInterface iDatabase, int iPort)
         {
-            this.database = database;
-            this._port = port;
+            database = iDatabase;
+            port = iPort;
             keepAlive = true;
             UpdateInformation();
 
             // Test to ensure we can listen.
-            _listener = new();
-            _listener.Prefixes.Add("http://*:" + _port.ToString() + "/");
-            _listener.Start();
+            listener = new HttpListener();
+            listener.Prefixes.Add($"http://*:{port}/");
+            listener.Start();
 
-            _serverThread = new(this.Listen);
-            _serverThread.Start();
+            serverThread = new Thread(Listen);
+            serverThread.Start();
         }
     }
 }

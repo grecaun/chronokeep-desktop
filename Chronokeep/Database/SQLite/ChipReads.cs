@@ -19,7 +19,7 @@ namespace Chronokeep.Database.SQLite
             [
                 new("@event", read.EventId),
                 new("@status", read.Status),
-                new("@loc", read.LocationID),
+                new("@loc", read.LocationId),
                 new("@chip", read.ChipNumber),
                 new("@sec", read.Seconds),
                 new("@milli", read.Milliseconds),
@@ -27,7 +27,7 @@ namespace Chronokeep.Database.SQLite
                 new("@reader", read.Reader),
                 new("@box", read.Box),
                 new("@logix", read.LogId),
-                new("@rssi", read.RSSI),
+                new("@rssi", read.Rssi),
                 new("@rewind", read.IsRewind),
                 new("@readertime", read.ReaderTime),
                 new("@starttime", read.StartTime),

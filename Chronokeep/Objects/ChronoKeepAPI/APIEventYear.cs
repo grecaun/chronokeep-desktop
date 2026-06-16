@@ -2,7 +2,7 @@
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APIEventYear
+    public class ApiEventYear
     {
         [JsonPropertyName("year")]
         public string Year { get; set; } = "";

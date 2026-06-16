@@ -6,7 +6,7 @@ namespace Chronokeep.Objects.ChronokeepRemote
     {
         // Identifier is either a BIB or a CHIP value.
         [JsonPropertyName("identifier")]
-        public string Identifier { get; set; } = "";
+        private string Identifier { get; set; } = "";
         [JsonPropertyName("seconds")]
         public long Seconds { get; set; }
         [JsonPropertyName("milliseconds")]
@@ -18,9 +18,9 @@ namespace Chronokeep.Objects.ChronokeepRemote
         [JsonPropertyName("antenna")]
         public int Antenna { get; set; }
         [JsonPropertyName("reader")]
-        public string Reader { get; set; } = "";
+        private string Reader { get; set; } = "";
         [JsonPropertyName("rssi")]
-        public string RSSI { get; set; } = "";
+        private string Rssi { get; set; } = "";
 
         public ChipRead ConvertToChipRead(int eventId, int locationId)
         {
@@ -33,7 +33,7 @@ namespace Chronokeep.Objects.ChronokeepRemote
                 Milliseconds,
                 Antenna,
                 Reader,
-                RSSI,
+                Rssi,
                 IdentType == IdentType.chip ? Constants.Timing.CHIPREAD_TYPE_CHIP : Constants.Timing.CHIPREAD_TYPE_MANUAL
                 );
         }

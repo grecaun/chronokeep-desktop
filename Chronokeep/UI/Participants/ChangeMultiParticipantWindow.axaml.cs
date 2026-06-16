@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -39,10 +38,10 @@ public partial class ChangeMultiParticipantWindow : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
-    private void Change_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Change_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Participants.ChangeMultiParticipantWindow", "Change clicked.");
         int distanceId = Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem!).Tag!);
@@ -56,7 +55,7 @@ public partial class ChangeMultiParticipantWindow : Window
         Close();
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Participants.ChangeMultiParticipantWindow", "Cancel clicked.");
         Close();

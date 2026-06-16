@@ -28,10 +28,10 @@ namespace Chronokeep.MemStore
                             DistanceStat allstats = new()
                             {
                                 DistanceName = "All",
-                                DistanceID = -1,
+                                DistanceId = -1,
                                 Active = 0,
-                                DNF = 0,
-                                DNS = 0,
+                                Dnf = 0,
+                                Dns = 0,
                                 Finished = 0
                             };
                             foreach (Participant p in participants.Values)
@@ -48,18 +48,18 @@ namespace Chronokeep.MemStore
                                     distStats = new()
                                     {
                                         DistanceName = distName,
-                                        DistanceID = distIdent,
+                                        DistanceId = distIdent,
                                         Active = 0,
-                                        DNF = 0,
-                                        DNS = 0,
+                                        Dnf = 0,
+                                        Dns = 0,
                                         Finished = 0
                                     };
                                     distStatDict[distIdent] = distStats;
                                 }
                                 if (Constants.Timing.EVENTSPECIFIC_DNF == p.Status)
                                 {
-                                    distStats.DNF += 1;
-                                    allstats.DNF += 1;
+                                    distStats.Dnf += 1;
+                                    allstats.Dnf += 1;
                                 }
                                 else if (Constants.Timing.EVENTSPECIFIC_FINISHED == p.Status)
                                 {
@@ -73,8 +73,8 @@ namespace Chronokeep.MemStore
                                 }
                                 else if (Constants.Timing.EVENTSPECIFIC_DNS == p.Status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == p.Status)
                                 {
-                                    distStats.DNS += 1;
-                                    allstats.DNS += 1;
+                                    distStats.Dns += 1;
+                                    allstats.Dns += 1;
                                 }
                             }
                             output.AddRange(distStatDict.Values);

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
@@ -11,7 +10,7 @@ public partial class ParticipantConflicts : Window
 {
     private readonly IMainWindow window;
 
-    public ParticipantConflicts(IMainWindow window, List<Participant> participants)
+    private ParticipantConflicts(IMainWindow window, List<Participant> participants)
     {
         InitializeComponent();
         this.window = window;
@@ -26,7 +25,7 @@ public partial class ParticipantConflicts : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
     private void OnClose(object sender, RoutedEventArgs e)

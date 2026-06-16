@@ -5,11 +5,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Chronokeep.UI.Parts.BibChipHeaderPart"
              IsTabStop="False">
-    <Grid Margin="0,2">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Grid Margin="0,2" ColumnDefinitions="*,*">
         <TextBlock Grid.Column="0"
                    Name="HeaderLabel"
                    FontSize="18"

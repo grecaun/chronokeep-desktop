@@ -12,23 +12,17 @@ using System.Linq;
 
 namespace Chronokeep.UI.ChipAssignment;
 
-public partial class ChipTool : Window
+public partial class ChipTool : ChronokeepWindow
 {
     private readonly IWindowCallback? window;
     private readonly IDBInterface? database;
 
-    public bool ImportComplete = false;
-
-    public ChipTool()
-    {
-        InitializeComponent();
-        correlationBox.Items.Add(new TagRangePart(correlationBox));
-    }
+    public bool ImportComplete;
 
     private ChipTool(IWindowCallback window, IDBInterface database)
     {
         InitializeComponent();
-        correlationBox.Items.Add(new TagRangePart(correlationBox));
+        CorrelationBox.Items.Add(new TagRangePart(CorrelationBox));
         this.window = window;
         this.database = database;
         MinHeight = 100;
@@ -39,23 +33,24 @@ public partial class ChipTool : Window
 
     public static ChipTool NewWindow(IWindowCallback window, IDBInterface database)
     {
-        return new(window, database);
+        return new ChipTool(window, database);
     }
 
-    private void AddRange_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void AddRange_Click(object? sender, RoutedEventArgs e)
     {
-        correlationBox.Items.Add(new TagRangePart(correlationBox));
+        CorrelationBox.Items.Add(new TagRangePart(CorrelationBox));
     }
 
-    private void Save_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Save_Click(object? sender, RoutedEventArgs e)
     {
         List<Range> ranges = [];
-        foreach (TagRangePart? tag in correlationBox.Items.Cast<TagRangePart?>())
+        foreach (object? tag in CorrelationBox.Items)
         {
-            _ = int.TryParse(tag!.StartBib.Text, out int startBib);
-            _ = int.TryParse(tag!.EndBib.Text, out int endBib);
-            _ = int.TryParse(tag!.StartChip.Text, out int startChip);
-            _ = int.TryParse(tag!.EndChip.Text!.ToString(), out int endChip);
+            if (tag is not TagRangePart part) continue;
+            _ = int.TryParse(part.StartBib.Text, out int startBib);
+            _ = int.TryParse(part.EndBib.Text, out int endBib);
+            _ = int.TryParse(part.StartChip.Text, out int startChip);
+            _ = int.TryParse(part.EndChip.Text!, out int endChip);
             Log.D("UI.ChipAssignment.ChipTool", "StartBib " + startBib + " EndBib " + endBib + " StartChip " + startChip + " EndChip " + endChip);
             Range curRange = new()
             {
@@ -65,12 +60,9 @@ public partial class ChipTool : Window
                 EndChip = endChip
             };
             bool conflicts = !curRange.IsValid();
-            foreach (Range r in ranges)
+            foreach (Range _ in ranges.Where(r => r.Violates(curRange)))
             {
-                if (r.Violates(curRange))
-                {
-                    conflicts = true;
-                }
+                conflicts = true;
             }
             if (conflicts)
             {
@@ -85,7 +77,7 @@ public partial class ChipTool : Window
         {
             for (int bib = r.StartBib, tag = r.StartChip; bib <= r.EndBib && tag <= r.EndChip; bib++, tag++)
             {
-                list.Add(new()
+                list.Add(new BibChipAssociation
                 {
                     Bib = bib.ToString(),
                     Chip = tag.ToString()
@@ -109,8 +101,8 @@ public partial class ChipTool : Window
         window?.WindowFinalize(this);
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

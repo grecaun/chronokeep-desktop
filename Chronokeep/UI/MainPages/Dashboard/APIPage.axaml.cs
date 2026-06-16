@@ -5,17 +5,16 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.UI.Parts;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Chronokeep.UI.MainPages.Dashboard;
 
-public partial class APIPage : UserControl, IMainPage
+public partial class ApiPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
     private readonly IDBInterface database;
-    private List<APIObject>? resultsAPI;
+    private List<ApiObject>? resultsApi;
 
-    public APIPage(IMainWindow mWindow, IDBInterface database)
+    public ApiPage(IMainWindow mWindow, IDBInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -32,7 +31,7 @@ public partial class APIPage : UserControl, IMainPage
     public void Keyboard_Ctrl_S()
     {
         Log.D("UI.MainPages.APIPage", "Ctrl + S Passed to this page.");
-        UpdateResultsAPI();
+        UpdateResultsApi();
         UpdateView();
     }
 
@@ -43,11 +42,11 @@ public partial class APIPage : UserControl, IMainPage
 
     public void UpdateView()
     {
-        APIBox.Items.Clear();
-        resultsAPI = database.GetAllAPI();
-        foreach (APIObject api in resultsAPI)
+        ApiBox.Items.Clear();
+        resultsApi = database.GetAllAPI();
+        foreach (ApiObject api in resultsApi)
         {
-            APIBox.Items.Add(new APIPart(this, api));
+            ApiBox.Items.Add(new ApiPart(this, api));
         }
     }
 
@@ -55,32 +54,27 @@ public partial class APIPage : UserControl, IMainPage
     {
         if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
         {
-            UpdateResultsAPI();
+            UpdateResultsApi();
         }
     }
 
-    public void UpdateResultsAPI()
+    private void UpdateResultsApi()
     {
-        foreach (APIPart? listDiv in APIBox.Items.Cast<APIPart?>())
+        foreach (object? listDiv in ApiBox.Items)
         {
-            listDiv!.UpdateResultsAPI();
-            database.UpdateAPI(listDiv.theAPI);
+            if (listDiv is not ApiPart part) continue;
+            part.UpdateResultsApi();
+            database.UpdateAPI(part.TheApi);
         }
     }
 
-    public void RemoveAPI(APIObject api)
+    public void RemoveApi(ApiObject api)
     {
         if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
         {
-            UpdateResultsAPI();
+            UpdateResultsApi();
         }
         database.RemoveAPI(api.Identifier);
-        UpdateView();
-    }
-
-    public void UpdateResultsAPI(APIObject api)
-    {
-        database.UpdateAPI(api);
         UpdateView();
     }
 
@@ -89,16 +83,16 @@ public partial class APIPage : UserControl, IMainPage
         Log.D("UI.MainPages.APIPage", "Add api clicked.");
         if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
         {
-            UpdateResultsAPI();
+            UpdateResultsApi();
         }
-        database.AddAPI(new APIObject());
+        database.AddAPI(new ApiObject());
         UpdateView();
     }
 
     private void Update_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.MainPages.APIPage", "Update clicked.");
-        UpdateResultsAPI();
+        UpdateResultsApi();
         UpdateView();
     }
 

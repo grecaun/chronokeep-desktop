@@ -8,19 +8,19 @@ using Chronokeep.UI.MainPages;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Chronokeep.UI.Parts;
 
 public partial class DistancePart : UserControl
 {
-    private bool PlusWave = true;
+    private bool plusWave = true;
 
     private const string TimeFormat = "{0:D2}:{1:D2}:{2:D2}.{3:D3}";
     private const string LimitFormat = "{0:D2}:{1:D2}:{2:D2}";
-    readonly DistancesPage page;
-    public Distance theDistance;
-    public DistancePart? parent;
+    private readonly DistancesPage page;
+    private readonly Distance theDistance;
     private readonly Dictionary<int, Distance> distanceDictionary;
 
     [GeneratedRegex("[^0-9.]")]
@@ -36,8 +36,7 @@ public partial class DistancePart : UserControl
         this.distanceDictionary = distanceDictionary;
         otherDistances.Remove(distance);
         this.page = page;
-        this.theDistance = distance;
-        this.parent = parent;
+        theDistance = distance;
         InitializeComponent();
         DistanceName.Text = theDistance.Name;
         CopyFromBox.Items.Add(new ComboBoxItem()
@@ -54,7 +53,7 @@ public partial class DistancePart : UserControl
             });
         }
         CopyFromBox.SelectedIndex = 0;
-        DistanceBox.Text = theDistance.DistanceValue.ToString();
+        DistanceBox.Text = theDistance.DistanceValue.ToString(CultureInfo.InvariantCulture);
         DistanceUnit.Items.Add(new ComboBoxItem()
         {
             Content = "",
@@ -111,10 +110,10 @@ public partial class DistancePart : UserControl
         }
         if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
         {
-            ComboBoxItem? selected = null, current;
+            ComboBoxItem? selected = null;
             for (int i = 1; i <= maxOccurrences; i++)
             {
-                current = new()
+                ComboBoxItem current = new()
                 {
                     Content = i.ToString(),
                     Tag = i.ToString()
@@ -152,22 +151,22 @@ public partial class DistancePart : UserControl
         if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType)
         {
             Wave.Text = theDistance.Wave.ToString();
-            PlusWave = true;
+            plusWave = true;
             if (theDistance.StartOffsetSeconds < 0)
             {
                 Log.D("UI.MainPages.DistancesPage", "Setting type to negative and making seconds/milliseconds positive for offset textbox.");
-                PlusWave = false;
+                plusWave = false;
                 theDistance.StartOffsetSeconds *= -1;
                 theDistance.StartOffsetMilliseconds *= -1;
             }
         }
-        PlusIcon.IsVisible = PlusWave;
-        MinusIcon.IsVisible = !PlusWave;
+        PlusIcon.IsVisible = plusWave;
+        MinusIcon.IsVisible = !plusWave;
         StartOffset.Text = string.Format(TimeFormat, theDistance.StartOffsetSeconds / 3600,
             theDistance.StartOffsetSeconds % 3600 / 60, theDistance.StartOffsetSeconds % 60,
             theDistance.StartOffsetMilliseconds);
         Certification.Text = theDistance.Certification;
-        if (theEvent.UploadSpecific == true)
+        if (theEvent.UploadSpecific)
         {
             UploadPanel.IsVisible = true;
             Upload.IsChecked = theDistance.Upload;
@@ -277,7 +276,7 @@ public partial class DistancePart : UserControl
             theDistance.DistanceValue = dist;
         }
         theDistance.DistanceUnit = Convert.ToInt32(((ComboBoxItem)DistanceUnit.SelectedItem!).Tag);
-        if (FinishOccurrence != null && FinishOccurrence.SelectedItem != null)
+        if (FinishOccurrence is { SelectedItem: not null })
         {
             theDistance.FinishOccurrence = Convert.ToInt32(((ComboBoxItem)FinishOccurrence.SelectedItem).Tag!);
         }
@@ -314,7 +313,7 @@ public partial class DistancePart : UserControl
         {
             DialogBox.Show("Error with values given.");
         }
-        if (!PlusWave)
+        if (!plusWave)
         {
             Log.D("UI.MainPages.DistancesPage", "Recording negative values.");
             theDistance.StartOffsetSeconds *= -1;
@@ -328,14 +327,7 @@ public partial class DistancePart : UserControl
         {
             theDistance.Upload = true;
         }
-        if (Certification != null)
-        {
-            theDistance.Certification = Certification.Text!;
-        }
-        else
-        {
-            theDistance.Certification = "";
-        }
+        theDistance.Certification = Certification != null ? Certification.Text! : "";
         if (Ranking.Text != null && int.TryParse(Ranking.Text, out int rankVal))
         {
             theDistance.Ranking = rankVal;
@@ -375,10 +367,10 @@ public partial class DistancePart : UserControl
 
     private void SwapWaveType_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.DistancesPage", "Plus/Minus sign clicked. PlusWave is: " + PlusWave);
-        PlusWave = !PlusWave;
-        PlusIcon.IsVisible = PlusWave;
-        MinusIcon.IsVisible = !PlusWave;
+        Log.D("UI.MainPages.DistancesPage", "Plus/Minus sign clicked. PlusWave is: " + plusWave);
+        plusWave = !plusWave;
+        PlusIcon.IsVisible = plusWave;
+        MinusIcon.IsVisible = !plusWave;
     }
 
     private void DotValidation(object? sender, TextInputEventArgs e)

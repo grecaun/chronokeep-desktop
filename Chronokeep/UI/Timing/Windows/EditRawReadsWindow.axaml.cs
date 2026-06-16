@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -13,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class EditRawReadsWindow : Window
+public partial class EditRawReadsWindow : ChronokeepWindow
 {
     private readonly ITimingPage parent;
     private readonly IDBInterface database;
@@ -29,10 +28,10 @@ public partial class EditRawReadsWindow : Window
         this.parent = parent;
         this.database = database;
         this.chipReads = chipReads;
-        this.MinWidth = 280;
-        this.Width = 280;
-        this.MinHeight = 230;
-        this.Height = 230;
+        MinWidth = 280;
+        Width = 280;
+        MinHeight = 230;
+        Height = 230;
         theEvent = database.GetCurrentEvent()!;
         TimeBox.Focus();
     }
@@ -52,12 +51,9 @@ public partial class EditRawReadsWindow : Window
         }
     }
 
-    private void Submit_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs? e)
+    private void Submit_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.Timing.EditRawReadsWindow", "Submit clicked.");
-        // Keep track of any bibs/chips we've changed.
-        HashSet<string> bibsChanged = [];
-        HashSet<string> chipsChanged = [];
         bool add = AddRadio.IsChecked == true;
         string[] firstparts = TimeBox.Text!.Replace('_', '0').Split(':');
         string[] secondparts = firstparts[2].Split('.');
@@ -85,25 +81,18 @@ public partial class EditRawReadsWindow : Window
         }
         foreach (ChipRead read in chipReads)
         {
-            if (Constants.Timing.CHIPREAD_DUMMYBIB == read.Bib)
-            {
-                chipsChanged.Add(read.ChipNumber);
-            }
-            else
-            {
-                bibsChanged.Add(read.Bib);
-            }
             read.TimeSeconds = read.TimeSeconds + (86400 * days) + seconds;
             read.TimeMilliseconds += milliseconds;
-            if (read.TimeMilliseconds < 0)
+            switch (read.TimeMilliseconds)
             {
-                read.TimeSeconds--;
-                read.TimeMilliseconds += 1000;
-            }
-            else if (read.TimeMilliseconds >= 1000)
-            {
-                read.TimeSeconds++;
-                read.TimeMilliseconds -= 1000;
+                case < 0:
+                    read.TimeSeconds--;
+                    read.TimeMilliseconds += 1000;
+                    break;
+                case >= 1000:
+                    read.TimeSeconds++;
+                    read.TimeMilliseconds -= 1000;
+                    break;
             }
         }
         database.UpdateChipReads(chipReads);
@@ -113,14 +102,14 @@ public partial class EditRawReadsWindow : Window
         Close();
     }
 
-    private void Cancel_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.EditRawReadsWindow", "Cancel clicked.");
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

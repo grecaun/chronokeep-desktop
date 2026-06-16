@@ -3,23 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Chronokeep.UI.Parts.APIPart">
-    <Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="150"/>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="45"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0">
+             x:Class="Chronokeep.UI.Parts.ApiPart">
+    <Grid ColumnDefinitions="*,150,*,*,*,45">
+	    <StackPanel Grid.Column="0">
 		    <TextBlock Text="Nickname"
                        FontSize="15"
                        Margin="10,5,0,5"
                        TextAlignment="Center"
                        VerticalAlignment="Center"/>
-            <TextBox Name="APINickname"
+            <TextBox Name="ApiNickname"
                      FontSize="15"
                      Height="45"
                      Margin="10,5,0,5"
@@ -33,7 +25,7 @@
                        Margin="10,5,0,5"
                        TextAlignment="Center"
                        VerticalAlignment="Center"/>
-            <ComboBox Name="APIType"
+            <ComboBox Name="ApiType"
                       FontSize="14"
                       Height="45"
                       Margin="10,5,0,5"
@@ -47,7 +39,7 @@
                        Margin="10,5,0,5"
                        TextAlignment="Center"
                        VerticalAlignment="Center"/>
-            <TextBox Name="APIURL"
+            <TextBox Name="ApiUrl"
                      FontSize="15"
                      Height="45"
                      Margin="10,5,0,5"
@@ -62,7 +54,7 @@
                        Margin="10,5,0,5"
                        TextAlignment="Center"
                        VerticalAlignment="Center"/>
-            <TextBox Name="APIToken"
+            <TextBox Name="ApiToken"
                      FontSize="15"
                      Height="45"
                      Margin="10,5,0,5"
@@ -76,7 +68,7 @@
                        Margin="10,5,0,5"
                        TextAlignment="Center"
                        VerticalAlignment="Center"/>
-            <TextBox Name="APIWebURL"
+            <TextBox Name="ApiWebUrl"
                      FontSize="15"
                      Height="45"
                      Margin="10,5,0,5"

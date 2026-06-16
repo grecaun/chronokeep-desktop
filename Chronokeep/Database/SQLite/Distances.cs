@@ -34,7 +34,7 @@ namespace Chronokeep.Database.SQLite
                 new("@linked", d.LinkedDistance),
                 new("@type", d.Type),
                 new("@rank", d.Ranking),
-                new("@sms", d.SMSEnabled ? 1 : 0),
+                new("@sms", d.SmsEnabled ? 1 : 0),
                 new("@upload", d.Upload ? 1 : 0),
                 new("@cert", d.Certification),
             ]);
@@ -96,7 +96,7 @@ namespace Chronokeep.Database.SQLite
                 new("@linked", d.LinkedDistance),
                 new("@type", d.Type),
                 new("@rank", d.Ranking),
-                new("@sms", d.SMSEnabled ? 1 : 0),
+                new("@sms", d.SmsEnabled ? 1 : 0),
                 new("@upload", d.Upload ? 1 : 0),
                 new("@cert", d.Certification),
             ]);

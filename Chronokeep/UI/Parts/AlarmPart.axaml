@@ -12,21 +12,14 @@
        </Style> 
     </UserControl.Styles>
     <Grid HorizontalAlignment="Center"
-          VerticalAlignment="Center">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="100"/>
-			<ColumnDefinition Width="120"/>
-			<ColumnDefinition Width="175"/>
-			<ColumnDefinition Width="55"/>
-			<ColumnDefinition Width="45"/>
-        </Grid.ColumnDefinitions>
-        <TextBox Grid.Column="0"
-                 Name="BibBox"
-                 Height="35"
-                 Margin="2"
-                 FontSize="16"
-                 VerticalAlignment="Center"
-                 VerticalContentAlignment="Center"/>
+          VerticalAlignment="Center" ColumnDefinitions="100,120,175,55,45">
+	    <TextBox Grid.Column="0"
+	             Name="BibBox"
+	             Height="35"
+	             Margin="2"
+	             FontSize="16"
+	             VerticalAlignment="Center"
+	             VerticalContentAlignment="Center"/>
         <TextBox Grid.Column="1"
                  Name="ChipBox"
                  Height="35"

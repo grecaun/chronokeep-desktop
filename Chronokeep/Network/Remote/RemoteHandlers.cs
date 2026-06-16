@@ -5,6 +5,7 @@ using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.Objects.ChronokeepRemote;
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,9 +13,9 @@ using static Chronokeep.Network.Util.Helpers;
 
 namespace Chronokeep.Network.Remote
 {
-    public class RemoteHandlers
+    public static class RemoteHandlers
     {
-        public static async Task<GetReadersResponse> GetReaders(APIObject api)
+        public static async Task<GetReadersResponse> GetReaders(ApiObject api)
         {
             string content;
             Log.D("Network.Remote.RemoteHandlers", "Getting remote readers.");
@@ -24,31 +25,31 @@ namespace Chronokeep.Network.Remote
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri(api.URL + "readers")
+                    RequestUri = new Uri($"{api.Url}readers")
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.Remote.RemoteHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetReadersResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetReadersResponse result = JsonSerializer.Deserialize<GetReadersResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.Remote.RemoteHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.Remote.RemoteHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException("Exception thrown getting events: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetReadsResponse> GetReads(APIObject api, string reader, long start, long end)
+        public static async Task<GetReadsResponse> GetReads(ApiObject api, string reader, long start, long end)
         {
             string content;
             Log.D("Network.Remote.RemoteHandlers", "Getting reads.");
@@ -58,7 +59,7 @@ namespace Chronokeep.Network.Remote
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri(api.URL + "reads"),
+                    RequestUri = new Uri($"{api.Url}reads"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetReadsRequest
                         {
@@ -70,29 +71,29 @@ namespace Chronokeep.Network.Remote
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.Remote.RemoteHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetReadsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetReadsResponse result = JsonSerializer.Deserialize<GetReadsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.Remote.RemoteHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.Remote.RemoteHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException("Exception thrown getting events: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<DeleteReadsResponse> DeleteReads(APIObject api, string reader, long start, long end)
+        public static async Task<DeleteReadsResponse> DeleteReads(ApiObject api, string reader, long start, long end)
         {
             string content;
             Log.D("Network.Remote.RemoteHandlers", "Deleting reads.");
@@ -102,7 +103,7 @@ namespace Chronokeep.Network.Remote
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "reads/delete"),
+                    RequestUri = new Uri($"{api.Url}reads/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new DeleteReadsRequest
                         {
@@ -114,26 +115,26 @@ namespace Chronokeep.Network.Remote
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.Remote.RemoteHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<DeleteReadsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    DeleteReadsResponse result = JsonSerializer.Deserialize<DeleteReadsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.Remote.RemoteHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.Remote.RemoteHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException("Exception thrown getting events: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
     }
 }

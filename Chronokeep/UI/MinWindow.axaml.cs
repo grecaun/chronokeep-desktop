@@ -16,20 +16,21 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static Chronokeep.Helpers.Globals;
 
 namespace Chronokeep.UI;
 
-public partial class MinWindow : Window, IMainWindow
+public partial class MinWindow : ChronokeepWindow, IMainWindow
 {
     private readonly MemStore.MemStore? database;
     private readonly MinTimingPage? page;
 
     // Timing objects.
-    private Thread? TimingControllerThread;
-    private readonly TimingController? TimingController;
+    private Thread? timingControllerThread;
+    private readonly TimingController? timingController;
 
     private readonly List<Window> openWindows = [];
 
@@ -38,7 +39,7 @@ public partial class MinWindow : Window, IMainWindow
 #if DEBUG
     private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep-debug");
 #else
-        private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
+    private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
 #endif
 
     public MinWindow()
@@ -57,15 +58,15 @@ public partial class MinWindow : Window, IMainWindow
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
             : Path.Combine(Directory.GetCurrentDirectory(), "data");
         string path = Path.Combine(dirPath, MainWindow.DatabaseFileName);
-        Log.D("UI.MainWindow", "Looking for database file.");
+        Log.D("UI.MinWindow", "Looking for database file.");
         if (!Directory.Exists(dirPath))
         {
-            Log.D("UI.MainWindow", "Creating directory.");
+            Log.D("UI.MinWindow", "Creating directory.");
             Directory.CreateDirectory(dirPath);
         }
         if (!File.Exists(path))
         {
-            Log.D("UI.MainWindow", "Creating database file.");
+            Log.D("UI.MinWindow", "Creating database file.");
             SQLiteConnection.CreateFile(path);
         }
         database = MemStore.MemStore.GetMemStore(new SQLiteInterface(path));
@@ -75,20 +76,21 @@ public partial class MinWindow : Window, IMainWindow
         }
         catch (InvalidDatabaseVersion db)
         {
-            DialogBox.Show(string.Format("Database version greater than the max known by this client. Please update the client. Database version {0}. Max version for this client {1}", db.FoundVersion, db.MaxVersion));
+            DialogBox.Show(
+                $"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
             this.Close();
             return;
         }
         Constants.Settings.SetupSettings(database);
 
-        TimingController = new TimingController(this, database);
+        timingController = new TimingController(this, database);
 
         page = new MinTimingPage(this, database);
         TheFrame.Content = page;
     }
 
 
-    private void NewEvent_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void NewEvent_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.DashboardPage", "New event clicked.");
         if (CancelEventChangeAsync(EventClickType.NewEvent))
@@ -96,14 +98,11 @@ public partial class MinWindow : Window, IMainWindow
             return;
         }
         NewEventWindow newEventWindow = NewEventWindow.NewWindow(this, database!);
-        if (newEventWindow != null)
-        {
-            this.AddWindow(newEventWindow);
-            newEventWindow.ShowDialog(this);
-        }
+        AddWindow(newEventWindow);
+        newEventWindow.ShowDialog(this);
     }
 
-    private void ChangeEvent_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ChangeEvent_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.DashboardPage", "Change event clicked.");
         if (CancelEventChangeAsync(EventClickType.ChangeEvent))
@@ -111,49 +110,41 @@ public partial class MinWindow : Window, IMainWindow
             return;
         }
         ChangeEventWindow changeEventWindow = ChangeEventWindow.NewWindow(this, database!);
-        if (changeEventWindow != null)
-        {
-            this.AddWindow(changeEventWindow);
-            changeEventWindow.ShowDialog(this);
-        }
+        AddWindow(changeEventWindow);
+        changeEventWindow.ShowDialog(this);
     }
 
     private bool CancelEventChangeAsync(EventClickType clickType)
     {
         Log.D("UI.DashboardPage", "Checking if we need to cancel the change.");
-        if (BackgroundProcessesRunning())
-        {
-            DialogBox.Show(
-                "There are processes running in the background. Do you wish to stop these and continue?",
-                "Yes",
-                "No",
-                () =>
+        if (!BackgroundProcessesRunning()) return false;
+        DialogBox.Show(
+            "There are processes running in the background. Do you wish to stop these and continue?",
+            "Yes",
+            "No",
+            () =>
+            {
+                StopBackgroundProcesses();
+                switch (clickType)
                 {
-                    StopBackgroundProcesses();
-                    switch (clickType)
-                    {
-                        case EventClickType.NewEvent:
-                            NewEventWindow newEventWindow = NewEventWindow.NewWindow(this, database!);
-                            if (newEventWindow != null)
-                            {
-                                this.AddWindow(newEventWindow);
-                                newEventWindow.ShowDialog(this);
-                            }
-                            break;
-                        case EventClickType.ChangeEvent:
-                            ChangeEventWindow changeEventWindow = ChangeEventWindow.NewWindow(this, database!);
-                            if (changeEventWindow != null)
-                            {
-                                this.AddWindow(changeEventWindow);
-                                changeEventWindow.ShowDialog(this);
-                            }
-                            break;
-                    }
+                    case EventClickType.NewEvent:
+                        NewEventWindow newEventWindow = NewEventWindow.NewWindow(this, database!);
+                        AddWindow(newEventWindow);
+                        newEventWindow.ShowDialog(this);
+                        break;
+                    case EventClickType.ChangeEvent:
+                        ChangeEventWindow changeEventWindow = ChangeEventWindow.NewWindow(this, database!);
+                        AddWindow(changeEventWindow);
+                        changeEventWindow.ShowDialog(this);
+                        break;
+                    case EventClickType.ImportEvent:
+                    case EventClickType.DeleteEvent:
+                    default:
+                        break;
                 }
-                );
-            return true;
-        }
-        return false;
+            }
+        );
+        return true;
     }
 
     private enum EventClickType
@@ -183,28 +174,31 @@ public partial class MinWindow : Window, IMainWindow
         if (database.GetAppSetting(Constants.Settings.EXIT_NO_PROMPT)!.Value == Constants.Settings.SETTING_FALSE &&
             (BackgroundProcessesRunning()))
         {
-            bool AllowClose = false;
+            bool allowClose = false;
             DialogBox.Show(
                 "Are you sure you wish to exit?",
                 "Yes",
                 "No",
                 () =>
                 {
-                    AllowClose = true;
+                    allowClose = true;
                 }
                 );
-            if (!AllowClose)
+            if (!allowClose)
             {
                 e.Cancel = true;
                 return;
             }
         }
-        Log.D("UI.MainWindow", "Window is closing!");
+        Log.D("UI.MinWindow", "Window is closing!");
         try
         {
             StopTimingController();
         }
-        catch { }
+        catch
+        {
+            Log.D("UI.MinWindow", "Something went wrong stopping the timing controller... Oh well!");
+        }
         foreach (Window w in openWindows)
         {
             try
@@ -213,39 +207,29 @@ public partial class MinWindow : Window, IMainWindow
             }
             catch
             {
-                Log.D("UI.MainWindow", "Oh well!");
+                Log.D("UI.MinWindow", "Something went wrong closing a window... Oh well!");
             }
         }
         page?.Closing();
     }
 
-    private void OnMinimize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void OnMaximize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
-    }
-
-    private void OnClose(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    protected override void SetMaximizeIcon()
     {
         MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;        
+    }
+
+    protected override void Maximize()
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 
     public bool StopTimingController()
     {
         try
         {
-            Log.D("UI.MainWindow", "Stopping Timing Controller.");
-            TimingController?.Shutdown();
+            Log.D("UI.MinWindow", "Stopping Timing Controller.");
+            timingController?.Shutdown();
         }
         catch
         {
@@ -266,60 +250,73 @@ public partial class MinWindow : Window, IMainWindow
 
     public async void ConnectTimingSystem(TimingSystem system)
     {
-        await Task.Run(() =>
+        try
         {
-            TimingController?.ConnectTimingSystem(system);
-        });
-        UpdateTiming();
-        await Task.Run(() =>
-        {
-            if (!TimingController.IsRunning())
+            await Task.Run(() =>
             {
-                TimingControllerThread = new Thread(new ThreadStart(TimingController!.Run));
-                TimingControllerThread.Start();
-            }
-        });
+                timingController?.ConnectTimingSystem(system);
+            });
+            UpdateTiming();
+            await Task.Run(() =>
+            {
+                if (TimingController.IsRunning()) return;
+                timingControllerThread = new Thread(timingController!.Run);
+                timingControllerThread.Start();
+            });
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MinWindow", "Error thrown connecting to timing system.");
+        }
     }
 
     public async void DisconnectTimingSystem(TimingSystem system)
     {
-        await Task.Run(() =>
+        try
         {
-            TimingController!.DisconnectTimingSystem(system);
-        });
-        UpdateTiming();
+            await Task.Run(() =>
+            {
+                timingController!.DisconnectTimingSystem(system);
+            });
+            UpdateTiming();
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MinWindow", "Error thrown disconnecting from timing system.");
+        }
     }
 
     public void ShutdownTimingController()
     {
-        TimingController?.Shutdown();
+        timingController?.Shutdown();
     }
 
     public List<TimingSystem> GetConnectedSystems()
     {
-        List<TimingSystem> connected = TimingController!.GetConnectedSystems();
+        List<TimingSystem> connected = timingController!.GetConnectedSystems();
         List<TimingSystem> saved = database!.GetTimingSystems();
-        saved.RemoveAll(x => connected.Contains(x));
+        saved.RemoveAll(connected.Contains);
         saved.InsertRange(0, connected);
         return saved;
     }
 
     public void TimingSystemDisconnected(TimingSystem system)
     {
-        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current!.Dispatcher.Invoke(delegate
         {
             if (!system.SystemInterface!.WasShutdown())
             {
-                DialogBox.Show(string.Format("Reader at {0} has unexpectedly disconnected. IP Address was {1}.", system.LocationName, system.IPAddress));
+                DialogBox.Show(
+                    $"Reader at {system.LocationName} has unexpectedly disconnected. IP Address was {system.IpAddress}.");
             }
             system.Status = SYSTEM_STATUS.DISCONNECTED;
             UpdateTiming();
-        }));
+        });
     }
 
     public void NotifyTimingWorker() { }
 
-    private void Window_Loaded(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Check for current theme color and apply it.
         AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);
@@ -345,17 +342,20 @@ public partial class MinWindow : Window, IMainWindow
         {
             StopTimingController();
         }
-        catch { }
+        catch
+        {
+            Log.D("UI.MinWindow", "Error thrown stopping the timing controller.");
+        }
     }
 
-    public void ShowNotificationDialog(string ReaderName, string Address, RemoteNotification notification)
+    public void ShowNotificationDialog(string readerName, string address, RemoteNotification notification)
     {
-        Log.D("UI.MainWindow", $"Show Notification Dialog called. When '{notification.When}' - Type '{notification.Type}' - ReaderName '{ReaderName}' - Address '{Address}'");
+        Log.D("UI.MinWindow", $"Show Notification Dialog called. When '{notification.When}' - Type '{notification.Type}' - ReaderName '{readerName}' - Address '{address}'");
         ReaderMessage msg = new()
         {
             Message = notification,
-            SystemName = ReaderName,
-            Address = Address,
+            SystemName = readerName,
+            Address = address,
             // MinWindow can just set it to high always because it lacks an info badge.
             Severity = ReaderMessage.SeverityLevel.High,
         };
@@ -365,34 +365,31 @@ public partial class MinWindow : Window, IMainWindow
 
     public void UpdateTimingNonBlocking()
     {
-        Log.D("UI.MainWindow", "UpdateTimingNonBlocking called.");
+        Log.D("UI.MinWindow", "UpdateTimingNonBlocking called.");
         List<ReaderMessage> toShow = [];
         List<ReaderMessage> readerMsgs = GetReaderMessages();
-        foreach (ReaderMessage message in readerMsgs)
+        foreach (ReaderMessage message in readerMsgs.Where(message => message is { Severity: ReaderMessage.SeverityLevel.High, Notified: false }))
         {
-            if (message.Severity == ReaderMessage.SeverityLevel.High && !message.Notified)
-            {
-                toShow.Add(message);
-                message.Notified = true;
-                UpdateReaderMessage(message);
-            }
+            toShow.Add(message);
+            message.Notified = true;
+            UpdateReaderMessage(message);
         }
-        Thread newThread = new(new ThreadStart(() =>
+        Thread newThread = new(() =>
         {
             // show any dialogboxes that need to be shown due to importance
             foreach (ReaderMessage message in toShow)
             {
-                Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+                Application.Current!.Dispatcher.Invoke(delegate
                 {
                     DialogBox.Show(message.DialogBoxString);
-                }));
+                });
             }
             // Let the announcer window know that it has new information.
-            Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+            Application.Current!.Dispatcher.Invoke(delegate
             {
                 page?.UpdateView();
-            }));
-        }));
+            });
+        });
         newThread.Start();
     }
 
@@ -412,26 +409,22 @@ public partial class MinWindow : Window, IMainWindow
 
     public void UpdateTimingFromController()
     {
-        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current!.Dispatcher.Invoke(delegate
         {
-            if (page is MinTimingPage tPage)
-            {
-                tPage.UpdateView();
-                tPage.NewMessage();
-            }
-        }));
+            if (page is null) return;
+            page.UpdateView();
+            page.NewMessage();
+        });
     }
 
     public void UpdateTiming()
     {
-        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current!.Dispatcher.Invoke(delegate
         {
-            if (page is MinTimingPage tPage)
-            {
-                tPage.UpdateView();
-                tPage.NewMessage();
-            }
-        }));
+            if (page is null) return;
+            page.UpdateView();
+            page.NewMessage();
+        });
     }
 
     public void UpdateAnnouncerWindow() { }
@@ -446,7 +439,7 @@ public partial class MinWindow : Window, IMainWindow
 
     public bool StopDidNotStartMode() { return false; }
 
-    public void NotifyAlarm(string Bib, string Chip) { }
+    public void NotifyAlarm(string bib, string chip) { }
 
     public bool AnnouncerConnected() { return false; }
 

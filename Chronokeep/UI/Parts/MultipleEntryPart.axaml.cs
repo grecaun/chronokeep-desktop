@@ -14,7 +14,7 @@ public partial class MultipleEntryPart : UserControl
         Existing.Text = (person.Identifier == Constants.Timing.PARTICIPANT_DUMMYIDENTIFIER ? "" : "X");
         Bib.Text = person.Bib;
         Distance.Text = person.Distance;
-        PartName.Text = string.Format("{0} {1}", person.FirstName, person.LastName);
+        PartName.Text = $"{person.FirstName} {person.LastName}";
         Sex.Text = person.Gender;
         Age.Text = person.Age(theEvent.Date);
     }

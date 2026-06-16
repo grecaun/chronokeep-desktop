@@ -1,29 +1,16 @@
 ﻿namespace Chronokeep.Objects.RFID
 {
-    public class RFIDSettingsHolder
+    public class RfidSettingsHolder
     {
-        public RFIDSettingsHolder()
-        {
-            UltraID = -1;
-            ChipType = ChipTypeEnum.UNKNOWN;
-            GatingMode = GatingModeEnum.UNKNOWN;
-            GatingInterval = -1;
-            Beep = BeepEnum.UNKNOWN;
-            BeepVolume = BeepVolumeEnum.UNKNOWN;
-            SetFromGPS = GPSEnum.UNKNOWN;
-            TimeZone = -25;
-            Status = StatusEnum.UNKNOWN;
-        }
-
-        public int UltraID { get; set; }
-        public ChipTypeEnum ChipType { get; set; }
-        public GatingModeEnum GatingMode { get; set; }
-        public int GatingInterval { get; set; }
-        public BeepEnum Beep { get; set; }
-        public BeepVolumeEnum BeepVolume { get; set; }
-        public GPSEnum SetFromGPS { get; set; }
-        public int TimeZone { get; set; }
-        public StatusEnum Status { get; set; }
+        public int UltraId { get; set; } = -1;
+        public ChipTypeEnum ChipType { get; set; } = ChipTypeEnum.UNKNOWN;
+        public GatingModeEnum GatingMode { get; set; } = GatingModeEnum.UNKNOWN;
+        public int GatingInterval { get; set; } = -1;
+        public BeepEnum Beep { get; set; } = BeepEnum.UNKNOWN;
+        public BeepVolumeEnum BeepVolume { get; set; } = BeepVolumeEnum.UNKNOWN;
+        public GpsEnum SetFromGps { get; set; } = GpsEnum.UNKNOWN;
+        public int TimeZone { get; set; } = -25;
+        public StatusEnum Status { get; set; } = StatusEnum.UNKNOWN;
 
         public enum ChipTypeEnum
         {
@@ -55,7 +42,7 @@
             LOUD
         }
 
-        public enum GPSEnum
+        public enum GpsEnum
         {
             UNKNOWN,
             SET,

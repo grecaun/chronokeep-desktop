@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Chronokeep.Objects.ChronokeepPortal.Requests
+namespace Chronokeep.Objects.ChronokeepPortal
 {
     public class Request
     {
@@ -77,13 +77,13 @@ namespace Chronokeep.Objects.ChronokeepPortal.Requests
         }
 
         [JsonPropertyName("id")]
-        public long ID { get; set; }
+        public long Id { get; set; }
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
         [JsonPropertyName("kind")]
         public string Type { get; set; } = "";
         [JsonPropertyName("uri")]
-        public string URI { get; set; } = "";
+        public string Uri { get; set; } = "";
         [JsonPropertyName("token")]
         public string Token { get; set; } = "";
     }
@@ -96,7 +96,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Requests
         }
 
         [JsonPropertyName("list")]
-        public List<PortalAPI> List { get; set; } = [];
+        public List<PortalApi> List { get; set; } = [];
     }
 
     public class ApiListRequest : Request
@@ -135,7 +135,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Requests
         }
 
         [JsonPropertyName("id")]
-        public long ID { get; set; }
+        public long Id { get; set; }
     }
 
     public class ConnectRequest : Request
@@ -211,7 +211,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Requests
         [JsonPropertyName("kind")]
         public string Type { get; set; } = "";
         [JsonPropertyName("ip_address")]
-        public string IPAddress { get; set; } = "";
+        public string IpAddress { get; set; } = "";
         [JsonPropertyName("port")]
         public uint Port { get; set; }
         [JsonPropertyName("auto_connect")]

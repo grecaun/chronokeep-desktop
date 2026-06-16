@@ -13,20 +13,14 @@ public partial class ImportFilePageConflicts : UserControl
         InitializeComponent();
         foreach (Participant part in conflicts)
         {
-            multiplesListBox.Items.Add(new MultipleEntryPart(part, theEvent));
+            MultiplesListBox.Items.Add(new MultipleEntryPart(part, theEvent));
         }
     }
 
     public List<Participant> GetParticipantsToRemove()
     {
         List<Participant> output = [];
-        foreach (MultipleEntryPart item in multiplesListBox.Items.Cast<MultipleEntryPart>())
-        {
-            if (item.Keep.IsChecked == false)
-            {
-                output.Add(item.Part);
-            }
-        }
+        output.AddRange(from item in MultiplesListBox.Items.Cast<MultipleEntryPart>() where item.Keep.IsChecked == false select item.Part);
         return output;
     }
 }

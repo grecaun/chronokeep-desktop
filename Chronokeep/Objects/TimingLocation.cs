@@ -4,47 +4,47 @@ namespace Chronokeep.Objects
 {
     public class TimingLocation : IEquatable<TimingLocation>, IComparable<TimingLocation>
     {
-        private int identifier = -1, eventIdentifier, max_occurrences, ignore_within;
         private string name = "";
 
         public TimingLocation() { }
 
         public TimingLocation(int eventIdentifier, string nameString)
         {
-            this.eventIdentifier = eventIdentifier;
+            EventIdentifier = eventIdentifier;
             name = nameString ?? "";
-            max_occurrences = 1;
-            ignore_within = -1;
+            MaxOccurrences = 1;
+            IgnoreWithin = -1;
         }
 
         public TimingLocation(int identifier, int eventIdentifier, string nameString)
         {
-            this.identifier = identifier;
-            this.eventIdentifier = eventIdentifier;
+            Identifier = identifier;
+            EventIdentifier = eventIdentifier;
             name = nameString ?? "";
-            max_occurrences = 1;
-            ignore_within = -1;
+            MaxOccurrences = 1;
+            IgnoreWithin = -1;
         }
 
         public TimingLocation(int id, int eventId, string name, int maxOcc, int ignore)
         {
-            identifier = id;
-            eventIdentifier = eventId;
+            Identifier = id;
+            EventIdentifier = eventId;
             this.name = name ?? "";
-            max_occurrences = maxOcc;
-            ignore_within = ignore;
+            MaxOccurrences = maxOcc;
+            IgnoreWithin = ignore;
         }
 
-        public int Identifier { get => identifier; set => identifier = value; }
-        public int EventIdentifier { get => eventIdentifier; set => eventIdentifier = value; }
+        public int Identifier { get; set; } = -1;
+        public int EventIdentifier { get; set; }
+
         public string Name { get => name; set => name = value ?? ""; }
-        public int MaxOccurrences { get => max_occurrences; set => max_occurrences = value; }
-        public int IgnoreWithin { get => ignore_within; set => ignore_within = value; }
+        public int MaxOccurrences { get; set; }
+
+        public int IgnoreWithin { get; set; }
 
         public int CompareTo(TimingLocation? other)
         {
-            if (other == null) return 1;
-            return Identifier.CompareTo(other.Identifier);
+            return other == null ? 1 : Identifier.CompareTo(other.Identifier);
         }
 
         public bool Equals(TimingLocation? other)

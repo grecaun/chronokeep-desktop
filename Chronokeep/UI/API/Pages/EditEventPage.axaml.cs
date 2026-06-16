@@ -1,24 +1,26 @@
+using System;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Chronokeep.Constants;
+using Chronokeep.Helpers;
 using Chronokeep.Network.API;
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.Util;
-using System;
-using System.Linq;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
 public partial class EditEventPage : UserControl
 {
-    private readonly EditAPIWindow window;
+    private readonly EditApiWindow window;
 
-    private readonly APIObject api;
+    private readonly ApiObject api;
     private readonly string slug;
 
     private GetEventResponse? apiEvent;
 
-    public EditEventPage(EditAPIWindow window, APIObject api, string slug)
+    public EditEventPage(EditApiWindow window, ApiObject api, string slug)
     {
         InitializeComponent();
         this.window = window;
@@ -31,92 +33,93 @@ public partial class EditEventPage : UserControl
     {
         try
         {
-            apiEvent = await APIHandlers.GetEvent(api, slug);
-        }
-        catch (APIException ex)
-        {
-            DialogBox.Show(ex.Message);
-            window.Close();
-            return;
-        }
-        nameBox.Text = apiEvent.Event.Name;
-        slugBox.Text = apiEvent.Event.Slug;
-        contactBox.Text = apiEvent.Event.ContactEmail;
-        websiteBox.Text = apiEvent.Event.Website;
-        imageBox.Text = apiEvent.Event.Image;
-        restrictBox.IsChecked = apiEvent.Event.AccessRestricted == true;
-        ComboBoxItem? type = null;
-        foreach (ComboBoxItem? item in typeBox.Items.Cast<ComboBoxItem?>())
-        {
-
-            if (item!.Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase)
-                && apiEvent.Event.Type.Equals(Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                type = item;
+                apiEvent = await ApiHandlers.GetEvent(api, slug);
             }
-            else if (item.Content.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase)
-                && apiEvent.Event.Type.Equals(Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_TIME, StringComparison.OrdinalIgnoreCase))
+            catch (ApiException ex)
             {
-                type = item;
+                DialogBox.Show(ex.Message);
+                window.Close();
+                return;
             }
-            else if (item.Content.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase)
-                && apiEvent.Event.Type.Equals(Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA, StringComparison.OrdinalIgnoreCase))
+            NameBox.Text = apiEvent.Event.Name;
+            SlugBox.Text = apiEvent.Event.Slug;
+            ContactBox.Text = apiEvent.Event.ContactEmail;
+            WebsiteBox.Text = apiEvent.Event.Website;
+            ImageBox.Text = apiEvent.Event.Image;
+            RestrictBox.IsChecked = apiEvent.Event.AccessRestricted;
+            ComboBoxItem? type = null;
+            foreach (object? item in TypeBox.Items)
             {
-                type = item;
+                if (item is not ComboBoxItem cbi) continue;
+                if (cbi.Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase)
+                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase)
+                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_TIME, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase)
+                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA, StringComparison.OrdinalIgnoreCase))
+                {
+                    type = cbi;
+                }
             }
+            if (type != null)
+            {
+                TypeBox.SelectedItem = type;
+            }
+            else
+            {
+                TypeBox.SelectedIndex = 0;
+            }
+            EventPanel.IsVisible = true;
+            HoldingLabel.IsVisible = false;
+            SaveButton.IsEnabled = true;
         }
-        if (type != null)
+        catch (Exception)
         {
-            typeBox.SelectedItem = type;
+            Log.D("UI.API.Pages.EditEventPage", "Error getting event.");
         }
-        else
-        {
-            typeBox.SelectedIndex = 0;
-        }
-        eventPanel.IsVisible = true;
-        holdingLabel.IsVisible = false;
-        SaveButton.IsEnabled = true;
     }
 
-    private async void Done_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Done_Click(object? sender, RoutedEventArgs e)
     {
         try
         {
-            string? type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
-            if (((ComboBoxItem)typeBox.SelectedItem!).Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase))
+            string type = APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
+            if (((ComboBoxItem)TypeBox.SelectedItem!).Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase))
             {
-                type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
+                type = APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
             }
-            else if (((ComboBoxItem)typeBox.SelectedItem).Content!.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase))
+            else if (((ComboBoxItem)TypeBox.SelectedItem).Content!.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase))
             {
-                type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
+                type = APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
             }
-            else if (((ComboBoxItem)typeBox.SelectedItem).Content!.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase))
+            else if (((ComboBoxItem)TypeBox.SelectedItem).Content!.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase))
             {
-                type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
+                type = APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
             }
-
-            ModifyEventResponse? addResponse = await APIHandlers.UpdateEvent(api, new APIEvent
+            await ApiHandlers.UpdateEvent(api, new ApiEvent
             {
-                Name = nameBox.Text!,
-                CertificateName = certNameBox.Text!,
-                Slug = slugBox.Text!,
-                Website = websiteBox.Text!,
-                Image = imageBox.Text!,
-                ContactEmail = contactBox.Text!,
-                AccessRestricted = restrictBox.IsChecked == true,
+                Name = NameBox.Text!,
+                CertificateName = CertNameBox.Text!,
+                Slug = SlugBox.Text!,
+                Website = WebsiteBox.Text!,
+                Image = ImageBox.Text!,
+                ContactEmail = ContactBox.Text!,
+                AccessRestricted = RestrictBox.IsChecked == true,
                 Type = type
             });
             window.Close();
         }
-        catch (APIException ex)
+        catch (ApiException ex)
         {
             DialogBox.Show(ex.Message);
-            return;
+        }
+        catch (Exception)
+        {
+            Log.D("UI.API.Pages.EditEventPage", "Error finishing.");
         }
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         window.Close();
     }

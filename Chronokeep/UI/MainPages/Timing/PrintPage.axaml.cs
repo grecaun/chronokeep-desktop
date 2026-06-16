@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.MainPages.Timing;
 
@@ -35,16 +36,13 @@ public partial class PrintPage : UserControl, ISubPage
         }
 
         List<Distance> distances = database.GetDistances(theEvent.Identifier);
-        distances.Sort((x1, x2) => x1.Name.CompareTo(x2.Name));
-        foreach (Distance d in distances)
+        distances.Sort((x1, x2) => string.Compare(x1.Name, x2.Name, StringComparison.Ordinal));
+        foreach (Distance d in distances.Where(d => d.LinkedDistance <= 0))
         {
-            if (d.LinkedDistance <= 0)
+            DistancesBox.Items.Add(new ListBoxItem()
             {
-                DistancesBox.Items.Add(new ListBoxItem()
-                {
-                    Content = d.Name
-                });
-            }
+                Content = d.Name
+            });
         }
         parent.SetReaders([], false);
     }
@@ -58,7 +56,7 @@ public partial class PrintPage : UserControl, ISubPage
     private string GetOverallPrintableDocument(List<string> distances)
     {
         // Get all results for the race
-        List<TimeResult>? results = database.GetTimingResults(theEvent!.Identifier);
+        List<TimeResult> results = database.GetTimingResults(theEvent!.Identifier);
         // Remove all unknown participants
         results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
         results.RemoveAll(x => x.DistanceName.Length < 1);
@@ -100,13 +98,13 @@ public partial class PrintPage : UserControl, ISubPage
             }
             if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
             {
-                if (!dnfResultDictionary.TryGetValue(result.DistanceName, out List<TimeResult>? oDNFResList))
+                if (!dnfResultDictionary.TryGetValue(result.DistanceName, out List<TimeResult>? oDnfResList))
                 {
-                    oDNFResList = [];
-                    dnfResultDictionary[result.DistanceName] = oDNFResList;
+                    oDnfResList = [];
+                    dnfResultDictionary[result.DistanceName] = oDnfResList;
                 }
 
-                oDNFResList.Add(result);
+                oDnfResList.Add(result);
             }
             else
             {
@@ -127,7 +125,7 @@ public partial class PrintPage : UserControl, ISubPage
     private string GetGenderPrintableDocument(List<string> distances)
     {
         // Get all finish results for the race
-        List<TimeResult>? results = database.GetTimingResults(theEvent!.Identifier);
+        List<TimeResult> results = database.GetTimingResults(theEvent!.Identifier);
         // Remove all unknown participants
         results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
         results.RemoveAll(x => x.DistanceName.Length < 1);
@@ -216,7 +214,7 @@ public partial class PrintPage : UserControl, ISubPage
         // Add an age group for our unknown age people/
         ageGroups[Constants.Timing.TIMERESULT_DUMMYAGEGROUP] = new(theEvent.Identifier, Constants.Timing.COMMON_AGEGROUPS_DISTANCEID, -1, 3000);
         // Get all finish results for the race
-        List<TimeResult>? results = database.GetTimingResults(theEvent.Identifier);
+        List<TimeResult> results = database.GetTimingResults(theEvent.Identifier);
         // Remove all unknown participants
         results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
         results.RemoveAll(x => x.DistanceName.Length < 1);
@@ -287,7 +285,7 @@ public partial class PrintPage : UserControl, ISubPage
             Dictionary<(int, string), List<TimeResult>> lDistResDict = distanceResults[divName];
             foreach ((int ag, string gender) in lDistResDict.Keys)
             {
-                List<TimeResult>? lDistResList = lDistResDict[(ag, gender)];
+                List<TimeResult> lDistResList = lDistResDict[(ag, gender)];
                 // get rid of non-finish results
                 lDistResList.RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
                 // sort results
@@ -316,12 +314,13 @@ public partial class PrintPage : UserControl, ISubPage
 
     public void Reader(string reader) { }
 
-    private async void Save_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Save_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.PrintPage", "All times - save clicked.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            Log.D("UI.Timing.PrintPage", "All times - save clicked.");
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
@@ -331,10 +330,10 @@ public partial class PrintPage : UserControl, ISubPage
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.PDFType],
-                SuggestedFileName = string.Format("{0}-{1}-Results.{2}", theEvent!.YearCode, theEvent.Name, "pdf").Replace(' ', '-'),
+                SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Results.pdf".Replace(' ', '-'),
                 SuggestedStartLocation = startingFolder,
             });
             List<string> divsToPrint = [];
@@ -342,98 +341,97 @@ public partial class PrintPage : UserControl, ISubPage
             {
                 foreach (object? divItem in DistancesBox.SelectedItems)
                 {
-                    if (divItem is ListBoxItem div && div.Content != null)
+                    if (divItem is not ListBoxItem { Content: not null } div) continue;
+                    if (div.Content.Equals("All"))
                     {
-                        if (div.Content.Equals("All"))
-                        {
-                            divsToPrint.Clear();
-                            break;
-                        }
-                        divsToPrint.Add(div.Content.ToString()!);
+                        divsToPrint.Clear();
+                        break;
                     }
+                    divsToPrint.Add(div.Content.ToString()!);
                 }
             }
-            if (file is not null)
+
+            if (file is null) return;
+            string htmlString;
+            switch (PlacementType.SelectedIndex)
             {
-                string HTML_String;
-                if (PlacementType.SelectedIndex == 0)
+                case 0:
+                    htmlString = GetOverallPrintableDocument(divsToPrint);
+                    break;
+                case 1:
+                    htmlString = GetGenderPrintableDocument(divsToPrint);
+                    break;
+                case 2:
+                    htmlString = GetAgeGroupPrintableDocument(divsToPrint);
+                    break;
+                default:
+                    DialogBox.Show("Please select a type.");
+                    return;
+            }
+            try
+            {
+                string weasyName;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    HTML_String = GetOverallPrintableDocument(divsToPrint);
+                    weasyName = Path.Combine(Directory.GetCurrentDirectory(), "weasyprint.exe");
                 }
-                else if (PlacementType.SelectedIndex == 1)
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    HTML_String = GetGenderPrintableDocument(divsToPrint);
-                }
-                else if (PlacementType.SelectedIndex == 2)
-                {
-                    HTML_String = GetAgeGroupPrintableDocument(divsToPrint);
+                    weasyName = "weasyprint";
+                    using Process testWeasy = new();
+                    testWeasy.StartInfo.FileName = "which";
+                    testWeasy.StartInfo.Arguments = weasyName;
+                    testWeasy.Start();
+                    await testWeasy.WaitForExitAsync();
+                    testWeasy.Close();
+                    if (testWeasy.ExitCode != 0)
+                    {
+                        DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
+                            "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
+                        return;
+                    }
                 }
                 else
                 {
-                    DialogBox.Show("Please select a type.");
+                    DialogBox.Show("Operating System detected does not support this function currently.");
                     return;
                 }
-                try
+                // Write HTML to a temp file.
+                string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
+                await using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
+                await streamwriter.WriteAsync(htmlString);
+                streamwriter.Close();
+                // Delete old file if it exists.
+                string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
+                if (File.Exists(filePath))
                 {
-                    string weasyName;
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        weasyName = Path.Combine(Directory.GetCurrentDirectory(), "weasyprint.exe");
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        weasyName = "weasyprint";
-                        using Process test_weasy = new();
-                        test_weasy.StartInfo.FileName = "which";
-                        test_weasy.StartInfo.Arguments = weasyName;
-                        test_weasy.Start();
-                        await test_weasy.WaitForExitAsync();
-                        test_weasy.Close();
-                        if (test_weasy.ExitCode != 0)
-                        {
-                            DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
-                                "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        DialogBox.Show("Operating System detected does not support this function currently.");
-                        return;
-                    }
-                    // Write HTML to a temp file.
-                    string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
-                    using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
-                    streamwriter.Write(HTML_String);
-                    streamwriter.Close();
-                    // Delete old file if it exists.
-                    var filePath = file.TryGetLocalPath()!.Replace(' ', '-');
-                    if (File.Exists(filePath))
-                    {
-                        File.Delete(filePath);
-                    }
-                    // Use weasyprint to convert our temp html file to a saved pdf file.
-                    using Process create_pdf = new();
-                    create_pdf.StartInfo.FileName = weasyName;
-                    create_pdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
-                    create_pdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    create_pdf.Start();
-                    // wait for it to exit then kill it, even if the wait timed out
-                    await create_pdf.WaitForExitAsync();
-                    create_pdf.Close();
-                    // delete old file
-                    File.Delete(tmpFile);
-                    DialogBox.Show("File saved.");
+                    File.Delete(filePath);
                 }
-                catch
-                {
-                    DialogBox.Show($"Unable to save file.");
-                }
+                // Use weasyprint to convert our temp html file to a saved pdf file.
+                using Process createPdf = new();
+                createPdf.StartInfo.FileName = weasyName;
+                createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
+                createPdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                createPdf.Start();
+                // wait for it to exit then kill it, even if the wait timed out
+                await createPdf.WaitForExitAsync();
+                createPdf.Close();
+                // delete old file
+                File.Delete(tmpFile);
+                DialogBox.Show("File saved.");
             }
+            catch
+            {
+                DialogBox.Show($"Unable to save file.");
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.PrintPage", "Error saving.");
         }
     }
 
-    private void Done_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Done_Click(object? sender, RoutedEventArgs e)
     {
         parent.LoadMainDisplay();
     }

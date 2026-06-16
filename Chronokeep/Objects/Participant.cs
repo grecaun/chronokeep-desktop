@@ -6,25 +6,8 @@ namespace Chronokeep.Objects
 {
     public class Participant : IEquatable<Participant>, IComparable<Participant>
     {
-        private static string CurrentEventDate = "";
-
-        private int identifier = Constants.Timing.PARTICIPANT_DUMMYIDENTIFIER;
-        private string firstName = "", lastName = "", street = "", city = "", state = "", zip = "", email = "", phone = "",
-            mobile = "", parent = "", country = "", street2 = "", gender = "", birthdate = "", emergencyName = "",
-            emergencyPhone = "";
-        private readonly EventSpecific eventSpecific;
-
-        public Participant()
-        {
-            firstName = "";
-            lastName = "";
-            this.street = "";
-            this.city = "";
-            this.state = "";
-            this.zip = "";
-            this.birthdate = "";
-            eventSpecific = new EventSpecific();
-        }
+        private static string currentEventDate = "";
+        private string birthdate;
 
         public Participant(
             string first, string last, string street, string city, string state, string zip,
@@ -33,23 +16,23 @@ namespace Chronokeep.Objects
             string ecName, string ecPhone
             )
         {
-            this.birthdate = birthday;
-            firstName = first ?? "";
-            lastName = last ?? "";
-            this.street = street ?? "";
-            this.city = city ?? "";
-            this.state = state ?? "";
-            this.zip = zip ?? "";
-            eventSpecific = epi;
-            this.email = email ?? "";
-            this.phone = phone ?? "";
-            this.mobile = mobile ?? "";
-            this.parent = parent ?? "";
-            this.country = country ?? "";
-            this.street2 = street2 ?? "";
-            this.gender = gender ?? "";
-            emergencyName = ecName ?? "Emergency Services";
-            emergencyPhone = ecPhone ?? "911";
+            birthdate = birthday;
+            FirstName = first;
+            LastName = last;
+            Street = street;
+            City = city;
+            State = state;
+            Zip = zip;
+            EventSpecific = epi;
+            Email = email;
+            Phone = phone;
+            Mobile = mobile;
+            Parent = parent;
+            Country = country;
+            Street2 = street2;
+            Gender = gender;
+            EcName = ecName;
+            EcPhone = ecPhone;
             Trim();
             FormatData();
         }
@@ -61,449 +44,420 @@ namespace Chronokeep.Objects
             string ecName, string ecPhone
             )
         {
-            this.birthdate = birthday;
-            identifier = id;
-            firstName = first ?? "";
-            lastName = last ?? "";
-            this.street = street ?? "";
-            this.city = city ?? "";
-            this.state = state ?? "";
-            this.zip = zip ?? "";
-            eventSpecific = epi ?? EventSpecific.Blank();
-            this.email = email ?? "";
-            this.phone = phone ?? "";
-            this.mobile = mobile ?? "";
-            this.parent = parent ?? "";
-            this.country = country ?? "";
-            this.street2 = street2 ?? "";
-            this.gender = gender ?? "";
-            emergencyName = ecName ?? "Emergency Services";
-            emergencyPhone = ecPhone ?? "911";
+            birthdate = birthday;
+            Identifier = id;
+            FirstName = first;
+            LastName = last;
+            Street = street;
+            City = city;
+            State = state;
+            Zip = zip;
+            EventSpecific = epi ?? EventSpecific.Blank();
+            Email = email;
+            Phone = phone;
+            Mobile = mobile;
+            Parent = parent;
+            Country = country;
+            Street2 = street2;
+            Gender = gender;
+            EcName = ecName;
+            EcPhone = ecPhone;
             Trim();
         }
 
-        public int Identifier { get => identifier; set => identifier = value; }
-        public string Birthdate { get => GetBirthdateString(); }
+        public int Identifier { get; set; } = Constants.Timing.PARTICIPANT_DUMMYIDENTIFIER;
+        public string Birthdate => GetBirthdateString();
 
-        public string GetBirthdateString()
+        private string GetBirthdateString()
         {
-            if (DateTime.TryParse(birthdate, out DateTime bd))
-            {
-                if (bd.Year < (DateTime.Now.Year - 120))
-                {
-                    return "";
-                }
-                return birthdate;
-            }
-            return "";
+            if (!DateTime.TryParse(birthdate, out DateTime bd)) return "";
+            return bd.Year < (DateTime.Now.Year - 120) ? "" : birthdate;
         }
 
-        internal EventSpecific EventSpecific { get => eventSpecific; }
+        internal EventSpecific EventSpecific { get; }
 
         internal void Trim()
         {
             birthdate = birthdate.Trim();
-            firstName = firstName.Trim();
-            lastName = lastName.Trim();
-            street = (street ?? "").Trim();
-            street2 = (street2 ?? "").Trim();
-            city = (city ?? "").Trim();
-            state = (state ?? "").Trim();
-            zip = (zip ?? "").Trim();
-            eventSpecific.Trim();
-            email = (email ?? "").Trim();
-            phone = (phone ?? "").Trim();
-            mobile = (mobile ?? "").Trim();
-            parent = (parent ?? "").Trim();
-            country = (country ?? "").Trim();
-            gender = (gender ?? "").Trim();
-            emergencyName = (emergencyName ?? "").Trim();
-            emergencyPhone = (emergencyPhone ?? "").Trim();
+            FirstName = FirstName.Trim();
+            LastName = LastName.Trim();
+            Street = Street.Trim();
+            Street2 = Street2.Trim();
+            City = City.Trim();
+            State = State.Trim();
+            Zip = Zip.Trim();
+            EventSpecific.Trim();
+            Email = Email.Trim();
+            Phone = Phone.Trim();
+            Mobile = Mobile.Trim();
+            Parent = Parent.Trim();
+            Country = Country.Trim();
+            Gender = Gender.Trim();
+            EcName = EcName.Trim();
+            EcPhone = EcPhone.Trim();
         }
 
         internal void FormatData()
         {
-            if (EventSpecific.Bib == null)
+            if (!string.IsNullOrEmpty(FirstName))
             {
-                EventSpecific.Bib = "";
+                FirstName = CapitalizeFirst(FirstName);
             }
-            if (EventSpecific.Apparel == null)
+            if (!string.IsNullOrEmpty(LastName))
             {
-                EventSpecific.Apparel = "";
+                LastName = CapitalizeFirst(LastName);
             }
-            if (firstName != null && firstName.Length > 0)
+            if (!string.IsNullOrEmpty(City))
             {
-                firstName = CapitalizeFirst(firstName);
+                City = CapitalizeFirst(City);
             }
-            if (lastName != null && lastName.Length > 0)
+            if (!string.IsNullOrEmpty(Street))
             {
-                lastName = CapitalizeFirst(lastName);
-            }
-            if (city != null && city.Length > 0)
-            {
-                city = CapitalizeFirst(city);
-            }
-            if (street != null && street.Length > 0)
-            {
-                string[] addressArray = street.Split(',');
-                if (addressArray.Length == 2 && street2.Length == 0)
+                string[] addressArray = Street.Split(',');
+                switch (addressArray.Length)
                 {
-                    street = addressArray[0];
-                    street2 = addressArray[1];
-                }
-                else if (addressArray.Length > 2)
-                {
-                    street = addressArray[0];
+                    case 2 when Street2.Length == 0:
+                        Street = addressArray[0];
+                        Street2 = addressArray[1];
+                        break;
+                    case > 2:
+                        Street = addressArray[0];
+                        break;
                 }
             }
-            if (country != null && country.Length > 0)
+            if (!string.IsNullOrEmpty(Country))
             {
-                if (country.Equals("US", StringComparison.OrdinalIgnoreCase) || country.Equals("United States of America", StringComparison.OrdinalIgnoreCase) || country.Equals("United States", StringComparison.OrdinalIgnoreCase))
+                if (Country.Equals("USA", StringComparison.OrdinalIgnoreCase) || Country.Equals("United States of America", StringComparison.OrdinalIgnoreCase) || Country.Equals("United States", StringComparison.OrdinalIgnoreCase))
                 {
-                    country = "USA";
+                    Country = "US";
                 }
-                else if (country.Equals("Canad", StringComparison.OrdinalIgnoreCase) || country.Equals("Canada", StringComparison.OrdinalIgnoreCase))
+                else if (Country.Equals("CAN", StringComparison.OrdinalIgnoreCase) || Country.Equals("Canad", StringComparison.OrdinalIgnoreCase) || Country.Equals("Canada", StringComparison.OrdinalIgnoreCase))
                 {
-                    country = "CAN";
+                    Country = "CA";
                 }
             }
-            if (state != null && state.Length > 0)
+            if (!string.IsNullOrEmpty(State))
             {
-                if (state.Length > 2)
+                if (State.Length > 2)
                 {
-                    if (state.Equals("Alabama", StringComparison.OrdinalIgnoreCase))
+                    if (State.Equals("Alabama", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AL";
+                        State = "AL";
                     }
-                    else if (state.Equals("Alaska", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Alaska", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AK";
+                        State = "AK";
                     }
-                    else if (state.Equals("Arizona", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Arizona", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AZ";
+                        State = "AZ";
                     }
-                    else if (state.Equals("Arkansas", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Arkansas", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AR";
+                        State = "AR";
                     }
-                    else if (state.Equals("California", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("California", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "CA";
+                        State = "CA";
                     }
-                    else if (state.Equals("Colorado", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Colorado", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "CO";
+                        State = "CO";
                     }
-                    else if (state.Equals("Connecticut", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Connecticut", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "CT";
+                        State = "CT";
                     }
-                    else if (state.Equals("Delaware", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Delaware", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "DE";
+                        State = "DE";
                     }
-                    else if (state.Equals("Florida", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Florida", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "FL";
+                        State = "FL";
                     }
-                    else if (state.Equals("Georgia", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Georgia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "GA";
+                        State = "GA";
                     }
-                    else if (state.Equals("Hawaii", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Hawaii", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "HI";
+                        State = "HI";
                     }
-                    else if (state.Equals("Idaho", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Idaho", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "ID";
+                        State = "ID";
                     }
-                    else if (state.Equals("Illinois", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Illinois", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "IL";
+                        State = "IL";
                     }
-                    else if (state.Equals("Indiana", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Indiana", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "IN";
+                        State = "IN";
                     }
-                    else if (state.Equals("Iowa", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Iowa", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "IA";
+                        State = "IA";
                     }
-                    else if (state.Equals("Kansas", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Kansas", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "KS";
+                        State = "KS";
                     }
-                    else if (state.Equals("Kentucky", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Kentucky", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "KY";
+                        State = "KY";
                     }
-                    else if (state.Equals("Louisianna", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Louisianna", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "LA";
+                        State = "LA";
                     }
-                    else if (state.Equals("Maine", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Maine", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "ME";
+                        State = "ME";
                     }
-                    else if (state.Equals("Maryland", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Maryland", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MD";
+                        State = "MD";
                     }
-                    else if (state.Equals("Massachusetts", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Massachusetts", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MA";
+                        State = "MA";
                     }
-                    else if (state.Equals("Michigan", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Michigan", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MI";
+                        State = "MI";
                     }
-                    else if (state.Equals("Minnesota", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Minnesota", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MN";
+                        State = "MN";
                     }
-                    else if (state.Equals("Mississippi", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Mississippi", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MS";
+                        State = "MS";
                     }
-                    else if (state.Equals("Missouri", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Missouri", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MO";
+                        State = "MO";
                     }
-                    else if (state.Equals("Montana", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Montana", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MT";
+                        State = "MT";
                     }
-                    else if (state.Equals("Nebraska", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Nebraska", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NE";
+                        State = "NE";
                     }
-                    else if (state.Equals("Nevada", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Nevada", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NV";
+                        State = "NV";
                     }
-                    else if (state.Equals("New Hampshire", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("New Hampshire", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NH";
+                        State = "NH";
                     }
-                    else if (state.Equals("New Jersey", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("New Jersey", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NJ";
+                        State = "NJ";
                     }
-                    else if (state.Equals("New Mexico", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("New Mexico", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NM";
+                        State = "NM";
                     }
-                    else if (state.Equals("New York", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("New York", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NY";
+                        State = "NY";
                     }
-                    else if (state.Equals("North Carolina", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("North Carolina", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "NC";
+                        State = "NC";
                     }
-                    else if (state.Equals("North Dakota", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("North Dakota", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "ND";
+                        State = "ND";
                     }
-                    else if (state.Equals("Ohio", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Ohio", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "OH";
+                        State = "OH";
                     }
-                    else if (state.Equals("Oklahoma", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Oklahoma", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "OK";
+                        State = "OK";
                     }
-                    else if (state.Equals("Oregon", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Oregon", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "OR";
+                        State = "OR";
                     }
-                    else if (state.Equals("Pennsylvania", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Pennsylvania", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "PA";
+                        State = "PA";
                     }
-                    else if (state.Equals("Rhode Island", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Rhode Island", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "RI";
+                        State = "RI";
                     }
-                    else if (state.Equals("South Carolina", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("South Carolina", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "SC";
+                        State = "SC";
                     }
-                    else if (state.Equals("South Dakota", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("South Dakota", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "SD";
+                        State = "SD";
                     }
-                    else if (state.Equals("Tennessee", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Tennessee", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "TN";
+                        State = "TN";
                     }
-                    else if (state.Equals("Texas", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Texas", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "TX";
+                        State = "TX";
                     }
-                    else if (state.Equals("Utah", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Utah", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "UT";
+                        State = "UT";
                     }
-                    else if (state.Equals("Vermont", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Vermont", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "VT";
+                        State = "VT";
                     }
-                    else if (state.Equals("Virginia", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Virginia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "VA";
+                        State = "VA";
                     }
-                    else if (state.Equals("Washington", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Washington", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "WA";
+                        State = "WA";
                     }
-                    else if (state.Equals("West Virginia", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("West Virginia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "WV";
+                        State = "WV";
                     }
-                    else if (state.Equals("Wisconsin", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Wisconsin", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "WI";
+                        State = "WI";
                     }
-                    else if (state.Equals("Wyoming", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Wyoming", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "WY";
+                        State = "WY";
                     }
-                    else if (state.Equals("American Samoa", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("American Samoa", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AS";
+                        State = "AS";
                     }
-                    else if (state.Equals("District of Columbia", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("District of Columbia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "DC";
+                        State = "DC";
                     }
-                    else if (state.Equals("Federated States of Micronesia", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Federated States of Micronesia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "FM";
+                        State = "FM";
                     }
-                    else if (state.Equals("Guam", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Guam", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "GU";
+                        State = "GU";
                     }
-                    else if (state.Equals("Marshall Islands", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Marshall Islands", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MH";
+                        State = "MH";
                     }
-                    else if (state.Equals("Northern Mariana Islands", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Northern Mariana Islands", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "MP";
+                        State = "MP";
                     }
-                    else if (state.Equals("Puerto Rico", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Puerto Rico", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "PR";
+                        State = "PR";
                     }
-                    else if (state.Equals("Palau", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Palau", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "PW";
+                        State = "PW";
                     }
-                    else if (state.Equals("Virgin Islands", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Virgin Islands", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "VI";
+                        State = "VI";
                     }
-                    else if (state.Equals("Armed Forces Africa", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Armed Forces Americas", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AE";
+                        State = "AA";
                     }
-                    else if (state.Equals("Armed Forces Americas", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Armed Forces Africa", StringComparison.OrdinalIgnoreCase) || State.Equals("Armed Forces Canada", StringComparison.OrdinalIgnoreCase) || State.Equals("Armed Forces Europe", StringComparison.OrdinalIgnoreCase) || State.Equals("Armed Forces Middle East", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AA";
+                        State = "AE";
                     }
-                    else if (state.Equals("Armed Forces Canada", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("Armed Forces Pacific", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AE";
+                        State = "AP";
                     }
-                    else if (state.Equals("Armed Forces Europe", StringComparison.OrdinalIgnoreCase))
+                    else if (State.Equals("British Columbia", StringComparison.OrdinalIgnoreCase))
                     {
-                        state = "AE";
-                    }
-                    else if (state.Equals("Armed Forces Middle East", StringComparison.OrdinalIgnoreCase))
-                    {
-                        state = "AE";
-                    }
-                    else if (state.Equals("Armed Forces Pacific", StringComparison.OrdinalIgnoreCase))
-                    {
-                        state = "AP";
-                    }
-                    else if (state.Equals("British Columbia", StringComparison.OrdinalIgnoreCase))
-                    {
-                        state = "BC";
+                        State = "BC";
                     }
                 }
                 else
                 {
-                    state = state.ToUpper();
+                    State = State.ToUpper();
                 }
             }
             string tmpPhone;
-            if (phone != null && phone.Length > 0)
+            if (!string.IsNullOrEmpty(Phone))
             {
-                tmpPhone = phone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
-                if (tmpPhone.Length == 10)
+                tmpPhone = Phone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
+                Phone = tmpPhone.Length switch
                 {
-                    phone = tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4);
-                }
-                else if (tmpPhone.Length == 11)
-                {
-                    phone = tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" + tmpPhone.Substring(7, 4);
-                }
+                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
+                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
+                          tmpPhone.Substring(7, 4),
+                    _ => Phone
+                };
             }
-            if (mobile != null && mobile.Length > 0)
+            if (!string.IsNullOrEmpty(Mobile))
             {
-                tmpPhone = mobile.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
-                if (tmpPhone.Length == 10)
+                tmpPhone = Mobile.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
+                Mobile = tmpPhone.Length switch
                 {
-                    mobile = tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4);
-                }
-                else if (tmpPhone.Length == 11)
-                {
-                    mobile = tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" + tmpPhone.Substring(7, 4);
-                }
+                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
+                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
+                          tmpPhone.Substring(7, 4),
+                    _ => Mobile
+                };
             }
-            if (emergencyPhone != null && emergencyPhone.Length > 0)
+            if (!string.IsNullOrEmpty(EcPhone))
             {
-                tmpPhone = emergencyPhone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
-                if (tmpPhone.Length == 10)
+                tmpPhone = EcPhone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
+                EcPhone = tmpPhone.Length switch
                 {
-                    emergencyPhone = tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4);
-                }
-                else if (tmpPhone.Length == 11)
-                {
-                    emergencyPhone = tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" + tmpPhone.Substring(7, 4);
-                }
+                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
+                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
+                          tmpPhone.Substring(7, 4),
+                    _ => EcPhone
+                };
             }
-            if (gender != null && gender.Length > 0)
+            if (!string.IsNullOrEmpty(Gender))
             {
-                gender = CapitalizeFirstAll(gender.Trim());
-                if (gender.Equals("M", StringComparison.OrdinalIgnoreCase)
-                    || gender.Equals("Male", StringComparison.OrdinalIgnoreCase))
+                Gender = CapitalizeFirstAll(Gender.Trim());
+                if (Gender.Equals("M", StringComparison.OrdinalIgnoreCase)
+                    || Gender.Equals("Male", StringComparison.OrdinalIgnoreCase))
                 {
-                    gender = "Man";
+                    Gender = "Man";
                 }
-                else if (gender.Equals("F", StringComparison.OrdinalIgnoreCase)
-                    || gender.Equals("Female", StringComparison.OrdinalIgnoreCase)
-                    || gender.Equals("W", StringComparison.OrdinalIgnoreCase))
+                else if (Gender.Equals("F", StringComparison.OrdinalIgnoreCase)
+                    || Gender.Equals("Female", StringComparison.OrdinalIgnoreCase)
+                    || Gender.Equals("W", StringComparison.OrdinalIgnoreCase))
                 {
-                    gender = "Woman";
+                    Gender = "Woman";
                 }
-                else if (gender.Equals("NB", StringComparison.OrdinalIgnoreCase) ||
-                    gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ||
-                    gender.Equals("non binary", StringComparison.OrdinalIgnoreCase) ||
-                    gender.Equals("nonbinary", StringComparison.OrdinalIgnoreCase) ||
-                    gender.Equals("X", StringComparison.OrdinalIgnoreCase))
+                else if (Gender.Equals("NB", StringComparison.OrdinalIgnoreCase) ||
+                    Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ||
+                    Gender.Equals("non binary", StringComparison.OrdinalIgnoreCase) ||
+                    Gender.Equals("nonbinary", StringComparison.OrdinalIgnoreCase) ||
+                    Gender.Equals("X", StringComparison.OrdinalIgnoreCase))
                 {
-                    gender = "Non-Binary";
+                    Gender = "Non-Binary";
                 }
             }
             else
             {
-                gender = "Not Specified";
+                Gender = "Not Specified";
             }
             string dummyYear = $"{DateTime.Now.Year - 130}";
             if (!DateTime.TryParse(birthdate, out DateTime birthDateTime))
@@ -513,27 +467,24 @@ namespace Chronokeep.Objects
             birthdate = birthDateTime.ToShortDateString();
         }
 
-        internal static bool AllCaps(string val) => val.Equals(val.ToUpper());
+        private static bool AllCaps(string val) => val.Equals(val.ToUpper());
 
-        internal static string CapitalizeFirst(string val)
+        private static string CapitalizeFirst(string val)
         {
             string outval = val;
             if (AllCaps(val))
             {
                 outval = val.ToLower();
             }
-            if (outval.Length < 1)
+            return outval.Length switch
             {
-                return outval;
-            }
-            else if (outval.Length == 1)
-            {
-                return outval.ToUpper();
-            }
-            return string.Concat(outval[..1].ToUpper(), outval.AsSpan(1, outval.Length - 1));
+                < 1 => outval,
+                1 => outval.ToUpper(),
+                _ => string.Concat(outval[..1].ToUpper(), outval.AsSpan(1, outval.Length - 1))
+            };
         }
 
-        internal static string CapitalizeFirstAll(string val)
+        private static string CapitalizeFirstAll(string val)
         {
             string[] tmp = val.Split(' ');
             StringBuilder output = new();
@@ -545,49 +496,45 @@ namespace Chronokeep.Objects
         }
 
         // Event Specific binding stuffs
-        public int EventIdentifier { get => eventSpecific.EventIdentifier; }
-        public string Bib { get => eventSpecific.Bib; }
-        public string Distance { get => eventSpecific.DistanceName; }
-        public string CheckedIn { get => eventSpecific.CheckedIn == 0 ? "No" : "Yes"; }
-        public bool IsCheckedIn { get => EventSpecific.CheckedIn == 1; }
-        public string Owes { get => eventSpecific.Owes; }
-        public string Other { get => eventSpecific.Other; }
-        public string Comments { get => eventSpecific.Comments; }
-        public int Status { get => eventSpecific.Status; set => eventSpecific.Status = value; }
-        public string Apparel { get => eventSpecific.Apparel; }
+        public int EventIdentifier => EventSpecific.EventIdentifier;
+        public string Bib => EventSpecific.Bib;
+        public string Distance => EventSpecific.DistanceName;
+        public string CheckedInStr => EventSpecific.CheckedIn == 0 ? "No" : "Yes";
+        public bool IsCheckedIn => EventSpecific.CheckedIn == 1;
+        public string Owes => EventSpecific.Owes;
+        public string Other => EventSpecific.Other;
+        public string Comments => EventSpecific.Comments;
+        public int Status { get => EventSpecific.Status; set => EventSpecific.Status = value; }
+        public string Apparel => EventSpecific.Apparel;
 
         // Emergency Contact binding stuffs
-        public string ECName { get => emergencyName; }
-        public string ECPhone { get => emergencyPhone; }
-
-        public string FirstName { get => firstName; }
-        public string LastName { get => lastName; }
-        public string Street { get => street; }
-        public string City { get => city; }
-        public string State { get => state; }
-        public string Zip { get => zip; }
-        public string Email { get => email; }
-        public string Phone { get => phone; }
-        public string Mobile { get => mobile; }
-        public string Parent { get => parent; }
-        public string Country { get => country; }
-        public string Street2 { get => street2; }
-        public string Gender { get => gender; }
-        public bool Anonymous { get => eventSpecific.Anonymous; }
-        public string Division { get => eventSpecific.Division; }
+        public string EcName { get; private set; }
+        public string EcPhone { get; private set; }
+        public string FirstName { get; private set; }
+        public string LastName { get; private set; }
+        public string Street { get; private set; }
+        public string City { get; private set; }
+        public string State { get; private set; }
+        public string Zip { get; private set; }
+        public string Email { get; private set; }
+        public string Phone { get; private set; }
+        public string Mobile { get; private set; }
+        public string Parent { get; private set; }
+        public string Country { get; private set; }
+        public string Street2 { get; private set; }
+        public string Gender { get; private set; }
+        public bool Anonymous => EventSpecific.Anonymous;
+        public string Division => EventSpecific.Division;
 
         public int CompareTo(Participant? other)
         {
             if (other == null) return 1;
-            if (EventSpecific.DistanceIdentifier == other.EventSpecific.DistanceIdentifier)
-            {
-                if (LastName == other.LastName)
-                {
-                    return FirstName.CompareTo(other.FirstName);
-                }
-                return LastName.CompareTo(other.LastName);
-            }
-            return EventSpecific.DistanceName.CompareTo(other.EventSpecific.DistanceName);
+            return EventSpecific.DistanceIdentifier == other.EventSpecific.DistanceIdentifier
+                ? LastName == other.LastName
+                    ? string.Compare(FirstName, other.FirstName, StringComparison.Ordinal)
+                    : string.Compare(LastName, other.LastName, StringComparison.Ordinal)
+                : string.Compare(EventSpecific.DistanceName, other.EventSpecific.DistanceName,
+                    StringComparison.Ordinal);
         }
 
         public bool Equals(Participant? other)
@@ -627,7 +574,7 @@ namespace Chronokeep.Objects
 
         public string Age(string eventDate)
         {
-            if (birthdate == null || birthdate.Length < 1)
+            if (string.IsNullOrEmpty(birthdate))
             {
                 return "";
             }
@@ -638,16 +585,12 @@ namespace Chronokeep.Objects
             {
                 numYears--;
             }
-            if (numYears > 120)
-            {
-                return "";
-            }
-            return Convert.ToString(numYears);
+            return numYears > 120 ? "" : Convert.ToString(numYears);
         }
 
         public int GetAge(string eventDate)
         {
-            if (birthdate == null || birthdate.Length < 1)
+            if (string.IsNullOrEmpty(birthdate))
             {
                 return -1;
             }
@@ -678,50 +621,43 @@ namespace Chronokeep.Objects
             {
                 return bibOne.CompareTo(bibTwo);
             }
-            return one.Bib.CompareTo(two.Bib);
+            return string.Compare(one.Bib, two.Bib, StringComparison.Ordinal);
         }
 
         public static int CompareByName(Participant? one, Participant? two)
         {
             if (two == null || one == null) return 1;
-            if (one.LastName == two.LastName)
-            {
-                return one.FirstName.CompareTo(two.FirstName);
-            }
-            return one.LastName.CompareTo(two.LastName);
+            return one.LastName == two.LastName ? string.Compare(one.FirstName, two.FirstName, StringComparison.Ordinal) : string.Compare(one.LastName, two.LastName, StringComparison.Ordinal);
         }
 
         public bool IsNotMatch(string value)
         {
-            return !EventSpecific.Bib.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)
+            return !EventSpecific.Bib.Contains(value, StringComparison.OrdinalIgnoreCase)
                 && !FirstName.Contains(value, StringComparison.OrdinalIgnoreCase)
                 && !LastName.Contains(value, StringComparison.OrdinalIgnoreCase);
         }
 
-        public string PrettyAnonymous
-        {
-            get => Anonymous == true ? "Yes" : "";
-        }
+        public string PrettyAnonymous => Anonymous ? "Yes" : "";
 
         public void Update(
-            string FirstName,
-            string LastName,
-            string Gender,
-            string Birthdate,
+            string firstName,
+            string lastName,
+            string gender,
+            string birthDate,
             Distance d,
-            string Bib,
-            bool SMSEnabled,
-            string Mobile)
+            string bib,
+            bool smsEnabled,
+            string mobile)
         {
-            firstName = FirstName ?? "";
-            lastName = LastName ?? "";
-            gender = Gender ?? "";
-            birthdate = Birthdate ?? "";
+            FirstName = firstName;
+            LastName = lastName;
+            Gender = gender;
+            birthdate = birthDate;
             EventSpecific.DistanceIdentifier = d.Identifier;
-            EventSpecific.DistanceName = d.Name ?? "";
-            EventSpecific.Bib = Bib ?? "";
-            EventSpecific.SMSEnabled = SMSEnabled;
-            mobile = Mobile ?? "";
+            EventSpecific.DistanceName = d.Name;
+            EventSpecific.Bib = bib;
+            EventSpecific.SMSEnabled = smsEnabled;
+            Mobile = mobile;
             Trim();
             FormatData();
         }
@@ -729,58 +665,55 @@ namespace Chronokeep.Objects
         public void CopyFrom(Participant other)
         {
             EventSpecific.CopyFrom(other.EventSpecific);
-            firstName = other.FirstName;
-            lastName = other.LastName;
-            gender = other.Gender;
+            FirstName = other.FirstName;
+            LastName = other.LastName;
+            Gender = other.Gender;
             birthdate = other.Birthdate;
-            street = other.Street;
-            city = other.City;
-            state = other.State;
-            zip = other.Zip;
-            email = other.Email;
-            phone = other.Phone;
-            mobile = other.Mobile;
-            parent = other.Parent;
-            country = other.Country;
-            street2 = other.Street2;
-            emergencyPhone = other.ECPhone;
-            emergencyName = other.ECName;
+            Street = other.Street;
+            City = other.City;
+            State = other.State;
+            Zip = other.Zip;
+            Email = other.Email;
+            Phone = other.Phone;
+            Mobile = other.Mobile;
+            Parent = other.Parent;
+            Country = other.Country;
+            Street2 = other.Street2;
+            EcPhone = other.EcPhone;
+            EcName = other.EcName;
             Trim();
             FormatData();
         }
 
-        public bool IsSimilar(APIPerson other)
+        public bool IsSimilar(ApiPerson other)
         {
-            return firstName.Equals(other.First, StringComparison.OrdinalIgnoreCase)
-                || lastName.Equals(other.Last, StringComparison.OrdinalIgnoreCase)
-                || (gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
+            return FirstName.Equals(other.First, StringComparison.OrdinalIgnoreCase)
+                || LastName.Equals(other.Last, StringComparison.OrdinalIgnoreCase)
+                || (Gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
                 && birthdate.Equals(other.Birthdate, StringComparison.OrdinalIgnoreCase));
         }
 
         public bool IsSimilar(Registration.Participant other)
         {
-            return firstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase)
-                || lastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase)
-                || (gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
+            return FirstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase)
+                || LastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase)
+                || (Gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
                 && birthdate.Equals(other.Birthdate, StringComparison.OrdinalIgnoreCase));
         }
 
         public bool IsSimilar(Participant other)
         {
-            return firstName.Equals(other.firstName, StringComparison.OrdinalIgnoreCase)
-                || lastName.Equals(other.lastName, StringComparison.OrdinalIgnoreCase)
-                || (gender.Equals(other.gender, StringComparison.OrdinalIgnoreCase)
+            return FirstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase)
+                || LastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase)
+                || (Gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
                 && birthdate.Equals(other.birthdate, StringComparison.OrdinalIgnoreCase));
         }
 
-        public string CurrentAge
-        {
-            get => this.Age(CurrentEventDate);
-        }
+        public string CurrentAge => Age(currentEventDate);
 
         public static void SetCurrentEventDate(string date)
         {
-            CurrentEventDate = date;
+            currentEventDate = date;
         }
     }
 }

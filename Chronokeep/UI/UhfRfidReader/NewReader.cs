@@ -1,51 +1,41 @@
 ﻿using System;
 using System.Threading;
+using Chronokeep.Helpers;
 
 namespace Chronokeep.UI.UhfRfidReader
 {
-    class NewReader(ChipReaderWindow chipReaderWindow)
+    internal class NewReader(ChipReaderWindow chipReaderWindow)
     {
-        private readonly int Delay = 500;
-        private bool KeepAlive = false;
+        private const int Delay = 500;
+        private bool keepAlive;
         private int counter = 1;
-        private RFIDSerial? serial = null;
+        private RfidSerial? serial;
 
-        public void SetSerial(RFIDSerial serial)
+        public void SetSerial(RfidSerial iSerial)
         {
-            this.serial = serial;
+            serial = iSerial;
         }
 
         public void Run()
         {
-            KeepAlive = serial != null;
-            while (KeepAlive)
+            keepAlive = serial != null;
+            while (keepAlive)
             {
-                System.Console.WriteLine("Active - Loop Number " + counter++);
-                Console.Write("Hello? Is anyone there?");
-                RFIDInfo read = serial!.ReadData();
-                if (read.ErrorCode == RFIDError.NOERR)
+                counter++;
+                RfidInfo read = serial!.ReadData();
+                if (read.ErrorCode == RfidError.NOERR)
                 {
-                    Console.WriteLine(" Ahhh! It's a monster!");
-                    chipReaderWindow.AddRFIDItem(read);
-                }
-                else
-                {
-                    Console.WriteLine(" Hmm. Must've been my imagination.");
+                    chipReaderWindow.AddRfidItem(read);
                 }
                 Thread.Sleep(Delay);
             }
-            System.Console.WriteLine("InActive - Finished after " + counter + " loops.");
+            Log.D("UI.UhfRfidReader.NewReader", "InActive - Finished after " + counter + @" loops.");
         }
 
         public void Kill()
         {
-            Console.WriteLine("Kill command received.");
-            KeepAlive = false;
-        }
-
-        public void Stop()
-        {
-            Kill();
+            Log.D("UI.UhfRfidReader.NewReader", "Kill command received.");
+            keepAlive = false;
         }
     }
 }

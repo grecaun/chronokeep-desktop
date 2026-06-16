@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
-             x:Class="Chronokeep.UI.MainPages.Dashboard.APIPage"
+             x:Class="Chronokeep.UI.MainPages.Dashboard.ApiPage"
              Padding="16"
              Background="{DynamicResource PrimaryBackground}"
              CornerRadius="8,0,0,0"
@@ -16,17 +16,12 @@
             <Setter Property="Width" Value="150"/>
         </Style>
     </UserControl.Styles>
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="55"/>
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="1*,55">
         <ListBox
-            Name="APIBox"
+            Name="ApiBox"
             KeyboardNavigation.TabNavigation="Continue"
             Grid.Row="0"
-            />
+        />
         <DockPanel Grid.Row="1" HorizontalAlignment="Center">
             <Button Name="Add"
                     Content="Add API"

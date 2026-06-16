@@ -73,45 +73,45 @@
                 </ListBox>
                 <TextBlock Text="Overall" Margin="0,10"/>
                 <DockPanel HorizontalAlignment="Left" Margin="0,0,0,5">
-                    <ToggleSwitch Name="overallYes" IsChecked="True"/>
+                    <ToggleSwitch Name="OverallYes" IsChecked="True"/>
                     <Label Content="Print" Margin="0,0,58,0"/>
                     <TextBox Text="3"
-                             Name="overallNumberParticipants"
+                             Name="OverallNumberParticipants"
                              TextInput="IsNumber"
                              Width="40"/>
                 </DockPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                    <ToggleSwitch Name="overallExcludeAG" IsChecked="False"/>
+                    <ToggleSwitch Name="OverallExcludeAg" IsChecked="False"/>
                     <Label Content="Exclude winners from Age Group awards." />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                    <ToggleSwitch Name="overallExcludeCustom" IsChecked="False"/>
+                    <ToggleSwitch Name="OverallExcludeCustom" IsChecked="False"/>
                     <Label Content="Exclude winners from Custom awards." />
                 </StackPanel>
                 <TextBlock Text="Age Groups" Margin="0,5,0,10"/>
                 <DockPanel HorizontalAlignment="Left" Margin="0,0,0,5">
-                    <ToggleSwitch Name="agYes" IsChecked="True"/>
+                    <ToggleSwitch Name="AgYes" IsChecked="True"/>
                     <Label Content="Print" Margin="0,0,58,0"/>
-                    <TextBox Name="agNumberParticipants"
+                    <TextBox Name="AgNumberParticipants"
                              TextInput="IsNumber"
                              Text="3"
                              Width="40"/>
                 </DockPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-					<ToggleSwitch Name="agExcludeCustom" IsChecked="False"/>
+					<ToggleSwitch Name="AgExcludeCustom" IsChecked="False"/>
                     <Label Content="Exclude winners from Custom awards."/>
                 </StackPanel>
                 <TextBlock Text="Custom" Margin="0,5,0,10"/>
                 <DockPanel HorizontalAlignment="Left" Margin="0,0,0,5">
-                    <ToggleSwitch Name="customYes" IsChecked="True"/>
+                    <ToggleSwitch Name="CustomYes" IsChecked="True"/>
                     <Label Content="Print" Margin="0,0,58,0"/>
-                    <TextBox Name="customNumberParticipants"
+                    <TextBox Name="CustomNumberParticipants"
                              TextInput="IsNumber"
                              DockPanel.Dock="Top"
                              Text="3"
                              Width="40"/>
                 </DockPanel>
-                <DataGrid Name="customGroupsListView" SelectionMode="Extended" Margin="0,0,0,5" FontSize="12" CanUserResizeColumns="False">
+                <DataGrid Name="CustomGroupsListView" SelectionMode="Extended" Margin="0,0,0,5" FontSize="12" CanUserResizeColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Start Age" Binding="{Binding StartAge}" Width="110" x:DataType="objects:AgeGroup"/>
                         <DataGridTextColumn Header="End Age" Binding="{Binding EndAge}" Width="110" x:DataType="objects:AgeGroup"/>
@@ -119,19 +119,19 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <DockPanel HorizontalAlignment="Center" Margin="0,0,0,5">
-                    <TextBox Width="100" Name="startCustom" TextInput="IsNumber" Margin="0,0,2,0" HorizontalContentAlignment="Center" />
-                    <TextBox Width="100" Name="endCustom" TextInput="IsNumber" Margin="2,0" HorizontalContentAlignment="Center" />
-                    <TextBox Width="100" Name="customNameBox" Margin="2,0,0,0" HorizontalContentAlignment="Center" />
+                    <TextBox Width="100" Name="StartCustom" TextInput="IsNumber" Margin="0,0,2,0" HorizontalContentAlignment="Center" />
+                    <TextBox Width="100" Name="EndCustom" TextInput="IsNumber" Margin="2,0" HorizontalContentAlignment="Center" />
+                    <TextBox Width="100" Name="CustomNameBox" Margin="2,0,0,0" HorizontalContentAlignment="Center" />
                 </DockPanel>
                 <DockPanel HorizontalAlignment="Center" Margin="0,5,0,0">
-                    <Button Name="addCustom" Content="Add" Click="AddCustom_Click"/>
-                    <Button Name="deleteCustom" Content="Delete" Click="DeleteCustom_Click"/>
+                    <Button Name="AddCustom" Content="Add" Click="AddCustom_Click"/>
+                    <Button Name="DeleteCustom" Content="Delete" Click="DeleteCustom_Click"/>
                 </DockPanel>
             </StackPanel>
         </ScrollViewer>
         <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1">
-            <Button Name="saveButton" Content="Save" Click="SaveButton_Click"/>
-            <Button Name="doneButton" Content="Done" Click="DoneButton_Click"/>
+            <Button Name="SaveButton" Content="Save" Click="SaveButton_Click"/>
+            <Button Name="DoneButton" Content="Done" Click="DoneButton_Click"/>
         </DockPanel>
     </Grid>
 </UserControl>

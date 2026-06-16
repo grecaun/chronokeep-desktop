@@ -3,26 +3,22 @@ using Chronokeep.Timing;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Chronokeep.Constants;
 using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
 
 namespace Chronokeep.Objects
 {
     public partial class TimeResult : IEquatable<TimeResult>
     {
-        private int eventId, eventspecificId, locationId, segmentId,
-            occurrence, readId, place, agePlace, genderPlace,
-            ageGroupId, chipMilliseconds, status, uploaded, type, milliseconds,
-            divisionPlace;
-        private long chipSeconds, seconds;
-        private string time = "", locationName = "", segmentName = "", firstName = "", lastName = "", bib = "",
-            distanceName = "", unknownId = "", chipTime = "", gender = "", ageGroupName = "", splitTime = "", birthday = "",
-            linked_distance_name = "", chip = "", participantId = "", division = "";
-        private bool anonymous;
-        DateTime systemTime;
-        Event? theEvent;
+        private int uploaded;
+        private string ageGroupName = "";
+
+        private DateTime systemTime;
+        private Event? theEvent;
 
         [GeneratedRegex(@"(\d+):(\d{2}):(\d{2})\.(\d{3})")]
-        public static partial Regex TimeRegex();
+        private static partial Regex TimeRegex();
 
         // database constructor
         public TimeResult(
@@ -52,7 +48,7 @@ namespace Chronokeep.Objects
             int uploaded,
             string birthday,
             int type,
-            string linked_distance_name,
+            string linkedDistanceName,
             string chip,
             bool anonymous,
             string participantId,
@@ -64,159 +60,159 @@ namespace Chronokeep.Objects
             int divisionPlace
             )
         {
-            this.eventId = eventId;
-            this.eventspecificId = eventspecificId;
-            this.locationId = locationId;
-            this.segmentId = segmentId;
-            this.time = time ?? "";
-            this.occurrence = occurrence;
-            locationName = locations != null ? locations.TryGetValue(locationId, out TimingLocation? loc) ? loc.Name : "Unknown" : "Unknown";
-            if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+            EventIdentifier = eventId;
+            EventSpecificId = eventspecificId;
+            LocationId = locationId;
+            SegmentId = segmentId;
+            Time = time;
+            Occurrence = occurrence;
+            LocationName = locations.TryGetValue(locationId, out TimingLocation? loc) ? loc.Name : "Unknown";
+            if (Constants.Timing.SEGMENT_FINISH == SegmentId)
             {
-                segmentName = "Finish ";
+                SegmentName = "Finish ";
             }
-            else if (Constants.Timing.SEGMENT_START == this.segmentId)
+            else if (Constants.Timing.SEGMENT_START == SegmentId)
             {
-                segmentName = "Start ";
+                SegmentName = "Start ";
             }
-            else if (segments != null && segments.TryGetValue(this.segmentId, out Segment? seg))
+            else if (segments.TryGetValue(SegmentId, out Segment? seg))
             {
-                segmentName = seg.Name + " ";
+                SegmentName = seg.Name + " ";
             }
             else
             {
-                segmentName = "";
+                SegmentName = "";
             }
-            if (theEvent != null && theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
+            if (theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
             {
-                if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && distances.TryGetValue(linked_distance_name, out Distance? linkedDist)
+                    if (linkedDistanceName.Length > 0
+                        && distances.TryGetValue(linkedDistanceName, out Distance? linkedDist)
                         && linkedDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Lap {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
                             occurrence,
                             linkedDist.DistanceValue * occurrence,
-                            Constants.Distances.DistanceString(linkedDist.DistanceUnit)
+                            Distances.DistanceString(linkedDist.DistanceUnit)
                             );
                     }
                     else if (distance.Length > 0
                         && distances.TryGetValue(distance, out Distance? oDist)
                         && oDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Lap {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
                             occurrence,
                             oDist.DistanceValue * occurrence,
-                            Constants.Distances.DistanceString(oDist.DistanceUnit)
+                            Distances.DistanceString(oDist.DistanceUnit)
                             );
                     }
                     else
                     {
-                        segmentName = string.Format("Lap {0}", occurrence);
+                        SegmentName = $"Lap {occurrence}";
                     }
                 }
-                else if (Constants.Timing.SEGMENT_START != this.segmentId)
+                else if (Constants.Timing.SEGMENT_START != SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && segments!.TryGetValue(this.segmentId, out Segment? oSeg)
+                    if (linkedDistanceName.Length > 0
+                        && segments.TryGetValue(SegmentId, out Segment? oSeg)
                         && oSeg.CumulativeDistance > 0)
                     {
-                        segmentName = string.Format("{2:0.##} {3} - {0}{1}",
-                            segmentName,
+                        SegmentName = string.Format("{2:0.##} {3} - {0}{1}",
+                            SegmentName,
                             occurrence,
                             oSeg.CumulativeDistance * occurrence,
-                            Constants.Distances.DistanceString(oSeg.DistanceUnit)
+                            Distances.DistanceString(oSeg.DistanceUnit)
                             );
                     }
                     else
                     {
-                        segmentName = string.Format("{0} {1}", segmentName, occurrence);
+                        SegmentName = $"{SegmentName} {occurrence}";
                     }
                 }
             }
-            else if (theEvent != null && Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
+            else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
             {
-                var hour = (this.occurrence / 2) + 1;
-                if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+                int hour = (Occurrence / 2) + 1;
+                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && distances.TryGetValue(linked_distance_name, out Distance? linkedDist)
+                    if (linkedDistanceName.Length > 0
+                        && distances.TryGetValue(linkedDistanceName, out Distance? linkedDist)
                         && linkedDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Hour {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
                             hour,
                             linkedDist.DistanceValue * hour,
-                            Constants.Distances.DistanceString(linkedDist.DistanceUnit)
+                            Distances.DistanceString(linkedDist.DistanceUnit)
                             );
                     }
                     else if (distance.Length > 0
                         && distances.TryGetValue(distance, out Distance? oDist)
                         && oDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Hour {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
                             hour,
                             oDist.DistanceValue * hour,
-                            Constants.Distances.DistanceString(oDist.DistanceUnit)
+                            Distances.DistanceString(oDist.DistanceUnit)
                             );
                     }
                     else
                     {
-                        segmentName = string.Format("Hour {0}", hour);
+                        SegmentName = $"Hour {hour}";
                     }
                 }
-                else if (Constants.Timing.SEGMENT_START == this.segmentId)
+                else if (Constants.Timing.SEGMENT_START == SegmentId)
                 {
-                    segmentName = string.Format("Start {0}", hour);
+                    SegmentName = $"Start {hour}";
                 }
             }
-            segmentName = segmentName.Trim();
-            firstName = first ?? "";
-            lastName = last ?? "";
-            distanceName = distance ?? "";
-            this.bib = bib ?? "";
-            this.unknownId = unknownId ?? "";
-            this.readId = readId;
+            SegmentName = SegmentName.Trim();
+            First = first;
+            Last = last;
+            RealDistanceName = distance;
+            Bib = bib;
+            UnknownId = unknownId;
+            ReadId = readId;
             systemTime = Constants.Timing.RFIDEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
-            this.chipTime = chipTime ?? "";
-            this.place = place;
-            this.agePlace = agePlace;
-            this.genderPlace = genderPlace;
-            this.gender = gender ?? "";
-            this.ageGroupId = ageGroupId;
-            this.ageGroupName = ageGroupName ?? "";
-            Match chipTimeMatch = TimeRegex().Match(chipTime!);
-            chipSeconds = 0;
-            chipMilliseconds = 0;
+            this.ChipTime = chipTime;
+            Place = place;
+            AgePlace = agePlace;
+            GenderPlace = genderPlace;
+            this.Gender = gender;
+            AgeGroupId = ageGroupId;
+            this.ageGroupName = ageGroupName;
+            Match chipTimeMatch = TimeRegex().Match(chipTime);
+            ChipSeconds = 0;
+            ChipMilliseconds = 0;
             if (chipTimeMatch.Success)
             {
-                chipSeconds = Convert.ToInt64(chipTimeMatch.Groups[1].Value) * 3600
+                ChipSeconds = Convert.ToInt64(chipTimeMatch.Groups[1].Value) * 3600
                    + Convert.ToInt64(chipTimeMatch.Groups[2].Value) * 60
                    + Convert.ToInt64(chipTimeMatch.Groups[3].Value);
-                chipMilliseconds = Convert.ToInt32(chipTimeMatch.Groups[4].Value);
+                ChipMilliseconds = Convert.ToInt32(chipTimeMatch.Groups[4].Value);
             }
-            Match timeMatch = TimeRegex().Match(time!);
-            seconds = 0;
-            milliseconds = 0;
+            Match timeMatch = TimeRegex().Match(time);
+            Seconds = 0;
+            Milliseconds = 0;
             if (timeMatch.Success)
             {
-                seconds = Convert.ToInt64(timeMatch.Groups[1].Value) * 3600
+                Seconds = Convert.ToInt64(timeMatch.Groups[1].Value) * 3600
                    + Convert.ToInt64(timeMatch.Groups[2].Value) * 60
                    + Convert.ToInt64(timeMatch.Groups[3].Value);
-                milliseconds = Convert.ToInt32(timeMatch.Groups[4].Value);
+                Milliseconds = Convert.ToInt32(timeMatch.Groups[4].Value);
             }
-            this.status = status;
-            splitTime = split ?? "";
+            Status = status;
+            LapTime = split;
             this.uploaded = uploaded;
-            this.birthday = birthday ?? "";
-            this.type = type;
-            this.linked_distance_name = linked_distance_name ?? "";
-            this.chip = chip ?? "";
-            this.anonymous = anonymous;
-            this.participantId = participantId ?? First + Last;
+            Birthday = birthday;
+            Type = type;
+            LinkedDistanceName = linkedDistanceName;
+            Chip = chip;
+            Anonymous = anonymous;
+            ParticipantId = participantId;
             this.theEvent = theEvent;
-            this.division = division ?? "";
-            this.divisionPlace = divisionPlace;
+            Division = division;
+            DivisionPlace = divisionPlace;
         }
 
         // Used by routines to add new results to the database.
@@ -238,142 +234,111 @@ namespace Chronokeep.Objects
             string division
             )
         {
-            this.eventId = eventId;
-            this.readId = readId;
-            this.eventspecificId = eventspecificId;
-            this.locationId = locationId;
-            this.segmentId = segmentId;
-            this.occurrence = occurrence;
-            this.time = Constants.Timing.TIMERESULT_STATUS_DNF == status ? "DNF" : Constants.Timing.TIMERESULT_STATUS_DNS == status ? "DNS" : Constants.Timing.ToTime(seconds, milliseconds);
-            this.unknownId = unknownId ?? "";
-            this.chipTime = Constants.Timing.TIMERESULT_STATUS_DNF == status ? "DNF" : Constants.Timing.TIMERESULT_STATUS_DNS == status ? "DNS" : Constants.Timing.ToTime(chipSeconds, chipMilliseconds);
+            EventIdentifier = eventId;
+            ReadId = readId;
+            EventSpecificId = eventspecificId;
+            LocationId = locationId;
+            SegmentId = segmentId;
+            Occurrence = occurrence;
+            Time = Constants.Timing.TIMERESULT_STATUS_DNF == status ? "DNF" : Constants.Timing.TIMERESULT_STATUS_DNS == status ? "DNS" : Constants.Timing.ToTime(seconds, milliseconds);
+            UnknownId = unknownId;
+            ChipTime = Constants.Timing.TIMERESULT_STATUS_DNF == status ? "DNF" : Constants.Timing.TIMERESULT_STATUS_DNS == status ? "DNS" : Constants.Timing.ToTime(chipSeconds, chipMilliseconds);
             this.systemTime = systemTime;
-            this.bib = bib ?? "";
-            place = Constants.Timing.TIMERESULT_DUMMYPLACE;
-            agePlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
-            genderPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
-            divisionPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
-            this.status = status;
-            splitTime = "";
-            this.seconds = seconds;
-            this.milliseconds = milliseconds;
-            this.chipSeconds = chipSeconds;
-            this.chipMilliseconds = chipMilliseconds;
-            this.division = division ?? "";
+            Bib = bib;
+            Place = Constants.Timing.TIMERESULT_DUMMYPLACE;
+            AgePlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+            GenderPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+            DivisionPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+            Status = status;
+            LapTime = "";
+            Seconds = seconds;
+            Milliseconds = milliseconds;
+            ChipSeconds = chipSeconds;
+            ChipMilliseconds = chipMilliseconds;
+            Division = division;
         }
 
-        public int EventSpecificId { get => eventspecificId; set => eventspecificId = value; }
-        public int LocationId { get => locationId; set => locationId = value; }
-        public int EventIdentifier { get => eventId; set => eventId = value; }
-        public int SegmentId { get => segmentId; set => segmentId = value; }
-        public int Occurrence { get => occurrence; set => occurrence = value; }
-        public string Time { get => time; set => time = value ?? ""; }
-        public string LocationName { get => locationName; set => locationName = value ?? ""; }
-        public string SegmentName { get => segmentName; set => segmentName = value ?? ""; }
-        public string First { get => firstName; set => firstName = value ?? ""; }
-        public string Last { get => lastName; set => lastName = value ?? ""; }
-        public string ParticipantName { get => string.Format("{0} {1}", firstName, lastName).Trim(); }
-        public string PrettyParticipantName { get => anonymous ? string.Format("Bib {0}", bib) : string.Format("{0} {1}", firstName, lastName).Trim(); }
-        public string DistanceName { get => linked_distance_name == "" ? distanceName : linked_distance_name; }
-        internal string LinkedDistanceName { get => linked_distance_name; set => linked_distance_name = value; }
-        public string RealDistanceName { get => distanceName; internal set => distanceName = value; }
-        public string Bib { get => bib; set => bib = value ?? ""; }
-        public int AgeGroupId { get => ageGroupId; set => ageGroupId = value; }
-        public string UnknownId { get => unknownId; set => unknownId = value ?? ""; }
-        public int ReadId { get => readId; set => readId = value; }
-        public int Place { get => place; set => place = value; }
-        public string PlaceStr { get => theEvent != null && theEvent.DisplayPlacements ? place < 1 ? "" : place.ToString() : ""; }
-        public string PrettyPlaceStr
-        {
-            get => type == Constants.Timing.DISTANCE_TYPE_EARLY && place > 0 ? string.Format("{0}e", place) :
-                type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL && place > 0 ? string.Format("{0}u", place) :
-                type == Constants.Timing.DISTANCE_TYPE_DROP && place > 0 ? string.Format("{0}d", place) :
-                type == Constants.Timing.DISTANCE_TYPE_LATE && place > 0 ? string.Format("{0}l", place) :
-                Finish && place > 0 ? place.ToString() : "";
-        }
-        public int AgePlace { get => agePlace; set => agePlace = value; }
-        public string AgePlaceStr { get => theEvent != null && theEvent.DisplayPlacements ? agePlace < 1 ? "" : agePlace.ToString() : ""; }
-        public int GenderPlace { get => genderPlace; set => genderPlace = value; }
-        public string GenderPlaceStr { get => theEvent != null && theEvent.DisplayPlacements ? genderPlace < 1 ? "" : genderPlace.ToString() : ""; }
-        public string Division { get => division; set => division = value; }
-        public int DivisionPlace { get => divisionPlace; set => divisionPlace = value; }
-        public string DivisionPlaceStr { get => theEvent != null && theEvent.DisplayPlacements ? divisionPlace < 1 ? "" : divisionPlace.ToString() : ""; }
-        public int Type { get => type; set => type = value; }
-        public string Identifier { get => unknownId; }
-        public string PrettyType
-        {
-            get => PrettyTypeStr();
-        }
-        public string PrettyGender
-        {
-            get => gender == null ? "" : gender == "Man" ? "M" : gender == "Woman" ? "W" : gender == "Non-Binary" ? "X" : gender == "Not Specified" || gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : gender.Length <= 2 ? gender : gender[..2];
-        }
-        public int DivisionColWidth { get => theEvent!.DivisionsEnabled ? 80 : 0; }
-        public int DivisionPlaceColWidth { get => theEvent!.DivisionsEnabled ? 40 : 0; }
-        public int DivisionMargin { get => theEvent!.DivisionsEnabled ? 4 : 0; }
+        public int EventSpecificId { get; set; }
+        public int LocationId { get; set; }
+        public int EventIdentifier { get; set; }
+        public int SegmentId { get; set; }
+        public int Occurrence { get; set; }
+        public string Time { get; set; }
+        public string LocationName { get; set; } = "";
+        public string SegmentName { get; set; } = "";
+        public string First { get; private set; } = "";
+        public string Last { get; private set; } = "";
+        public string ParticipantName => $"{First} {Last}".Trim();
+        public string PrettyParticipantName => Anonymous ? $"Bib {Bib}" : $"{First} {Last}".Trim();
+        public string DistanceName => LinkedDistanceName == "" ? RealDistanceName : LinkedDistanceName;
+        internal string LinkedDistanceName { get; set; } = "";
+        public string RealDistanceName { get; internal set; } = "";
+        public string Bib { get; set; }
+        public int AgeGroupId { get; private set; }
+        public string UnknownId { get; set; }
+        public int ReadId { get; set; }
+        public int Place { get; set; }
+        public string PlaceStr => theEvent is { DisplayPlacements: true } ? Place < 1 ? "" : Place.ToString() : "";
+        public string PrettyPlaceStr =>
+            Type == Constants.Timing.DISTANCE_TYPE_EARLY && Place > 0 ? $"{Place}e" :
+            Type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL && Place > 0 ? $"{Place}u" :
+            Type == Constants.Timing.DISTANCE_TYPE_DROP && Place > 0 ? $"{Place}d" :
+            Type == Constants.Timing.DISTANCE_TYPE_LATE && Place > 0 ? $"{Place}l" :
+            Finish && Place > 0 ? Place.ToString() : "";
+        public int AgePlace { get; set; }
+        public string AgePlaceStr => theEvent is { DisplayPlacements: true } ? AgePlace < 1 ? "" : AgePlace.ToString() : "";
+        public int GenderPlace { get; set; }
+        public string GenderPlaceStr => theEvent is { DisplayPlacements: true } ? GenderPlace < 1 ? "" : GenderPlace.ToString() : "";
+        public string Division { get; set; }
+        public int DivisionPlace { get; set; }
+        public string DivisionPlaceStr => theEvent is { DisplayPlacements: true } ? DivisionPlace < 1 ? "" : DivisionPlace.ToString() : "";
+        public int Type { get; private set; }
+        public string Identifier => UnknownId;
+        public string PrettyType => PrettyTypeStr();
+        public string PrettyGender => Gender == "Man" ? "M" : Gender == "Woman" ? "W" : Gender == "Non-Binary" ? "X" : Gender == "Not Specified" || Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : Gender.Length <= 2 ? Gender : Gender[..2];
 
-        public string PrettyTypeStr()
+        private string PrettyTypeStr()
         {
-            string output = type == Constants.Timing.DISTANCE_TYPE_EARLY ? "E"
-                : type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL ? "U"
-                : type == Constants.Timing.DISTANCE_TYPE_LATE ? "L"
-                : type == Constants.Timing.DISTANCE_TYPE_VIRTUAL ? "V"
-                : type == Constants.Timing.DISTANCE_TYPE_DROP ? "D"
+            string output = Type == Constants.Timing.DISTANCE_TYPE_EARLY ? "E"
+                : Type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL ? "U"
+                : Type == Constants.Timing.DISTANCE_TYPE_LATE ? "L"
+                : Type == Constants.Timing.DISTANCE_TYPE_VIRTUAL ? "V"
+                : Type == Constants.Timing.DISTANCE_TYPE_DROP ? "D"
                 : "";
-            return anonymous ? "A" + output : output;
+            return Anonymous ? "A" + output : output;
         }
 
         public DateTime SystemTime { get => systemTime; set => systemTime = value; }
 
-        public string SysTime
-        {
-            get
-            {
-                return systemTime.ToString("MMM dd HH:mm:ss.fff");
-            }
-        }
-
-        public string ChipLapTime
-        {
-            get => theEvent != null && theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME ? splitTime : chipTime;
-        }
-        public string ChipTime { get => chipTime; set => chipTime = value ?? ""; }
-        public string ChipTimeNoMilliseconds { get => chipTime.Split('.').Length > 0 ? chipTime.Split('.')[0] : chipTime; }
-        public string Gender { get => gender; set => gender = value ?? ""; }
-        public string AgeGroupName { get => PrettyAgeGroupName(); set => ageGroupName = value ?? ""; }
-        public int Status { get => status; set => status = value; }
-        public string LapTime { get => splitTime; set => splitTime = value ?? ""; }
-        public long ChipSeconds { get => chipSeconds; set => chipSeconds = value; }
-        public int ChipMilliseconds { get => chipMilliseconds; set => chipMilliseconds = value; }
-        public long Seconds { get => seconds; set => seconds = value; }
-        public int Milliseconds { get => milliseconds; set => milliseconds = value; }
+        public string SysTime => systemTime.ToString("MMM dd HH:mm:ss.fff");
+        public string ChipLapTime => theEvent != null && theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME ? LapTime : ChipTime;
+        public string ChipTime { get; set; }
+        public string ChipTimeNoMilliseconds => ChipTime.Split('.').Length > 0 ? ChipTime.Split('.')[0] : ChipTime;
+        public string Gender { get; private set; } = "";
+        public string AgeGroupName { get => PrettyAgeGroupName(); set => ageGroupName = value; }
+        public int Status { get; set; }
+        public string LapTime { get; set; }
+        public long ChipSeconds { get; set; }
+        public int ChipMilliseconds { get; set; }
+        public long Seconds { get; set; }
+        public int Milliseconds { get; set; }
         public int Uploaded { get => uploaded; set => uploaded = value == Constants.Timing.TIMERESULT_UPLOADED_FALSE ? Constants.Timing.TIMERESULT_UPLOADED_FALSE : Constants.Timing.TIMERESULT_UPLOADED_TRUE; }
-        public string Birthday { get => birthday; set => birthday = value ?? ""; }
-        public string Chip { get => chip; set => chip = value ?? ""; }
-        public bool Anonymous { get => anonymous; set => anonymous = value; }
-        public string AgeGenderString
-        {
-            get => theEvent != null ? string.Format("{0} {1}", Age(theEvent.Date), PrettyGender) : string.Format("? {0}", PrettyGender);
-        }
-        public bool Finish { get => segmentId == Constants.Timing.SEGMENT_FINISH; }
-        public string ParticipantId { get => participantId; }
+        private string Birthday { get; set; } = "";
+        public string Chip { get; private set; } = "";
+        public bool Anonymous { get; private set; }
+        public string AgeGenderString => theEvent != null ? $"{Age(theEvent.Date)} {PrettyGender}" : $"? {PrettyGender}";
+        public bool Finish => SegmentId == Constants.Timing.SEGMENT_FINISH;
+        public string ParticipantId { get; private set; } = "";
 
         public string PrettyAgeGroupName()
         {
             string[] agSplit = ageGroupName.Split('-');
-            int topAge = -1;
-            if (agSplit.Length > 1 && agSplit[0] == "0")
+            if (agSplit.Length <= 1 || agSplit[0] != "0") return ageGroupName;
+            if (int.TryParse(agSplit[1], out int topAge) && topAge > 0)
             {
-                if (int.TryParse(agSplit[1], out topAge) && topAge > 0)
-                {
-                    return string.Format("Under {0}", topAge + 1);
-                }
+                return $"Under {topAge + 1}";
             }
-            else if (topAge >= 99)
-            {
-                return string.Format("Over {0}", agSplit[0]);
-            }
-            return ageGroupName;
+            return topAge >= 99 ? $"Over {agSplit[0]}" : ageGroupName;
         }
 
         public static string BibToIdentifier(string iBib)
@@ -387,39 +352,39 @@ namespace Chronokeep.Objects
 
         public void SetParticipant(Participant p)
         {
-            participantId = p.Identifier.ToString();
-            anonymous = p.Anonymous;
-            distanceName = p.EventSpecific.DistanceName;
-            gender = p.Gender;
-            firstName = p.FirstName;
-            lastName = p.LastName;
-            ageGroupId = p.EventSpecific.AgeGroupId;
+            ParticipantId = p.Identifier.ToString();
+            Anonymous = p.Anonymous;
+            RealDistanceName = p.EventSpecific.DistanceName;
+            Gender = p.Gender;
+            First = p.FirstName;
+            Last = p.LastName;
+            AgeGroupId = p.EventSpecific.AgeGroupId;
             ageGroupName = p.EventSpecific.AgeGroupName;
-            birthday = p.Birthdate;
+            Birthday = p.Birthdate;
         }
 
         public void SetBlankParticipant()
         {
-            participantId = "";
-            anonymous = false;
-            distanceName = "";
-            gender = "";
-            firstName = "";
-            lastName = "";
-            ageGroupId = -1;
+            ParticipantId = "";
+            Anonymous = false;
+            RealDistanceName = "";
+            Gender = "";
+            First = "";
+            Last = "";
+            AgeGroupId = -1;
             ageGroupName = "";
-            birthday = "";
-            linked_distance_name = "";
+            Birthday = "";
+            LinkedDistanceName = "";
         }
 
         public void SetLinkedDistanceName(string linkedDistanceName)
         {
-            linked_distance_name = linkedDistanceName ?? "";
+            LinkedDistanceName = linkedDistanceName;
         }
 
         public void SetResultType(int type)
         {
-            this.type = type;
+            Type = type;
         }
 
         public void SetChipRead(
@@ -429,8 +394,8 @@ namespace Chronokeep.Objects
             int systemTimeMill
             )
         {
-            this.chip = chip;
-            this.bib = bib;
+            Chip = chip;
+            Bib = bib;
             systemTime = Constants.Timing.RFIDEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
         }
 
@@ -438,121 +403,116 @@ namespace Chronokeep.Objects
             Dictionary<int, TimingLocation> locations,
             Dictionary<int, Segment> segments,
             Dictionary<string, Distance> distances,
-            Event theEvent
+            Event iEvent
             )
         {
-            locationName = locations != null ? locations.TryGetValue(locationId, out TimingLocation? loc) ? loc.Name : "Unknown" : "Unknown";
-            if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+            LocationName = locations.TryGetValue(LocationId, out TimingLocation? loc) ? loc.Name : "Unknown";
+            if (Constants.Timing.SEGMENT_FINISH == SegmentId)
             {
-                segmentName = "Finish ";
+                SegmentName = "Finish ";
             }
-            else if (Constants.Timing.SEGMENT_START == this.segmentId)
+            else if (Constants.Timing.SEGMENT_START == SegmentId)
             {
-                segmentName = "Start ";
+                SegmentName = "Start ";
             }
-            else if (segments != null && segments.TryGetValue(this.segmentId, out Segment? seg))
+            else if (segments.TryGetValue(SegmentId, out Segment? seg))
             {
-                segmentName = seg.Name + " ";
+                SegmentName = seg.Name + " ";
             }
             else
             {
-                segmentName = "";
+                SegmentName = "";
             }
-            if (theEvent != null && theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
+            if (iEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
             {
-                if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && distances.TryGetValue(linked_distance_name, out Distance? linkedDist)
+                    if (LinkedDistanceName.Length > 0
+                        && distances.TryGetValue(LinkedDistanceName, out Distance? linkedDist)
                         && linkedDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Lap {0}",
-                            occurrence,
-                            linkedDist.DistanceValue * occurrence,
-                            Constants.Distances.DistanceString(linkedDist.DistanceUnit)
+                        SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
+                            Occurrence,
+                            linkedDist.DistanceValue * Occurrence,
+                            Distances.DistanceString(linkedDist.DistanceUnit)
                             );
                     }
-                    else if (distanceName.Length > 0
-                        && distances.TryGetValue(distanceName, out Distance? oDist)
+                    else if (RealDistanceName.Length > 0
+                        && distances.TryGetValue(RealDistanceName, out Distance? oDist)
                         && oDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Lap {0}",
-                            occurrence,
-                            oDist.DistanceValue * occurrence,
-                            Constants.Distances.DistanceString(oDist.DistanceUnit)
+                        SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
+                            Occurrence,
+                            oDist.DistanceValue * Occurrence,
+                            Distances.DistanceString(oDist.DistanceUnit)
                             );
                     }
                     else
                     {
-                        segmentName = string.Format("Lap {0}", occurrence);
+                        SegmentName = $"Lap {Occurrence}";
                     }
                 }
-                else if (Constants.Timing.SEGMENT_START != this.segmentId)
+                else if (Constants.Timing.SEGMENT_START != SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && segments!.TryGetValue(this.segmentId, out Segment? oSeg)
+                    if (LinkedDistanceName.Length > 0
+                        && segments.TryGetValue(SegmentId, out Segment? oSeg)
                         && oSeg.CumulativeDistance > 0)
                     {
-                        segmentName = string.Format("{2:0.##} {3} - {0}{1}",
-                            segmentName,
-                            occurrence,
-                            oSeg.CumulativeDistance * occurrence,
-                            Constants.Distances.DistanceString(oSeg.DistanceUnit)
-                            );
+                        SegmentName = $"{oSeg.CumulativeDistance * Occurrence:0.##} {Distances.DistanceString(oSeg.DistanceUnit)} - {SegmentName}{Occurrence}";
                     }
                     else
                     {
-                        segmentName = string.Format("{0} {1}", segmentName, occurrence);
+                        SegmentName = $"{SegmentName} {Occurrence}";
                     }
                 }
             }
-            else if (theEvent != null && Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
+            else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == iEvent.EventType)
             {
-                var hour = (this.occurrence / 2) + 1;
-                if (Constants.Timing.SEGMENT_FINISH == this.segmentId)
+                int hour = (Occurrence / 2) + 1;
+                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
                 {
-                    if (linked_distance_name.Length > 0
-                        && distances.TryGetValue(linked_distance_name, out Distance? linkedDist)
+                    if (LinkedDistanceName.Length > 0
+                        && distances.TryGetValue(LinkedDistanceName, out Distance? linkedDist)
                         && linkedDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Hour {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
                             hour,
                             linkedDist.DistanceValue * hour,
-                            Constants.Distances.DistanceString(linkedDist.DistanceUnit)
+                            Distances.DistanceString(linkedDist.DistanceUnit)
                             );
                     }
-                    else if (distanceName.Length > 0
-                        && distances.TryGetValue(distanceName, out Distance? oDist)
+                    else if (RealDistanceName.Length > 0
+                        && distances.TryGetValue(RealDistanceName, out Distance? oDist)
                         && oDist.DistanceValue > 0)
                     {
-                        segmentName = string.Format("{1:0.##} {2} - Hour {0}",
+                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
                             hour,
                             oDist.DistanceValue * hour,
-                            Constants.Distances.DistanceString(oDist.DistanceUnit)
+                            Distances.DistanceString(oDist.DistanceUnit)
                             );
                     }
                     else
                     {
-                        segmentName = string.Format("Hour {0}", hour);
+                        SegmentName = $"Hour {hour}";
                     }
                 }
-                else if (Constants.Timing.SEGMENT_START == this.segmentId)
+                else if (Constants.Timing.SEGMENT_START == SegmentId)
                 {
-                    segmentName = string.Format("Start {0}", hour);
+                    SegmentName = $"Start {hour}";
                 }
             }
-            segmentName = segmentName.Trim();
-            this.theEvent = theEvent;
+            SegmentName = SegmentName.Trim();
+            theEvent = iEvent;
         }
 
         public int Age(string eventDate)
         {
-            if (birthday.Length < 1)
+            if (Birthday.Length < 1)
             {
                 return -1;
             }
             DateTime eventDateTime = Convert.ToDateTime(eventDate);
-            DateTime myDateTime = Convert.ToDateTime(birthday);
+            DateTime myDateTime = Convert.ToDateTime(Birthday);
             int numYears = eventDateTime.Year - myDateTime.Year;
             if (eventDateTime.Month < myDateTime.Month || eventDateTime.Month == myDateTime.Month && eventDateTime.Day < myDateTime.Day)
             {
@@ -566,76 +526,42 @@ namespace Chronokeep.Objects
             return uploaded != Constants.Timing.TIMERESULT_UPLOADED_FALSE;
         }
 
-        public bool IsDNF()
+        public bool IsDnf()
         {
-            return status == Constants.Timing.TIMERESULT_STATUS_DNF;
+            return Status == Constants.Timing.TIMERESULT_STATUS_DNF;
         }
 
         public static int CompareByGunTime(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.Seconds == two.Seconds)
-            {
-                return one.Milliseconds.CompareTo(two.Milliseconds);
-            }
-            return one.Seconds.CompareTo(two.Seconds);
+            return one.Seconds == two.Seconds ? one.Milliseconds.CompareTo(two.Milliseconds) : one.Seconds.CompareTo(two.Seconds);
         }
 
         public static int CompareByNetTime(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.ChipSeconds == two.ChipSeconds)
-            {
-                return one.ChipMilliseconds.CompareTo(two.ChipMilliseconds);
-            }
-            return one.ChipSeconds.CompareTo(two.ChipSeconds);
+            return one.ChipSeconds == two.ChipSeconds ? one.ChipMilliseconds.CompareTo(two.ChipMilliseconds) : one.ChipSeconds.CompareTo(two.ChipSeconds);
         }
 
         public static int CompareByAgeGroup(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                if (one.AgeGroupId == two.AgeGroupId)
-                {
-                    if (one.Gender.Equals(two.Gender))
-                    {
-                        if (one.Occurrence.Equals(two.Occurrence))
-                        {
-                            return one.Place.CompareTo(two.Place);
-                        }
-                        return one.Occurrence.CompareTo(two.Occurrence);
-                    }
-                    return one.Gender.CompareTo(two.Gender);
-                }
-                return one.AgeGroupId.CompareTo(two.AgeGroupId);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            if (!one.DistanceName.Equals(two.DistanceName)) return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            if (one.AgeGroupId != two.AgeGroupId) return one.AgeGroupId.CompareTo(two.AgeGroupId);
+            if (!one.Gender.Equals(two.Gender)) return string.Compare(one.Gender, two.Gender, StringComparison.Ordinal);
+            return one.Occurrence.Equals(two.Occurrence) ? one.Place.CompareTo(two.Place) : one.Occurrence.CompareTo(two.Occurrence);
         }
 
         public static int CompareByGender(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                if (one.Gender.Equals(two.Gender))
-                {
-                    return one.systemTime.CompareTo(two.systemTime);
-                }
-                return one.Gender.CompareTo(two.Gender);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            if (!one.DistanceName.Equals(two.DistanceName)) return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            return one.Gender.Equals(two.Gender) ? one.systemTime.CompareTo(two.systemTime) : string.Compare(one.Gender, two.Gender, StringComparison.Ordinal);
         }
 
         public static int CompareBySystemTime(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
             return one.systemTime.CompareTo(two.systemTime);
         }
 
         public static int CompareByBib(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
             if (one.Bib == two.Bib)
             {
                 return one.systemTime.CompareTo(two.systemTime);
@@ -644,129 +570,69 @@ namespace Chronokeep.Objects
             {
                 return bibOne.CompareTo(bibTwo);
             }
-            return one.Bib.CompareTo(two.Bib);
+            return string.Compare(one.Bib, two.Bib, StringComparison.Ordinal);
         }
 
         public static int CompareByDistance(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                return one.systemTime.CompareTo(two.systemTime);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            return one.DistanceName.Equals(two.DistanceName) ? one.systemTime.CompareTo(two.systemTime) : string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
         }
 
         public int CompareChip(TimeResult other)
         {
-            if (other == null) return 1;
-            if (chipSeconds == other.chipSeconds)
-            {
-                return chipMilliseconds.CompareTo(other.chipMilliseconds);
-            }
-            return chipSeconds.CompareTo(other.chipSeconds);
+            return ChipSeconds == other.ChipSeconds ? ChipMilliseconds.CompareTo(other.ChipMilliseconds) : ChipSeconds.CompareTo(other.ChipSeconds);
         }
 
         public static int CompareByDistanceChip(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                if (one.chipSeconds == two.chipSeconds)
-                {
-                    return one.chipMilliseconds.CompareTo(two.chipMilliseconds);
-                }
-                return one.chipSeconds.CompareTo(two.chipSeconds);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            if (!one.DistanceName.Equals(two.DistanceName)) return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            return one.ChipSeconds == two.ChipSeconds ? one.ChipMilliseconds.CompareTo(two.ChipMilliseconds) : one.ChipSeconds.CompareTo(two.ChipSeconds);
         }
 
         public static int CompareByDistancePlace(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
+            if (!one.DistanceName.Equals(two.DistanceName)) return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            if (one.Occurrence != two.Occurrence)
             {
-                if (one.Occurrence != two.Occurrence)
-                {
-                    return two.Occurrence.CompareTo(one.Occurrence);
-                }
-                if (one.Status == Constants.Timing.TIMERESULT_STATUS_DNF && two.Status != Constants.Timing.TIMERESULT_STATUS_DNF)
-                {
-                    return 1;
-                }
-                if (one.Status != Constants.Timing.TIMERESULT_STATUS_DNF && two.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
-                {
-                    return -1;
-                }
-                if (one.Place == two.Place)
-                {
-                    return one.SystemTime.CompareTo(two.SystemTime);
-                }
-                return one.Place.CompareTo(two.Place);
+                return two.Occurrence.CompareTo(one.Occurrence);
             }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            if (one.Status == Constants.Timing.TIMERESULT_STATUS_DNF && two.Status != Constants.Timing.TIMERESULT_STATUS_DNF)
+            {
+                return 1;
+            }
+            if (one.Status != Constants.Timing.TIMERESULT_STATUS_DNF && two.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
+            {
+                return -1;
+            }
+            return one.Place == two.Place ? one.SystemTime.CompareTo(two.SystemTime) : one.Place.CompareTo(two.Place);
         }
 
         public static int CompareByDistanceGenderPlace(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                return one.GenderPlace.CompareTo(two.GenderPlace);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            return one.DistanceName.Equals(two.DistanceName) ? one.GenderPlace.CompareTo(two.GenderPlace) : string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
         }
 
         public static int CompareByDistanceAgeGroupPlace(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.DistanceName.Equals(two.DistanceName))
-            {
-                return one.AgePlace.CompareTo(two.AgePlace);
-            }
-            return one.DistanceName.CompareTo(two.DistanceName);
+            return one.DistanceName.Equals(two.DistanceName) ? one.AgePlace.CompareTo(two.AgePlace) : string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
         }
 
         public static int CompareByOccurrence(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.Occurrence.Equals(two.Occurrence))
-            {
-                if (one.Seconds == two.Seconds)
-                {
-                    return one.Milliseconds.CompareTo(two.Milliseconds);
-                }
-                return one.seconds.CompareTo(two.Seconds);
-            }
-            return one.Occurrence.CompareTo(two.Occurrence);
+            if (!one.Occurrence.Equals(two.Occurrence)) return one.Occurrence.CompareTo(two.Occurrence);
+            return one.Seconds == two.Seconds ? one.Milliseconds.CompareTo(two.Milliseconds) : one.Seconds.CompareTo(two.Seconds);
         }
 
         public static int CompareForBackyardElapsed(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.Occurrence.Equals(two.Occurrence))
-            {
-                if (one.Seconds == two.Seconds)
-                {
-                    return one.Milliseconds.CompareTo(two.Milliseconds);
-                }
-                return one.Seconds.CompareTo(two.Seconds);
-            }
-            return two.Occurrence.CompareTo(one.Occurrence);
+            if (!one.Occurrence.Equals(two.Occurrence)) return two.Occurrence.CompareTo(one.Occurrence);
+            return one.Seconds == two.Seconds ? one.Milliseconds.CompareTo(two.Milliseconds) : one.Seconds.CompareTo(two.Seconds);
         }
 
         public static int CompareForBackyardCumulative(TimeResult one, TimeResult two)
         {
-            if (one == null || two == null) return 1;
-            if (one.Occurrence.Equals(two.Occurrence))
-            {
-                if (one.ChipSeconds == two.ChipSeconds)
-                {
-                    return one.ChipMilliseconds.CompareTo(two.ChipMilliseconds);
-                }
-                return one.ChipSeconds.CompareTo(two.ChipSeconds);
-            }
-            return two.Occurrence.CompareTo(one.Occurrence);
+            if (!one.Occurrence.Equals(two.Occurrence)) return two.Occurrence.CompareTo(one.Occurrence);
+            return one.ChipSeconds == two.ChipSeconds ? one.ChipMilliseconds.CompareTo(two.ChipMilliseconds) : one.ChipSeconds.CompareTo(two.ChipSeconds);
         }
 
         public static bool IsNotKnown(TimeResult one)
@@ -798,7 +664,7 @@ namespace Chronokeep.Objects
         {
             return one.SegmentId == Constants.Timing.SEGMENT_START
                 || one.EventSpecificId != Constants.Timing.TIMERESULT_DUMMYPERSON
-                || one.locationId != Constants.Timing.LOCATION_FINISH;
+                || one.LocationId != Constants.Timing.LOCATION_FINISH;
         }
 
         public static bool IsNotStartOrKnown(TimeResult one)
@@ -813,76 +679,73 @@ namespace Chronokeep.Objects
                 !ParticipantName.Contains(value, StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool SMSCanBeSent(TimingDictionary dictionary)
+        public bool SmsCanBeSent(TimingDictionary dictionary)
         {
-            if (Constants.GlobalVars.TwilioCredentials.AccountSID.Length < 1 || Constants.GlobalVars.TwilioCredentials.AuthToken.Length < 1)
+            if (GlobalVars.TwilioCredentials.AccountSid.Length < 1 || GlobalVars.TwilioCredentials.AuthToken.Length < 1)
             {
                 return false;
             }
-            if (!dictionary.participantBibDictionary.TryGetValue(bib, out Participant? part) || part.EventSpecific.SMSEnabled == false)
+            if (!dictionary.ParticipantBibDictionary.TryGetValue(Bib, out Participant? part) || !part.EventSpecific.SMSEnabled)
             {
                 return false;
             }
-            string validPhone = Constants.GlobalVars.GetValidPhone(part.Mobile);
+            string validPhone = GlobalVars.GetValidPhone(part.Mobile);
             if (validPhone.Length == 0)
             {
-                validPhone = Constants.GlobalVars.GetValidPhone(part.Phone);
+                validPhone = GlobalVars.GetValidPhone(part.Phone);
             }
+
             // Invalid length. +15555551234 is a valid phone
-            if (validPhone.Length != 12 || Constants.GlobalVars.TwilioCredentials.PhoneNumber.Length != 12)
-            {
-                return false;
-            }
-            return true;
+            return validPhone.Length == 12 && GlobalVars.TwilioCredentials.PhoneNumber.Length == 12;
         }
 
-        public static SMSState SendSMSAlert(string phone, string sms)
+        public static SmsState SendSmsAlert(string phone, string sms)
         {
-            if (Constants.GlobalVars.TwilioCredentials.AccountSID.Length < 1 || Constants.GlobalVars.TwilioCredentials.AuthToken.Length < 1)
+            if (GlobalVars.TwilioCredentials.AccountSid.Length < 1 || GlobalVars.TwilioCredentials.AuthToken.Length < 1)
             {
-                return SMSState.Invalid;
+                return SmsState.Invalid;
             }
             // Invalid length. +15555551234 is a valid phone
-            if (phone.Length != 12 || Constants.GlobalVars.TwilioCredentials.PhoneNumber.Length != 12)
+            if (phone.Length != 12 || GlobalVars.TwilioCredentials.PhoneNumber.Length != 12)
             {
-                return SMSState.Invalid;
+                return SmsState.Invalid;
             }
             // Verify phone number isn't in our list of banned phone numbers (i.e. they've told us to not send texts)
             // return true if it is in the banned list, otherwise try to send it, and return true if we were able to send it
-            if (Constants.GlobalVars.BannedPhones.Contains(phone))
+            if (GlobalVars.BannedPhones.Contains(phone))
             {
                 Log.D("Objects.TimeResult", "Phone number is banned.");
-                return SMSState.Invalid;
+                return SmsState.Invalid;
             }
             try
             {
                 Log.D("Objects.TimeResult", "sms: '" + sms + "' phone: " + phone);
-                var messageOptions = new CreateMessageOptions(
-                    new Twilio.Types.PhoneNumber(phone)
+                CreateMessageOptions messageOptions = new(
+                    new PhoneNumber(phone)
                     )
                 {
-                    From = new Twilio.Types.PhoneNumber(Constants.GlobalVars.TwilioCredentials.PhoneNumber),
+                    From = new PhoneNumber(GlobalVars.TwilioCredentials.PhoneNumber),
                     Body = sms
                 };
-                var message = MessageResource.Create(messageOptions);
+                MessageResource? message = MessageResource.Create(messageOptions);
                 if (message.ErrorMessage != null)
                 {
-                    return SMSState.AddToBanned;
+                    return SmsState.AddToBanned;
                 }
             }
             catch
             {
-                return SMSState.NetworkError;
+                return SmsState.NetworkError;
             }
-            return SMSState.Success;
+            return SmsState.Success;
         }
 
         public bool Equals(TimeResult? other)
         {
-            return other != null && this.EventSpecificId == other.EventSpecificId
-                && this.LocationId == other.LocationId
-                && this.SegmentId == other.SegmentId
-                && this.Occurrence == other.Occurrence;
+            return other != null && EventSpecificId == other.EventSpecificId
+                && LocationId == other.LocationId
+                && SegmentId == other.SegmentId
+                && Occurrence == other.Occurrence;
         }
 
         public void UpdateEvent(Event newEvent)
@@ -890,7 +753,7 @@ namespace Chronokeep.Objects
             theEvent = newEvent;
         }
 
-        public enum SMSState
+        public enum SmsState
         {
             None = 0,
             Success,

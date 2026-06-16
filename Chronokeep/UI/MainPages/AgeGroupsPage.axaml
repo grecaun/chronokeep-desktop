@@ -8,17 +8,7 @@
              Background="{DynamicResource PrimaryBackground}"
              CornerRadius="8,0,0,0"
              >
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="40"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="150"/>
-        </Grid.ColumnDefinitions>
+    <Grid ColumnDefinitions="1*,150" RowDefinitions="auto,40,*,auto">
         <ComboBox Grid.Row="0"
                   Grid.Column="0"
                   Name="DistancesBox"
@@ -30,21 +20,15 @@
                   HorizontalAlignment="Center"
                   VerticalContentAlignment="Center"
                   IsVisible="False"/>
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="1" Grid.Column="0"
               MaxWidth="400"
-              VerticalAlignment="Center"
-              >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="55" />
-            </Grid.ColumnDefinitions> 
+              VerticalAlignment="Center" ColumnDefinitions="*,*,55">
             <TextBlock Grid.Column="0"
                        Text="Start Age"
                        FontSize="16"
                        Margin="10"
                        HorizontalAlignment="Center"
-                       />
+            />
             <TextBlock Grid.Column="1"
                        Text="End Age"
                        FontSize="16"
@@ -52,14 +36,14 @@
                        HorizontalAlignment="Center"
                        />
         </Grid>
-        <ListBox Grid.Row="2"
+        <ListBox Grid.Row="2" Grid.Column="0"
                  Name="AgeGroupsBox"
                  CornerRadius="8"
                  KeyboardNavigation.TabNavigation="Continue"
                  />
         <DockPanel LastChildFill="False"
                    Grid.Row="3"
-                   Grid.ColumnSpan="2"
+                   Grid.ColumnSpan="2" Grid.Column="0"
                    HorizontalAlignment="Center"
                    Margin="0"
                    >

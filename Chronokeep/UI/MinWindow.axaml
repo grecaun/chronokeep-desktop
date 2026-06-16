@@ -21,7 +21,10 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -57,19 +60,13 @@
                               Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
                               />
                    </Button>
-               </StackPanel> 
+               </StackPanel>
             </DockPanel>
         </Border>
-        <StackPanel Margin="0,32,0,0" Grid.Row="1">
-		    <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*" />
-                    <ColumnDefinition Width="1*" />
-                    <ColumnDefinition Width="1*" />
-                    <ColumnDefinition Width="1*" />
-                </Grid.ColumnDefinitions>
+        <StackPanel Margin="0" Grid.Row="1">
+		    <Grid ColumnDefinitions="*,*,*,*">
                 <Button Grid.Column="1"
-                        Name="newEvent"
+                        Name="NewEvent"
                         Content="New Event"
                         Click="NewEvent_Click"
                         Height="40"
@@ -78,7 +75,7 @@
                         HorizontalAlignment="Stretch"
                         VerticalContentAlignment="Center"/>
                 <Button Grid.Column="2"
-                        Name="changeEvent"
+                        Name="ChangeEvent"
                         Content="Change Event"
                         Click="ChangeEvent_Click"
                         Height="40"

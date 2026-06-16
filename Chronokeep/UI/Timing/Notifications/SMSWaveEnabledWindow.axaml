@@ -4,7 +4,7 @@
         xmlns:local="using:Chronokeep.UI.Timing.Notifications"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="230"
-        x:Class="Chronokeep.UI.Timing.Notifications.SMSWaveEnabledWindow"
+        x:Class="Chronokeep.UI.Timing.Notifications.SmsWaveEnabledWindow"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
@@ -19,7 +19,10 @@
     <Grid RowDefinitions="32,*,auto">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -45,13 +48,13 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <ToggleSwitch Name="SmsEnabledSwitch"
                                             DockPanel.Dock="Right"
-                                            IsChecked="{Binding SMSEnabled}"
+                                            IsChecked="{Binding SmsEnabled}"
                                             Margin="0,-7"
                                             OnContent=""
                                             OffContent=""
                                             VerticalAlignment="Center"
-                                            x:DataType="local:WaveSMS"/>
-                            <TextBlock Text="{Binding WaveName}" Margin="5" x:DataType="local:WaveSMS"/>
+                                            x:DataType="local:WaveSms"/>
+                            <TextBlock Text="{Binding WaveName}" Margin="5" x:DataType="local:WaveSms"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

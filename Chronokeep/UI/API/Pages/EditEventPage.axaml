@@ -3,11 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Chronokeep.UI.API.EditEventPage">
+             x:Class="Chronokeep.UI.API.Pages.EditEventPage">
     <StackPanel HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Margin="0,5,0,10">
-        <TextBlock Name="holdingLabel"
+        <TextBlock Name="HoldingLabel"
                    Text="Retrieving Event, Please Hold."
                    FontSize="18"
                    VerticalAlignment="Center"
@@ -15,7 +15,7 @@
                    HorizontalAlignment="Center"
                    TextWrapping="Wrap"
                    Margin="0,10,0,0"/>
-        <StackPanel Name="eventPanel"
+        <StackPanel Name="EventPanel"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Margin="5,0"
@@ -27,7 +27,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="nameBox"
+                <TextBox Name="NameBox"
                          FontSize="15"
                          Width="180"
                          VerticalAlignment="Center"
@@ -40,7 +40,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="certNameBox"
+                <TextBox Name="CertNameBox"
                          FontSize="15"
                          Width="180"
                          VerticalAlignment="Center"
@@ -53,7 +53,7 @@
                            VerticalAlignment="Center"
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="slugBox"
+                <TextBox Name="SlugBox"
                          IsEnabled="False"
                          FontSize="15"
                          Width="180"
@@ -67,7 +67,7 @@
                            VerticalAlignment="Center" 
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="contactBox"
+                <TextBox Name="ContactBox"
                          FontSize="15" 
                          Width="180"
                          VerticalAlignment="Center" 
@@ -80,7 +80,7 @@
                            VerticalAlignment="Center" 
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="websiteBox"
+                <TextBox Name="WebsiteBox"
                          FontSize="15" 
                          Width="180"
                          VerticalAlignment="Center" 
@@ -93,7 +93,7 @@
                            VerticalAlignment="Center" 
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <TextBox Name="imageBox"
+                <TextBox Name="ImageBox"
                          FontSize="15" 
                          Width="180"
                          VerticalAlignment="Center" 
@@ -106,7 +106,7 @@
                            VerticalAlignment="Center" 
                            TextAlignment="Right"
                            Padding="0,0,5,0"/>
-                <ComboBox Name="typeBox"
+                <ComboBox Name="TypeBox"
                           FontSize="15" 
                           Width="180"
                           VerticalAlignment="Center" 
@@ -117,7 +117,7 @@
                 </ComboBox>
             </DockPanel>
             <DockPanel HorizontalAlignment="Center">
-                <ToggleSwitch Name="restrictBox"
+                <ToggleSwitch Name="RestrictBox"
                               FontSize="15"
                               OnContent=""
                               OffContent=""

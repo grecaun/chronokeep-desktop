@@ -11,13 +11,8 @@
         </Style>
     </UserControl.Styles>
     <StackPanel Name="MainPanel" Margin="0,5" MaxWidth="600">
-        <Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="5*"/>
-				<ColumnDefinition Width="3*"/>
-				<ColumnDefinition Width="2*"/>
-            </Grid.ColumnDefinitions>
-            <DockPanel Grid.Column="0">
+        <Grid ColumnDefinitions="5*,3*,2*">
+	        <DockPanel Grid.Column="0">
 				<TextBlock Text="Name"
                            Width="55"
                            Margin="0"
@@ -78,13 +73,7 @@
                 </Button>
             </DockPanel>
         </Grid>
-        <Grid Name="DistPanel">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <Grid Name="DistPanel" ColumnDefinitions="*,*,*,*">
             <DockPanel Grid.Column="1">
                 <TextBlock Text="Distance"
                            Width="75"

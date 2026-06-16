@@ -9,63 +9,57 @@ namespace Chronokeep.Timing.Remote
         private readonly List<IRemoteReadersChangeSubscriber> subscribed = [];
         private readonly Lock rrLock = new();
 
-        private static readonly RemoteReadersNotifier instance = new();
+        private static readonly RemoteReadersNotifier Instance = new();
 
         public static RemoteReadersNotifier GetRemoteReadersNotifier()
         {
-            return instance;
+            return Instance;
         }
 
         public bool Subscribe(IRemoteReadersChangeSubscriber sub)
         {
-            var output = false;
-            if (rrLock.TryEnter(3000))
+            bool output = false;
+            if (!rrLock.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    subscribed.Add(sub);
-                    output = true;
-                }
-                finally
-                {
-                    rrLock.Exit();
-                }
+                subscribed.Add(sub);
+                output = true;
+            }
+            finally
+            {
+                rrLock.Exit();
             }
             return output;
         }
 
         public bool Unsubscribe(IRemoteReadersChangeSubscriber sub)
         {
-            var output = false;
-            if (rrLock.TryEnter(3000))
+            bool output = false;
+            if (!rrLock.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    output = subscribed.Remove(sub);
-                }
-                finally
-                {
-                    rrLock.Exit();
-                }
+                output = subscribed.Remove(sub);
+            }
+            finally
+            {
+                rrLock.Exit();
             }
             return output;
         }
 
         public void Notify()
         {
-            if (rrLock.TryEnter(3000))
+            if (!rrLock.TryEnter(3000)) return;
+            try
             {
-                try
+                foreach (IRemoteReadersChangeSubscriber subscriber in subscribed)
                 {
-                    foreach (IRemoteReadersChangeSubscriber subscriber in subscribed)
-                    {
-                        subscriber.NotifyRemoteReadersChange();
-                    }
+                    subscriber.NotifyRemoteReadersChange();
                 }
-                finally
-                {
-                    rrLock.Exit();
-                }
+            }
+            finally
+            {
+                rrLock.Exit();
             }
         }
     }

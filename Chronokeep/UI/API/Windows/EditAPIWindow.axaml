@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Chronokeep.UI.API.Windows.EditAPIWindow"
+        x:Class="Chronokeep.UI.API.Windows.EditApiWindow"
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
@@ -17,7 +17,9 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -33,6 +35,6 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <UserControl Name="EditAPIFrame" IsTabStop="False" Grid.Row="1"/>
+        <UserControl Name="EditApiFrame" IsTabStop="False" Grid.Row="1"/>
     </Grid>
 </Window>

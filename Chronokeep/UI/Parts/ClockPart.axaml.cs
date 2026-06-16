@@ -15,7 +15,7 @@ public partial class ClockPart : UserControl
     private Chronoclock clock;
     private readonly Event theEvent;
 
-    public bool IsLocked { get; private set; }
+    private bool IsLocked { get; set; }
 
     public ClockPart(Chronoclock clock, ClockControl parent, Event theEvent)
     {
@@ -24,7 +24,7 @@ public partial class ClockPart : UserControl
         this.theEvent = theEvent;
         this.parent = parent;
         NameBlock.Text = clock.Name;
-        UrlBlock.Text = clock.URL;
+        UrlBlock.Text = clock.Url;
         EnabledSwitch.IsChecked = clock.Enabled;
         BrightnessBox.IsEnabled = false;
         CountDatePicker.IsEnabled = false;
@@ -33,13 +33,13 @@ public partial class ClockPart : UserControl
         Stop.IsEnabled = false;
         GetTime.IsEnabled = false;
         SetTime.IsEnabled = false;
-        if (clock.URL != null && clock.URL.Length > 0)
+        if (!string.IsNullOrEmpty(clock.Url))
         {
             GetConfig();
         }
     }
 
-    public void UpdateLockStatus(bool locked)
+    private void UpdateLockStatus(bool locked)
     {
         IsLocked = locked;
         if (locked)
@@ -58,12 +58,12 @@ public partial class ClockPart : UserControl
         }
     }
 
-    public async void GetConfig()
+    private async void GetConfig()
     {
         try
         {
             GetConfigResponse resp = await clock.GetConfig();
-            UpdateInformation(new()
+            UpdateInformation(new CountUpDownTimestampResponse
             {
                 CountUpDownTimestamp = resp.CountUpDownTimestamp,
                 Brightness = resp.Brightness,
@@ -71,13 +71,17 @@ public partial class ClockPart : UserControl
                 LockCountUpDown = resp.LockCountUpDown,
             });
         }
-        catch (APIException ex)
+        catch (ApiException ex)
         {
             Log.D("UI.Timing.ClockControl.ClockListItem", "Unable to fetch clock config." + ex.Message);
         }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error getting config.");
+        }
     }
 
-    public void UpdateInformation(CountUpDownTimestampResponse info)
+    private void UpdateInformation(CountUpDownTimestampResponse info)
     {
         clock = GetUpdatedClock();
         if (info.Brightness > 0)
@@ -91,23 +95,24 @@ public partial class ClockPart : UserControl
             CountDatePicker.Text = countupdown.ToString("MM/dd/yyyy");
             ChangeCountTimeBox(countupdown.ToString("HH:mm:ss"));
         }
-        else if (theEvent!.StartSeconds > 0 || theEvent!.StartMilliseconds > 0)
+        else if (theEvent.StartSeconds > 0 || theEvent.StartMilliseconds > 0)
         {
             CountDatePicker.Text = DateTime.Parse(theEvent.Date).ToString("MM/dd/yyyy");
             ChangeCountTimeBox(Constants.Timing.SecondsToTime(theEvent.StartMilliseconds >= 500 ? theEvent.StartSeconds + 1 : theEvent.StartSeconds));
-            Log.D("UI.Timing.ClockControl.ClockListItem", string.Format("Time should be set to: {0}", Constants.Timing.SecondsToTime(theEvent.StartSeconds)));
+            Log.D("UI.Timing.ClockControl.ClockListItem",
+                $"Time should be set to: {Constants.Timing.SecondsToTime(theEvent.StartSeconds)}");
         }
         EnableConfig();
     }
 
-    public void ChangeCountTimeBox(string time)
+    private void ChangeCountTimeBox(string time)
     {
         CountTimeBox.IsEnabled = true;
         CountTimeBox.Text = time;
         CountTimeBox.IsEnabled = false;
     }
 
-    public void EnableConfig()
+    private void EnableConfig()
     {
         BrightnessBox.IsEnabled = true;
         LockedSwitch.IsEnabled = true;
@@ -115,11 +120,11 @@ public partial class ClockPart : UserControl
         CountTimeBox.IsEnabled = true;
         GetTime.IsEnabled = true;
         SetTime.IsEnabled = true;
-        Start.IsEnabled = IsLocked == false;
-        Stop.IsEnabled = IsLocked == false;
+        Start.IsEnabled = !IsLocked;
+        Stop.IsEnabled = !IsLocked;
     }
 
-    public void DisableConfig()
+    private void DisableConfig()
     {
         BrightnessBox.IsEnabled = false;
         LockedSwitch.IsEnabled = false;
@@ -138,23 +143,18 @@ public partial class ClockPart : UserControl
             Identifier = clock.Identifier,
             Name = NameBlock.Text!,
             Enabled = EnabledSwitch.IsChecked == true,
-            URL = UrlBlock.Text!,
+            Url = UrlBlock.Text!,
         };
         return output;
     }
 
-    private void SelectAll(object sender, RoutedEventArgs e)
-    {
-        TextBox src = (TextBox)e.Source!;
-        src.SelectAll();
-    }
-
     private async void LockedChanged(object sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "LockedChanged");
-        clock = GetUpdatedClock();
-        if (LockedSwitch.IsEnabled == true)
+        try
         {
+            Log.D("UI.Timing.ClockControl.ClockListItem", "LockedChanged");
+            clock = GetUpdatedClock();
+            if (!LockedSwitch.IsEnabled) return;
             UpdateLockStatus(!IsLocked);
             DisableConfig();
             try
@@ -162,140 +162,177 @@ public partial class ClockPart : UserControl
                 CountUpDownTimestampResponse resp = await clock.SetLockCountUpDown(IsLocked);
                 UpdateInformation(resp);
             }
-            catch (APIException ex)
+            catch (ApiException ex)
             {
                 DialogBox.Show(ex.Message);
             }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error setting lock.");
         }
     }
 
     private async void BrightnessChanged(object sender, SelectionChangedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "BrightnessChanged");
-        clock = GetUpdatedClock();
-        if (BrightnessBox.IsEnabled == true)
+        try
         {
-            if (BrightnessBox.SelectedIndex >= 0)
+            Log.D("UI.Timing.ClockControl.ClockListItem", "BrightnessChanged");
+            clock = GetUpdatedClock();
+            if (!BrightnessBox.IsEnabled) return;
+            if (BrightnessBox.SelectedIndex < 0) return;
+            DisableConfig();
+            try
             {
-                DisableConfig();
-                try
-                {
-                    CountUpDownTimestampResponse resp = await clock.SetBrightness((uint)(BrightnessBox.SelectedIndex + 1));
-                    UpdateInformation(resp);
-                }
-                catch (APIException ex)
-                {
-                    DialogBox.Show(ex.Message);
-                }
+                CountUpDownTimestampResponse resp = await clock.SetBrightness((uint)(BrightnessBox.SelectedIndex + 1));
+                UpdateInformation(resp);
             }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error changing brightness.");
         }
     }
 
     private async void Start_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "Start clicked.");
-        clock = GetUpdatedClock();
-        DateTime countDate;
-        if (CountDatePicker.Text == null || CountTimeBox.Text == null)
+        try
         {
-            try
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Start clicked.");
+            clock = GetUpdatedClock();
+            DateTime countDate;
+            if (CountDatePicker.Text == null || CountTimeBox.Text == null)
             {
-                countDate = DateTime.Now;
-                CountUpDownTimestampResponse resp = await clock.SetCountUpDownTime(countDate);
-                UpdateInformation(resp);
+                try
+                {
+                    countDate = DateTime.Now;
+                    CountUpDownTimestampResponse resp = await clock.SetCountUpDownTime(countDate);
+                    UpdateInformation(resp);
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                }
             }
-            catch (APIException ex)
+            else
             {
-                DialogBox.Show(ex.Message);
-                return;
+                if (!DateTime.TryParse(
+                        $"{CountDatePicker.Text!.Replace('_', '0')} {CountTimeBox.Text!.Replace('_', '0')}", out countDate))
+                {
+                    countDate = DateTime.Now;
+                }
+                try
+                {
+                    CountUpDownTimestampResponse resp = await clock.SetCountUpDownTime(countDate);
+                    UpdateInformation(resp);
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                }
             }
         }
-        else
+        catch (Exception)
         {
-            if (!DateTime.TryParse(string.Format("{0} {1}", CountDatePicker.Text!.Replace('_', '0'), CountTimeBox.Text!.Replace('_', '0')), out countDate))
-            {
-                countDate = DateTime.Now;
-            }
-            try
-            {
-                CountUpDownTimestampResponse resp = await clock.SetCountUpDownTime(countDate);
-                UpdateInformation(resp);
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
-                return;
-            }
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error starting clock.");
         }
     }
 
     private async void Stop_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "Stop clicked.");
-        clock = GetUpdatedClock();
         try
         {
-            CountUpDownTimestampResponse resp = await clock.StopCountUp();
-            UpdateInformation(resp);
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Stop clicked.");
+            clock = GetUpdatedClock();
+            try
+            {
+                CountUpDownTimestampResponse resp = await clock.StopCountUp();
+                UpdateInformation(resp);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            return;
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error stopping clock.");
         }
     }
 
     private async void GetTime_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "Get Time clicked.");
-        clock = GetUpdatedClock();
         try
         {
-            GetTimeResponse resp = await clock.GetTime();
-            parent.UpdateTime(resp.Time);
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Get Time clicked.");
+            clock = GetUpdatedClock();
+            try
+            {
+                GetTimeResponse resp = await clock.GetTime();
+                parent.UpdateTime(resp.Time);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            return;
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error getting time.");
         }
     }
 
     private async void SetTime_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "Set Time clicked.");
-        clock = GetUpdatedClock();
         try
         {
-            GetTimeResponse resp = await clock.SetTime(DateTime.Now);
-            parent.UpdateTime(resp.Time);
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Set Time clicked.");
+            clock = GetUpdatedClock();
+            try
+            {
+                GetTimeResponse resp = await clock.SetTime(DateTime.Now);
+                parent.UpdateTime(resp.Time);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            return;
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error setting time.");
         }
     }
 
     private async void Refresh_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ClockControl.ClockListItem", "Refresh clicked.");
-        clock = GetUpdatedClock();
         try
         {
-            GetConfigResponse resp = await clock.GetConfig();
-            UpdateInformation(new()
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Refresh clicked.");
+            clock = GetUpdatedClock();
+            try
             {
-                CountUpDownTimestamp = resp.CountUpDownTimestamp,
-                Brightness = resp.Brightness,
-                FlipDisplay = resp.FlipDisplay,
-                LockCountUpDown = resp.LockCountUpDown,
-            });
+                GetConfigResponse resp = await clock.GetConfig();
+                UpdateInformation(new CountUpDownTimestampResponse
+                {
+                    CountUpDownTimestamp = resp.CountUpDownTimestamp,
+                    Brightness = resp.Brightness,
+                    FlipDisplay = resp.FlipDisplay,
+                    LockCountUpDown = resp.LockCountUpDown,
+                });
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            return;
+            Log.D("UI.Timing.ClockControl.ClockListItem", "Error refreshing data.");
         }
     }
 

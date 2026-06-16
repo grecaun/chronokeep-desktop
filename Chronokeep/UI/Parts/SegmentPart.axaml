@@ -53,7 +53,7 @@
 			<ComboBoxItem Content="Yards"/>
 			<ComboBoxItem Content="Feet"/>
         </ComboBox>
-        <TextBox Name="GPS"
+        <TextBox Name="Gps"
                     GotFocus="SelectAll"
                     Width="190"
                     Height="35"

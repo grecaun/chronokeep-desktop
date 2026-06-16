@@ -13,13 +13,13 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public const string READER_DEFAULT_PORT_RFID = "23";
 
         [JsonPropertyName("id")]
-        public long Id { get; set; }
+        public long Id { get; init; }
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
         [JsonPropertyName("kind")]
         public string Kind { get; set; } = "";
         [JsonPropertyName("ip_address")]
-        public string IPAddress { get; set; } = "";
+        public string IpAddress { get; set; } = "";
         [JsonPropertyName("port")]
         public uint Port { get; set; }
         [JsonPropertyName("auto_connect")]

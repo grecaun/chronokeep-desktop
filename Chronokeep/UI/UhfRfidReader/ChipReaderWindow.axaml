@@ -31,7 +31,10 @@
     <Grid RowDefinitions="32,*,auto" Margin="0">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -70,14 +73,14 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <DataGrid Name="chipNumbers" Grid.Row="1">
+        <DataGrid Name="ChipNumbers" Grid.Row="1">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Dec Number" Binding="{Binding DecNumber}" x:DataType="local:RFIDInfo"/>
-                <DataGridTextColumn Header="Hex Number" Binding="{Binding HexNumber}" x:DataType="local:RFIDInfo"/>
-                <DataGridTextColumn Header="Ant Number" Binding="{Binding AntennaNumber}" x:DataType="local:RFIDInfo"/>
-                <DataGridTextColumn Header="Dev Number" Binding="{Binding DeviceNumber}" x:DataType="local:RFIDInfo"/>
-                <DataGridTextColumn Header="Data" Binding="{Binding DataRep}" x:DataType="local:RFIDInfo"/>
-                <DataGridTextColumn Header="Read Number" Binding="{Binding ReadNumber}" x:DataType="local:RFIDInfo"/>
+                <DataGridTextColumn Header="Dec Number" Binding="{Binding DecNumber}" x:DataType="local:RfidInfo"/>
+                <DataGridTextColumn Header="Hex Number" Binding="{Binding HexNumber}" x:DataType="local:RfidInfo"/>
+                <DataGridTextColumn Header="Ant Number" Binding="{Binding AntennaNumber}" x:DataType="local:RfidInfo"/>
+                <DataGridTextColumn Header="Dev Number" Binding="{Binding DeviceNumber}" x:DataType="local:RfidInfo"/>
+                <DataGridTextColumn Header="Data" Binding="{Binding DataRep}" x:DataType="local:RfidInfo"/>
+                <DataGridTextColumn Header="Read Number" Binding="{Binding ReadNumber}" x:DataType="local:RfidInfo"/>
             </DataGrid.Columns>
         </DataGrid>
         <Grid HorizontalAlignment="Center" Height="55" Grid.Row="2">
@@ -93,7 +96,7 @@
                        Name="EventNameHolder"
                        Margin="5,0,15,0"
                        IsVisible="False">
-                <TextBlock Name="eventName"
+                <TextBlock Name="EventName"
                            Text="TEST"
                            VerticalAlignment="Center"/>
             </DockPanel>
@@ -103,7 +106,7 @@
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
             <ComboBox Grid.Column="2"
-                      Name="serialPortCB"
+                      Name="SerialPortCb"
                       Margin="2"
                       Height="35"
                       VerticalAlignment="Center"
@@ -118,7 +121,7 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"/>
             <Button Grid.Column="4"
-                    Name="connectBtn"
+                    Name="ConnectBtn"
                     Content="Connect"
                     Click="ConnectBtn_Click"
                     Margin="2"
@@ -127,7 +130,7 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"/>
             <Button Grid.Column="5"
-                    Name="beautyBtn"
+                    Name="BeautyBtn"
                     Content="Show Info Window"
                     Click="BeautyBtn_Click"
                     Margin="2"

@@ -99,7 +99,7 @@
             division = division.Trim();
         }
 
-        internal EventSpecific Blank()
+        internal static EventSpecific Blank()
         {
             return new EventSpecific(-1, -1, -1, "None", "", 0, "", "", "", 0, "", Constants.Timing.TIMERESULT_DUMMYAGEGROUP, false, false, "", "", Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION, Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION);
         }

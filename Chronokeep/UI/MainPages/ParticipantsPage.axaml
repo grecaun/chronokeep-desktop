@@ -56,7 +56,7 @@
                     Classes="part"
                     />
                 <StackPanel
-                    Name="apiPanel"
+                    Name="ApiPanel"
                     IsVisible="False"
                     >
                     <TextBlock 
@@ -186,8 +186,7 @@
                                 />
                         </DockPanel>
                     </Expander.Header>
-                    <DataGrid Grid.Row="0"
-                              Name="StatsListView"
+                    <DataGrid Name="StatsListView"
                               Margin="0"
                               FontSize="10"
                               GridLinesVisibility="None"
@@ -249,11 +248,11 @@
                                     Width="130"
                                     x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="EC Name"
-                                    Binding="{Binding ECName}"
+                                    Binding="{Binding EcName}"
                                     Width="155"
                                     x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="EC Phone"
-                                    Binding="{Binding ECPhone}"
+                                    Binding="{Binding EcPhone}"
                                     Width="155"
                                     x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Anon"

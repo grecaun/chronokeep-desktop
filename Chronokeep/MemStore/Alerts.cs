@@ -101,7 +101,7 @@ namespace Chronokeep.MemStore
             }
         }
 
-        public void AddSmsSubscriptions(int eventId, List<APISmsSubscription> subscriptions)
+        public void AddSmsSubscriptions(int eventId, List<ApiSmsSubscription> subscriptions)
         {
             Log.D("MemStore", "AddSmsSubscriptions");
             database.AddSmsSubscriptions(eventId, subscriptions);
@@ -186,10 +186,10 @@ namespace Chronokeep.MemStore
             }
         }
 
-        public List<APISmsSubscription> GetSmsSubscriptions(int eventId)
+        public List<ApiSmsSubscription> GetSmsSubscriptions(int eventId)
         {
             Log.D("MemStore", "GetSmsSubscriptions");
-            List<APISmsSubscription> output = [];
+            List<ApiSmsSubscription> output = [];
             try
             {
                 if (memStoreLock.TryEnter(lockTimeout))

@@ -8,16 +8,12 @@
              Background="{DynamicResource PrimaryBackground}"
              CornerRadius="8,0,0,0"
              >
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="*,auto">
         <ListBox
             Grid.Row="0"
             Name="LocationsBox"
             KeyboardNavigation.TabNavigation="Continue"
-            >
+        >
         </ListBox>
         <DockPanel HorizontalAlignment="Center" Grid.Row="1" Margin="0">
             <Button Name="Add"

@@ -19,7 +19,7 @@ namespace Chronokeep.Database.SQLite
                 {
                     Identifier = Convert.ToInt32(reader["clock_id"]),
                     Name = reader["name"].ToString()!,
-                    URL = reader["url"].ToString()!,
+                    Url = reader["url"].ToString()!,
                     Enabled = Convert.ToInt32(reader["enabled"]) != 0,
                 });
             }
@@ -33,7 +33,7 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "INSERT INTO chronoclocks (name, url, enabled) VALUES (@name, @url, @enabled);";
             command.Parameters.AddRange([
                 new("@name", clock.Name),
-                new("@url", clock.URL),
+                new("@url", clock.Url),
                 new("@enabled", clock.Enabled ? 1 : 0)
                 ]);
             command.ExecuteNonQuery();
@@ -46,7 +46,7 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "UPDATE chronoclocks SET name=@name, url=@url, enabled=@enabled WHERE clock_id=@clockID;";
             command.Parameters.AddRange([
                 new("@name", clock.Name),
-                new("@url", clock.URL),
+                new("@url", clock.Url),
                 new("@enabled", clock.Enabled ? 1 : 0),
                 new("@clockID", clock.Identifier)
                 ]);

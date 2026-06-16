@@ -14,9 +14,9 @@ namespace Chronokeep.Database.SQLite
                 " VALUES (@ip, @port, @location, @type);";
             command.Parameters.AddRange(
             [
-                new("@ip", system.IPAddress),
+                new("@ip", system.IpAddress),
                 new("@port", system.Port),
-                new("@location", system.LocationID),
+                new("@location", system.LocationId),
                 new("@type", system.Type)
             ]);
             command.ExecuteNonQuery();
@@ -31,9 +31,9 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "UPDATE timing_systems SET ts_ip=@ip, ts_port=@port, ts_location=@location, ts_type=@type WHERE ts_identifier=@id;";
             command.Parameters.AddRange(
             [
-                new("@ip", system.IPAddress),
+                new("@ip", system.IpAddress),
                     new("@port", system.Port),
-                    new("@location", system.LocationID),
+                    new("@location", system.LocationId),
                     new("@type", system.Type),
                     new("@id", system.SystemIdentifier)
             ]);

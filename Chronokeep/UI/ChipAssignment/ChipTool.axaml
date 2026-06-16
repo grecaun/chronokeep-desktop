@@ -16,7 +16,9 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -32,12 +34,7 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <Grid Margin="20,0,20,20" Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <Grid Margin="20,0,20,20" Grid.Row="1" RowDefinitions="Auto,Auto,*">
             <StackPanel Grid.Row="0"
                         Orientation="Horizontal"
                         HorizontalAlignment="Center"
@@ -61,14 +58,7 @@
                         Margin="10,0,10,10"
                         TabIndex="3"/>
             </StackPanel>
-            <Grid Grid.Row="1" Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="50" />
-                </Grid.ColumnDefinitions>
+            <Grid Grid.Row="1" Margin="5" ColumnDefinitions="*,*,*,*,50">
                 <TextBlock Grid.Column="0"
                            Margin="10,0,0,0"
                            Text="Start Bib #"/>
@@ -82,8 +72,8 @@
                            Margin="10,0,0,0"
                            Text="End Tag #"/>
             </Grid>
-            <Grid Name="itemsWindow" Grid.Row="2">
-                <ListBox Name="correlationBox" KeyboardNavigation.TabNavigation="Continue"/>
+            <Grid Name="ItemsWindow" Grid.Row="2">
+                <ListBox Name="CorrelationBox" KeyboardNavigation.TabNavigation="Continue"/>
             </Grid>
         </Grid>
     </Grid>

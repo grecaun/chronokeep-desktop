@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Chronokeep.Objects.ChronokeepPortal.Responses
+namespace Chronokeep.Objects.ChronokeepPortal
 {
     public class Response
     {
@@ -57,7 +57,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Responses
         [JsonPropertyName("readers")]
         public List<PortalReader> Readers { get; set; } = [];
         [JsonPropertyName("apis")]
-        public List<PortalAPI> APIs { get; set; } = [];
+        public List<PortalApi> ApIs { get; set; } = [];
         [JsonPropertyName("auto_upload")]
         public PortalStatus AutoUpload { get; set; }
         [JsonPropertyName("portal_version")]
@@ -67,7 +67,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Responses
     public class ApiListResponse : Response
     {
         [JsonPropertyName("apis")]
-        public List<PortalAPI> List { get; set; } = [];
+        public List<PortalApi> List { get; set; } = [];
     }
 
     public class ReadsResponse : Response
@@ -87,7 +87,7 @@ namespace Chronokeep.Objects.ChronokeepPortal.Responses
         [JsonPropertyName("local")]
         public string Local { get; set; } = "";
         [JsonPropertyName("utc")]
-        public string UTC { get; set; } = "";
+        public string Utc { get; set; } = "";
     }
 
     public class EventsResponse : Response

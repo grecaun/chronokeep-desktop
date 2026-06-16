@@ -35,8 +35,7 @@
                       VerticalContentAlignment="Center"/>
         </DockPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
-            <Button Grid.Column="0"
-                    Name="NextButton"
+            <Button Name="NextButton"
                     Content="Next"
                     Click="NextButton_Click"
                     Width="120"
@@ -45,8 +44,7 @@
                     Margin="10,0,5,5"
                     HorizontalAlignment="Right"
                     VerticalContentAlignment="Center"/>
-            <Button Grid.Column="1"
-                    Name="CancelButton"
+            <Button Name="CancelButton"
                     Content="Cancel"
                     Click="CancelButton_Click"
                     Width="120"

@@ -17,8 +17,8 @@ namespace Chronokeep.Database.SQLite
                 command.Parameters.AddRange(
                 [
                 new("@event", eventId),
-                    new("@api", reader.APIIDentifier),
-                    new("@location", reader.LocationID),
+                    new("@api", reader.ApiiDentifier),
+                    new("@location", reader.LocationId),
                     new("@name", reader.Name)
                 ]);
                 command.ExecuteNonQuery();
@@ -43,7 +43,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                     new("@event", eventId),
-                    new("@api", reader.APIIDentifier),
+                    new("@api", reader.ApiiDentifier),
                     new("@name", reader.Name)
             ]);
             command.ExecuteNonQuery();

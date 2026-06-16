@@ -13,18 +13,18 @@ namespace Chronokeep.Objects.Registration
         public const string CONNECT                = "connect";
 
         [JsonPropertyName("command")]
-        public string Command { get; set; } = "";
+        public string Command { get; init; } = "";
     }
 
     public class ModifyParticipant : Request
     {
         [JsonPropertyName("participant")]
-        public Participant Participant { get; set; } = new();
+        public Participant Participant { get; init; } = new();
     }
 
     public class ModifyMultipleParticipants : Request
     {
         [JsonPropertyName("participants")]
-        public List<Participant> Participants { get; set; } = [];
+        public List<Participant> Participants { get; init; } = [];
     }
 }

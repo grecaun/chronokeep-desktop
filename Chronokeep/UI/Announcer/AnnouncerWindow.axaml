@@ -62,6 +62,8 @@
                 RelativePanel.AlignRightWithPanel="True"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
                 Width="400">
             <StackPanel DockPanel.Dock="Right"
                         Orientation="Horizontal"

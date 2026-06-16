@@ -19,7 +19,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
     public class ModifyEventRequest
     {
         [JsonPropertyName("event")]
-        public APIEvent Event { get; set; } = new();
+        public ApiEvent Event { get; set; } = new();
     }
 
     // Event Year specific requests.
@@ -36,7 +36,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("slug")]
         public string Slug { get; set; } = "";
         [JsonPropertyName("event_year")]
-        public APIEventYear Year { get; set; } = new();
+        public ApiEventYear Year { get; set; } = new();
     }
 
     // Result specific requests
@@ -65,7 +65,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("year")]
         public string Year { get; set; } = "";
         [JsonPropertyName("results")]
-        public List<APIResult> Results { get; set; } = [];
+        public List<ApiResult> Results { get; set; } = [];
     }
 
     // Participant specific requests
@@ -96,7 +96,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("year")]
         public string Year { get; set; } = "";
         [JsonPropertyName("participants")]
-        public List<APIPerson> Participants { get; set; } = [];
+        public List<ApiPerson> Participants { get; set; } = [];
     }
 
     // Bibchip specific requests
@@ -182,7 +182,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("year")]
         public string Year { get; set; } = "";
         [JsonPropertyName("segments")]
-        public List<APISegment> Segments { get; set; } = [];
+        public List<ApiSegment> Segments { get; set; } = [];
     }
 
     public class DeleteSegmentsRequest
@@ -209,7 +209,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("year")]
         public string Year { get; set; } = "";
         [JsonPropertyName("distances")]
-        public List<APIDistance> Distances { get; set; } = [];
+        public List<ApiDistance> Distances { get; set; } = [];
     }
 
     public class DeleteDistancesRequest

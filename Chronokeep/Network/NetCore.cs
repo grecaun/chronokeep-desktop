@@ -5,16 +5,16 @@ using System.Net.NetworkInformation;
 
 namespace Chronokeep.Network
 {
-    internal class NetCore
+    internal static class NetCore
     {
-        private static readonly int tcpPort = GetAvailableTCPPort(4488, 5588);
+        private static readonly int TcpPort = GetAvailableTcpPort(4488, 5588);
 
-        public static int TCPPort()
+        public static int GetTcpPort()
         {
-            return tcpPort;
+            return TcpPort;
         }
 
-        public static int GetAvailableTCPPort(int start, int end)
+        private static int GetAvailableTcpPort(int start, int end)
         {
             Log.D("Network.NetCore", "Getting TCP Port.");
             List<int> portArray = [];
@@ -30,11 +30,9 @@ namespace Chronokeep.Network
             portArray.Sort();
             for (int i = start; i <= end; i++)
             {
-                if (!portArray.Contains(i))
-                {
-                    Log.D("Network.NetCore", "TCP Port is: " + i);
-                    return i;
-                }
+                if (portArray.Contains(i)) continue;
+                Log.D("Network.NetCore", "TCP Port is: " + i);
+                return i;
             }
             return 0;
         }

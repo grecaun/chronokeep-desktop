@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -17,13 +16,13 @@ using static Chronokeep.UI.Import.ImportFilePage2Alt;
 
 namespace Chronokeep.UI.Import;
 
-public partial class ImportFileWindow : Window
+public partial class ImportFileWindow : ChronokeepWindow
 {
     private readonly IDataImporter importer;
-    private readonly IMainWindow? window = null;
+    private readonly IMainWindow? window;
     private readonly IDBInterface database;
     private readonly bool init = true;
-    internal static readonly string[] human_fields = [
+    internal static readonly string[] HUMAN_FIELDS = [
         "",
         "Age",
         "Anonymous",
@@ -52,36 +51,38 @@ public partial class ImportFileWindow : Window
         "Street 2",
         "Zip"
     ];
-    internal static readonly int AGE = 1;
-    internal static readonly int ANONYMOUS = 2;
-    internal static readonly int APPARELITEM = 3;
-    internal static readonly int BIB = 4;
-    internal static readonly int BIRTHDAY = 5;
-    internal static readonly int CITY = 6;
-    internal static readonly int COMMENTS = 7;
-    internal static readonly int COUNTRY = 8;
-    internal static readonly int DISTANCE = 9;
-    internal static readonly int DIVISION = 10;
-    internal static readonly int EMAIL = 11;
-    internal static readonly int EMERGENCYNAME = 12;
-    internal static readonly int EMERGENCYPHONE = 13;
-    internal static readonly int FIRST = 14;
-    internal static readonly int GENDER = 15;
-    internal static readonly int LAST = 16;
-    internal static readonly int MOBILE = 17;
-    internal static readonly int OTHER = 18;
-    internal static readonly int OWES = 19;
-    internal static readonly int PARENT = 20;
-    internal static readonly int PHONE = 21;
-    internal static readonly int REGDATE = 22;
-    internal static readonly int STATE = 23;
-    internal static readonly int STREET = 24;
-    internal static readonly int STREET2 = 25;
-    internal static readonly int ZIP = 26;
-    private UserControl? page = null;
+
+    private const int AGE = 1;
+    private const int ANONYMOUS = 2;
+    private const int APPARELITEM = 3;
+    private const int BIB = 4;
+    private const int BIRTHDAY = 5;
+    private const int CITY = 6;
+    private const int COMMENTS = 7;
+    private const int COUNTRY = 8;
+    private const int DISTANCE = 9;
+    private const int DIVISION = 10;
+    private const int EMAIL = 11;
+    private const int EMERGENCYNAME = 12;
+    private const int EMERGENCYPHONE = 13;
+    internal const int FIRST = 14;
+    private const int GENDER = 15;
+    internal const int LAST = 16;
+    private const int MOBILE = 17;
+    private const int OTHER = 18;
+    private const int OWES = 19;
+    private const int PARENT = 20;
+    private const int PHONE = 21;
+    private const int REGDATE = 22;
+    private const int STATE = 23;
+    private const int STREET = 24;
+    private const int STREET2 = 25;
+    private const int ZIP = 26;
+    
+    private UserControl? page;
     private int[] keys = [];
 
-    private bool no_distance = false;
+    private bool noDistance;
 
     private readonly Event? theEvent;
 
@@ -93,7 +94,7 @@ public partial class ImportFileWindow : Window
     private readonly List<Participant> updatedParticipants = [];
     private readonly List<Participant> existingToRemoveParticipants = [];
 
-    public ImportFileWindow(IMainWindow? window, IDataImporter importer, IDBInterface database)
+    private ImportFileWindow(IMainWindow? window, IDataImporter importer, IDBInterface database)
     {
         InitializeComponent();
         this.importer = importer;
@@ -120,7 +121,7 @@ public partial class ImportFileWindow : Window
     private void StartImport(HeaderPart[] headerListBoxItems)
     {
         importer.FetchData();
-        keys = new int[human_fields.Length + 1];
+        keys = new int[HUMAN_FIELDS.Length + 1];
         for (int i = 0; i < keys.Length; i++)
         {
             keys[i] = 0;
@@ -137,20 +138,21 @@ public partial class ImportFileWindow : Window
         string[] distancesFromFile = data.GetDistanceNames(keys[DISTANCE]);
         if (distancesFromFile.Length <= 0)
         {
-            no_distance = true;
+            noDistance = true;
             distancesFromFile =
             [
                 "",
                 ];
         }
-        Event theEvent = database.GetCurrentEvent()!;
-        if (theEvent == null || theEvent.Identifier < 0)
+        Event? currentEvent = database.GetCurrentEvent();
+        if (currentEvent == null || currentEvent.Identifier < 0)
         {
             Log.E("IO.ImportFileWindow", "No event selected.");
             Close();
+            return;
         }
-        List<Distance> distancesFromDatabase = database.GetDistances(theEvent!.Identifier);
-        page = new ImportFilePage2Alt(distancesFromFile, distancesFromDatabase, no_distance);
+        List<Distance> distancesFromDatabase = database.GetDistances(currentEvent.Identifier);
+        page = new ImportFilePage2Alt(distancesFromFile, distancesFromDatabase, noDistance);
         Frame.Content = page;
         SheetsBox.IsVisible = false;
         Done.IsEnabled = true;
@@ -159,364 +161,375 @@ public partial class ImportFileWindow : Window
 
     private async void ImportWork(List<ImportDistance> fileDistances)
     {
-        // Make sure Age Groups are set properly.
-        Dictionary<(int, int), AgeGroup> AgeGroups = [];
-        Dictionary<int, AgeGroup> LastAgeGroup = [];
-        foreach (AgeGroup g in database.GetAgeGroups(theEvent!.Identifier))
+        try
         {
-            for (int i = g.StartAge; i <= g.EndAge; i++)
+            // Make sure Age Groups are set properly.
+            Dictionary<(int, int), AgeGroup> ageGroups = [];
+            Dictionary<int, AgeGroup> lastAgeGroup = [];
+            foreach (AgeGroup g in database.GetAgeGroups(theEvent!.Identifier))
             {
-                AgeGroups[(g.DistanceId, i)] = g;
-            }
-            if (!LastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) || group.StartAge < g.StartAge)
-            {
-                group = g;
-                LastAgeGroup[g.DistanceId] = group;
-            }
-        }
-
-        HashSet<Participant> multiples = [];
-        await Task.Run(() =>
-        {
-            ImportData data = importer.Data!;
-            int thisYear = DateTime.Parse(theEvent.Date).Year;
-            Dictionary<string, Distance> divHashName = [];
-            Dictionary<int, Distance> divHashId = [];
-            List<Distance> distances = database.GetDistances(theEvent.Identifier);
-            foreach (Distance d in distances)
-            {
-                divHashName[d.Name.ToLower()] = d;
-                divHashId[d.Identifier] = d;
-            }
-            bool BackYardUltra = Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType;
-            Distance? theDistance;
-            Distance? backyardDistance = null;
-            // Ensure we don't add more distances for backyard ultra events.
-            if (!BackYardUltra)
-            {
-                bool newDistances = false;
-                foreach (ImportDistance id in fileDistances)
+                for (int i = g.StartAge; i <= g.EndAge; i++)
                 {
-                    string nameFromFile = id.NameFromFile.ToLower();
-                    if (id.DistanceId == -1)
+                    ageGroups[(g.DistanceId, i)] = g;
+                }
+                if (lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) &&
+                    group.StartAge >= g.StartAge) continue;
+                group = g;
+                lastAgeGroup[g.DistanceId] = group;
+            }
+
+            HashSet<Participant> multiples = [];
+            await Task.Run(() =>
+            {
+                ImportData data = importer.Data!;
+                int thisYear = DateTime.Parse(theEvent.Date).Year;
+                Dictionary<string, Distance> divHashName = [];
+                Dictionary<int, Distance> divHashId = [];
+                List<Distance> distances = database.GetDistances(theEvent.Identifier);
+                foreach (Distance d in distances)
+                {
+                    divHashName[d.Name.ToLower()] = d;
+                    divHashId[d.Identifier] = d;
+                }
+                bool backYardUltra = Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType;
+                Distance? backyardDistance = null;
+                // Ensure we don't add more distances for backyard ultra events.
+                if (!backYardUltra)
+                {
+                    bool newDistances = false;
+                    foreach (ImportDistance id in fileDistances)
                     {
-                        if (divHashName.TryGetValue(nameFromFile, out Distance? dist))
+                        string nameFromFile = id.NameFromFile.ToLower();
+                        if (id.DistanceId == -1)
                         {
-                            theDistance = dist;
-                        }
-                        else
-                        {
-                            dist = new(id.NameFromFile, theEvent.Identifier);
+                            if (divHashName.TryGetValue(nameFromFile, out Distance? dist)) continue;
+                            dist = new Distance(id.NameFromFile, theEvent.Identifier);
                             database.AddDistance(dist);
                             dist.Identifier = database.GetDistanceID(dist);
                             divHashName[nameFromFile] = dist;
                             newDistances = true;
                         }
+                        else
+                        {
+                            if (divHashId.TryGetValue(id.DistanceId, out Distance? theDistance))
+                            {
+                                divHashName[nameFromFile] = theDistance;
+                            }
+                            else
+                            {
+                                Log.E("IO.ImportFileWindow", "Distance doesn't exist in the database...");
+                            }
+                        }
+                    }
+                    if (newDistances)
+                    {
+                        window?.UpdateRegistrationDistances();
+                    }
+                }
+                else
+                {
+                    if (distances.Count > 0)
+                    {
+                        backyardDistance = distances[0];
                     }
                     else
                     {
-                        if (divHashId.TryGetValue(id.DistanceId, out theDistance))
+                        backyardDistance = new Distance("Backyard", theEvent.Identifier);
+                        database.AddDistance(backyardDistance);
+                        backyardDistance.Identifier = database.GetDistanceID(backyardDistance);
+                        window?.UpdateRegistrationDistances();
+                    }
+                }
+                int numEntries = data.Data.Count;
+                importParticipants = [];
+                // new distances might have been added
+                distances = database.GetDistances(theEvent.Identifier);
+                for (int counter = 0; counter < numEntries; counter++)
+                {
+                    Distance thisDiv = distances[0];
+                    if (data.Data[counter][keys[DISTANCE]].Length > 0)
+                    {
+                        string distName = data.Data[counter][keys[DISTANCE]].ToLower();
+                        // Always set distance to our backyard distance if we're importing for a backyard ultra event. Otherwise figure out the proper distance.
+                        thisDiv = backYardUltra ? backyardDistance! : divHashName[distName];
+                    }
+                    string birthday = "";
+                    int age;
+                    if (keys[BIRTHDAY] == 0 && keys[AGE] != 0) // birthday not set but age is
+                    {
+                        try
                         {
-                            divHashName[nameFromFile] = theDistance;
+                            if (int.TryParse(data.Data[counter][keys[AGE]], out age))
+                            {
+                                birthday = $"{thisYear - age,4}/01/01";
+                            }
                         }
-                        else
+                        catch
                         {
-                            Log.E("IO.ImportFileWindow", "Distance doesn't exist in the database...");
+                            Log.E("IO.ImportFileWindow", "Error parsing age.");
+                        }
+                    }
+                    else if (keys[BIRTHDAY] != 0)
+                    {
+                        birthday = data.Data[counter][keys[BIRTHDAY]]; // birthday
+                    }
+                    Participant output = new(
+                        data.Data[counter][keys[FIRST]], // First Name
+                        data.Data[counter][keys[LAST]], // Last Name
+                        data.Data[counter][keys[STREET]], // Street
+                        data.Data[counter][keys[CITY]], // City
+                        data.Data[counter][keys[STATE]], // State
+                        data.Data[counter][keys[ZIP]], // Zip
+                        birthday, // Birthday
+                        new EventSpecific(
+                            theEvent.Identifier,
+                            thisDiv.Identifier,
+                            thisDiv.Name,
+                            data.Data[counter][keys[BIB]], // Bib number
+                            0,                            // checked in
+                            data.Data[counter][keys[COMMENTS]], // comments
+                            data.Data[counter][keys[OWES]], // owes
+                            data.Data[counter][keys[OTHER]], // other
+                            data.Data[counter][keys[ANONYMOUS]].Trim().Length > 0, // Set Anonymous if anything is in the field
+                            false, // always false, this field is no longer used
+                            data.Data[counter][keys[APPARELITEM]],
+                            data.Data[counter][keys[DIVISION]]
+                        ),
+                        data.Data[counter][keys[EMAIL]], // email
+                        data.Data[counter][keys[PHONE]], // phone
+                        data.Data[counter][keys[MOBILE]], // mobile
+                        data.Data[counter][keys[PARENT]], // parent
+                        data.Data[counter][keys[COUNTRY]], // country
+                        data.Data[counter][keys[STREET2]],  // street2
+                        data.Data[counter][keys[GENDER]],  // gender
+                        data.Data[counter][keys[EMERGENCYNAME]], // Emergency Name
+                        data.Data[counter][keys[EMERGENCYPHONE]]  // Emergency Phone
+                    );
+                    int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : output.EventSpecific.DistanceIdentifier;
+                    age = output.GetAge(theEvent.Date);
+                    if (age < 0)
+                    {
+                        output.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+                        output.EventSpecific.AgeGroupName = "";
+                    }
+                    else if (ageGroups.TryGetValue((agDivId, age), out AgeGroup? group))
+                    {
+                        output.EventSpecific.AgeGroupId = group.GroupId;
+                        output.EventSpecific.AgeGroupName = group.PrettyName();
+                    }
+                    else if (lastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
+                    {
+                        output.EventSpecific.AgeGroupId = lGroup.GroupId;
+                        output.EventSpecific.AgeGroupName = lGroup.PrettyName();
+                    }
+                    else
+                    {
+                        output.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+                        output.EventSpecific.AgeGroupName = "";
+                    }
+                    importParticipants.Add(output);
+                }
+                // Check import participants for multiples.
+                existingParticipants = database.GetParticipants(theEvent.Identifier);
+                HashSet<Participant> duplicatesImport = [];
+                for (int inner = 0; inner < importParticipants.Count; inner++)
+                {
+                    // Check against others imported
+                    for (int outer = inner + 1; outer < importParticipants.Count; outer++)
+                    {
+                        //Log.D("ImportFileWindow", string.Format("inner {1} outer {0}", outer, inner));
+                        if (importParticipants[inner].Is(importParticipants[outer]))
+                        {
+                            // if they're a duplicate and not just a multiple
+                            if (importParticipants[inner].Bib == importParticipants[outer].Bib
+                                && importParticipants[inner].Distance.Equals(importParticipants[outer].Distance, StringComparison.OrdinalIgnoreCase))
+                            {
+                                duplicatesImport.Add(importParticipants[inner]);
+                            }
+                            else
+                            {
+                                multiples.Add(importParticipants[inner]);
+                                multiples.Add(importParticipants[outer]);
+                            }
+                        }
+                    }
+                    // Check against everyone currently in the database.
+                    foreach (Participant part in existingParticipants)
+                    {
+                        if (importParticipants[inner].Is(part))
+                        {
+                            // check if its someone who's already in the database thus we don't need to add to multiples and
+                            // we can remove them from the import
+                            if ((importParticipants[inner].Bib == part.Bib || importParticipants[inner].Bib.Length < 1 && part.Bib.Length > 0)
+                                && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
+                            {
+                                // bib remains the same or isn't set in new import
+                                duplicatesImport.Add(importParticipants[inner]);
+                            }
+                            else if (importParticipants[inner].Bib.Length > 0 && part.Bib.Length < 1
+                                                                              && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
+                            {
+                                // bib is an update, add to duplicates so we don't add it again,
+                                // then add to list of participants to update
+                                duplicatesImport.Add(importParticipants[inner]);
+                                updatedParticipants.Add(importParticipants[inner]);
+                            }
+                            else
+                            {
+                                multiples.Add(importParticipants[inner]);
+                                multiples.Add(part);
+                            }
                         }
                     }
                 }
-                if (newDistances)
+                // Remove anyone that was deemed a duplicate
+                // This can happen if there was an X, Y, and Z in the import where X and Y are duplicates
+                // but Z is the same person with diff bib/distance.
+                // This can also happen if there are X and Z in the import but Y in the database,
+                // where the situation is as above
+                foreach (Participant dup in duplicatesImport)
                 {
-                    window?.UpdateRegistrationDistances();
+                    multiples.Remove(dup);
                 }
+                // remove all duplicates from the import
+                importParticipants.RemoveAll(duplicatesImport.Contains);
+            });
+            // if we have multiples to mess around with display the page
+            if (multiples.Count > 0)
+            {
+                page = new ImportFilePageConflicts([.. multiples], theEvent);
+                Frame.Content = page;
+                Done.IsEnabled = true;
+                Cancel.IsEnabled = true;
             }
+            // otherwise process the multiples (none)
             else
             {
-                if (distances.Count > 0)
-                {
-                    backyardDistance = distances[0];
-                }
-                else
-                {
-                    backyardDistance = new("Backyard", theEvent.Identifier);
-                    database.AddDistance(backyardDistance);
-                    backyardDistance.Identifier = database.GetDistanceID(backyardDistance);
-                    window?.UpdateRegistrationDistances();
-                }
+                ProcessMultiplestoRemove([]);
             }
-            int numEntries = data.Data.Count;
-            importParticipants = [];
-            // new distances might have been added
-            distances = database.GetDistances(theEvent.Identifier);
-            for (int counter = 0; counter < numEntries; counter++)
-            {
-                Distance thisDiv = distances[0];
-                if (data.Data[counter][keys[DISTANCE]] != null && data.Data[counter][keys[DISTANCE]].Length > 0)
-                {
-                    string distName = data.Data[counter][keys[DISTANCE]].ToLower();
-                    // Always set distance to our backyard distance if we're importing for a backyard ultra event. Otherwise figure out the proper distance.
-                    thisDiv = BackYardUltra ? backyardDistance! : divHashName[distName];
-                }
-                string birthday = "";
-                int age = -1;
-                if (keys[BIRTHDAY] == 0 && keys[AGE] != 0) // birthday not set but age is
-                {
-                    try
-                    {
-                        if (int.TryParse(data.Data[counter][keys[AGE]], out age))
-                        {
-                            birthday = string.Format("{0,4}/01/01", thisYear - age);
-                        }
-                    }
-                    catch { }
-                }
-                else if (keys[BIRTHDAY] != 0)
-                {
-                    birthday = data.Data[counter][keys[BIRTHDAY]]; // birthday
-                }
-                Participant output = new(
-                    data.Data[counter][keys[FIRST]], // First Name
-                    data.Data[counter][keys[LAST]], // Last Name
-                    data.Data[counter][keys[STREET]], // Street
-                    data.Data[counter][keys[CITY]], // City
-                    data.Data[counter][keys[STATE]], // State
-                    data.Data[counter][keys[ZIP]], // Zip
-                    birthday, // Birthday
-                    new(
-                        theEvent.Identifier,
-                        thisDiv.Identifier,
-                        thisDiv.Name,
-                        data.Data[counter][keys[BIB]], // Bib number
-                        0,                            // checked in
-                        data.Data[counter][keys[COMMENTS]], // comments
-                        data.Data[counter][keys[OWES]], // owes
-                        data.Data[counter][keys[OTHER]], // other
-                        data.Data[counter][keys[ANONYMOUS]] != null && data.Data[counter][keys[ANONYMOUS]].Trim().Length > 0, // Set Anonymous if anything is in the field
-                        false, // always false, this field is no longer used
-                        data.Data[counter][keys[APPARELITEM]],
-                        data.Data[counter][keys[DIVISION]]
-                        ),
-                    data.Data[counter][keys[EMAIL]], // email
-                    data.Data[counter][keys[PHONE]], // phone
-                    data.Data[counter][keys[MOBILE]], // mobile
-                    data.Data[counter][keys[PARENT]], // parent
-                    data.Data[counter][keys[COUNTRY]], // country
-                    data.Data[counter][keys[STREET2]],  // street2
-                    data.Data[counter][keys[GENDER]] ?? "",  // gender
-                    data.Data[counter][keys[EMERGENCYNAME]], // Emergency Name
-                    data.Data[counter][keys[EMERGENCYPHONE]]  // Emergency Phone
-                    );
-                int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : output.EventSpecific.DistanceIdentifier;
-                age = output.GetAge(theEvent.Date);
-                if (age < 0)
-                {
-                    output.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                    output.EventSpecific.AgeGroupName = "";
-                }
-                else if (AgeGroups.TryGetValue((agDivId, age), out AgeGroup? group))
-                {
-                    output.EventSpecific.AgeGroupId = group.GroupId;
-                    output.EventSpecific.AgeGroupName = group.PrettyName();
-                }
-                else if (LastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
-                {
-                    output.EventSpecific.AgeGroupId = lGroup.GroupId;
-                    output.EventSpecific.AgeGroupName = lGroup.PrettyName();
-                }
-                else
-                {
-                    output.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                    output.EventSpecific.AgeGroupName = "";
-                }
-                importParticipants.Add(output);
-            }
-            /**
-             * 
-             * VERIFICATION CODE
-             * 
-             */
-            // Check import participants for multiples.
-            existingParticipants = database.GetParticipants(theEvent.Identifier);
-            HashSet<Participant> duplicatesImport = [];
-            for (int inner = 0; inner < importParticipants.Count; inner++)
-            {
-                // Check against others imported
-                for (int outer = inner + 1; outer < importParticipants.Count; outer++)
-                {
-                    //Log.D("ImportFileWindow", string.Format("inner {1} outer {0}", outer, inner));
-                    if (importParticipants[inner].Is(importParticipants[outer]))
-                    {
-                        // if they're a duplicate and not just a multiple
-                        if (importParticipants[inner].Bib == importParticipants[outer].Bib
-                            && importParticipants[inner].Distance.Equals(importParticipants[outer].Distance, StringComparison.OrdinalIgnoreCase))
-                        {
-                            duplicatesImport.Add(importParticipants[inner]);
-                        }
-                        else
-                        {
-                            multiples.Add(importParticipants[inner]);
-                            multiples.Add(importParticipants[outer]);
-                        }
-                    }
-                }
-                // Check against everyone currently in the database.
-                foreach (Participant part in existingParticipants)
-                {
-                    if (importParticipants[inner].Is(part))
-                    {
-                        // check if its someone who's already in the database thus we don't need to add to multiples and
-                        // we can remove them from the import
-                        if ((importParticipants[inner].Bib == part.Bib || importParticipants[inner].Bib.Length < 1 && part.Bib.Length > 0)
-                            && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // bib remains the same or isn't set in new import
-                            duplicatesImport.Add(importParticipants[inner]);
-                        }
-                        else if (importParticipants[inner].Bib.Length > 0 && part.Bib.Length < 1
-                            && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // bib is an update, add to duplicates so we don't add it again,
-                            // then add to list of participants to update
-                            duplicatesImport.Add(importParticipants[inner]);
-                            updatedParticipants.Add(importParticipants[inner]);
-                        }
-                        else
-                        {
-                            multiples.Add(importParticipants[inner]);
-                            multiples.Add(part);
-                        }
-                    }
-                }
-            }
-            // Remove anyone that was deemed a duplicate
-            // This can happen if there was an X, Y, and Z in the import where X and Y are duplicates
-            // but Z is the same person with diff bib/distance.
-            // This can also happen if there are X and Z in the import but Y in the database,
-            // where the situation is as above
-            foreach (Participant dup in duplicatesImport)
-            {
-                multiples.Remove(dup);
-            }
-            // remove all duplicates from the import
-            importParticipants.RemoveAll(x => duplicatesImport.Contains(x));
-        });
-        // if we have multiples to mess around with display the page
-        if (multiples.Count > 0)
-        {
-            page = new ImportFilePageConflicts([.. multiples], theEvent);
-            Frame.Content = page;
-            Done.IsEnabled = true;
-            Cancel.IsEnabled = true;
         }
-        // otherwise process the multiples (none)
-        else
+        catch (Exception)
         {
-            ProcessMultiplestoRemove([]);
+            Log.E("IO.ImportFileWindow", "Error importing.");
         }
     }
 
     private async void ProcessMultiplestoRemove(List<Participant> toRemove)
     {
-        List<Participant> conflicts = [];
-        await Task.Run(() =>
+        try
         {
-            Dictionary<string, HashSet<Participant>> BibConflictsDict = [];
-            Dictionary<string, Participant> ExistingParticipantsDict = [];
-            // keep track of who we need to tell the database to remove
-            existingToRemoveParticipants.AddRange(toRemove);
-            existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
-            // Remove those we didn't select to keep from our lists.
-            existingParticipants.RemoveAll(x => toRemove.Contains(x));
-            importParticipants.RemoveAll(x => toRemove.Contains(x));
-            foreach (Participant existing in existingParticipants)
+            List<Participant> conflicts = [];
+            await Task.Run(() =>
             {
-                ExistingParticipantsDict[existing.Bib] = existing;
-            }
-            foreach (Participant import in importParticipants)
-            {
-                import.FormatData();
-                // this is checking for bib repeats, so check if we're actually checking a specified bib
-                if (import.Bib.Length > 0 && ExistingParticipantsDict.TryGetValue(import.Bib, out Participant? part))
+                Dictionary<string, HashSet<Participant>> bibConflictsDict = [];
+                Dictionary<string, Participant> existingParticipantsDict = [];
+                // keep track of who we need to tell the database to remove
+                existingToRemoveParticipants.AddRange(toRemove);
+                existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
+                // Remove those we didn't select to keep from our lists.
+                existingParticipants.RemoveAll(toRemove.Contains);
+                importParticipants.RemoveAll(toRemove.Contains);
+                foreach (Participant existing in existingParticipants)
                 {
-                    part.FormatData();
-                    if (!part.Is(import))
+                    existingParticipantsDict[existing.Bib] = existing;
+                }
+                foreach (Participant import in importParticipants)
+                {
+                    import.FormatData();
+                    // this is checking for bib repeats, so check if we're actually checking a specified bib
+                    if (import.Bib.Length > 0 && existingParticipantsDict.TryGetValue(import.Bib, out Participant? part))
                     {
-                        Log.D("ImportFileWindow",
-                            string.Format("We've found \n'{0}' '{1}' '{5}' '{7}' '{9}'\n'{2}' '{3}' '{6}' '{8}' '{10}'\nfor bib '{4}'",
-                            import.FirstName,
-                            import.LastName,
-                            ExistingParticipantsDict[import.Bib].FirstName,
-                            ExistingParticipantsDict[import.Bib].LastName,
-                            import.Bib,
-                            import.Street,
-                            ExistingParticipantsDict[import.Bib].Street,
-                            import.Zip,
-                            ExistingParticipantsDict[import.Bib].Zip,
-                            import.Birthdate,
-                            ExistingParticipantsDict[import.Bib].Birthdate
-                            ));
-                        if (!BibConflictsDict.TryGetValue(import.Bib, out HashSet<Participant>? bibConflictSet))
+                        part.FormatData();
+                        if (!part.Is(import))
                         {
-                            bibConflictSet = [];
-                            BibConflictsDict[import.Bib] = bibConflictSet;
+                            Log.D("ImportFileWindow",
+                                string.Format("We've found \n'{0}' '{1}' '{5}' '{7}' '{9}'\n'{2}' '{3}' '{6}' '{8}' '{10}'\nfor bib '{4}'",
+                                    import.FirstName,
+                                    import.LastName,
+                                    existingParticipantsDict[import.Bib].FirstName,
+                                    existingParticipantsDict[import.Bib].LastName,
+                                    import.Bib,
+                                    import.Street,
+                                    existingParticipantsDict[import.Bib].Street,
+                                    import.Zip,
+                                    existingParticipantsDict[import.Bib].Zip,
+                                    import.Birthdate,
+                                    existingParticipantsDict[import.Bib].Birthdate
+                                ));
+                            if (!bibConflictsDict.TryGetValue(import.Bib, out HashSet<Participant>? bibConflictSet))
+                            {
+                                bibConflictSet = [];
+                                bibConflictsDict[import.Bib] = bibConflictSet;
+                            }
+                            bibConflictSet.Add(import);
+                            bibConflictSet.Add(existingParticipantsDict[import.Bib]);
                         }
-                        bibConflictSet.Add(import);
-                        bibConflictSet.Add(ExistingParticipantsDict[import.Bib]);
                     }
                 }
-            }
-            foreach (string bib in BibConflictsDict.Keys)
+                foreach (string bib in bibConflictsDict.Keys)
+                {
+                    conflicts.AddRange(bibConflictsDict[bib]);
+                }
+            });
+            // if we have multiples to mess around with display the page
+            if (conflicts.Count > 0)
             {
-                conflicts.AddRange(BibConflictsDict[bib]);
+                page = new ImportFilePageConflicts(conflicts, theEvent!);
+                Frame.Content = page;
+                Done.IsEnabled = true;
+                Cancel.IsEnabled = true;
             }
-        });
-        // if we have multiples to mess around with display the page
-        if (conflicts.Count > 0)
-        {
-            page = new ImportFilePageConflicts(conflicts, theEvent!);
-            Frame.Content = page;
-            Done.IsEnabled = true;
-            Cancel.IsEnabled = true;
+            // otherwise process the multiples (none)
+            else
+            {
+                ProcessBibConflicts([]);
+            }
         }
-        // otherwise process the multiples (none)
-        else
+        catch (Exception)
         {
-            ProcessBibConflicts([]);
+            Log.E("IO.ImportFileWindow", "Error processing multiples.");
         }
     }
 
     private async void ProcessBibConflicts(List<Participant> toRemove)
     {
-        await Task.Run(() =>
+        try
         {
-            // keep track of who we need to tell the database to get rid of
-            existingToRemoveParticipants.AddRange(toRemove);
-            existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
-            // Remove those we didn't select to keep from our import list
-            // no need to remove from the existing because we're not re-adding those
-            importParticipants.RemoveAll(x => toRemove.Contains(x));
-            Log.D("ImportFileWindow", "Removing old participants we were told to.");
-            database.RemoveParticipantEntries(existingToRemoveParticipants);
-            Log.D("ImportFileWindow", "Updating participants.");
-            foreach (Participant p in updatedParticipants)
+            await Task.Run(() =>
             {
-                p.Trim();
-                p.FormatData();
-            }
-            database.UpdateParticipants(updatedParticipants);
-            Log.D("ImportFileWindow", "Adding new participants.");
-            foreach (Participant p in importParticipants)
-            {
-                p.Trim();
-                p.FormatData();
-            }
-            database.AddParticipants(importParticipants);
-        });
-        Log.D("ImportFileWindow", "All done with the import.");
-        database.ResetTimingResultsEvent(theEvent!.Identifier);
-        window?.NetworkClearResults();
-        window?.NotifyTimingWorker();
-        Close();
+                // keep track of who we need to tell the database to get rid of
+                existingToRemoveParticipants.AddRange(toRemove);
+                existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
+                // Remove those we didn't select to keep from our import list
+                // no need to remove from the existing because we're not re-adding those
+                importParticipants.RemoveAll(toRemove.Contains);
+                Log.D("ImportFileWindow", "Removing old participants we were told to.");
+                database.RemoveParticipantEntries(existingToRemoveParticipants);
+                Log.D("ImportFileWindow", "Updating participants.");
+                foreach (Participant p in updatedParticipants)
+                {
+                    p.Trim();
+                    p.FormatData();
+                }
+                database.UpdateParticipants(updatedParticipants);
+                Log.D("ImportFileWindow", "Adding new participants.");
+                foreach (Participant p in importParticipants)
+                {
+                    p.Trim();
+                    p.FormatData();
+                }
+                database.AddParticipants(importParticipants);
+            });
+            Log.D("ImportFileWindow", "All done with the import.");
+            database.ResetTimingResultsEvent(theEvent!.Identifier);
+            window?.NetworkClearResults();
+            window?.NotifyTimingWorker();
+            Close();
+        }
+        catch (Exception)
+        {
+            Log.E("IO.ImportFileWindow", "Error processing bib conflicts.");
+        }
     }
 
     internal static int GetHeaderBoxIndex(string s)
@@ -670,7 +683,7 @@ public partial class ImportFileWindow : Window
         if (init) { return; }
         int selection = ((ComboBox)sender!).SelectedIndex;
         Log.D("ImportFileWindow", "You've selected number " + selection);
-        if (page != null && page is ImportFilePage1 page1)
+        if (page is ImportFilePage1 page1)
         {
             page1.UpdateSheetNo(selection + 1);
         }
@@ -681,7 +694,7 @@ public partial class ImportFileWindow : Window
         Log.D("ImportFileWindow", "Import - Done button clicked.");
         Done.IsEnabled = false;
         Cancel.IsEnabled = false;
-        if (page != null && page is ImportFilePage1 page1)
+        if (page is ImportFilePage1 page1)
         {
             List<string> repeats = page1.RepeatHeaders();
             List<string> requiredNotFound = page1.RequiredNotFound();
@@ -719,17 +732,17 @@ public partial class ImportFileWindow : Window
                 }
             }
         }
-        else if (page != null && page is ImportFilePage2Alt page2)
+        else if (page is ImportFilePage2Alt page2)
         {
             Log.D("ImportFileWindow", "Importing participants.");
             ImportWork(page2.GetDistances());
         }
-        else if (page != null && page is ImportFilePageConflicts multiplesPage)
+        else if (page is ImportFilePageConflicts multiplesPage)
         {
             Log.D("ImportFileWindow", "Processing multiples to keep/remove.");
             ProcessMultiplestoRemove(multiplesPage.GetParticipantsToRemove());
         }
-        else if (page != null && page is ImportFilePageConflicts bibConflictsPage)
+        else if (page is ImportFilePageConflicts bibConflictsPage)
         {
             Log.D("ImportFileWindow", "Processing bib conflicts to remove.");
             ProcessBibConflicts(bibConflictsPage.GetParticipantsToRemove());
@@ -748,8 +761,8 @@ public partial class ImportFileWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

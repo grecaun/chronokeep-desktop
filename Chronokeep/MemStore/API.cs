@@ -12,7 +12,7 @@ namespace Chronokeep.MemStore
          * API functions
          */
 
-        public int AddAPI(APIObject anAPI)
+        public int AddAPI(ApiObject anAPI)
         {
             Log.D("MemStore", "UpdateAgeGroup");
             anAPI.Identifier = database.AddAPI(anAPI);
@@ -38,10 +38,10 @@ namespace Chronokeep.MemStore
             }
         }
 
-        public List<APIObject> GetAllAPI()
+        public List<ApiObject> GetAllAPI()
         {
             Log.D("MemStore", "GetAllAPI");
-            List<APIObject> output = [];
+            List<ApiObject> output = [];
             try
             {
                 if (memStoreLock.TryEnter(lockTimeout))
@@ -64,10 +64,10 @@ namespace Chronokeep.MemStore
             return output;
         }
 
-        public APIObject? GetAPI(int identifier)
+        public ApiObject? GetAPI(int identifier)
         {
             Log.D("MemStore", "GetAPI");
-            APIObject? output = null;
+            ApiObject? output = null;
             try
             {
                 if (memStoreLock.TryEnter(lockTimeout))
@@ -118,7 +118,7 @@ namespace Chronokeep.MemStore
             }
         }
 
-        public void UpdateAPI(APIObject anAPI)
+        public void UpdateAPI(ApiObject anAPI)
         {
             Log.D("MemStore", "UpdateAPI");
             database.UpdateAPI(anAPI);
@@ -128,13 +128,13 @@ namespace Chronokeep.MemStore
                 {
                     try
                     {
-                        if (apis.TryGetValue(anAPI.Identifier, out APIObject? api))
+                        if (apis.TryGetValue(anAPI.Identifier, out ApiObject? api))
                         {
                             api.Type = anAPI.Type;
-                            api.URL = anAPI.URL;
+                            api.Url = anAPI.Url;
                             api.AuthToken = anAPI.AuthToken;
                             api.Nickname = anAPI.Nickname;
-                            api.WebURL = anAPI.WebURL;
+                            api.WebUrl = anAPI.WebUrl;
                         }
                         else
                         {

@@ -30,7 +30,7 @@ namespace Chronokeep.Constants
         {
             try
             {
-                GetBannedPhonesResponse phonesResponse = await APIHandlers.GetBannedPhones();
+                GetBannedPhonesResponse phonesResponse = await ApiHandlers.GetBannedPhones();
                 BannedPhones.Clear();
                 if (phonesResponse.Phones != null)
                 {
@@ -66,7 +66,7 @@ namespace Chronokeep.Constants
                 {
                     try
                     {
-                        await APIHandlers.AddBannedPhone(p);
+                        await ApiHandlers.AddBannedPhone(p);
                         NewBannedPhones.Remove(phone);
                     }
                     catch
@@ -84,7 +84,7 @@ namespace Chronokeep.Constants
             NewBannedPhones.Add(phone);
             try
             {
-                await APIHandlers.AddBannedPhone(p);
+                await ApiHandlers.AddBannedPhone(p);
                 NewBannedPhones.Remove(phone);
             }
             catch
@@ -97,7 +97,7 @@ namespace Chronokeep.Constants
         {
             try
             {
-                GetBannedEmailsResponse emailsResponse = await APIHandlers.GetBannedEmails();
+                GetBannedEmailsResponse emailsResponse = await ApiHandlers.GetBannedEmails();
                 BannedEmails.Clear();
                 if (emailsResponse.Emails != null)
                 {
@@ -142,7 +142,7 @@ namespace Chronokeep.Constants
             AppSetting phone = database.GetAppSetting(Settings.TWILIO_PHONE_NUMBER)!;
             if (sid != null)
             {
-                TwilioCredentials.AccountSID = sid.Value;
+                TwilioCredentials.AccountSid = sid.Value;
             }
             if (auth != null)
             {
@@ -152,20 +152,20 @@ namespace Chronokeep.Constants
             {
                 TwilioCredentials.PhoneNumber = phone.Value;
             }
-            if (TwilioCredentials.AccountSID.Length > 0 && TwilioCredentials.AuthToken.Length > 0)
+            if (TwilioCredentials.AccountSid.Length > 0 && TwilioCredentials.AuthToken.Length > 0)
             {
-                TwilioClient.Init(TwilioCredentials.AccountSID, TwilioCredentials.AuthToken);
+                TwilioClient.Init(TwilioCredentials.AccountSid, TwilioCredentials.AuthToken);
             }
         }
 
         public static void SetTwilioCredentials(string accountSID, string authToken, string phoneNumber)
         {
-            TwilioCredentials.AccountSID = accountSID;
+            TwilioCredentials.AccountSid = accountSID;
             TwilioCredentials.AuthToken = authToken;
             TwilioCredentials.PhoneNumber = GetValidPhone(phoneNumber);
-            if (TwilioCredentials.AccountSID.Length > 0 && TwilioCredentials.AuthToken.Length > 0)
+            if (TwilioCredentials.AccountSid.Length > 0 && TwilioCredentials.AuthToken.Length > 0)
             {
-                TwilioClient.Init(TwilioCredentials.AccountSID, TwilioCredentials.AuthToken);
+                TwilioClient.Init(TwilioCredentials.AccountSid, TwilioCredentials.AuthToken);
             }
         }
     }

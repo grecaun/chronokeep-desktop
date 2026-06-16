@@ -11,14 +11,15 @@ namespace Chronokeep.UI.Timing.Import;
 
 public partial class ImportLogPage2 : UserControl
 {
-    internal static string[] human_fields =
+    private static readonly string[] HumanFields =
     [
         "",
         "Chip",
         "Time"
     ];
-    private static readonly int CHIP = 1;
-    private static readonly int TIME = 2;
+
+    private const int CHIP = 1;
+    private const int TIME = 2;
 
     private readonly ImportLogWindow parent;
 
@@ -28,33 +29,31 @@ public partial class ImportLogPage2 : UserControl
         this.parent = parent;
         for (int i = 1; i < importer.Data!.GetNumHeaders(); i++)
         {
-            itemListBox.Items.Add(new LogPart(importer.Data.Headers[i], i, human_fields, 0));
+            ItemListBox.Items.Add(new LogPart(importer.Data.Headers[i], i, HumanFields, 0));
         }
     }
 
-    internal List<string> RepeatHeaders()
+    private List<string> RepeatHeaders()
     {
         Log.D("UI.Timing.ImportLog", "Checking for repeat headers in user selection.");
-        int[] check = new int[human_fields.Length];
+        int[] check = new int[HumanFields.Length];
         bool repeat = false;
         List<string> output = [];
-        foreach (LogPart? item in itemListBox.Items.Cast<LogPart?>())
+        foreach (LogPart? item in ItemListBox.Items.Cast<LogPart?>())
         {
             int val = item!.HeaderBox.SelectedIndex;
-            if (val > 0)
+            if (val <= 0) continue;
+            if (check[val] > 0)
             {
-                if (check[val] > 0)
-                {
-                    output.Add(item.HeaderBox.SelectedItem!.ToString()!);
-                    repeat = true;
-                }
-                else
-                {
-                    check[val] = 1;
-                }
+                output.Add(item.HeaderBox.SelectedItem!.ToString()!);
+                repeat = true;
+            }
+            else
+            {
+                check[val] = 1;
             }
         }
-        return repeat == true ? output : [];
+        return repeat ? output : [];
     }
 
     private void CancelButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -67,7 +66,7 @@ public partial class ImportLogPage2 : UserControl
     {
         Log.D("UI.Timing.ImportLog", "Import clicked.");
         List<string> repeats = RepeatHeaders();
-        if (repeats != null)
+        if (repeats.Count < 1)
         {
             StringBuilder message = new("The following are repeats:\n");
             foreach (string s in repeats)
@@ -79,7 +78,7 @@ public partial class ImportLogPage2 : UserControl
             return;
         }
         int chip = 0, time = 0;
-        foreach (LogPart? item in itemListBox.Items.Cast<LogPart?>())
+        foreach (LogPart? item in ItemListBox.Items.Cast<LogPart?>())
         {
             if (CHIP == item!.HeaderBox.SelectedIndex)
             {

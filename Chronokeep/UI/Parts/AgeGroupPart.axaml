@@ -4,20 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Chronokeep.UI.Parts.AgeGroupPart">
-    <Grid MaxWidth="400">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="55"/>
-        </Grid.ColumnDefinitions>
-        <TextBox Grid.Column="0"
-                 Name="StartAge"
-                 GotFocus="SelectAll"
-                 TextInput="NumberValidation"
-                 Margin="5"
-                 FontSize="16"
-                 VerticalAlignment="Center"
-                 VerticalContentAlignment="Center"/>
+    <Grid MaxWidth="400" ColumnDefinitions="*,*,55">
+	    <TextBox Grid.Column="0"
+	             Name="StartAge"
+	             GotFocus="SelectAll"
+	             TextInput="NumberValidation"
+	             Margin="5"
+	             FontSize="16"
+	             VerticalAlignment="Center"
+	             VerticalContentAlignment="Center"/>
         <TextBox Grid.Column="1"
                  Name="EndAge"
                  GotFocus="SelectAll"

@@ -16,14 +16,14 @@ namespace Chronokeep.UI.Parts;
 
 public partial class ReaderPart : UserControl
 {
-    readonly ITimingPage parent;
+    private readonly ITimingPage parent;
     private List<TimingLocation> locations;
-    public TimingSystem reader;
+    public readonly TimingSystem Reader;
 
-    public RewindWindow? rewind = null;
+    public RewindWindow? Rewind = null;
 
     [GeneratedRegex("^([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])$")]
-    private static partial Regex IPPattern();
+    private static partial Regex IpPattern();
     [GeneratedRegex("[^0-9.]")]
     private static partial Regex AllowedChars();
     [GeneratedRegex("[^0-9]")]
@@ -34,16 +34,16 @@ public partial class ReaderPart : UserControl
         this.parent = parent;
         this.locations = locations;
         InitializeComponent();
-        reader = sys;
+        Reader = sys;
         ComboBoxItem? current, selected = null;
-        foreach (string SYSTEM_IDVAL in Readers.SYSTEM_NAMES.Keys)
+        foreach (string systemIdval in Readers.SYSTEM_NAMES.Keys)
         {
             current = new ComboBoxItem()
             {
-                Content = Readers.SYSTEM_NAMES[SYSTEM_IDVAL],
-                Tag = SYSTEM_IDVAL
+                Content = Readers.SYSTEM_NAMES[systemIdval],
+                Tag = systemIdval
             };
-            if (SYSTEM_IDVAL == reader.Type)
+            if (systemIdval == Reader.Type)
             {
                 selected = current;
             }
@@ -57,8 +57,8 @@ public partial class ReaderPart : UserControl
         {
             ReaderType.SelectedIndex = 0;
         }
-        ReaderIP.Text = reader.IPAddress;
-        ReaderPort.Text = reader.Port.ToString();
+        ReaderIp.Text = Reader.IpAddress;
+        ReaderPort.Text = Reader.Port.ToString();
         selected = null;
         foreach (TimingLocation loc in this.locations)
         {
@@ -67,7 +67,7 @@ public partial class ReaderPart : UserControl
                 Content = loc.Name,
                 Tag = loc.Identifier.ToString()
             };
-            if (reader.LocationID == loc.Identifier)
+            if (Reader.LocationId == loc.Identifier)
             {
                 selected = current;
             }
@@ -81,26 +81,19 @@ public partial class ReaderPart : UserControl
         {
             ReaderLocation.SelectedIndex = 0;
         }
-        if (reader.Saved())
-        {
-            RemoveButton.IsVisible = true;
-        }
-        else
-        {
-            RemoveButton.IsVisible = false;
-        }
+        RemoveButton.IsVisible = Reader.Saved();
         UpdateStatus();
     }
 
-    public void UpdateLocations(List<TimingLocation> locations)
+    public void UpdateLocations(List<TimingLocation> iLocations)
     {
-        this.locations = locations;
+        this.locations = iLocations;
         int selectedLocation = Convert.ToInt32(((ComboBoxItem)ReaderLocation.SelectedItem!).Tag!);
         ReaderLocation.Items.Clear();
-        ComboBoxItem? current, selected = null;
+        ComboBoxItem? selected = null;
         foreach (TimingLocation loc in this.locations)
         {
-            current = new()
+            ComboBoxItem current = new()
             {
                 Content = loc.Name,
                 Tag = loc.Identifier.ToString()
@@ -123,52 +116,47 @@ public partial class ReaderPart : UserControl
 
     public void UpdateStatus()
     {
-        if (reader.Status == SYSTEM_STATUS.CONNECTED)
+        switch (Reader.Status)
         {
-            SetConnected();
+            case SYSTEM_STATUS.CONNECTED:
+                SetConnected();
+                break;
+            case SYSTEM_STATUS.DISCONNECTED:
+                SetDisconnected();
+                break;
+            case SYSTEM_STATUS.WORKING:
+            default:
+                SetWorking();
+                break;
         }
-        else if (reader.Status == SYSTEM_STATUS.DISCONNECTED)
-        {
-            SetDisconnected();
-        }
-        else
-        {
-            SetWorking();
-        }
-        ChangeReadingStatus(reader.SystemStatus);
+
+        ChangeReadingStatus(Reader.SystemStatus);
     }
 
     public void UpdateReader()
     {
         // Check if IP is a valid IP address
-        if (!IPPattern().IsMatch(ReaderIP.Text!.Trim()))
-        {
-            reader.IPAddress = "";
-        }
-        else
-        {
-            reader.IPAddress = ReaderIP.Text.Trim();
-        }
+        Reader.IpAddress = !IpPattern().IsMatch(ReaderIp.Text!.Trim()) ? "" : ReaderIp.Text.Trim();
         // Check if Port is valid.
         _ = int.TryParse(ReaderPort.Text!.Trim(), out int portNo);
         if (portNo > 65535)
         {
             portNo = -1;
         }
-        reader.Port = portNo;
-        reader.LocationID = Convert.ToInt32(((ComboBoxItem)ReaderLocation.SelectedItem!).Tag!);
-        reader.LocationName = ((ComboBoxItem)ReaderLocation.SelectedItem).Content!.ToString()!;
+        Reader.Port = portNo;
+        Reader.LocationId = Convert.ToInt32(((ComboBoxItem)ReaderLocation.SelectedItem!).Tag!);
+        Reader.LocationName = ((ComboBoxItem)ReaderLocation.SelectedItem).Content!.ToString()!;
     }
 
     private void SetConnected()
     {
         ReaderType.IsEnabled = false;
-        ReaderIP.IsEnabled = false;
+        ReaderIp.IsEnabled = false;
         ReaderPort.IsEnabled = false;
         ReaderLocation.IsEnabled = false;
         RemoveButton.IsEnabled = false;
         RemoveButton.Opacity = 0.2;
-        if (reader.Type.Equals(Readers.SYSTEM_IPICO_LITE, StringComparison.OrdinalIgnoreCase))
+        if (Reader.Type.Equals(Readers.SYSTEM_IPICO_LITE, StringComparison.OrdinalIgnoreCase))
         {
             RewindButton.IsEnabled = false;
             ClockButton.IsEnabled = false;
@@ -183,7 +171,7 @@ public partial class ReaderPart : UserControl
             ClockButton.IsEnabled = true;
             RewindButton.Opacity = 1.0;
             ClockButton.Opacity = 1.0;
-            if (reader.SystemInterface!.SettingsEditable())
+            if (Reader.SystemInterface!.SettingsEditable())
             {
                 SettingsButton.IsEnabled = true;
                 ReaderButton.IsEnabled = true;
@@ -211,8 +199,8 @@ public partial class ReaderPart : UserControl
     private void SetDisconnected()
     {
         ReaderType.IsEnabled = true;
-        ReaderIP.IsEnabled = true;
-        ReaderPort.IsEnabled = Readers.SYSTEM_CHRONOKEEP_PORTAL != reader.Type;
+        ReaderIp.IsEnabled = true;
+        ReaderPort.IsEnabled = Readers.SYSTEM_CHRONOKEEP_PORTAL != Reader.Type;
         ReaderLocation.IsEnabled = true;
         // Set Remove and Connect buttons to enabled
         RemoveButton.IsEnabled = true;
@@ -239,7 +227,7 @@ public partial class ReaderPart : UserControl
     private void SetWorking()
     {
         ReaderType.IsEnabled = false;
-        ReaderIP.IsEnabled = false;
+        ReaderIp.IsEnabled = false;
         ReaderPort.IsEnabled = false;
         ReaderLocation.IsEnabled = false;
         ClockButton.IsEnabled = false;
@@ -279,8 +267,8 @@ public partial class ReaderPart : UserControl
 
     internal void UpdateSystemType(string type)
     {
-        reader.UpdateSystemType(type);
-        ReaderPort.Text = reader.Port.ToString();
+        Reader.UpdateSystemType(type);
+        ReaderPort.Text = Reader.Port.ToString();
     }
 
     private void ReaderType_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -288,8 +276,8 @@ public partial class ReaderPart : UserControl
         Log.D("UI.MainPages.TimingPage", "Reader type has changed.");
         string type = (string)((ComboBoxItem)ReaderType.SelectedItem!).Tag!;
         Log.D("UI.MainPages.TimingPage", "Updating to type: " + Readers.SYSTEM_NAMES[type]);
-        reader.UpdateSystemType(type);
-        ReaderPort.Text = reader.Port.ToString();
+        Reader.UpdateSystemType(type);
+        ReaderPort.Text = Reader.Port.ToString();
         ReaderPort.IsEnabled = Readers.SYSTEM_CHRONOKEEP_PORTAL != type;
     }
 
@@ -299,7 +287,7 @@ public partial class ReaderPart : UserControl
         src.SelectAll();
     }
 
-    private void IPValidation(object? sender, TextInputEventArgs e)
+    private void IpValidation(object? sender, TextInputEventArgs e)
     {
         e.Handled = AllowedChars().IsMatch(e.Text!);
     }
@@ -311,25 +299,25 @@ public partial class ReaderPart : UserControl
 
     private void Rewind_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Settings button pressed. IP is " + ReaderIP.Text);
-        parent.OpenRewindWindow(reader);
+        Log.D("UI.MainPages.TimingPage", "Settings button pressed. IP is " + ReaderIp.Text);
+        parent.OpenRewindWindow(Reader);
     }
 
     private void Clock_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Clock button pressed. IP is " + ReaderIP.Text);
-        parent.OpenTimeWindow(reader);
+        Log.D("UI.MainPages.TimingPage", "Clock button pressed. IP is " + ReaderIp.Text);
+        parent.OpenTimeWindow(Reader);
     }
 
     private void Settings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (reader == null || reader.SystemInterface == null)
+        if (Reader.SystemInterface == null)
         {
             return;
         }
-        if (reader.SystemInterface.SettingsEditable())
+        if (Reader.SystemInterface.SettingsEditable())
         {
-            reader.SystemInterface.OpenSettings();
+            Reader.SystemInterface.OpenSettings();
         }
         else
         {
@@ -339,20 +327,22 @@ public partial class ReaderPart : UserControl
 
     private void Readers_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (reader == null || reader.SystemInterface == null)
+        if (Reader.SystemInterface == null)
         {
             return;
         }
-        if (reader.SystemStatus == TimingSystem.READING_STATUS_READING
-            || reader.SystemStatus == TimingSystem.READING_STATUS_PARTIAL)
+        switch (Reader.SystemStatus)
         {
-            reader.SystemInterface.StopReading();
+            case TimingSystem.READING_STATUS_READING:
+            case TimingSystem.READING_STATUS_PARTIAL:
+                Reader.SystemInterface.StopReading();
+                return;
+            case TimingSystem.READING_STATUS_STOPPED:
+                Reader.SystemInterface.StartReading();
+                return;
+            default:
+                return;
         }
-        else if (reader.SystemStatus == TimingSystem.READING_STATUS_STOPPED)
-        {
-            reader.SystemInterface.StartReading();
-        }
-        return;
     }
 
     private void Connect_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -360,42 +350,41 @@ public partial class ReaderPart : UserControl
         if ("connect" != (string)ConnectButton.Tag!)
         {
             Log.D("UI.MainPages.TimingPage", "Disconnect pressed.");
-            reader.Status = SYSTEM_STATUS.WORKING;
-            parent.DisconnectSystem(reader);
+            Reader.Status = SYSTEM_STATUS.WORKING;
+            parent.DisconnectSystem(Reader);
             UpdateStatus();
-            reader.SystemInterface!.CloseSettings();
+            Reader.SystemInterface!.CloseSettings();
             return;
         }
-        Log.D("UI.MainPages.TimingPage", "Connect button pressed. IP is " + ReaderIP.Text);
+        Log.D("UI.MainPages.TimingPage", "Connect button pressed. IP is " + ReaderIp.Text);
         // Check if IP is a valid IP address
-        if (!IPPattern().IsMatch(ReaderIP.Text!.Trim()))
+        if (!IpPattern().IsMatch(ReaderIp.Text!.Trim()))
         {
             DialogBox.Show("IP address given not valid.");
             return;
         }
-        reader.IPAddress = ReaderIP.Text.Trim();
+        Reader.IpAddress = ReaderIp.Text.Trim();
         // Check if Port is valid.
         _ = int.TryParse(ReaderPort.Text!.Trim(), out int portNo);
-        if (portNo < 0 || portNo > 65535)
+        if (portNo is < 0 or > 65535)
         {
             DialogBox.Show("Port given not valid.");
             return;
         }
-        reader.Port = portNo;
-        reader.LocationID = Convert.ToInt32(((ComboBoxItem)ReaderLocation.SelectedItem!).Tag!);
-        reader.LocationName = ((ComboBoxItem)ReaderLocation.SelectedItem).Content!.ToString()!;
-        reader.Status = SYSTEM_STATUS.WORKING;
-        parent.ConnectSystem(reader);
+        Reader.Port = portNo;
+        Reader.LocationId = Convert.ToInt32(((ComboBoxItem)ReaderLocation.SelectedItem!).Tag!);
+        Reader.LocationName = ((ComboBoxItem)ReaderLocation.SelectedItem).Content!.ToString()!;
+        Reader.Status = SYSTEM_STATUS.WORKING;
+        parent.ConnectSystem(Reader);
         UpdateStatus();
     }
 
     private void Remove_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.MainPages.TimingPage", "Remove button for a timing system has been clicked.");
-        if (reader.Saved())
+        if (Reader.Saved())
         {
-            parent.RemoveSystem(reader);
+            parent.RemoveSystem(Reader);
         }
-        ;
     }
 }

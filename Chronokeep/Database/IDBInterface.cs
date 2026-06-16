@@ -18,11 +18,11 @@ namespace Chronokeep.Database
         void SetAppSetting(AppSetting setting);
 
         // Results API Functions
-        int AddAPI(APIObject anAPI);
-        void UpdateAPI(APIObject anAPI);
+        int AddAPI(ApiObject anAPI);
+        void UpdateAPI(ApiObject anAPI);
         void RemoveAPI(int identifier);
-        APIObject? GetAPI(int identifier);
-        List<APIObject> GetAllAPI();
+        ApiObject? GetAPI(int identifier);
+        List<ApiObject> GetAllAPI();
 
         // Event Functions
         int AddEvent(Event anEvent);
@@ -193,8 +193,8 @@ namespace Chronokeep.Database
         void ClearBannedPhones();
 
         // SMS Subscription functions
-        List<APISmsSubscription> GetSmsSubscriptions(int eventId);
-        void AddSmsSubscriptions(int eventId, List<APISmsSubscription> subscriptions);
+        List<ApiSmsSubscription> GetSmsSubscriptions(int eventId);
+        void AddSmsSubscriptions(int eventId, List<ApiSmsSubscription> subscriptions);
         void DeleteSmsSubscriptions(int eventId);
 
         // Chronoclock functions

@@ -6,57 +6,55 @@ using System.Text;
 
 namespace Chronokeep.Network
 {
-    class ZeroConf
+    internal class ZeroConf
     {
         private bool keepAlive = true;
         private UdpClient? udpClient;
-        private string servername;
-        public static string? serverid;
+        private readonly string servername;
+        private static string? serverid;
 
-        private static bool running = false;
+        private static bool running;
 
         public ZeroConf(string? name)
         {
             char[] chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
-            char[] serverid_chars = new char[10];
+            char[] serveridChars = new char[10];
             Random rng = new();
-            for (int i = 0; i < serverid_chars.Length; i++)
+            for (int i = 0; i < serveridChars.Length; i++)
             {
-                serverid_chars[i] = chars[rng.Next(0, chars.Length)];
+                serveridChars[i] = chars[rng.Next(0, chars.Length)];
             }
             servername = name ?? Constants.Network.DEFAULT_CHRONOKEEP_SERVER_NAME;
-            serverid = new string(serverid_chars);
+            serverid = new string(serveridChars);
             Log.D("Network.ZeroConf", "Server name is " + servername + " and has an id of " + serverid + ".");
         }
 
         public void Run()
         {
             running = true;
-            udpClient = new();
+            udpClient = new UdpClient();
             IPEndPoint endPoint = new(IPAddress.Any, Constants.Network.CHRONOKEEP_ZCONF_PORT);
             udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             IPAddress multicastAddr = IPAddress.Parse(Constants.Network.CHRONOKEEP_ZCONF_MULTICAST_IP);
             udpClient.JoinMulticastGroup(multicastAddr);
             udpClient.Client.Bind(endPoint);
 
-            string received_data;
-            byte[] receive_byte_array;
-
             int counter = 0;
-            while (keepAlive == true)
+            while (keepAlive)
             {
-                Log.D("Network.ZeroConf", counter++ + " clients have contacted me.");
+                Log.D("Network.ZeroConf", counter + " clients have contacted me.");
+                counter++;
                 try
                 {
-                    receive_byte_array = udpClient.Receive(ref endPoint);
-                    received_data = Encoding.UTF8.GetString(receive_byte_array, 0, receive_byte_array.Length).Trim();
-                    Log.D("Network.ZeroConf", string.Format("Received broadcast from '{0}' with data '{1}'", endPoint.ToString(), received_data));
-                    if (received_data.Equals(Constants.Network.CHRONOKEEP_ZCONF_CONNECT_MSG, StringComparison.OrdinalIgnoreCase))
+                    byte[] receiveByteArray = udpClient.Receive(ref endPoint);
+                    string receivedData = Encoding.UTF8.GetString(receiveByteArray, 0, receiveByteArray.Length).Trim();
+                    Log.D("Network.ZeroConf", $"Received broadcast from '{endPoint}' with data '{receivedData}'");
+                    if (receivedData.Equals(Constants.Network.CHRONOKEEP_ZCONF_CONNECT_MSG, StringComparison.OrdinalIgnoreCase))
                     {
-                        string outString = string.Format("[{0}|{1}|{2}]", servername, serverid, NetCore.TCPPort());
-                        byte[] out_data = Encoding.UTF8.GetBytes(outString);
-                        Log.D("Network.ZeroConf", string.Format("Sending '{0}'", outString));
-                        udpClient.Send(out_data, out_data.Length, endPoint);
+                        string outString = $"[{servername}|{serverid}|{NetCore.GetTcpPort()}]";
+                        byte[] outData = Encoding.UTF8.GetBytes(outString);
+                        Log.D("Network.ZeroConf", $"Sending '{outString}'");
+                        udpClient.Send(outData, outData.Length, endPoint);
                     }
                 }
                 catch
@@ -75,10 +73,5 @@ namespace Chronokeep.Network
         }
 
         public static bool IsRunning() => running;
-
-        public void SetName(string name)
-        {
-            servername = name;
-        }
     }
 }

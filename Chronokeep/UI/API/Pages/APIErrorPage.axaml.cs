@@ -1,19 +1,19 @@
 using Avalonia.Controls;
 using Chronokeep.UI.API.Windows;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
-public partial class APIErrorPage : UserControl
+public partial class ApiErrorPage : UserControl
 {
-    private readonly APIWindow window;
+    private readonly ApiWindow window;
 
-    public APIErrorPage(APIWindow window, bool noAPI)
+    public ApiErrorPage(ApiWindow window, bool noApi)
     {
         InitializeComponent();
         this.window = window;
-        if (noAPI)
+        if (noApi)
         {
-            errorLabel.Text = "An API must be set up before you can use this tool.";
+            ErrorLabel.Text = "An API must be set up before you can use this tool.";
         }
     }
 

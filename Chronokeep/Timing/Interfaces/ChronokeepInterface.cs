@@ -5,13 +5,12 @@ using Chronokeep.Interfaces.Timing;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronokeepPortal;
-using Chronokeep.Objects.ChronokeepPortal.Requests;
-using Chronokeep.Objects.ChronokeepPortal.Responses;
 using Chronokeep.UI.Timing.ReaderSettings;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,28 +23,28 @@ namespace Chronokeep.Timing.Interfaces
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly StringBuilder buffer = new();
         private Socket? sock;
-        private bool wasShutdown = false;
+        private bool wasShutdown;
 
-        private ChronokeepSettings? settingsWindow = null;
-        private string reader_ip = "";
-        private string reader_name = "";
+        private ChronokeepSettings? settingsWindow;
+        private string readerIp = "";
+        private string readerName = "";
 
         [GeneratedRegex(@"^\[(?'PORTAL_NAME'[^|]*)\|(?'PORTAL_ID'[^|]*)\|(?'PORTAL_PORT'\d{1,5})\]")]
         private static partial Regex ZeroConf();
         [GeneratedRegex(@"^[^\n]*\n")]
         private static partial Regex Msg();
 
-        public List<Socket>? Connect(string IP_Address, int Port)
+        public List<Socket>? Connect(string ipAddress, int _)
         {
-            reader_ip = IP_Address;
+            readerIp = ipAddress;
             List<Socket> output = [];
-            sock = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 Log.D("Timing.Interfaces.ChronokeepInterface", "Attempting to get port from server.");
                 using UdpClient client = new(AddressFamily.InterNetwork);
                 byte[] msg = Encoding.Default.GetBytes(Constants.Network.CHRONOKEEP_ZCONF_CONNECT_MSG);
-                IPEndPoint endPoint = new(IPAddress.Parse(IP_Address), Constants.Network.CHRONOKEEP_ZCONF_PORT);
+                IPEndPoint endPoint = new(IPAddress.Parse(ipAddress), Constants.Network.CHRONOKEEP_ZCONF_PORT);
                 client.Send(msg, msg.Length, endPoint);
                 client.Client.ReceiveTimeout = Constants.Readers.TIMEOUT;
                 byte[] data = client.Receive(ref endPoint);
@@ -60,14 +59,13 @@ namespace Chronokeep.Timing.Interfaces
                         + ". Port is "
                         + match.Groups["PORTAL_PORT"].Value
                         );
-                    int port = Constants.Network.CHRONOKEEP_ZCONF_PORT;
-                    reader_name = match.Groups["PORTAL_NAME"].Value;
-                    if (!int.TryParse(match.Groups["PORTAL_PORT"].Value, out port))
+                    readerName = match.Groups["PORTAL_NAME"].Value;
+                    if (!int.TryParse(match.Groups["PORTAL_PORT"].Value, out int port))
                     {
                         Log.E("Timing.Interfaces.ChronokeepInterface", "Error parsing port.");
                         return null;
                     }
-                    sock.Connect(IP_Address, port);
+                    sock.Connect(ipAddress, port);
                     SendMessage(JsonSerializer.Serialize(new ConnectRequest()
                     {
                         Reads = true,
@@ -94,10 +92,10 @@ namespace Chronokeep.Timing.Interfaces
         public void GetTime()
         {
             Log.D("Timing.Interfaces.ChronokeepInterface", "Requesting time.");
-            SendMessage(JsonSerializer.Serialize(new TimeGetRequest() { }));
+            SendMessage(JsonSerializer.Serialize(new TimeGetRequest()));
         }
 
-        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket sock)
+        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket _)
         {
             Dictionary<MessageType, List<string>> output = [];
             buffer.Append(inMessage);
@@ -119,26 +117,19 @@ namespace Chronokeep.Timing.Interfaces
                     {
                         case Response.KEEPALIVE:
                             Log.D("Timing.Interfaces.ChronokeepInterface", "Reader sent keepalive message.");
-                            SendMessage(JsonSerializer.Serialize(new KeepaliveAckRequest { }));
+                            SendMessage(JsonSerializer.Serialize(new KeepaliveAckRequest()));
                             break;
                         case Response.READERS:
                             Log.D("Timing.Interfaces.ChronokeepInterface", "Reader sent readers message.");
                             try
                             {
                                 ReadersResponse readRes = JsonSerializer.Deserialize<ReadersResponse>(message)!;
-                                settingsWindow?.UpdateView(new()
+                                settingsWindow?.UpdateView(new PortalSettingsHolder
                                 {
                                     Readers = readRes.List,
                                     Changes = [PortalSettingsHolder.ChangeType.READERS]
                                 });
-                                int oneReadingCount = 0;
-                                foreach (PortalReader reader in readRes.List)
-                                {
-                                    if (reader.Reading)
-                                    {
-                                        oneReadingCount++;
-                                    }
-                                }
+                                int oneReadingCount = readRes.List.Count(reader => reader.Reading);
                                 if (!output.TryGetValue(MessageType.STATUS, out List<string>? readersStatusList))
                                 {
                                     readersStatusList = [];
@@ -214,7 +205,7 @@ namespace Chronokeep.Timing.Interfaces
                                     output[MessageType.ERROR] = errorList;
                                 }
                                 Log.E("Timing.Interfaces.ChronokeepInterface", "Error sent to us is of type '" + err.Value.Type + "' and has message '" + err.Value.Message + "'.");
-                                window?.ShowNotificationDialog(reader_name, reader_ip, new()
+                                window?.ShowNotificationDialog(readerName, readerIp, new()
                                 {
                                     Type = err.Value.Type,
                                     When = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -261,22 +252,14 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.Volume = double.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_VOICE:
-                                                if (set.Value == PortalSetting.VOICE_EMILY)
+                                                updSettings.Voice = set.Value switch
                                                 {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.EMILY;
-                                                }
-                                                else if (set.Value == PortalSetting.VOICE_MICHAEL)
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.MICHAEL;
-                                                }
-                                                else if (set.Value == PortalSetting.VOICE_CUSTOM)
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.CUSTOM;
-                                                }
-                                                else
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.EMILY;
-                                                }
+                                                    PortalSetting.VOICE_EMILY => PortalSettingsHolder.VoiceType.EMILY,
+                                                    PortalSetting.VOICE_MICHAEL => PortalSettingsHolder.VoiceType
+                                                        .MICHAEL,
+                                                    PortalSetting.VOICE_CUSTOM => PortalSettingsHolder.VoiceType.CUSTOM,
+                                                    _ => PortalSettingsHolder.VoiceType.EMILY
+                                                };
                                                 break;
                                             case PortalSetting.SETTING_UPLOAD_INTERVAL:
                                                 updSettings.UploadInterval = int.Parse(set.Value);
@@ -285,7 +268,7 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.BeepInterval = int.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_NTFY_URL:
-                                                updSettings.NtfyURL = set.Value;
+                                                updSettings.NtfyUrl = set.Value;
                                                 break;
                                             case PortalSetting.SETTING_NTFY_TOPIC:
                                                 updSettings.NtfyTopic = set.Value;
@@ -297,13 +280,13 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.NtfyPass = set.Value;
                                                 break;
                                             case PortalSetting.SETTING_ENABLE_NTFY:
-                                                updSettings.EnableNTFY = set.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+                                                updSettings.EnableNtfy = set.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
                                                 break;
                                             case PortalSetting.SETTING_SCREEN_TYPE:
                                                 updSettings.ScreenType = set.Value;
                                                 break;
                                         }
-                                        updSettings.Changes!.Add(PortalSettingsHolder.ChangeType.SETTINGS);
+                                        updSettings.Changes.Add(PortalSettingsHolder.ChangeType.SETTINGS);
                                     }
                                     settingsWindow.UpdateView(updSettings);
                                 }
@@ -331,9 +314,9 @@ namespace Chronokeep.Timing.Interfaces
                             try
                             {
                                 ApiListResponse apiList = JsonSerializer.Deserialize<ApiListResponse>(message)!;
-                                settingsWindow?.UpdateView(new()
+                                settingsWindow?.UpdateView(new PortalSettingsHolder
                                 {
-                                    APIs = apiList.List,
+                                    ApIs = apiList.List,
                                     Changes = [PortalSettingsHolder.ChangeType.APIS]
                                 });
                                 if (!output.TryGetValue(MessageType.SETTINGVALUE, out List<string>? settingList))
@@ -365,7 +348,7 @@ namespace Chronokeep.Timing.Interfaces
                                     PortalSettingsHolder updSettings = new()
                                     {
                                         Readers = allSettings.Readers,
-                                        APIs = allSettings.APIs,
+                                        ApIs = allSettings.ApIs,
                                         AutoUpload = allSettings.AutoUpload,
                                         PortalVersion = allSettings.PortalVersion,
                                     };
@@ -413,7 +396,7 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.BeepInterval = int.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_NTFY_URL:
-                                                updSettings.NtfyURL = set.Value;
+                                                updSettings.NtfyUrl = set.Value;
                                                 break;
                                             case PortalSetting.SETTING_NTFY_TOPIC:
                                                 updSettings.NtfyTopic = set.Value;
@@ -425,21 +408,14 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.NtfyPass = set.Value;
                                                 break;
                                             case PortalSetting.SETTING_ENABLE_NTFY:
-                                                updSettings.EnableNTFY = set.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+                                                updSettings.EnableNtfy = set.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
                                                 break;
                                             case PortalSetting.SETTING_SCREEN_TYPE:
                                                 updSettings.ScreenType = set.Value;
                                                 break;
                                         }
                                     }
-                                    int settingsReadingCount = 0;
-                                    foreach (PortalReader reader in allSettings.Readers)
-                                    {
-                                        if (reader.Reading)
-                                        {
-                                            settingsReadingCount++;
-                                        }
-                                    }
+                                    int settingsReadingCount = allSettings.Readers.Count(reader => reader.Reading);
                                     if (!output.TryGetValue(MessageType.STATUS, out List<string>? settingsStatusList))
                                     {
                                         settingsStatusList = [];
@@ -457,10 +433,10 @@ namespace Chronokeep.Timing.Interfaces
                                     {
                                         output[MessageType.STATUS].Add(TimingSystem.READING_STATUS_PARTIAL);
                                     }
-                                    updSettings.Changes!.Add(PortalSettingsHolder.ChangeType.SETTINGS);
-                                    updSettings.Changes!.Add(PortalSettingsHolder.ChangeType.READERS);
-                                    updSettings.Changes!.Add(PortalSettingsHolder.ChangeType.APIS);
-                                    settingsWindow?.UpdateView(
+                                    updSettings.Changes.Add(PortalSettingsHolder.ChangeType.SETTINGS);
+                                    updSettings.Changes.Add(PortalSettingsHolder.ChangeType.READERS);
+                                    updSettings.Changes.Add(PortalSettingsHolder.ChangeType.APIS);
+                                    settingsWindow.UpdateView(
                                         updSettings
                                         );
                                 }
@@ -503,11 +479,11 @@ namespace Chronokeep.Timing.Interfaces
                                                 Constants.Timing.UTCSecondsToRFIDSeconds(pRead.Seconds),
                                                 pRead.Milliseconds,
                                                 pRead.Antenna,
-                                                pRead.RSSI,
+                                                pRead.Rssi,
                                                 pRead.Reader,
                                                 pRead.Type == PortalRead.READ_KIND_CHIP ? Constants.Timing.CHIPREAD_TYPE_CHIP : Constants.Timing.CHIPREAD_TYPE_MANUAL,
                                                 Constants.Timing.UTCToLocalDate(pRead.ReaderSeconds, pRead.ReaderMilliseconds).ToString("yyyy/MM/dd HH:mm:ss.fff"),
-                                                reader_name
+                                                readerName
                                                 );
                                             if (window != null && window.InDidNotStartMode())
                                             {
@@ -549,8 +525,8 @@ namespace Chronokeep.Timing.Interfaces
                                 }
 
                                 timeList.Clear();
-                                DateTime timeDT = DateTime.ParseExact(t.Local, "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
-                                timeList.Add(timeDT.ToString("dd MMM yyyy  HH:mm:ss"));
+                                DateTime timeDt = DateTime.ParseExact(t.Local, "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
+                                timeList.Add(timeDt.ToString("dd MMM yyyy  HH:mm:ss"));
                             }
                             catch (Exception e)
                             {
@@ -628,37 +604,37 @@ namespace Chronokeep.Timing.Interfaces
                                 switch (notRes.Type)
                                 {
                                     case PortalNotification.UPS_DISCONNECTED:
-                                        msg = "Portal at " + reader_ip + " UPS has been disconnected.";
+                                        msg = "Portal at " + readerIp + " UPS has been disconnected.";
                                         break;
                                     case PortalNotification.UPS_CONNECTED:
-                                        msg = "Portal at " + reader_ip + " UPS connection has been re-established.";
+                                        msg = "Portal at " + readerIp + " UPS connection has been re-established.";
                                         break;
                                     case PortalNotification.UPS_ON_BATTERY:
-                                        msg = "Portal at " + reader_ip + " UPS is working from battery power.";
+                                        msg = "Portal at " + readerIp + " UPS is working from battery power.";
                                         break;
                                     case PortalNotification.UPS_LOW_BATTERY:
-                                        msg = "Portal at " + reader_ip + " UPS battery is low. Shutdown imminent.";
+                                        msg = "Portal at " + readerIp + " UPS battery is low. Shutdown imminent.";
                                         break;
                                     case PortalNotification.UPS_ONLINE:
-                                        msg = "Portal at " + reader_ip + " UPS is back on line power.";
+                                        msg = "Portal at " + readerIp + " UPS is back on line power.";
                                         break;
                                     case PortalNotification.SHUTTING_DOWN:
-                                        msg = "Portal at " + reader_ip + " is shutting down.";
+                                        msg = "Portal at " + readerIp + " is shutting down.";
                                         break;
                                     case PortalNotification.RESTARTING:
-                                        msg = "Portal at " + reader_ip + " is restarting.";
+                                        msg = "Portal at " + readerIp + " is restarting.";
                                         break;
                                     case PortalNotification.HIGH_TEMP:
-                                        msg = "Portal at " + reader_ip + " temperature is high.";
+                                        msg = "Portal at " + readerIp + " temperature is high.";
                                         break;
                                     case PortalNotification.MAX_TEMP:
-                                        msg = "Portal at " + reader_ip + " temperature is very high. Throttling will most likely occur.";
+                                        msg = "Portal at " + readerIp + " temperature is very high. Throttling will most likely occur.";
                                         break;
                                     case PortalNotification.BATTERY_LOW:
-                                        msg = "Portal at " + reader_ip + " is indicating the battery is low.";
+                                        msg = "Portal at " + readerIp + " is indicating the battery is low.";
                                         break;
                                     case PortalNotification.BATTERY_CRITICAL:
-                                        msg = "Portal at " + reader_ip + " is indicating the battery is critical.";
+                                        msg = "Portal at " + readerIp + " is indicating the battery is critical.";
                                         break;
                                 }
                                 Application.Current!.Dispatcher.Invoke(() =>
@@ -709,12 +685,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(int reader = 1)
         {
-            SendMessage(JsonSerializer.Serialize(new ReadsGetAllRequest() { }));
+            SendMessage(JsonSerializer.Serialize(new ReadsGetAllRequest()));
         }
 
-        public void SetMainSocket(Socket sock) { }
+        public void SetMainSocket(Socket iSock) { }
 
-        public void SetSettingsSocket(Socket sock) { }
+        public void SetSettingsSocket(Socket iSock) { }
 
         public void SetTime(DateTime date)
         {
@@ -740,132 +716,139 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SendQuit()
         {
-            SendMessage(JsonSerializer.Serialize(new QuitRequest { }));
+            SendMessage(JsonSerializer.Serialize(new QuitRequest()));
             wasShutdown = true;
         }
 
         public void SendRestart()
         {
-            SendMessage(JsonSerializer.Serialize(new RestartRequest { }));
+            SendMessage(JsonSerializer.Serialize(new RestartRequest()));
             wasShutdown = true;
         }
 
         public void SendUpdate()
         {
-            SendMessage(JsonSerializer.Serialize(new UpdateRequest { }));
+            SendMessage(JsonSerializer.Serialize(new UpdateRequest()));
             wasShutdown = true;
         }
 
         public void SendShutdown()
         {
-            SendMessage(JsonSerializer.Serialize(new ShutdownRequest { }));
+            SendMessage(JsonSerializer.Serialize(new ShutdownRequest()));
             wasShutdown = true;
         }
 
         public void SendGetSettings()
         {
-            SendMessage(JsonSerializer.Serialize(new SettingsGetAllRequest { }));
+            SendMessage(JsonSerializer.Serialize(new SettingsGetAllRequest()));
         }
 
         public void SendSetSettings(PortalSettingsHolder settings)
         {
             SettingsSetRequest settingsReq = new()
             {
-                Settings = []
+                Settings =
+                [
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_PORTAL_NAME,
+                        Value = settings.Name
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_READ_WINDOW,
+                        Value = settings.ReadWindow.ToString()
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_CHIP_TYPE,
+                        Value = settings.ChipType == PortalSettingsHolder.ChipTypeEnum.DEC
+                            ? PortalSetting.TYPE_CHIP_DEC
+                            : PortalSetting.TYPE_CHIP_HEX
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_VOLUME,
+                        Value = settings.Volume.ToString(CultureInfo.InvariantCulture)
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_PLAY_SOUND,
+                        Value = settings.PlaySound ? "true" : "false"
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_UPLOAD_INTERVAL,
+                        Value = settings.UploadInterval.ToString()
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_BEEP_INTERVAL,
+                        Value = settings.BeepInterval.ToString()
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_VOICE,
+                        Value = settings.Voice switch
+                        {
+                            PortalSettingsHolder.VoiceType.EMILY => PortalSetting.VOICE_EMILY,
+                            PortalSettingsHolder.VoiceType.MICHAEL => PortalSetting.VOICE_MICHAEL,
+                            _ => PortalSetting.VOICE_CUSTOM
+                        }
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_NTFY_URL,
+                        Value = settings.NtfyUrl
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_NTFY_TOPIC,
+                        Value = settings.NtfyTopic
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_NTFY_USER,
+                        Value = settings.NtfyUser
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_NTFY_PASS,
+                        Value = settings.NtfyPass
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_ENABLE_NTFY,
+                        Value = settings.EnableNtfy ? "true" : "false",
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_SCREEN_TYPE,
+                        Value = settings.ScreenType
+                    }
+
+                ]
             };
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_PORTAL_NAME,
-                Value = settings.Name!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_READ_WINDOW,
-                Value = settings.ReadWindow.ToString()!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_CHIP_TYPE,
-                Value = settings.ChipType == PortalSettingsHolder.ChipTypeEnum.DEC ? PortalSetting.TYPE_CHIP_DEC
-                    : PortalSetting.TYPE_CHIP_HEX
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_VOLUME,
-                Value = settings.Volume.ToString()!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_PLAY_SOUND,
-                Value = settings.PlaySound == true ? "true" : "false"
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_UPLOAD_INTERVAL,
-                Value = settings.UploadInterval.ToString()!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_BEEP_INTERVAL,
-                Value = settings.BeepInterval.ToString()!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_VOICE,
-                Value = settings.Voice == PortalSettingsHolder.VoiceType.EMILY ? PortalSetting.VOICE_EMILY
-                    : settings.Voice == PortalSettingsHolder.VoiceType.MICHAEL ? PortalSetting.VOICE_MICHAEL
-                    : PortalSetting.VOICE_CUSTOM
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_NTFY_URL,
-                Value = settings.NtfyURL!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_NTFY_TOPIC,
-                Value = settings.NtfyTopic!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_NTFY_USER,
-                Value = settings.NtfyUser!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_NTFY_PASS,
-                Value = settings.NtfyPass!
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_ENABLE_NTFY,
-                Value = settings.EnableNTFY == true ? "true" : "false",
-            });
-            settingsReq.Settings.Add(new()
-            {
-                Name = PortalSetting.SETTING_SCREEN_TYPE,
-                Value = settings.ScreenType!
-            });
             SendMessage(JsonSerializer.Serialize(settingsReq));
         }
 
-        public void SendSaveApi(PortalAPI api)
+        public void SendSaveApi(PortalApi api)
         {
             SendMessage(JsonSerializer.Serialize(new ApiSaveRequest()
             {
-                ID = api.Id,
+                Id = api.Id,
                 Name = api.Nickname,
                 Type = api.Kind,
-                URI = api.Uri,
+                Uri = api.Uri,
                 Token = api.Token,
             }));
         }
 
-        public void SendDeleteApi(PortalAPI api)
+        public void SendDeleteApi(PortalApi api)
         {
             SendMessage(JsonSerializer.Serialize(new ApiRemoveRequest()
             {
-                ID = api.Id
+                Id = api.Id
             }));
         }
 
@@ -876,7 +859,7 @@ namespace Chronokeep.Timing.Interfaces
                 Id = reader.Id,
                 Name = reader.Name,
                 Type = reader.Kind,
-                IPAddress = reader.IPAddress,
+                IpAddress = reader.IpAddress,
                 Port = reader.Port,
                 AutoConnect = reader.AutoConnect,
             }));
@@ -913,22 +896,16 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SendAutoUploadResults(AutoUploadQuery query)
         {
-            string q_string = "";
-            switch (query)
+            string qString = query switch
             {
-                case AutoUploadQuery.STOP:
-                    q_string = Request.AUTO_UPLOAD_QUERY_STOP;
-                    break;
-                case AutoUploadQuery.START:
-                    q_string = Request.AUTO_UPLOAD_QUERY_START;
-                    break;
-                case AutoUploadQuery.STATUS:
-                    q_string = Request.AUTO_UPLOAD_QUERY_STATUS;
-                    break;
-            }
+                AutoUploadQuery.STOP => Request.AUTO_UPLOAD_QUERY_STOP,
+                AutoUploadQuery.START => Request.AUTO_UPLOAD_QUERY_START,
+                AutoUploadQuery.STATUS => Request.AUTO_UPLOAD_QUERY_STATUS,
+                _ => ""
+            };
             SendMessage(JsonSerializer.Serialize(new ApiRemoteAutoUploadRequest()
             {
-                Query = q_string
+                Query = qString
             }));
         }
 
@@ -939,7 +916,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Disconnect()
         {
-            SendMessage(JsonSerializer.Serialize(new DisconnectRequest() { }));
+            SendMessage(JsonSerializer.Serialize(new DisconnectRequest()));
         }
 
         private void SendMessage(string msg)
@@ -960,7 +937,7 @@ namespace Chronokeep.Timing.Interfaces
                 DialogBox.Show("Settings window already open.");
                 return;
             }
-            settingsWindow = new(this);
+            settingsWindow = new ChronokeepSettings(this);
             window.AddWindow(settingsWindow);
             settingsWindow.Show();
         }

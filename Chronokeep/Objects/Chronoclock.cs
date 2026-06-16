@@ -2,6 +2,7 @@
 using Chronokeep.Network.API;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -13,16 +14,16 @@ namespace Chronokeep.Objects
     public class Chronoclock
     {
         public int Identifier { get; set; }
-        public string Name { get; set; } = "";
-        public string URL { get; set; } = "";
-        public bool Enabled { get; set; }
+        public string Name { get; init; } = "";
+        public string Url { get; init; } = "";
+        public bool Enabled { get; init; }
 
         public async Task<CountUpDownTimestampResponse> StartCountUp()
         {
             Log.D("Chronokeep.Objects.Chronoclock", "StartCountUp");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -31,10 +32,10 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new("http://" + this.URL + "/start"),
+                    RequestUri = new Uri($"http://{Url}/start"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -49,17 +50,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown starting countup: " + ex.Message);
+                throw new ApiException("Exception thrown starting countup: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> StopCountUp()
         {
             Log.D("Chronokeep.Objects.Chronoclock", "StopCountUp");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(this.Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -68,10 +69,10 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new("http://" + this.URL + "/stop"),
+                    RequestUri = new Uri($"http://{Url}/stop"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -86,17 +87,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown stopping countup: " + ex.Message);
+                throw new ApiException("Exception thrown stopping countup: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> AdjustTime(int seconds)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "AdjustTime");
-            if (URL == null || URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -113,11 +114,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + which),
+                    RequestUri = new Uri($"http://{Url}{which}"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -132,17 +133,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown adjusting time: " + ex.Message);
+                throw new ApiException("Exception thrown adjusting time: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<GetTimeResponse> GetTime()
         {
             Log.D("Chronokeep.Objects.Chronoclock", "GetTime");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -151,10 +152,10 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new("http://" + this.URL + "/get_time"),
+                    RequestUri = new Uri($"http://{Url}/get_time"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -169,17 +170,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown getting time: " + ex.Message);
+                throw new ApiException("Exception thrown getting time: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<GetConfigResponse> GetConfig()
         {
             Log.D("Chronokeep.Objects.Chronoclock", "GetConfig");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -188,10 +189,10 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new("http://" + this.URL + "/config.json"),
+                    RequestUri = new Uri($"http://{Url}/config.json"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -206,32 +207,32 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown getting config: " + ex.Message);
+                throw new ApiException("Exception thrown getting config: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<GetTimeResponse> SetTime(DateTime date)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetTime");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
             {
                 Dictionary<string, string> postContent = [];
-                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss").ToString();
+                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss");
                 using HttpClient client = GetHttpClient();
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_time"),
+                    RequestUri = new Uri($"http://{Url}/set_time"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -246,17 +247,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting time: " + ex.Message);
+                throw new ApiException("Exception thrown setting time: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> SetCountUpDownTime(DateTime date)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetCountUpDownTime");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -267,11 +268,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_countupdown"),
+                    RequestUri = new Uri($"http://{Url}/set_countupdown"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -286,17 +287,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting time: " + ex.Message);
+                throw new ApiException("Exception thrown setting time: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> SetFlipDisplay(bool flipDisplay)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetFlipDisplay");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -307,11 +308,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_flip"),
+                    RequestUri = new Uri($"http://{Url}/set_flip"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -326,17 +327,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting flipDisplay: " + ex.Message);
+                throw new ApiException("Exception thrown setting flipDisplay: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> SetTwelveHour(bool twelveHour)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetTwelveHour");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -347,11 +348,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_twelvehour"),
+                    RequestUri = new Uri($"http://{Url}/set_twelvehour"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -366,17 +367,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting twelveHour: " + ex.Message);
+                throw new ApiException("Exception thrown setting twelveHour: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> SetLockCountUpDown(bool lockCountUpDown)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetLockCountUpDown");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -387,11 +388,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_lock"),
+                    RequestUri = new Uri($"http://{Url}/set_lock"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -406,17 +407,17 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting lockCountUpDown: " + ex.Message);
+                throw new ApiException("Exception thrown setting lockCountUpDown: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public async Task<CountUpDownTimestampResponse> SetBrightness(uint brightness)
         {
             Log.D("Chronokeep.Objects.Chronoclock", "SetBrightness");
-            if (this.URL == null || this.URL.Length == 0)
+            if (string.IsNullOrEmpty(Url))
             {
-                throw new APIException("url not set");
+                throw new ApiException("url not set");
             }
             string content;
             try
@@ -427,11 +428,11 @@ namespace Chronokeep.Objects
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new("http://" + this.URL + "/set_brightness"),
+                    RequestUri = new Uri($"http://{Url}/set_brightness"),
                     Content = new FormUrlEncodedContent(postContent)
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Log.D("Chronokeep.Objects.Chronoclock", "Status code = ok.");
                     string json = await response.Content.ReadAsStringAsync();
@@ -446,65 +447,65 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new APIException("Exception thrown setting brightness: " + ex.Message);
+                throw new ApiException("Exception thrown setting brightness: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
     }
 
     public class GetConfigResponse
     {
         [JsonPropertyName("mdns")]
-        public string MDNS { get; set; } = "";
+        public string Mdns { get; init; } = "";
         [JsonPropertyName("apSsid")]
-        public string ApSSID { get; set; } = "";
+        public string ApSsid { get; init; } = "";
         [JsonPropertyName("apPassword")]
-        public string ApPassword { get; set; } = "";
+        public string ApPassword { get; init; } = "";
         [JsonPropertyName("ssids")]
-        public List<string> SSIDs { get; set; } = [];
+        public List<string> Ssids { get; init; } = [];
         [JsonPropertyName("passwords")]
-        public List<string> Passwords { get; set; } = [];
+        public List<string> Passwords { get; init; } = [];
         [JsonPropertyName("timeZone")]
-        public string TimeZone { get; set; } = "";
+        public string TimeZone { get; init; } = "";
         [JsonPropertyName("brightness")]
-        public uint Brightness { get; set; }
+        public uint Brightness { get; init; }
         [JsonPropertyName("flipDisplay")]
-        public bool FlipDisplay { get; set; }
+        public bool FlipDisplay { get; init; }
         [JsonPropertyName("twelveHour")]
-        public bool TwelveHour { get; set; }
+        public bool TwelveHour { get; init; }
         [JsonPropertyName("lockCountUpDown")]
-        public bool LockCountUpDown { get; set; }
+        public bool LockCountUpDown { get; init; }
         [JsonPropertyName("ntpServer1")]
-        public string NtpServer1 { get; set; } = "";
+        public string NtpServer1 { get; init; } = "";
         [JsonPropertyName("ntpServer2")]
-        public string NtpServer2 { get; set; } = "";
+        public string NtpServer2 { get; init; } = "";
         [JsonPropertyName("countupdownTimestamp")]
-        public long CountUpDownTimestamp { get; set; }
+        public long CountUpDownTimestamp { get; init; }
     }
 
     public class GetTimeResponse
     {
         [JsonPropertyName("time")]
-        public string Time { get; set; } = "";
+        public string Time { get; init; } = "";
     }
 
     public class CountUpDownTimestampResponse
     {
         [JsonPropertyName("brightness")]
-        public uint Brightness { get; set; }
+        public uint Brightness { get; init; }
         [JsonPropertyName("flipDisplay")]
-        public bool FlipDisplay { get; set; }
+        public bool FlipDisplay { get; init; }
         [JsonPropertyName("twelveHour")]
-        public bool TwelveHour { get; set; }
+        public bool TwelveHour { get; init; }
         [JsonPropertyName("lockCountUpDown")]
-        public bool LockCountUpDown { get; set; }
+        public bool LockCountUpDown { get; init; }
         [JsonPropertyName("countupdownTimestamp")]
-        public long CountUpDownTimestamp { get; set; }
+        public long CountUpDownTimestamp { get; init; }
     }
 
     public class ChronoclockErrorResponse
     {
         [JsonPropertyName("error")]
-        public string Error { get; set; } = "";
+        public string Error { get; init; } = "";
     }
 }

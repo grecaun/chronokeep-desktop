@@ -5,30 +5,18 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Chronokeep.UI.Parts.ReaderPart">
     <Grid VerticalAlignment="Center"
-		  HorizontalAlignment="Center">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="140"/> <!-- Type -->
-			<ColumnDefinition Width="120"/> <!-- IP -->
-			<ColumnDefinition Width="50"/>  <!-- Port -->
-			<ColumnDefinition Width="130"/> <!-- Location -->
-			<ColumnDefinition Width="50"/>  <!-- Clock -->
-			<ColumnDefinition Width="50"/>  <!-- Rewinnd -->
-			<ColumnDefinition Width="50"/>  <!-- Settings -->
-			<ColumnDefinition Width="50"/>  <!-- Reader -->
-			<ColumnDefinition Width="50"/>  <!-- Connect -->
-			<ColumnDefinition Width="50"/>  <!-- Delete -->
-        </Grid.ColumnDefinitions>
-		<ComboBox Grid.Column="0"
-			Name="ReaderType"
-			SelectionChanged="ReaderType_SelectionChanged"
-			Margin="2"
-			Height="40"
-			HorizontalAlignment="Stretch"
-			VerticalContentAlignment="Center"/>
+		  HorizontalAlignment="Center" ColumnDefinitions="140,120,50,130,50,50,50,50,50,50">
+	    <ComboBox Grid.Column="0"
+	              Name="ReaderType"
+	              SelectionChanged="ReaderType_SelectionChanged"
+	              Margin="2"
+	              Height="40"
+	              HorizontalAlignment="Stretch"
+	              VerticalContentAlignment="Center"/>
 		<TextBox Grid.Column="1"
-		    Name="ReaderIP"
+		    Name="ReaderIp"
 		    GotFocus="SelectAll"
-			TextInput="IPValidation"
+			TextInput="IpValidation"
 			Text=""
 			Margin="2"
 			Height="40"

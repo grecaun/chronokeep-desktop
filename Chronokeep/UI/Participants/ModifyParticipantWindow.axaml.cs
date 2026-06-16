@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -21,13 +20,13 @@ public partial class ModifyParticipantWindow : Window
     private readonly Event? theEvent;
     private readonly Participant? person;
 
-    private bool ParticipantChanged = false;
+    private bool participantChanged;
 
     public ModifyParticipantWindow(IMainWindow window, IDBInterface database, Participant? person)
     {
         InitializeComponent();
         this.window = window;
-        this.tPage = null;
+        tPage = null;
         this.database = database;
         this.person = person;
         theEvent = database.GetCurrentEvent();
@@ -49,22 +48,22 @@ public partial class ModifyParticipantWindow : Window
         BibBox.Focus();
     }
 
-    public ModifyParticipantWindow(TimingPage tPage, IDBInterface database, int EventSpecificId, string Bib)
+    public ModifyParticipantWindow(TimingPage tPage, IDBInterface database, int eventSpecificId, string bib)
     {
         InitializeComponent();
-        this.window = null;
+        window = null;
         this.tPage = tPage;
         this.database = database;
         theEvent = database.GetCurrentEvent();
         if (theEvent == null)
         {
             DialogBox.Show("Unable to get event.");
-            this.Close();
+            Close();
         }
-        person = database.GetParticipantEventSpecific(theEvent!.Identifier, EventSpecificId);
+        person = database.GetParticipantEventSpecific(theEvent!.Identifier, eventSpecificId);
         if (person == null)
         {
-            BibBox.Text = Bib;
+            BibBox.Text = bib;
             Add.Click += Add_Click;
             UpdateDistances();
         }
@@ -78,7 +77,7 @@ public partial class ModifyParticipantWindow : Window
 
     public static ModifyParticipantWindow NewWindow(IMainWindow window, IDBInterface database, Participant? person = null)
     {
-        return new(window, database, person);
+        return new ModifyParticipantWindow(window, database, person);
     }
 
     private void UpdateDistances()
@@ -99,7 +98,7 @@ public partial class ModifyParticipantWindow : Window
         DistanceBox.SelectedIndex = 0;
         List<string> divisions = database.GetDivisions(theEvent.Identifier);
         divisions.RemoveAll(x => x.Trim().Length < 1);
-        divisions.Sort((x, y) => x.CompareTo(y));
+        divisions.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
         DivisionBox.ItemsSource = divisions;
     }
 
@@ -127,7 +126,7 @@ public partial class ModifyParticipantWindow : Window
             DistanceBox.Items.Add(item);
         }
         DistanceBox.SelectedItem = selected;
-        BibBox.Text = person.Bib.ToString();
+        BibBox.Text = person.Bib;
         FirstBox.Text = person.FirstName;
         LastBox.Text = person.LastName;
         BirthdayBox.Text = DateTime.Parse(person.Birthdate).ToString("MM/dd/yyyy");
@@ -136,21 +135,20 @@ public partial class ModifyParticipantWindow : Window
         ComboBoxItem? otherBoxItem = null, notSpecifiedBoxItem = null;
         foreach (object? item in GenderBox.Items)
         {
-            if (item is ComboBoxItem cbi)
+            if (item is not ComboBoxItem cbi) continue;
+            if (person.Gender.Equals(cbi.Content!.ToString()))
             {
-                if (person.Gender.Equals(cbi!.Content!.ToString()))
-                {
-                    GenderBox.SelectedItem = cbi;
-                    genderFound = true;
-                }
-                if (cbi.Content.ToString() == "Not Specified")
-                {
+                GenderBox.SelectedItem = cbi;
+                genderFound = true;
+            }
+            switch (cbi.Content.ToString())
+            {
+                case "Not Specified":
                     notSpecifiedBoxItem = cbi;
-                }
-                else if (cbi.Content.ToString() == "Other")
-                {
+                    break;
+                case "Other":
                     otherBoxItem = cbi;
-                }
+                    break;
             }
         }
         if (person.Gender.Equals("NS", StringComparison.OrdinalIgnoreCase))
@@ -161,7 +159,7 @@ public partial class ModifyParticipantWindow : Window
         if (!genderFound)
         {
             GenderBox.SelectedItem = otherBoxItem;
-            otherGenderBox.Text = person.Gender;
+            OtherGenderBox.Text = person.Gender;
             ShowOtherGender();
         }
         else
@@ -179,8 +177,8 @@ public partial class ModifyParticipantWindow : Window
         MobileBox.Text = person.Mobile;
         ParentBox.Text = person.Parent;
         CommentsBox.Text = person.Comments;
-        ECNameBox.Text = person.ECName;
-        ECPhoneBox.Text = person.ECPhone;
+        EcNameBox.Text = person.EcName;
+        EcPhoneBox.Text = person.EcPhone;
         AnonymousBox.IsChecked = person.Anonymous;
         ApparelBox.Text = person.EventSpecific.Apparel;
         DivisionBox.Text = person.EventSpecific.Division;
@@ -188,7 +186,7 @@ public partial class ModifyParticipantWindow : Window
         Done.Content = "Cancel";
         List<string> divisions = database.GetDivisions(theEvent.Identifier);
         divisions.RemoveAll(x => x.Trim().Length < 1);
-        divisions.Sort((x, y) => x.CompareTo(y));
+        divisions.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
         DivisionBox.ItemsSource = divisions;
     }
 
@@ -200,7 +198,7 @@ public partial class ModifyParticipantWindow : Window
         LastBox.Text = "";
         AgeBox.Text = "";
         GenderBox.SelectedIndex = 0;
-        otherGenderBox.Text = "";
+        OtherGenderBox.Text = "";
         StreetBox.Text = "";
         Street2Box.Text = "";
         CityBox.Text = "";
@@ -212,25 +210,25 @@ public partial class ModifyParticipantWindow : Window
         MobileBox.Text = "";
         ParentBox.Text = "";
         CommentsBox.Text = "";
-        ECNameBox.Text = "";
-        ECPhoneBox.Text = "";
+        EcNameBox.Text = "";
+        EcPhoneBox.Text = "";
         AnonymousBox.IsChecked = false;
         ApparelBox.Text = "";
         DivisionBox.Text = "";
         List<string> divisions = database.GetDivisions(theEvent!.Identifier);
         divisions.RemoveAll(x => x.Trim().Length < 1);
-        divisions.Sort((x, y) => x.CompareTo(y));
+        divisions.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
         DivisionBox.ItemsSource = divisions;
     }
 
     private void ShowOtherGender()
     {
-        otherGenderBox?.IsVisible = true;
+        OtherGenderBox?.IsVisible = true;
     }
 
     private void DismissOtherGender()
     {
-        otherGenderBox?.IsVisible = false;
+        OtherGenderBox?.IsVisible = false;
     }
 
     private Participant? FromFields()
@@ -252,7 +250,7 @@ public partial class ModifyParticipantWindow : Window
         }
         if (gender.Equals("Other", StringComparison.OrdinalIgnoreCase))
         {
-            gender = otherGenderBox.Text!;
+            gender = OtherGenderBox.Text!;
             if (gender.Length < 1)
             {
                 gender = "Not Specified";
@@ -310,36 +308,36 @@ public partial class ModifyParticipantWindow : Window
             CountryBox.Text!,
             Street2Box.Text!,
             gender,
-            ECNameBox.Text!,
-            ECPhoneBox.Text!
+            EcNameBox.Text!,
+            EcPhoneBox.Text!
             );
         age = output.GetAge(theEvent.Date);
-        Dictionary<(int, int), AgeGroup> AgeGroups = [];
-        Dictionary<int, AgeGroup> LastAgeGroup = [];
+        Dictionary<(int, int), AgeGroup> ageGroups = [];
+        Dictionary<int, AgeGroup> lastAgeGroup = [];
         foreach (AgeGroup g in database.GetAgeGroups(theEvent.Identifier))
         {
             for (int i = g.StartAge; i <= g.EndAge; i++)
             {
-                AgeGroups[(g.DistanceId, i)] = g;
+                ageGroups[(g.DistanceId, i)] = g;
             }
-            if (!LastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? oAgeGrp) || oAgeGrp.StartAge < g.StartAge)
+            if (!lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? oAgeGrp) || oAgeGrp.StartAge < g.StartAge)
             {
-                LastAgeGroup[g.DistanceId] = g;
+                lastAgeGroup[g.DistanceId] = g;
             }
         }
         int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : output.EventSpecific.DistanceIdentifier;
-        if (AgeGroups == null || age < 0)
+        if (ageGroups.Count < 0 || age < 0)
         {
             Log.D("UI.Participants.ModifyParticipantWindow", "Age Groups not found or Age is less than 0.");
             output.EventSpecific.AgeGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
             output.EventSpecific.AgeGroupName = "";
         }
-        else if (AgeGroups.TryGetValue((agDivId, age), out AgeGroup? group))
+        else if (ageGroups.TryGetValue((agDivId, age), out AgeGroup? group))
         {
             output.EventSpecific.AgeGroupId = group.GroupId;
             output.EventSpecific.AgeGroupName = group.PrettyName();
         }
-        else if (LastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
+        else if (lastAgeGroup.TryGetValue(agDivId, out AgeGroup? lGroup))
         {
             output.EventSpecific.AgeGroupId = lGroup.GroupId;
             output.EventSpecific.AgeGroupName = lGroup.PrettyName();
@@ -355,7 +353,7 @@ public partial class ModifyParticipantWindow : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        if (ParticipantChanged)
+        if (participantChanged)
         {
             database.ResetTimingResultsEvent(theEvent!.Identifier);
             window?.NotifyTimingWorker();
@@ -393,15 +391,16 @@ public partial class ModifyParticipantWindow : Window
     private void Done_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Participants.ModifyParticipantWindow", "Done clicked.");
-        this.Close();
+        Close();
     }
 
     private void Modify_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Participants.ModifyParticipantWindow", "Modify clicked.");
-        Participant newPart = FromFields()!;
+        Participant? newPart = FromFields();
         // Copy old Version values when modifying.
-        newPart!.EventSpecific.Version = person!.EventSpecific.Version;
+        if (newPart == null) return;
+        newPart.EventSpecific.Version = person!.EventSpecific.Version;
         newPart.EventSpecific.UploadedVersion = person.EventSpecific.UploadedVersion;
         Participant? offendingBib = null;
         // If bib isn't empty and isn't the dummybib, offer to swap bibs.
@@ -412,14 +411,14 @@ public partial class ModifyParticipantWindow : Window
         if (offendingBib != null && newPart.Identifier != offendingBib.Identifier)
         {
             // bib is taken - person object holds old bib #
-            bool ModifyBibs = false;
+            bool modifyBibs = false;
             DialogBox.Show(
                 "This bib is already taken. Swap bibs?",
                 "Yes",
                 "No",
                 () =>
                 {
-                    ModifyBibs = true;
+                    modifyBibs = true;
                     offendingBib.EventSpecific.Bib = person.EventSpecific.Bib;
                     string newBib = newPart.EventSpecific.Bib;
                     newPart.EventSpecific.Bib = Constants.Timing.CHIPREAD_DUMMYBIB;
@@ -430,32 +429,29 @@ public partial class ModifyParticipantWindow : Window
                     database.UpdateParticipant(offendingBib);
                     newPart.EventSpecific.Bib = newBib;
                     database.UpdateParticipant(newPart);
-                    ParticipantChanged = true;
-                    this.Close();
+                    participantChanged = true;
+                    Close();
                 });
-            if (!ModifyBibs)
+            if (!modifyBibs)
             {
-                BibBox.Text = person.EventSpecific.Bib.ToString();
+                BibBox.Text = person.EventSpecific.Bib;
             }
         }
         else
         {
-            if (newPart != null)
+            Log.D("UI.Participants.ModifyParticipantWindow", "NewPart not null ---- Should update --- NewPart birthdate ----" + newPart.Birthdate);
+            // New Part has information that doesn't match the old participant.
+            // so increment the version
+            if (!newPart.Matches(person))
             {
-                Log.D("UI.Participants.ModifyParticipantWindow", "NewPart not null ---- Should update --- NewPart birthdate ----" + newPart.Birthdate);
-                // New Part has information that doesn't match the old participant.
-                // so increment the version
-                if (!newPart.Matches(person))
-                {
-                    newPart.EventSpecific.Version += 1;
-                }
-                database.UpdateParticipant(newPart);
-                if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
-                {
-                    ParticipantChanged = true;
-                }
-                this.Close();
+                newPart.EventSpecific.Version += 1;
             }
+            database.UpdateParticipant(newPart);
+            if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
+            {
+                participantChanged = true;
+            }
+            Close();
         }
     }
 
@@ -464,9 +460,10 @@ public partial class ModifyParticipantWindow : Window
         Log.D("UI.Participants.ModifyParticipantWindow", "Add clicked.");
         if (person != null && person.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
         {
-            ParticipantChanged = true;
+            participantChanged = true;
         }
-        Participant newPart = FromFields()!;
+        Participant? newPart = FromFields();
+        if (newPart == null) return;
         Participant? offendingBib = null;
         // If bib isn't empty and isn't the dummybib, offer to remove bib from old participant.
         if (newPart.Bib.Length > 0 && newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
@@ -482,23 +479,20 @@ public partial class ModifyParticipantWindow : Window
                 "No",
                 () =>
                 {
-                    if (newPart != null)
+                    if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
                     {
-                        if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
-                        {
-                            DialogBox.Show("Invalid name given.");
-                            return;
-                        }
-                        // only update the participant with the old bib if we're actually adding the person
-                        // but also make sure to increment their version because they were in fact updated
-                        offendingBib.EventSpecific.Bib = Constants.Timing.CHIPREAD_DUMMYBIB;
-                        offendingBib.EventSpecific.Version += 1;
-                        database.UpdateParticipant(offendingBib);
-                        database.AddParticipant(newPart);
-                        if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
-                        {
-                            ParticipantChanged = true;
-                        }
+                        DialogBox.Show("Invalid name given.");
+                        return;
+                    }
+                    // only update the participant with the old bib if we're actually adding the person
+                    // but also make sure to increment their version because they were in fact updated
+                    offendingBib.EventSpecific.Bib = Constants.Timing.CHIPREAD_DUMMYBIB;
+                    offendingBib.EventSpecific.Version += 1;
+                    database.UpdateParticipant(offendingBib);
+                    database.AddParticipant(newPart);
+                    if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
+                    {
+                        participantChanged = true;
                     }
                     Clear();
                     BibBox.Focus();
@@ -506,18 +500,15 @@ public partial class ModifyParticipantWindow : Window
         }
         else
         {
-            if (newPart != null)
+            if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
             {
-                if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
-                {
-                    DialogBox.Show("Invalid name given.");
-                    return;
-                }
-                database.AddParticipant(newPart);
-                if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
-                {
-                    ParticipantChanged = true;
-                }
+                DialogBox.Show("Invalid name given.");
+                return;
+            }
+            database.AddParticipant(newPart);
+            if (newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
+            {
+                participantChanged = true;
             }
             Clear();
             BibBox.Focus();

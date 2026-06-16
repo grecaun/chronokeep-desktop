@@ -26,14 +26,15 @@
     <Grid RowDefinitions="32,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped">
             <DockPanel Margin="0">
                 <TextBlock Name="VersionBlock" Height="20" FontSize="16" VerticalAlignment="Center"/>
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
                            HorizontalAlignment="Right">
                     <Button WindowDecorationProperties.ElementRole="CloseButton"
-                            Name="CloseButton"
                             Click="OnClose"
                             Classes="title close">
                     <PathIcon Classes="title"

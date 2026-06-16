@@ -10,10 +10,10 @@
                 HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-			<TextBox Name="nameBox"
+			<TextBox Name="NameBox"
                      Width="190"
                      Margin="5" />
-            <ComboBox Name="kindBox"
+            <ComboBox Name="KindBox"
                       Width="120" Margin="5"
                       SelectedIndex="0"
                       SelectionChanged="KindBox_ValueChanged" >
@@ -22,15 +22,15 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-			<TextBox Name="ipBox"
+			<TextBox Name="IpBox"
                      Width="120"
                      Margin="5"
-                     TextInput="IPValidation" />
-            <TextBox Name="portBox"
+                     TextInput="IpValidation" />
+            <TextBox Name="PortBox"
                      Width="60"
                      Margin="5"
                      TextInput="NumberValidation" />
-            <ToggleSwitch Name="autoConnectSwitch"
+            <ToggleSwitch Name="AutoConnectSwitch"
                             Width="40"
                             OnContent=""
                             OffContent=""
@@ -41,7 +41,7 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <ToggleSwitch Name="connectedSwitch"
+            <ToggleSwitch Name="ConnectedSwitch"
                             Width="40"
                             OnContent=""
                             OffContent=""
@@ -49,13 +49,13 @@
                             VerticalContentAlignment="Center" /> <!-- add ConnectReader -->
             <Label Content="Connected"
                    Width="75" />
-            <Button Name="saveReaderButton"
+            <Button Name="SaveReaderButton"
                     Width="40"
                     Margin="5"
                     Click="SaveReader">
 			    <PathIcon Data="{StaticResource save_regular}"/>
             </Button>
-            <Button Name="removeReaderButton"
+            <Button Name="RemoveReaderButton"
                     Width="40"
                     Margin="5"
                     Click="DeleteReader">
@@ -64,6 +64,6 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center"
-                    Name="antennaPanel" />
+                    Name="AntennaPanel" />
     </StackPanel>
 </UserControl>

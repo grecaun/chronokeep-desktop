@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -13,7 +12,7 @@ using System.Text.Json;
 
 namespace Chronokeep.UI.Util;
 
-public partial class ChangeLogWindow : Window
+public partial class ChangeLogWindow : ChronokeepWindow
 {
     private readonly IWindowCallback window;
     private readonly IDBInterface database;
@@ -48,8 +47,8 @@ public partial class ChangeLogWindow : Window
         changelogEntries[0].IsExpanded = true;
         changelogEntries = changelogEntries[..5];
         LogList.ItemsSource = changelogEntries;
-        AppSetting autoChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG)!;
-        autoChangelogToggleSwitch.IsChecked = autoChangelog != null && autoChangelog.Value == Constants.Settings.SETTING_TRUE;
+        AppSetting? autoChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG);
+        AutoChangelogToggleSwitch.IsChecked = autoChangelog is { Value: Constants.Settings.SETTING_TRUE };
     }
 
     public static ChangeLogWindow NewWindow(IWindowCallback window, IDBInterface database)
@@ -59,7 +58,7 @@ public partial class ChangeLogWindow : Window
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
-        database.SetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG, autoChangelogToggleSwitch.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
+        database.SetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG, AutoChangelogToggleSwitch.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
         window.WindowFinalize(this);
     }
 
@@ -69,8 +68,8 @@ public partial class ChangeLogWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

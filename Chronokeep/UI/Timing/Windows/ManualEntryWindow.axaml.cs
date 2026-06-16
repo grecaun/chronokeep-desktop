@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -12,7 +11,7 @@ using System.Collections.Generic;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class ManualEntryWindow : Window
+public partial class ManualEntryWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
     private readonly IDBInterface database;
@@ -20,15 +19,15 @@ public partial class ManualEntryWindow : Window
 
     private readonly HashSet<string> bibsAdded = [];
 
-    private readonly bool dnf = false;
+    private readonly bool dnf;
 
     private ManualEntryWindow(IMainWindow window, IDBInterface database, List<TimingLocation> locations)
     {
         InitializeComponent();
-        this.MinHeight = 275;
-        this.MinWidth = 300;
-        this.Width = 300;
-        this.Topmost = true;
+        MinHeight = 275;
+        MinWidth = 300;
+        Width = 300;
+        Topmost = true;
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -44,10 +43,10 @@ public partial class ManualEntryWindow : Window
     private ManualEntryWindow(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
-        this.MinHeight = 275;
-        this.MinWidth = 300;
-        this.Width = 300;
-        this.Topmost = true;
+        MinHeight = 275;
+        MinWidth = 300;
+        Width = 300;
+        Topmost = true;
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -57,11 +56,9 @@ public partial class ManualEntryWindow : Window
         }
         dnf = true;
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
-        if (locations != null)
-        {
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
-            UpdateLocations(locations);
-        }
+        if (locations.Count <= 0) return;
+        locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+        UpdateLocations(locations);
     }
 
     private void ClearBib()
@@ -70,29 +67,23 @@ public partial class ManualEntryWindow : Window
         BibBox.Focus();
     }
 
-    public void UpdateLocations(List<TimingLocation> locations)
+    private void UpdateLocations(List<TimingLocation> locations)
     {
         int selectedLoc;
         try
         {
-            if (LocationBox.SelectedIndex >= 0)
-            {
-                selectedLoc = Convert.ToInt32(((ComboBoxItem)LocationBox.SelectedItem!).Tag);
-            }
-            else
-            {
-                selectedLoc = Constants.Timing.LOCATION_FINISH;
-            }
+            selectedLoc = LocationBox.SelectedIndex < 0 ? Constants.Timing.LOCATION_FINISH : Convert.ToInt32(((ComboBoxItem)LocationBox.SelectedItem!).Tag);
         }
         catch
         {
             selectedLoc = Constants.Timing.LOCATION_FINISH;
         }
-        ComboBoxItem? current, selected = null;
+
+        ComboBoxItem? selected = null;
         LocationBox.Items.Clear();
         foreach (TimingLocation loc in locations)
         {
-            current = new ComboBoxItem()
+            ComboBoxItem current = new()
             {
                 Content = loc.Name,
                 Tag = loc.Identifier.ToString()
@@ -115,14 +106,10 @@ public partial class ManualEntryWindow : Window
 
     public static ManualEntryWindow NewWindow(IMainWindow window, IDBInterface database, List<TimingLocation>? locations = null)
     {
-        if (locations == null)
-        {
-            return new(window, database);
-        }
-        return new(window, database, locations);
+        return locations == null ? new ManualEntryWindow(window, database) : new ManualEntryWindow(window, database, locations);
     }
 
-    private void AddDNF()
+    private void AddDnf()
     {
         Log.D("UI.Timing.ManualEntryWindow", "DNF entry detected.");
         string bib = BibBox.Text!.Trim();
@@ -134,11 +121,10 @@ public partial class ManualEntryWindow : Window
         string timeVal = TimeBox.Text!.Replace('_', '0');
         int locationId = Convert.ToInt32(((ComboBoxItem)LocationBox.SelectedItem!).Tag);
         DateTime time;
-        long hours, minutes, seconds, milliseconds;
-        hours = Convert.ToInt32(timeVal[..2]);
-        minutes = Convert.ToInt32(timeVal.Substring(3, 2));
-        seconds = Convert.ToInt32(timeVal.Substring(6, 2));
-        milliseconds = Convert.ToInt32(timeVal.Substring(9, 3));
+        long hours = Convert.ToInt32(timeVal[..2]);
+        long minutes = Convert.ToInt32(timeVal.Substring(3, 2));
+        long seconds = Convert.ToInt32(timeVal.Substring(6, 2));
+        long milliseconds = Convert.ToInt32(timeVal.Substring(9, 3));
         if (hours == minutes && minutes == seconds && seconds == milliseconds && milliseconds == 0)
         {
             time = DateTime.Now;
@@ -212,11 +198,10 @@ public partial class ManualEntryWindow : Window
         string timeVal = TimeBox.Text!.Replace('_', '0');
         int locationId = Convert.ToInt32(((ComboBoxItem)LocationBox.SelectedItem!).Tag);
         DateTime time;
-        long hours, minutes, seconds, milliseconds;
-        hours = Convert.ToInt32(timeVal[..2]);
-        minutes = Convert.ToInt32(timeVal.Substring(3, 2));
-        seconds = Convert.ToInt32(timeVal.Substring(6, 2));
-        milliseconds = Convert.ToInt32(timeVal.Substring(9, 3));
+        long hours = Convert.ToInt32(timeVal[..2]);
+        long minutes = Convert.ToInt32(timeVal.Substring(3, 2));
+        long seconds = Convert.ToInt32(timeVal.Substring(6, 2));
+        long milliseconds = Convert.ToInt32(timeVal.Substring(9, 3));
         if (hours == minutes && minutes == seconds && seconds == milliseconds && milliseconds == 0)
         {
             DialogBox.Show("No time value specified.");
@@ -274,26 +259,22 @@ public partial class ManualEntryWindow : Window
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
-        if (bibsAdded.Count > 0)
-        {
-            database.ResetTimingResultsEvent(theEvent!.Identifier);
-            window?.NotifyTimingWorker();
-        }
+        window.WindowFinalize(this);
+        if (bibsAdded.Count <= 0) return;
+        database.ResetTimingResultsEvent(theEvent!.Identifier);
+        window.NotifyTimingWorker();
     }
 
     private void Enter_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        if (e.Key != Key.Enter) return;
+        if (dnf)
         {
-            if (dnf)
-            {
-                AddDNF();
-            }
-            else
-            {
-                AddEntry();
-            }
+            AddDnf();
+        }
+        else
+        {
+            AddEntry();
         }
     }
 
@@ -301,7 +282,7 @@ public partial class ManualEntryWindow : Window
     {
         if (dnf)
         {
-            AddDNF();
+            AddDnf();
         }
         else
         {
@@ -314,8 +295,8 @@ public partial class ManualEntryWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

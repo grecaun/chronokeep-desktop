@@ -21,8 +21,7 @@ public partial class AboutPage : UserControl, IMainPage
     {
         InitializeComponent();
         this.mWindow = mWindow;
-        string gitVersion = "";
-
+        string gitVersion;
         using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
         {
             using StreamReader reader = new(stream);
@@ -36,7 +35,7 @@ public partial class AboutPage : UserControl, IMainPage
             HelpDocsButton.Tag = dirPath;
         }
         VersionLabel.Text = gitVersion.Trim();
-        HelpDocsButton.NavigateUri = new(Path.Combine(AppContext.BaseDirectory, "help", "index.html"));
+        HelpDocsButton.NavigateUri = new Uri(Path.Combine(AppContext.BaseDirectory, "help", "index.html"));
         this.database = database;
 
     }
@@ -65,37 +64,43 @@ public partial class AboutPage : UserControl, IMainPage
 
     private async void OpenDataFolder_Click(object? sender, RoutedEventArgs e)
     {
-        string dirPath = App.IsWindows ?
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
-            : Path.Combine(Directory.GetCurrentDirectory(), "data/");
-        if (!Directory.Exists(dirPath))
+        try
         {
-            return;
-        }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("explorer", dirPath);
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            using Process dbusShowItemsProcess = new Process
+            string dirPath = App.IsWindows ?
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
+                : Path.Combine(Directory.GetCurrentDirectory(), "data/");
+            if (!Directory.Exists(dirPath))
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "dbus-send",
-                    Arguments =
-                        "--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://" +
-                        dirPath + "\" string:\"\"",
-                    UseShellExecute = true
-                }
-            };
-            dbusShowItemsProcess.Start();
-            await dbusShowItemsProcess.WaitForExitAsync();
-            if (dbusShowItemsProcess.ExitCode != 0)
-            {
-                Log.E("UI.MainPages.AboutPage", "Unable to open data directory.");
+                return;
             }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Process.Start("explorer", dirPath);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                using Process dbusShowItemsProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "dbus-send",
+                        Arguments =
+                            "--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://" +
+                            dirPath + "\" string:\"\"",
+                        UseShellExecute = true
+                    }
+                };
+                dbusShowItemsProcess.Start();
+                await dbusShowItemsProcess.WaitForExitAsync();
+                if (dbusShowItemsProcess.ExitCode != 0)
+                {
+                    Log.E("UI.MainPages.AboutPage", "Unable to open data directory.");
+                }
+            }
+        }
+        catch (Exception)
+        {
+            Log.E("UI.MainPages.AboutPage", "Error opening data directory.");
         }
     }
 }

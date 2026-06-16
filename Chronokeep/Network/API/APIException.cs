@@ -2,10 +2,10 @@
 
 namespace Chronokeep.Network.API
 {
-    class APIException : Exception
+    public class ApiException : Exception
     {
-        public APIException() { }
-        public APIException(string message) : base(message) { }
-        public APIException(string message, Exception inner) : base(message, inner) { }
+        public ApiException() { }
+        public ApiException(string message) : base(message) { }
+        public ApiException(string message, Exception inner) : base(message, inner) { }
     }
 }

@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Chronokeep.Constants;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -22,58 +21,53 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
     private TimingRawReadsPage? subPage;
 
     private Event? theEvent;
-    List<TimingLocation>? locations;
+    private List<TimingLocation>? locations;
 
-    private SetTimeWindow? timeWindow = null;
-    private RewindWindow? rewindWindow = null;
+    private SetTimeWindow? timeWindow;
+    private RewindWindow? rewindWindow;
 
-    int total = 4, connected = 0;
+    private int total = 4, connected;
 
-    private const string ipformat = "{0:D}.{1:D}.{2:D}.{3:D}";
-    private readonly int[] baseIP = [0, 0, 0, 0];
+    private const string Ipformat = "{0:D}.{1:D}.{2:D}.{3:D}";
+    private readonly int[] baseIp = [0, 0, 0, 0];
 
     public MinTimingPage(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
         this.database = database;
-        this.mWindow = window;
+        mWindow = window;
         theEvent = database.GetCurrentEvent();
 
         // Check for default IP address to give to our reader boxes for connections
         foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces())
         {
-            if (adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet && adapter.OperationalStatus == OperationalStatus.Up)
-            {
-                if (adapter.GetIPProperties().GatewayAddresses.FirstOrDefault() != null)
+            if (adapter is not
                 {
-                    foreach (UnicastIPAddressInformation ipinfo in adapter.GetIPProperties().UnicastAddresses)
+                    NetworkInterfaceType: NetworkInterfaceType.Ethernet, OperationalStatus: OperationalStatus.Up
+                }) continue;
+            if (adapter.GetIPProperties().GatewayAddresses.FirstOrDefault() == null) continue;
+            foreach (UnicastIPAddressInformation ipinfo in adapter.GetIPProperties().UnicastAddresses)
+            {
+                if (ipinfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
+                Log.D("UI.MainPages.TimingPage", "IP Address :" + ipinfo.Address);
+                Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipinfo.IPv4Mask);
+                string[] ipParts = ipinfo.Address.ToString().Split('.');
+                string[] maskParts = ipinfo.IPv4Mask.ToString().Split('.');
+                if (ipParts.Length != 4 || maskParts.Length != 4) continue;
+                for (int i = 0; i < 4; i++)
+                {
+                    int ip, mask;
+                    try
                     {
-                        if (ipinfo.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                        {
-                            Log.D("UI.MainPages.TimingPage", "IP Address :" + ipinfo.Address);
-                            Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipinfo.IPv4Mask);
-                            string[] ipParts = ipinfo.Address.ToString().Split('.');
-                            string[] maskParts = ipinfo.IPv4Mask.ToString().Split('.');
-                            if (ipParts.Length == 4 && maskParts.Length == 4)
-                            {
-                                for (int i = 0; i < 4; i++)
-                                {
-                                    int ip, mask;
-                                    try
-                                    {
-                                        ip = Convert.ToInt32(ipParts[i]);
-                                        mask = Convert.ToInt32(maskParts[i]);
-                                    }
-                                    catch
-                                    {
-                                        ip = 0;
-                                        mask = 0;
-                                    }
-                                    baseIP[i] = ip & mask;
-                                }
-                            }
-                        }
+                        ip = Convert.ToInt32(ipParts[i]);
+                        mask = Convert.ToInt32(maskParts[i]);
                     }
+                    catch
+                    {
+                        ip = 0;
+                        mask = 0;
+                    }
+                    baseIp[i] = ip & mask;
                 }
             }
         }
@@ -88,14 +82,14 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         locations = database.GetTimingLocations(theEvent.Identifier);
         if (!theEvent.CommonStartFinish)
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
-            locations.Insert(0, new(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
         }
         else
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
         }
         List<TimingSystem> systems = mWindow.GetConnectedSystems();
         int numSystems = systems.Count;
@@ -114,10 +108,10 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
             Log.D("UI.MainPages.TimingPage", systems.Count + " systems found.");
             for (int i = 0; i < 3 - numSystems; i++)
             {
-                systems.Add(new(string.Format(ipformat, baseIP[0], baseIP[1], baseIP[2], baseIP[3]), system));
+                systems.Add(new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
             }
         }
-        systems.Add(new(string.Format(ipformat, baseIP[0], baseIP[1], baseIP[2], baseIP[3]), system));
+        systems.Add(new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
         connected = 0;
         foreach (TimingSystem sys in systems)
         {
@@ -165,40 +159,37 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         locations = database.GetTimingLocations(theEvent.Identifier);
         if (!theEvent.CommonStartFinish)
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
-            locations.Insert(0, new(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
         }
         else
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
         }
 
         // Update locations in the list of readers
         connected = 0; total = ReadersBox.Items.Count;
-        foreach (ReaderPart? read in ReadersBox.Items.Cast<ReaderPart?>())
+        foreach (object? read in ReadersBox.Items)
         {
-            read!.UpdateLocations(locations);
-            read!.UpdateStatus();
-            connected += read.reader.Status == SYSTEM_STATUS.DISCONNECTED ? 0 : 1;
-            if (read.reader.Status == SYSTEM_STATUS.DISCONNECTED)
+            if (read is not ReaderPart part) continue;
+            part.UpdateLocations(locations);
+            part.UpdateStatus();
+            connected += part.Reader.Status == SYSTEM_STATUS.DISCONNECTED ? 0 : 1;
+            if (part.Reader.Status != SYSTEM_STATUS.DISCONNECTED) continue;
+            if (timeWindow != null && timeWindow.IsTimingSystem(part.Reader))
             {
-                if (timeWindow != null && timeWindow.IsTimingSystem(read.reader))
-                {
-                    timeWindow.Close();
-                    timeWindow = null;
-                }
-                if (rewindWindow != null && rewindWindow.IsTimingSystem(read.reader))
-                {
-                    rewindWindow.Close();
-                    rewindWindow = null;
-                }
+                timeWindow.Close();
+                timeWindow = null;
             }
+            if (rewindWindow == null || !rewindWindow.IsTimingSystem(part.Reader)) continue;
+            rewindWindow.Close();
+            rewindWindow = null;
         }
         if (total < 4)
         {
-            string system = Readers.DEFAULT_TIMING_SYSTEM;
+            string system;
             try
             {
                 system = database.GetAppSetting(Settings.DEFAULT_TIMING_SYSTEM)!.Value;
@@ -213,7 +204,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
                 ReadersBox.Items.Add(new ReaderPart(
                     this,
                     new(
-                        string.Format(ipformat, baseIP[0], baseIP[1], baseIP[2], baseIP[3]),
+                        string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
                         system),
                         locations));
             }
@@ -252,7 +243,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
     public void OpenRewindWindow(TimingSystem system)
     {
         Log.D("UI.MainPages.TimingPage", "Opening Rewind Window.");
-        rewindWindow = new(system, this);
+        rewindWindow = new RewindWindow(system, this);
         rewindWindow.ShowDialog((Window)mWindow);
     }
 
@@ -266,14 +257,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         List<TimingSystem> systems = mWindow.GetConnectedSystems();
         foreach (TimingSystem sys in systems)
         {
-            if (now)
-            {
-                sys.SystemInterface?.SetTime(DateTime.Now);
-            }
-            else
-            {
-                sys.SystemInterface?.SetTime(time);
-            }
+            sys.SystemInterface?.SetTime(now ? DateTime.Now : time);
         }
     }
 
@@ -282,7 +266,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         ReaderPart? removed = null;
         foreach (ReaderPart? box in ReadersBox.Items.Cast<ReaderPart?>())
         {
-            if (box!.reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved())
+            if (box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved())
             {
                 removed = box;
                 break;
@@ -312,7 +296,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
                 Log.D("UI.MainPages.TimingPage", "Error fetching default timing system information.");
                 system = Readers.DEFAULT_TIMING_SYSTEM;
             }
-            ReadersBox.Items.Add(new ReaderPart(this, new(string.Format(ipformat, baseIP[0], baseIP[1], baseIP[2], baseIP[3]), system), locations!));
+            ReadersBox.Items.Add(new ReaderPart(this, new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system), locations!));
             total = ReadersBox.Items.Count;
         }
         return sys.Status != SYSTEM_STATUS.DISCONNECTED;
@@ -327,11 +311,6 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         }
         Log.D("UI.MainPages.TimingPage", connected + " systems connected or trying to connect/disconnect.");
         return sys.Status == SYSTEM_STATUS.DISCONNECTED;
-    }
-
-    private void Page_Loaded(object sender, RoutedEventArgs e)
-    {
-        Log.D("UI.MainPages.TimingPage", "Starting TimingPage Update Timer.");
     }
 
     public string GetSearchValue() { return ""; }

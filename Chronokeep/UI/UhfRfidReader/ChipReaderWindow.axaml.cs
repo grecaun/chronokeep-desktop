@@ -13,20 +13,20 @@ using System.Threading;
 
 namespace Chronokeep.UI.UhfRfidReader;
 
-public partial class ChipReaderWindow : Window
+public partial class ChipReaderWindow : ChronokeepWindow
 {
     private static Thread? readingThread;
     private static NewReader? reader;
-    private static int ReadNo = 1;
-    RFIDSerial? serial;
-    private static ChipPersonWindow? personWindow = null;
+    private static int readNo = 1;
+    private RfidSerial? serial;
+    private static ChipPersonWindow? personWindow;
     private readonly IDBInterface database;
-    private readonly IWindowCallback? window = null;
-    private readonly int eventId = -1;
+    private readonly IWindowCallback? window;
+    private readonly int eventId;
 
-    private readonly ObservableCollection<RFIDInfo> chipInfo = [];
+    private readonly ObservableCollection<RfidInfo> chipInfo = [];
 
-    public ChipReaderWindow(IWindowCallback window, IDBInterface database)
+    private ChipReaderWindow(IWindowCallback window, IDBInterface database)
     {
         InitializeComponent();
         InstantiateSerialPortList();
@@ -36,8 +36,8 @@ public partial class ChipReaderWindow : Window
         Event theEvent = database.GetCurrentEvent() ?? throw new Exception("no event set");
         eventId = theEvent.Identifier;
         EventNameHolder.IsVisible = true;
-        eventName.Text = theEvent.Name;
-        chipNumbers.ItemsSource = chipInfo;
+        EventName.Text = theEvent.Name;
+        ChipNumbers.ItemsSource = chipInfo;
     }
 
     public static ChipReaderWindow NewWindow(IWindowCallback window, IDBInterface database)
@@ -48,45 +48,43 @@ public partial class ChipReaderWindow : Window
     internal void PersonWindowClosing()
     {
         personWindow = null;
-        beautyBtn.Content = "Show Info Window";
+        BeautyBtn.Content = "Show Info Window";
     }
 
-    public void InstantiateSerialPortList()
+    private void InstantiateSerialPortList()
     {
-        serialPortCB.Items.Clear();
-        var Ports = SerialPort.GetPortNames();
-        foreach (string port in Ports)
+        SerialPortCb.Items.Clear();
+        string[]? ports = SerialPort.GetPortNames();
+        foreach (string port in ports)
         {
-            serialPortCB.Items.Add(port);
+            SerialPortCb.Items.Add(port);
         }
-        if (serialPortCB.Items.Count > 0)
+        if (SerialPortCb.Items.Count > 0)
         {
-            serialPortCB.SelectedIndex = 0;
+            SerialPortCb.SelectedIndex = 0;
         }
     }
 
-    internal void KillReader()
+    private void KillReader()
     {
         serial?.Disconnect();
-        chipInfo.Add(new RFIDInfo { DecNumber = -1 });
+        chipInfo.Add(new RfidInfo { DecNumber = -1 });
         reader?.Kill();
         readingThread?.Join(TimeSpan.FromSeconds(1));
         readingThread = null;
     }
 
-    internal void AddRFIDItem(RFIDInfo read)
+    internal void AddRfidItem(RfidInfo read)
     {
-        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current!.Dispatcher.Invoke(delegate
         {
-            read.ReadNumber = ReadNo++;
+            read.ReadNumber = readNo++;
             chipInfo.Add(read);
-            if (personWindow != null)
-            {
-                string chip = database.GetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE)!.Value.Equals(Constants.Settings.CHIP_TYPE_DEC) ? read.DecNumber.ToString() : read.HexNumber;
-                Participant person = database.GetParticipantChip(eventId, chip)!;
-                personWindow.UpdateInfo(person, chip);
-            }
-        }));
+            if (personWindow == null) return;
+            string chip = database.GetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE)!.Value.Equals(Constants.Settings.CHIP_TYPE_DEC) ? read.DecNumber.ToString() : read.HexNumber;
+            Participant person = database.GetParticipantChip(eventId, chip)!;
+            personWindow.UpdateInfo(person, chip);
+        });
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
@@ -117,11 +115,11 @@ public partial class ChipReaderWindow : Window
 
     private void ConnectBtn_Click(object? sender, RoutedEventArgs e)
     {
-        if (connectBtn.Content!.Equals("Connect"))
+        if (ConnectBtn.Content!.Equals("Connect"))
         {
-            if (serialPortCB.SelectedIndex >= 0)
+            if (SerialPortCb.SelectedIndex >= 0)
             {
-                serial = new RFIDSerial(serialPortCB.Text!, 9600);
+                serial = new RfidSerial(SerialPortCb.Text!, 9600);
                 reader!.SetSerial(serial);
             }
             else
@@ -129,23 +127,23 @@ public partial class ChipReaderWindow : Window
                 DialogBox.Show("No serial port selected.");
                 return;
             }
-            if (serial.Connect() != RFIDError.NOERR)
+            if (serial.Connect() != RfidError.NOERR)
             {
                 DialogBox.Show("Unable to connect to device.");
                 return;
             }
-            connectBtn.Content = "Disconnect";
-            beautyBtn.IsVisible = true;
-            beautyBtn.Content = "Show Info Window";
-            chipInfo.Add(new RFIDInfo { DecNumber = 0 });
-            readingThread = new Thread(new ThreadStart(reader.Run));
+            ConnectBtn.Content = "Disconnect";
+            BeautyBtn.IsVisible = true;
+            BeautyBtn.Content = "Show Info Window";
+            chipInfo.Add(new RfidInfo { DecNumber = 0 });
+            readingThread = new Thread(reader.Run);
             readingThread.Start();
         }
         else
         {
-            connectBtn.Content = "Connect";
-            beautyBtn.IsVisible = false;
-            beautyBtn.Content = "Show Info Window";
+            ConnectBtn.Content = "Connect";
+            BeautyBtn.IsVisible = false;
+            BeautyBtn.Content = "Show Info Window";
             try
             {
                 KillReader();
@@ -163,9 +161,9 @@ public partial class ChipReaderWindow : Window
         if (personWindow == null)
         {
             Event thisEvent = database.GetEvent(eventId)!;
-            personWindow = new ChipPersonWindow(this, thisEvent!.Date);
+            personWindow = new ChipPersonWindow(this, thisEvent.Date);
             personWindow.Show();
-            beautyBtn.Content = "Close Info Window";
+            BeautyBtn.Content = "Close Info Window";
         }
         else
         {
@@ -174,24 +172,14 @@ public partial class ChipReaderWindow : Window
         }
     }
 
-    private void OnMinimize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void OnMaximize(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
-    }
-
-    private void OnClose(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    protected override void SetMaximizeIcon()
     {
         MaximizeIcon?.IsVisible = WindowState == WindowState.Normal;
-        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;
+        UnMaximizeIcon?.IsVisible = WindowState == WindowState.Maximized;        
+    }
+
+    protected override void Maximize()
+    {
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

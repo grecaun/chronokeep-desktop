@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APIEvent
+    public class ApiEvent
     {
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
@@ -24,7 +24,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("recent_time")]
         public string RecentTime { get; set; } = "";
 
-        public int CompareTo(APIEvent other)
+        public int CompareTo(ApiEvent other)
         {
             DateTime oneDate, twoDate;
             try

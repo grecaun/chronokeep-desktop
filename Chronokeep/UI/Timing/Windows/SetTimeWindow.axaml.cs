@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
@@ -7,7 +6,7 @@ using System;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class SetTimeWindow : Window
+public partial class SetTimeWindow : ChronokeepWindow
 {
     private readonly ITimingPage parent;
     private readonly TimingSystem timingSystem;
@@ -19,15 +18,15 @@ public partial class SetTimeWindow : Window
         this.timingSystem = timingSystem;
     }
 
-    public bool IsTimingSystem(TimingSystem timingSystem)
+    public bool IsTimingSystem(TimingSystem iTimingSystem)
     {
-        return this.timingSystem.Equals(timingSystem);
+        return timingSystem.Equals(iTimingSystem);
     }
 
     public void UpdateTime()
     {
-        TimeLabel.Text = string.Format("Reader time is {0}", timingSystem.SystemTime);
-        CurrentTimeLabel.Text = string.Format("System time is {0}", DateTime.Now.ToString("dd MMM yyyy HH:mm:ss"));
+        TimeLabel.Text = $"Reader time is {timingSystem.SystemTime}";
+        CurrentTimeLabel.Text = $"System time is {DateTime.Now:dd MMM yyyy HH:mm:ss}";
         TimeLabel.IsVisible = true;
         CurrentTimeLabel.IsVisible = true;
     }
@@ -44,7 +43,7 @@ public partial class SetTimeWindow : Window
 
     private void Set_Click(object sender, RoutedEventArgs e)
     {
-        if (DateTime.TryParse(string.Format("{0} {1}", SpecificDateBox.Text!.Replace('_', '0'), SpecificTimeBox.Text!.Replace('_', '0')), out DateTime alternateDate) == false)
+        if (!DateTime.TryParse($"{SpecificDateBox.Text!.Replace('_', '0')} {SpecificTimeBox.Text!.Replace('_', '0')}", out DateTime alternateDate))
         {
             alternateDate = DateTime.Now;
         }
@@ -67,8 +66,8 @@ public partial class SetTimeWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

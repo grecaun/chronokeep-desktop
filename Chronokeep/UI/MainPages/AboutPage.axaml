@@ -133,14 +133,7 @@
             FontWeight="Medium"
             Text="3rd Party Libraries"
             />
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="150"/>
-            </Grid.ColumnDefinitions>
+        <Grid ColumnDefinitions="150,150,150,150,150">
             <StackPanel Grid.Column="0" Margin="0,0,32,0">
                 <!-- NavigateUri="https://system.data.sqlite.org/" -->
                 <HyperlinkButton Classes="link" NavigateUri="https://system.data.sqlite.org/">

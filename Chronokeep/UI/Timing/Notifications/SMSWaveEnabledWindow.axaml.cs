@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -9,33 +8,32 @@ using System.Linq;
 
 namespace Chronokeep.UI.Timing.Notifications;
 
-public partial class SMSWaveEnabledWindow : Window
+public partial class SmsWaveEnabledWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
     private readonly IDBInterface database;
-    private readonly Event? theEvent;
 
     private readonly Dictionary<int, bool> initialValues = [];
     private readonly Dictionary<int, bool> updatedValues = [];
     private readonly Dictionary<int, List<Distance>> waveDistanceDictionary = [];
 
-    public SMSWaveEnabledWindow(IMainWindow window, IDBInterface database)
+    public SmsWaveEnabledWindow(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
-        this.MinHeight = 275;
-        this.MinWidth = 300;
-        this.Width = 300;
-        this.Topmost = true;
+        MinHeight = 275;
+        MinWidth = 300;
+        Width = 300;
+        Topmost = true;
         this.window = window;
         this.database = database;
-        theEvent = database.GetCurrentEvent();
-        if (theEvent == null)
+        Event? theEvent1 = database.GetCurrentEvent();
+        if (theEvent1 == null)
         {
             return;
         }
-        foreach (Distance dist in database.GetDistances(theEvent.Identifier))
+        foreach (Distance dist in database.GetDistances(theEvent1.Identifier))
         {
-            initialValues[dist.Wave] = dist.SMSEnabled;
+            initialValues[dist.Wave] = dist.SmsEnabled;
             if (!waveDistanceDictionary.TryGetValue(dist.Wave, out List<Distance>? oDistList))
             {
                 oDistList = [];
@@ -45,45 +43,37 @@ public partial class SMSWaveEnabledWindow : Window
         }
         List<int> sortedWaves = [.. initialValues.Keys];
         sortedWaves.Sort();
-        List<WaveSMS> waves = [];
-        foreach (int waveNum in sortedWaves)
-        {
-            waves.Add(new WaveSMS
-            {
-                Wave = waveNum,
-                SMSEnabled = initialValues[waveNum]
-            });
-        }
+        List<WaveSms> waves = [];
+        waves.AddRange(sortedWaves.Select(waveNum => new WaveSms { Wave = waveNum, SmsEnabled = initialValues[waveNum] }));
         WaveList.ItemsSource = waves;
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
         if (updatedValues.Keys.Count > 0)
         {
-            window?.NotifyTimingWorker();
+            window.NotifyTimingWorker();
         }
     }
 
     private void Set_Click(object? sender, RoutedEventArgs e)
     {
-        foreach (WaveSMS? waveSMS in WaveList.Items.Cast<WaveSMS?>())
+        foreach (object? waveSms in WaveList.Items)
         {
-            if (initialValues[waveSMS!.Wave] != waveSMS.SMSEnabled)
+            if (waveSms is not WaveSms wave) continue;
+            if (initialValues[wave.Wave] != wave.SmsEnabled)
             {
-                updatedValues[waveSMS.Wave] = waveSMS.SMSEnabled;
+                updatedValues[wave.Wave] = wave.SmsEnabled;
             }
         }
         foreach (int wave in updatedValues.Keys)
         {
-            if (waveDistanceDictionary.TryGetValue(wave, out List<Distance>? tDistList))
+            if (!waveDistanceDictionary.TryGetValue(wave, out List<Distance>? tDistList)) continue;
+            foreach (Distance dist in tDistList)
             {
-                foreach (Distance dist in tDistList)
-                {
-                    dist.SMSEnabled = updatedValues[wave];
-                    database.UpdateDistance(dist);
-                }
+                dist.SmsEnabled = updatedValues[wave];
+                database.UpdateDistance(dist);
             }
         }
         Close();
@@ -94,8 +84,8 @@ public partial class SMSWaveEnabledWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -17,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Chronokeep.UI.ChipAssignment;
 
-public partial class BibChipAssociationWindow : Window
+public partial class BibChipAssociationWindow : ChronokeepWindow
 {
     private readonly IDataImporter importer;
     private readonly IWindowCallback window;
@@ -25,7 +24,7 @@ public partial class BibChipAssociationWindow : Window
     private readonly bool init = true;
     private int[]? keys;
 
-    public bool ImportComplete = false;
+    public bool ImportComplete;
 
     private BibChipAssociationWindow(IWindowCallback window, IDataImporter importer, IDBInterface database)
     {
@@ -33,11 +32,11 @@ public partial class BibChipAssociationWindow : Window
         this.importer = importer;
         this.window = window;
         this.database = database;
-        this.MinHeight = 300;
-        this.MinWidth = 300;
-        this.Height = 300;
-        this.Width = 300;
-        this.Topmost = true;
+        MinHeight = 300;
+        MinWidth = 300;
+        Height = 300;
+        Width = 300;
+        Topmost = true;
         if (importer.Data!.Type == ImportData.FileType.EXCEL)
         {
             SheetsContainer.IsVisible = true;
@@ -51,51 +50,37 @@ public partial class BibChipAssociationWindow : Window
         }
         for (int i = 1; i < importer.Data.GetNumHeaders(); i++)
         {
-            headerListBox.Items.Add(new BibChipHeaderPart(importer.Data.Headers[i], i));
+            HeaderListBox.Items.Add(new BibChipHeaderPart(importer.Data.Headers[i], i));
         }
     }
 
     public static BibChipAssociationWindow NewWindow(IWindowCallback window, IDataImporter importer, IDBInterface database)
     {
-        return new(window, importer, database);
+        return new BibChipAssociationWindow(window, importer, database);
     }
 
-    internal List<string> RepeatHeaders()
+    private List<string> RepeatHeaders()
     {
         Log.D("UI.BibChipAssociationWindow", "Checking for repeat headers in user selection.");
-        int[] check = new int[BibChipHeaderPart.human_fields.Length];
+        int[] check = new int[BibChipHeaderPart.HUMAN_FIELDS.Length];
         bool repeat = false;
         List<string> output = [];
-        foreach (object? item in headerListBox.Items)
+        foreach (object? item in HeaderListBox.Items)
         {
-            if (item != null && item is BibChipHeaderPart part)
+            if (item is not BibChipHeaderPart part) continue;
+            int val = part.HeaderBox.SelectedIndex;
+            if (val <= 0) continue;
+            if (check[val] > 0)
             {
-                int val = part.HeaderBox.SelectedIndex;
-                if (val > 0)
-                {
-                    if (check[val] > 0)
-                    {
-                        output.Add(part.HeaderBox.SelectedItem!.ToString()!);
-                        repeat = true;
-                    }
-                    else
-                    {
-                        check[val] = 1;
-                    }
-                }
+                output.Add(part.HeaderBox.SelectedItem!.ToString()!);
+                repeat = true;
+            }
+            else
+            {
+                check[val] = 1;
             }
         }
         return repeat ? output : [];
-    }
-
-    internal BibChipHeaderPart[] GetListBoxItems()
-    {
-        BibChipHeaderPart[] output = new BibChipHeaderPart[headerListBox.Items.Count];
-        for (int i = 0; i < headerListBox.Items.Count; i++)
-        {
-            output[i] = (BibChipHeaderPart)headerListBox.Items[i]!;
-        }
-        return output;
     }
 
     private void SheetsBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -106,103 +91,109 @@ public partial class BibChipAssociationWindow : Window
         ExcelImporter excelImporter = (ExcelImporter)importer;
         excelImporter.ChangeSheet(selection);
         excelImporter.FetchHeaders();
-        headerListBox.Items.Clear();
+        HeaderListBox.Items.Clear();
         for (int i = 1; i < importer.Data!.GetNumHeaders(); i++)
         {
-            headerListBox.Items.Add(new BibChipHeaderPart(importer.Data.Headers[i], i));
+            HeaderListBox.Items.Add(new BibChipHeaderPart(importer.Data.Headers[i], i));
         }
     }
 
-    private async void Done_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Done_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.BibChipAssociationWindow", "Bib Chip Association = Done Clicked.");
-        List<string> headers = RepeatHeaders();
-        int eventId = -1;
-        eventId = database.GetCurrentEvent()!.Identifier;
-        if (headers.Count == 0)
+        try
         {
-            importer.FetchData();
-            keys = new int[3];
-            foreach (BibChipHeaderPart? item in headerListBox.Items.Cast<BibChipHeaderPart?>())
+            Log.D("UI.BibChipAssociationWindow", "Bib Chip Association = Done Clicked.");
+            List<string> headers = RepeatHeaders();
+            int eventId = database.GetCurrentEvent()!.Identifier;
+            if (headers.Count == 0)
             {
-                if (item!.HeaderBox.SelectedIndex != 0)
+                importer.FetchData();
+                keys = new int[3];
+                foreach (BibChipHeaderPart? item in HeaderListBox.Items.Cast<BibChipHeaderPart?>())
                 {
-                    keys[item.HeaderBox.SelectedIndex] = item.Index;
-                }
-            }
-            bool extraAssoc = Headers.IsChecked == false;
-            await Task.Run(() =>
-            {
-                Dictionary<string, string> currentAssociations = database.GetBibChips(eventId).ToDictionary(x => x.Chip, x => x.Bib);
-                List<BibChipAssociation> items = [];
-                ImportData data = importer.Data!;
-                int numEntries = data!.Data.Count;
-                if (extraAssoc)
-                {
-                    items.Add(new()
+                    if (item!.HeaderBox.SelectedIndex != 0)
                     {
-                        Bib = data.Headers[keys[1]],
-                        Chip = data.Headers[keys[2]]
-                    });
+                        keys[item.HeaderBox.SelectedIndex] = item.Index;
+                    }
                 }
-                for (int counter = 0; counter < numEntries; counter++)
+                bool extraAssoc = Headers.IsChecked == false;
+                await Task.Run(() =>
                 {
-                    try
+                    Dictionary<string, string> currentAssociations = database.GetBibChips(eventId).ToDictionary(x => x.Chip, x => x.Bib);
+                    List<BibChipAssociation> items = [];
+                    ImportData data = importer.Data!;
+                    int numEntries = data.Data.Count;
+                    if (extraAssoc)
                     {
-                        items.Add(new()
+                        items.Add(new BibChipAssociation
                         {
-                            Bib = data.Data[counter][keys[1]],
-                            Chip = data.Data[counter][keys[2]]
+                            Bib = data.Headers[keys[1]],
+                            Chip = data.Headers[keys[2]]
                         });
                     }
-                    catch
+                    for (int counter = 0; counter < numEntries; counter++)
                     {
-                        Log.E("UI.BibChipAssociationWindow", "One or more values not an integer.");
-                    }
-                }
-                // Check new associations against old ones.
-                List<BibChipAssociation> conflicts = [];
-                foreach (BibChipAssociation assoc in items)
-                {
-                    // Check to ensure we aren't trying to associate this chip with a different bib
-                    // when it already has one associated with it.
-                    if (currentAssociations.TryGetValue(assoc.Chip, out string? oBib) && !oBib.Equals(assoc.Bib, StringComparison.OrdinalIgnoreCase))
-                    {
-                        conflicts.Add(assoc);
-                    }
-                }
-                // if there are conflicts, alter the user to them and verify clobbering
-                if (conflicts.Count > 0)
-                {
-                    StringBuilder error = new("There were conflicts found in the import file. Please confirm you want to clobber current values.");
-                    foreach (BibChipAssociation assoc in conflicts)
-                    {
-                        error.Append(string.Format("\nChip {0} - Bib {1}", assoc.Chip, assoc.Bib));
-                    }
-                    DialogBox.Show(
-                        error.ToString(),
-                        "Yes",
-                        "No",
-                        () =>
+                        try
                         {
-                            items.RemoveAll(x => conflicts.Contains(x));
+                            items.Add(new BibChipAssociation
+                            {
+                                Bib = data.Data[counter][keys[1]],
+                                Chip = data.Data[counter][keys[2]]
+                            });
                         }
+                        catch
+                        {
+                            Log.E("UI.BibChipAssociationWindow", "One or more values not an integer.");
+                        }
+                    }
+                    // Check new associations against old ones.
+                    List<BibChipAssociation> conflicts = [];
+                    foreach (BibChipAssociation assoc in items)
+                    {
+                        // Check to ensure we aren't trying to associate this chip with a different bib
+                        // when it already has one associated with it.
+                        if (currentAssociations.TryGetValue(assoc.Chip, out string? oBib) && !oBib.Equals(assoc.Bib, StringComparison.OrdinalIgnoreCase))
+                        {
+                            conflicts.Add(assoc);
+                        }
+                    }
+                    // if there are conflicts, alter the user to them and verify clobbering
+                    if (conflicts.Count > 0)
+                    {
+                        StringBuilder error = new("There were conflicts found in the import file. Please confirm you want to clobber current values.");
+                        foreach (BibChipAssociation assoc in conflicts)
+                        {
+                            error.Append($"\nChip {assoc.Chip} - Bib {assoc.Bib}");
+                        }
+                        DialogBox.Show(
+                            error.ToString(),
+                            "Yes",
+                            "No",
+                            () =>
+                            {
+                                items.RemoveAll(conflicts.Contains);
+                            }
                         );
-                }
-                database.AddBibChipAssociation(eventId, items);
-            });
-            Log.D("UI.BibChipAssociationWindow", "All done with bib chip associations.");
-            ImportComplete = true;
-            Close();
-        }
-        else
-        {
-            string val = "";
-            foreach (string str in headers)
-            {
-                val = " " + str;
+                    }
+                    database.AddBibChipAssociation(eventId, items);
+                });
+                Log.D("UI.BibChipAssociationWindow", "All done with bib chip associations.");
+                ImportComplete = true;
+                Close();
             }
-            DialogBox.Show("Multiple values given for: " + val);
+            else
+            {
+                string val = "";
+                foreach (string str in headers)
+                {
+                    val = " " + str;
+                }
+                DialogBox.Show("Multiple values given for: " + val);
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.BibChipAssociationWindow", "Error finishing.");
         }
     }
 
@@ -216,11 +207,11 @@ public partial class BibChipAssociationWindow : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

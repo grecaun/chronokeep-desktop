@@ -23,7 +23,7 @@ namespace Chronokeep.MemStore
                     try
                     {
                         system.SystemIdentifier = output;
-                        timingSystems[system.IPAddress.Trim()] = system;
+                        timingSystems[system.IpAddress.Trim()] = system;
                     }
                     finally
                     {
@@ -75,7 +75,7 @@ namespace Chronokeep.MemStore
                 {
                     try
                     {
-                        timingSystems.Remove(system.IPAddress.Trim());
+                        timingSystems.Remove(system.IpAddress.Trim());
                     }
                     finally
                     {
@@ -105,7 +105,7 @@ namespace Chronokeep.MemStore
                         {
                             if (system.SystemIdentifier == systemId)
                             {
-                                ip = system.IPAddress.Trim();
+                                ip = system.IpAddress.Trim();
                                 break;
                             }
                         }
@@ -140,7 +140,7 @@ namespace Chronokeep.MemStore
                         timingSystems.Clear();
                         foreach (TimingSystem system in systems)
                         {
-                            timingSystems[system.IPAddress.Trim()] = system;
+                            timingSystems[system.IpAddress.Trim()] = system;
                         }
                     }
                     finally
@@ -166,7 +166,7 @@ namespace Chronokeep.MemStore
                 {
                     try
                     {
-                        if (timingSystems.TryGetValue(system.IPAddress.Trim(), out TimingSystem? oldSystem))
+                        if (timingSystems.TryGetValue(system.IpAddress.Trim(), out TimingSystem? oldSystem))
                         {
                             oldSystem.CopyFrom(system);
                         }

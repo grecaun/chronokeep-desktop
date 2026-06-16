@@ -8,10 +8,9 @@ namespace Chronokeep.Objects
 {
     public class Alarm(int identifier, string bib, string chip, bool enabled, int sound) : IEquatable<Alarm>, IComparable<Alarm>
     {
-        private static Lock listMtx = new();
-        private static readonly List<Alarm> alarms = [];
-        private static readonly Dictionary<string, Alarm> bibAlarms = [];
-        private static readonly Dictionary<string, Alarm> chipAlarms = [];
+        private static readonly List<Alarm> Alarms = [];
+        private static readonly Dictionary<string, Alarm> BibAlarms = [];
+        private static readonly Dictionary<string, Alarm> ChipAlarms = [];
 
         public int Identifier { get; set; } = identifier;
         public string Bib { get; set; } = bib;
@@ -19,7 +18,7 @@ namespace Chronokeep.Objects
         public bool Enabled { get; set; } = enabled;
         // Any number not assigned to a sound (1-5 currently) is assumed to be the default.
         public int AlarmSound { get; set; } = sound;
-        public static Lock ListMtx { get => listMtx; set => listMtx = value; }
+        private static Lock ListMtx { get; } = new();
 
         public static void SaveAlarms(int eventId, IDBInterface database)
         {
@@ -28,7 +27,7 @@ namespace Chronokeep.Objects
             {
                 try
                 {
-                    database.SaveAlarms(eventId, alarms);
+                    database.SaveAlarms(eventId, Alarms);
                 }
                 finally
                 {
@@ -61,16 +60,14 @@ namespace Chronokeep.Objects
         {
             Log.D("Objects.Alarm", "Getting alarms.");
             List<Alarm> output = [];
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    output.AddRange(alarms);
-                }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+                output.AddRange(Alarms);
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -79,17 +76,15 @@ namespace Chronokeep.Objects
         {
             Dictionary<string, Alarm> outBib = [];
             Dictionary<string, Alarm> outChip = [];
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return (outBib, outChip);
+            try
             {
-                try
-                {
-                    outBib = new Dictionary<string, Alarm>(bibAlarms);
-                    outChip = new Dictionary<string, Alarm>(chipAlarms);
-                }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+                outBib = new Dictionary<string, Alarm>(BibAlarms);
+                outChip = new Dictionary<string, Alarm>(ChipAlarms);
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return (outBib, outChip);
         }
@@ -97,18 +92,16 @@ namespace Chronokeep.Objects
         public static bool RemoveAlarm(Alarm alarm)
         {
             bool output = false;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    output = output && bibAlarms.Remove(alarm.Bib);
-                    output = output && chipAlarms.Remove(alarm.Chip);
-                    output = output && alarms.Remove(alarm);
-                }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+                output = output && BibAlarms.Remove(alarm.Bib);
+                output = output && ChipAlarms.Remove(alarm.Chip);
+                output = output && Alarms.Remove(alarm);
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -116,19 +109,17 @@ namespace Chronokeep.Objects
         public static bool ClearAlarms()
         {
             bool output = false;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
-                {
-                    alarms.Clear();
-                    bibAlarms.Clear();
-                    chipAlarms.Clear();
-                    output = true;
-                }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+                Alarms.Clear();
+                BibAlarms.Clear();
+                ChipAlarms.Clear();
+                output = true;
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -137,25 +128,23 @@ namespace Chronokeep.Objects
         {
             Log.D("Objects.Alarm", "Adding alarm.");
             bool output = false;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
+                Alarms.Add(alarm);
+                if (alarm.Bib.Length > 0)
                 {
-                    alarms.Add(alarm);
-                    if (alarm.Bib.Length > 0)
-                    {
-                        bibAlarms[alarm.Bib] = alarm;
-                    }
-                    if (alarm.Chip.Length > 0)
-                    {
-                        chipAlarms[alarm.Chip] = alarm;
-                    }
-                    output = true;
+                    BibAlarms[alarm.Bib] = alarm;
                 }
-                finally
+                if (alarm.Chip.Length > 0)
                 {
-                    ListMtx.Exit();
+                    ChipAlarms[alarm.Chip] = alarm;
                 }
+                output = true;
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -164,31 +153,29 @@ namespace Chronokeep.Objects
         {
             Log.D("Objects.Alarm", "Adding alarms.");
             bool output = false;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
+                Log.D("Objects.Alarm", "Number of alarms: " + newAlarms.Count);
+                foreach (Alarm alarm in newAlarms)
                 {
-                    Log.D("Objects.Alarm", "Number of alarms: " + newAlarms.Count);
-                    foreach (Alarm alarm in newAlarms)
+                    if (alarm.Bib.Length > 0)
                     {
-                        if (alarm.Bib.Length > 0)
-                        {
-                            bibAlarms[alarm.Bib] = alarm;
-                        }
-                        if (alarm.Chip.Length > 0)
-                        {
-                            chipAlarms[alarm.Chip] = alarm;
-                        }
-                        output = true;
+                        BibAlarms[alarm.Bib] = alarm;
                     }
-                    alarms.Clear();
-                    alarms.AddRange(bibAlarms.Values);
-                    alarms.AddRange(chipAlarms.Values);
+                    if (alarm.Chip.Length > 0)
+                    {
+                        ChipAlarms[alarm.Chip] = alarm;
+                    }
+                    output = true;
                 }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+                Alarms.Clear();
+                Alarms.AddRange(BibAlarms.Values);
+                Alarms.AddRange(ChipAlarms.Values);
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -196,19 +183,17 @@ namespace Chronokeep.Objects
         public static Alarm? GetAlarmByBib(string bib)
         {
             Alarm? output = null;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
+                if (BibAlarms.TryGetValue(bib, out Alarm? alarm))
                 {
-                    if (bibAlarms.TryGetValue(bib, out Alarm? alarm))
-                    {
-                        output = alarm;
-                    }
+                    output = alarm;
                 }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -216,19 +201,17 @@ namespace Chronokeep.Objects
         public static Alarm? GetAlarmByChip(string chip)
         {
             Alarm? output = null;
-            if (ListMtx.TryEnter(3000))
+            if (!ListMtx.TryEnter(3000)) return output;
+            try
             {
-                try
+                if (ChipAlarms.TryGetValue(chip, out Alarm? alarm))
                 {
-                    if (chipAlarms.TryGetValue(chip, out Alarm? alarm))
-                    {
-                        output = alarm;
-                    }
+                    output = alarm;
                 }
-                finally
-                {
-                    ListMtx.Exit();
-                }
+            }
+            finally
+            {
+                ListMtx.Exit();
             }
             return output;
         }
@@ -236,17 +219,13 @@ namespace Chronokeep.Objects
         public int CompareTo(Alarm? other)
         {
             if (other == null) return 1;
-            if (this.Bib == other.Bib)
-            {
-                return this.Chip.CompareTo(other.Chip);
-            }
-            return this.Bib.CompareTo(other.Bib);
+            return Bib == other.Bib ? string.Compare(Chip, other.Chip, StringComparison.Ordinal) : string.Compare(Bib, other.Bib, StringComparison.Ordinal);
         }
 
         public bool Equals(Alarm? other)
         {
             if (other == null) return false;
-            return this.Identifier == other.Identifier;
+            return Identifier == other.Identifier;
         }
     }
 }

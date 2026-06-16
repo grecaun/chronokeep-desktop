@@ -3,13 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace Chronokeep.Objects.ChronoKeepAPI
 {
-    public class APIPerson
+    public class ApiPerson
     {
-        public APIPerson() { }
+        public ApiPerson() { }
 
-        public APIPerson(Participant person, string uniqueID)
+        public ApiPerson(Participant person, string uniqueId)
         {
-            Identifier = string.Format("{0}{1}", uniqueID, person.EventSpecific.Identifier);
+            Identifier = $"{uniqueId}{person.EventSpecific.Identifier}";
             Bib = person.Bib.ToString();
             First = person.Anonymous ? "" : person.FirstName;
             Last = person.Anonymous ? "" : person.LastName;
@@ -18,7 +18,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
             AgeGroup = person.EventSpecific.AgeGroupName;
             Distance = person.EventSpecific.DistanceName;
             Anonymous = person.Anonymous;
-            SMSEnabled = person.EventSpecific.SMSEnabled;
+            SmsEnabled = person.EventSpecific.SMSEnabled;
             Mobile = person.Mobile;
             Apparel = person.EventSpecific.Apparel;
         }
@@ -42,7 +42,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("anonymous")]
         public bool Anonymous { get; set; }
         [JsonPropertyName("sms_enabled")]
-        public bool SMSEnabled { get; set; }
+        public bool SmsEnabled { get; set; }
         [JsonPropertyName("mobile")]
         public string Mobile { get; set; } = "";
         [JsonPropertyName("apparel")]

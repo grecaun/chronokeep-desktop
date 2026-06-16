@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -23,22 +24,22 @@ public partial class DistancesPage : UserControl, IMainPage
     private readonly Dictionary<int, List<Distance>> subDistanceDictionary = [];
     private readonly HashSet<int> distancesChanged = [];
     private List<Distance>? distances;
-    private bool UpdateTimingWorker = false;
-    private int DistanceCount = 1;
+    private bool updateTimingWorker;
+    private int distanceCount = 1;
 
     public DistancesPage(IMainWindow mWindow, IDBInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
         this.database = database;
-        this.theEvent = database.GetCurrentEvent();
-        if (theEvent!.API_ID > 0 && theEvent.API_Event_ID.Length > 1)
+        theEvent = database.GetCurrentEvent();
+        if (theEvent!.ApiId > 0 && theEvent.ApiEventId.Length > 1)
         {
-            apiPanel.IsVisible = true;
+            ApiPanel.IsVisible = true;
         }
         else
         {
-            apiPanel.IsVisible = false;
+            ApiPanel.IsVisible = false;
         }
         UpdateView();
     }
@@ -51,7 +52,7 @@ public partial class DistancesPage : UserControl, IMainPage
         }
         DistancesBox.Items.Clear();
         distances = database.GetDistances(theEvent.Identifier);
-        DistanceCount = 1;
+        distanceCount = 1;
         distances.Sort();
         distanceDictionary.Clear();
         subDistanceDictionary.Clear();
@@ -78,14 +79,14 @@ public partial class DistancesPage : UserControl, IMainPage
             distanceDictionary[div.Identifier] = div;
             DistancePart parent = new(this, div, theEvent.FinishMaxOccurrences, distances, distanceDictionary, theEvent, null);
             DistancesBox.Items.Add(parent);
-            DistanceCount = div.Identifier > DistanceCount - 1 ? div.Identifier + 1 : DistanceCount;
+            distanceCount = div.Identifier > distanceCount - 1 ? div.Identifier + 1 : distanceCount;
             // Add linked distances
             if (subDistanceDictionary.TryGetValue(div.Identifier, out List<Distance>? tSubDistList))
             {
                 foreach (Distance sub in tSubDistList)
                 {
                     DistancesBox.Items.Add(new DistancePart(this, sub, theEvent.FinishMaxOccurrences, distances, distanceDictionary, theEvent, parent));
-                    DistanceCount = sub.Identifier > DistanceCount - 1 ? sub.Identifier + 1 : DistanceCount;
+                    distanceCount = sub.Identifier > distanceCount - 1 ? sub.Identifier + 1 : distanceCount;
                 }
             }
         }
@@ -144,7 +145,6 @@ public partial class DistancesPage : UserControl, IMainPage
         }
         if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, distance.Identifier).Count > 0)
         {
-            keepDeleting = false;
             DialogBox.Show(
                 "Distance has participants, continue?",
                 "Yes",
@@ -161,11 +161,11 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             database.RemoveDistance(distance);
         }
-        UpdateTimingWorker = true;
+        updateTimingWorker = true;
         UpdateView();
     }
 
-    public void UpdateDatabase()
+    private void UpdateDatabase()
     {
         Dictionary<int, Distance> oldDistances = [];
         foreach (Distance distance in database.GetDistances(theEvent!.Identifier))
@@ -182,7 +182,7 @@ public partial class DistancesPage : UserControl, IMainPage
                 || oDist.FinishOccurrence != listDiv.GetDistance().FinishOccurrence))
             {
                 distancesChanged.Add(divId);
-                UpdateTimingWorker = true;
+                updateTimingWorker = true;
             }
             database.UpdateDistance(listDiv.GetDistance());
         }
@@ -216,13 +216,11 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        if (UpdateTimingWorker || distancesChanged.Count > 0)
-        {
-            database.ResetTimingResultsEvent(theEvent!.Identifier);
-            mWindow.NotifyTimingWorker();
-            mWindow.UpdateRegistrationDistances();
-            mWindow.NetworkUpdateResults();
-        }
+        if (!updateTimingWorker && distancesChanged.Count <= 0) return;
+        database.ResetTimingResultsEvent(theEvent!.Identifier);
+        mWindow.NotifyTimingWorker();
+        mWindow.UpdateRegistrationDistances();
+        mWindow.NetworkUpdateResults();
     }
 
     public void UpdateDistance(Distance distance)
@@ -245,8 +243,8 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddDistance(new(theDistance.Name + " Linked " + DistanceCount, theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
-        UpdateTimingWorker = true;
+        database.AddDistance(new(theDistance.Name + " Linked " + distanceCount, theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
+        updateTimingWorker = true;
         UpdateView();
     }
 
@@ -266,52 +264,60 @@ public partial class DistancesPage : UserControl, IMainPage
 
     private async void DeleteButton_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.DistancesPage", "Deleting uploaded distances.");
-        if (DeleteButton.Content!.ToString() == "Delete Uploaded")
+        try
         {
-            DeleteButton.IsEnabled = false;
-            DeleteButton.Content = "Working...";
-            if (theEvent!.API_ID < 0 || theEvent.API_Event_ID.Length < 1)
+            Log.D("UI.MainPages.DistancesPage", "Deleting uploaded distances.");
+            if (DeleteButton.Content!.ToString() == "Delete Uploaded")
             {
-                DeleteButton.Content = "Error";
-                return;
+                DeleteButton.IsEnabled = false;
+                DeleteButton.Content = "Working...";
+                if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1)
+                {
+                    DeleteButton.Content = "Error";
+                    return;
+                }
+                ApiObject api = database.GetAPI(theEvent.ApiId)!;
+                string[] eventIds = theEvent.ApiEventId.Split(',');
+                if (eventIds.Length != 2)
+                {
+                    DeleteButton.Content = "Error";
+                    return;
+                }
+                // Delete old information from the API
+                try
+                {
+                    await ApiHandlers.DeleteDistances(api, eventIds[0], eventIds[1]);
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                }
+                DeleteButton.IsEnabled = true;
+                DeleteButton.Content = "Delete Uploaded";
             }
-            APIObject api = database.GetAPI(theEvent.API_ID)!;
-            string[] event_ids = theEvent.API_Event_ID.Split(',');
-            if (event_ids.Length != 2)
-            {
-                DeleteButton.Content = "Error";
-                return;
-            }
-            // Delete old information from the API
-            try
-            {
-                await APIHandlers.DeleteDistances(api, event_ids[0], event_ids[1]);
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
-            }
-            DeleteButton.IsEnabled = true;
-            DeleteButton.Content = "Delete Uploaded";
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.DistancesPage", "Error deleting uploaded.");
         }
     }
 
     private async void UploadButton_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.DistancesPage", "Uploading distances.");
-        if (UploadButton.Content!.ToString() == "Upload")
+        try
         {
+            Log.D("UI.MainPages.DistancesPage", "Uploading distances.");
+            if (UploadButton.Content!.ToString() != "Upload") return;
             UploadButton.IsEnabled = false;
             UploadButton.Content = "Working...";
-            if (theEvent!.API_ID < 0 || theEvent.API_Event_ID.Length < 1)
+            if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1)
             {
                 UploadButton.Content = "Error";
                 return;
             }
-            APIObject api = database.GetAPI(theEvent.API_ID)!;
-            string[] event_ids = theEvent.API_Event_ID.Split(',');
-            if (event_ids.Length != 2)
+            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            string[] eventIds = theEvent.ApiEventId.Split(',');
+            if (eventIds.Length != 2)
             {
                 UploadButton.Content = "Error";
                 return;
@@ -320,40 +326,30 @@ public partial class DistancesPage : UserControl, IMainPage
             UpdateDatabase();
             UpdateView();
             // Get Distances and Locations to get their names
-            List<APIDistance> distances = [];
-            foreach (Distance d in database.GetDistances(theEvent.Identifier))
+            List<ApiDistance> apiDistances = [];
+            apiDistances.AddRange(from d in database.GetDistances(theEvent.Identifier) where d.Certification.Trim().Length > 0 select new ApiDistance { Name = d.Name.Trim(), Certification = d.Certification.Trim(), });
+            if (apiDistances.Count > 0)
             {
-                if (d.Certification.Trim().Length > 0)
-                {
-                    distances.Add(new()
-                    {
-                        Name = d.Name.Trim(),
-                        Certification = d.Certification.Trim(),
-                    });
-                }
-            }
-            if (distances.Count > 0)
-            {
-                Log.D("UI.MainPages.DistancesPage", "Attempting to upload " + distances.Count.ToString() + " distances.");
+                Log.D("UI.MainPages.DistancesPage", "Attempting to upload " + apiDistances.Count.ToString() + " distances.");
                 try
                 {
-                    GetDistancesResponse response = await APIHandlers.AddDistances(api, event_ids[0], event_ids[1], distances);
-                    if (response == null || response.Distances == null)
-                    {
-                        DialogBox.Show("Error uploading distances.");
-                    }
-                    else if (response.Distances.Count != distances.Count)
+                    GetDistancesResponse response = await ApiHandlers.AddDistances(api, eventIds[0], eventIds[1], apiDistances);
+                    if (response.Distances.Count != apiDistances.Count)
                     {
                         DialogBox.Show("Error uploading distances. Uploaded count doesn't match.");
                     }
                 }
-                catch (APIException ex)
+                catch (ApiException ex)
                 {
                     DialogBox.Show(ex.Message);
                 }
             }
             UploadButton.IsEnabled = true;
             UploadButton.Content = "Upload";
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.DistancesPage", "Error uploading distances.");
         }
     }
 
@@ -364,8 +360,8 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddDistance(new("New Distance " + DistanceCount, theEvent!.Identifier));
-        UpdateTimingWorker = true;
+        database.AddDistance(new Distance("New Distance " + distanceCount, theEvent!.Identifier));
+        updateTimingWorker = true;
         UpdateView();
     }
 }

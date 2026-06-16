@@ -5,6 +5,7 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
     private readonly IDBInterface database;
     private readonly Event? theEvent;
 
-    public readonly List<TimeResult> Results = [];
+    private readonly List<TimeResult> results = [];
 
     public TimingResultsPage(TimingPage parent, IDBInterface database)
     {
@@ -24,10 +25,10 @@ public partial class TimingResultsPage : UserControl, ISubPage
         this.parent = parent;
         this.database = database;
         theEvent = database.GetCurrentEvent();
-        updateListView.ItemsSource = this.Results;
+        UpdateListView.ItemsSource = results;
         if (Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType)
         {
-            updateListView.Columns[4].Header = "Lap Time";
+            UpdateListView.Columns[4].Header = "Lap Time";
         }
         if (database is SQLiteInterface)
         {
@@ -76,12 +77,9 @@ public partial class TimingResultsPage : UserControl, ISubPage
             {
                 Log.D("UI.Timing.TimingResultsPage", "Time based event.");
                 Dictionary<int, TimeResult> validResults = [];
-                foreach (TimeResult result in newResults)
+                foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
                 {
-                    if (Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId)
-                    {
-                        validResults[result.EventSpecificId] = result;
-                    }
+                    validResults[result.EventSpecificId] = result;
                 }
                 newResults.RemoveAll(x => !validResults.ContainsValue(x) && TimeResult.IsKnown(x));
             }
@@ -103,12 +101,9 @@ public partial class TimingResultsPage : UserControl, ISubPage
             {
                 Log.D("UI.Timing.TimingResultsPage", "Time based event.");
                 Dictionary<int, TimeResult> validResults = [];
-                foreach (TimeResult result in newResults)
+                foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
                 {
-                    if (Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId)
-                    {
-                        validResults[result.EventSpecificId] = result;
-                    }
+                    validResults[result.EventSpecificId] = result;
                 }
                 newResults.RemoveAll(x => !validResults.ContainsValue(x));
             }
@@ -122,139 +117,148 @@ public partial class TimingResultsPage : UserControl, ISubPage
             newResults.RemoveAll(TimeResult.IsNotStart);
         }
         newResults.RemoveAll(result => result.IsNotMatch(search));
-
         Log.D("UI.Timing.TimingResultsPage", "Removing all location based items. " + location);
-
-        if (location != null && location.Length > 0 && !location.Equals("All Locations", StringComparison.OrdinalIgnoreCase))
-
+        if (location.Length > 0 && !location.Equals("All Locations", StringComparison.OrdinalIgnoreCase))
         {
-
             newResults.RemoveAll(read => !read.LocationName.Equals(location, StringComparison.OrdinalIgnoreCase));
         }
-        if (sortType == SortType.BIB)
+        switch (sortType)
         {
-            newResults.Sort(TimeResult.CompareByBib);
-        }
-        else if (sortType == SortType.GUNTIME)
-        {
-            newResults.Sort(TimeResult.CompareByGunTime);
-        }
-        else if (sortType == SortType.DISTANCE)
-        {
-            newResults.Sort(TimeResult.CompareByDistance);
-        }
-        else if (sortType == SortType.AGEGROUP)
-        {
-            newResults.Sort(TimeResult.CompareByAgeGroup);
-        }
-        else if (sortType == SortType.GENDER)
-        {
-            newResults.Sort(TimeResult.CompareByGender);
-        }
-        else if (sortType == SortType.PLACE)
-        {
-            newResults.Sort(TimeResult.CompareByDistancePlace);
-        }
-        else
-        {
-            newResults.Sort(TimeResult.CompareBySystemTime);
+            case SortType.BIB:
+                newResults.Sort(TimeResult.CompareByBib);
+                break;
+            case SortType.GUNTIME:
+                newResults.Sort(TimeResult.CompareByGunTime);
+                break;
+            case SortType.DISTANCE:
+                newResults.Sort(TimeResult.CompareByDistance);
+                break;
+            case SortType.AGEGROUP:
+                newResults.Sort(TimeResult.CompareByAgeGroup);
+                break;
+            case SortType.GENDER:
+                newResults.Sort(TimeResult.CompareByGender);
+                break;
+            case SortType.PLACE:
+                newResults.Sort(TimeResult.CompareByDistancePlace);
+                break;
+            case SortType.SYSTIME:
+            default:
+                newResults.Sort(TimeResult.CompareBySystemTime);
+                break;
         }
     }
 
     public async void SortBy(SortType sortType)
     {
-        List<TimeResult> newResults = [.. Results];
-        PeopleType peopleType = parent.GetPeopleType();
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        await Task.Run(() =>
+        try
         {
-            Customize(sortType, peopleType, newResults, search, location);
-        });
-        updateListView.ItemsSource = newResults;
-        if (newResults.Count > 0)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            List<TimeResult> newResults = [.. results];
+            PeopleType peopleType = parent.GetPeopleType();
+            string search = parent.GetSearchValue();
+            string location = parent.GetLocation();
+            await Task.Run(() =>
             {
-                updateListView.ScrollIntoView(newResults[^1], null);
+                Customize(sortType, peopleType, newResults, search, location);
             });
+            UpdateListView.ItemsSource = newResults;
+            if (newResults.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    UpdateListView.ScrollIntoView(newResults[^1], null);
+                });
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.TimingResultsPage", "Error sorting.");
         }
     }
 
     public async void Location(string location)
-
     {
-
-        List<TimeResult> newResults = [.. Results];
-        PeopleType peopleType = parent.GetPeopleType();
-        SortType sortType = parent.GetSortType();
-        string search = parent.GetSearchValue();
-        await Task.Run(() =>
+        try
         {
-            Customize(sortType, peopleType, newResults, search, location);
-        });
-        updateListView.ItemsSource = newResults;
-        if (newResults.Count > 0)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            List<TimeResult> newResults = [.. results];
+            PeopleType peopleType = parent.GetPeopleType();
+            SortType sortType = parent.GetSortType();
+            string search = parent.GetSearchValue();
+            await Task.Run(() =>
             {
-                updateListView.ScrollIntoView(newResults[^1], null);
+                Customize(sortType, peopleType, newResults, search, location);
             });
+            UpdateListView.ItemsSource = newResults;
+            if (newResults.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    UpdateListView.ScrollIntoView(newResults[^1], null);
+                });
+            }
         }
-
+        catch (Exception)
+        {
+            Log.D("UI.Timing.TimingResultsPage", "Error customizing based on location.");
+        }
     }
-
-    public static void UpdateDatabase() { }
 
     public async void UpdateView()
     {
-        List<TimeResult> newResults = [];
-        SortType sortType = parent.GetSortType();
-        PeopleType peopleType = parent.GetPeopleType();
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        await Task.Run(() =>
+        try
         {
-            newResults = database.GetTimingResults(theEvent!.Identifier);
-        });
-        Results.Clear();
-        Results.AddRange(newResults);
-        await Task.Run(() =>
-        {
-            Customize(sortType, peopleType, newResults, search, location);
-        });
-        updateListView.ItemsSource = newResults;
-        if (newResults.Count > 0)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            List<TimeResult> newResults = [];
+            SortType sortType = parent.GetSortType();
+            PeopleType peopleType = parent.GetPeopleType();
+            string search = parent.GetSearchValue();
+            string location = parent.GetLocation();
+            await Task.Run(() =>
             {
-                updateListView.ScrollIntoView(newResults[^1], null);
+                newResults = database.GetTimingResults(theEvent!.Identifier);
             });
+            results.Clear();
+            results.AddRange(newResults);
+            await Task.Run(() =>
+            {
+                Customize(sortType, peopleType, newResults, search, location);
+            });
+            UpdateListView.ItemsSource = newResults;
+            if (newResults.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    UpdateListView.ScrollIntoView(newResults[^1], null);
+                });
+            }
+            if (theEvent!.DisplayPlacements)
+            {
+                DisplayPlacements();
+            }
+            else
+            {
+                HidePlacements();
+            }
         }
-        if (theEvent!.DisplayPlacements)
+        catch (Exception)
         {
-            DisplayPlacements();
-        }
-        else
-        {
-            HidePlacements();
+            Log.D("UI.Timing.TimingResultsPage", "Error updating view.");
         }
     }
 
-    public void DisplayPlacements()
+    private void DisplayPlacements()
     {
-        updateListView.Columns[7].IsVisible = true;
-        updateListView.Columns[9].IsVisible = true;
-        updateListView.Columns[11].IsVisible = true;
-        updateListView.Columns[13].IsVisible = true;
+        UpdateListView.Columns[7].IsVisible = true;
+        UpdateListView.Columns[9].IsVisible = true;
+        UpdateListView.Columns[11].IsVisible = true;
+        UpdateListView.Columns[13].IsVisible = true;
     }
 
-    public void HidePlacements()
+    private void HidePlacements()
     {
-        updateListView.Columns[7].IsVisible = false;
-        updateListView.Columns[9].IsVisible = false;
-        updateListView.Columns[11].IsVisible = false;
-        updateListView.Columns[13].IsVisible = false;
+        UpdateListView.Columns[7].IsVisible = false;
+        UpdateListView.Columns[9].IsVisible = false;
+        UpdateListView.Columns[11].IsVisible = false;
+        UpdateListView.Columns[13].IsVisible = false;
     }
 
     public void CancelableUpdateView(CancellationToken token)
@@ -271,21 +275,28 @@ public partial class TimingResultsPage : UserControl, ISubPage
 
     public async void Show(PeopleType peopleType)
     {
-        List<TimeResult> newResults = [.. Results];
-        SortType sortType = parent.GetSortType();
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        await Task.Run(() =>
+        try
         {
-            Customize(sortType, peopleType, newResults, search, location);
-        });
-        updateListView.ItemsSource = newResults;
-        if (newResults.Count > 0)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            List<TimeResult> newResults = [.. results];
+            SortType sortType = parent.GetSortType();
+            string search = parent.GetSearchValue();
+            string location = parent.GetLocation();
+            await Task.Run(() =>
             {
-                updateListView.ScrollIntoView(newResults[^1], null);
+                Customize(sortType, peopleType, newResults, search, location);
             });
+            UpdateListView.ItemsSource = newResults;
+            if (newResults.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    UpdateListView.ScrollIntoView(newResults[^1], null);
+                });
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Timing.TimingResultsPage", "Error limiting view.");
         }
     }
 

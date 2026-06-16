@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -11,7 +10,7 @@ using System.Linq;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class WaveWindow : Window
+public partial class WaveWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
     private readonly IDBInterface database;
@@ -23,9 +22,9 @@ public partial class WaveWindow : Window
     public WaveWindow(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
-        this.MinHeight = 300;
-        this.MinWidth = 230;
-        this.Width = 300;
+        MinHeight = 300;
+        MinWidth = 230;
+        Width = 300;
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -42,7 +41,7 @@ public partial class WaveWindow : Window
         {
             long seconds = waveTimes[waveNum].seconds;
             int milliseconds = waveTimes[waveNum].milliseconds;
-            Log.D("UI.Timing.WaveWindow", string.Format("Seconds {0} - Milliseconds {1}", seconds, milliseconds));
+            Log.D("UI.Timing.WaveWindow", $"Seconds {seconds} - Milliseconds {milliseconds}");
             WaveList.Items.Add(new WavePart(waveNum, waveTimes[waveNum].seconds, waveTimes[waveNum].milliseconds));
         }
         NetTimeButton.IsChecked = true;
@@ -50,7 +49,7 @@ public partial class WaveWindow : Window
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
     private void TimeofDayButton_Checked(object sender, RoutedEventArgs e)
@@ -123,8 +122,12 @@ public partial class WaveWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void SetMaximizeIcon()
+    { 
+    }
+
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

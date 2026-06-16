@@ -1,64 +1,62 @@
+using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Objects;
 using Chronokeep.UI.API.Windows;
-using System;
-using System.Collections.Generic;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
-public partial class APIPage1 : UserControl
+public partial class ApiPage1 : UserControl
 {
-    private readonly APIWindow window;
-    private readonly Dictionary<string, APIObject> apiDict;
+    private readonly ApiWindow window;
+    private readonly Dictionary<string, ApiObject> apiDict;
 
-    public APIPage1(APIWindow window, IDBInterface database)
+    public ApiPage1(ApiWindow window, IDBInterface database)
     {
         InitializeComponent();
         this.window = window;
 
-        AppSetting last_api = database.GetAppSetting(Constants.Settings.LAST_USED_API_ID)!;
-        List<APIObject> apis = database.GetAllAPI();
+        AppSetting lastApi = database.GetAppSetting(Constants.Settings.LAST_USED_API_ID)!;
+        List<ApiObject> apis = database.GetAllAPI();
         apis.RemoveAll(x => !Constants.APIConstants.API_RESULTS[x.Type]);
         apiDict = [];
-        int api_id = -1;
-        if (last_api != null)
+        int apiId;
+        try
         {
-            try
-            {
-                api_id = Convert.ToInt32(last_api.Value);
-            }
-            catch
-            {
-                api_id = -1;
-            }
+            apiId = Convert.ToInt32(lastApi.Value);
+        }
+        catch
+        {
+            apiId = -1;
         }
         int ix = 0;
         int count = 0;
-        foreach (APIObject api in apis)
+        foreach (ApiObject api in apis)
         {
             apiDict[api.Identifier.ToString()] = api;
-            APIBox.Items.Add(new ComboBoxItem
+            ApiBox.Items.Add(new ComboBoxItem
             {
                 Content = api.Nickname,
                 Tag = api.Identifier.ToString()
             });
-            if (api_id > 0 && api_id == api.Identifier)
+            if (apiId > 0 && apiId == api.Identifier)
             {
                 ix = count;
             }
             count++;
         }
-        APIBox.SelectedIndex = ix;
+        ApiBox.SelectedIndex = ix;
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         window.Close();
     }
 
-    private void Next_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void Next_Click(object? sender, RoutedEventArgs e)
     {
-        window.GotoPage2(apiDict[(string)((ComboBoxItem)APIBox.SelectedItem!).Tag!]);
+        window.GotoPage2(apiDict[(string)((ComboBoxItem)ApiBox.SelectedItem!).Tag!]);
     }
 }

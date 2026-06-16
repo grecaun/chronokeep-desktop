@@ -6,7 +6,10 @@ using Chronokeep.Objects;
 using Chronokeep.UI.Participants;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.MainPages.Timing;
 
@@ -25,7 +28,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
     private readonly ObservableCollection<Participant> dnfParticipants = [];
     private readonly ObservableCollection<Participant> finishedParticipants = [];
 
-    public DistanceStatsPage(TimingPage parent, IMainWindow window, IDBInterface database, int distanceId, string DistanceName, bool condensed = false)
+    public DistanceStatsPage(TimingPage parent, IMainWindow window, IDBInterface database, int distanceId, string distanceName, bool condensed = false)
     {
         InitializeComponent();
         this.parent = parent;
@@ -40,12 +43,12 @@ public partial class DistanceStatsPage : UserControl, ISubPage
             return;
         }
         Participant.SetCurrentEventDate(theEvent.Date);
-        activeListView.ItemsSource = activeParticipants;
-        dnsListView.ItemsSource = dnsParticipants;
-        unknownListView.ItemsSource = unknownParticipants;
-        dnfListView.ItemsSource = dnfParticipants;
-        finishedListView.ItemsSource = finishedParticipants;
-        this.DistanceName.Text = DistanceName;
+        ActiveListView.ItemsSource = activeParticipants;
+        DnsListView.ItemsSource = dnsParticipants;
+        UnknownListView.ItemsSource = unknownParticipants;
+        DnfListView.ItemsSource = dnfParticipants;
+        FinishedListView.ItemsSource = finishedParticipants;
+        this.DistanceName.Text = distanceName;
         parent.SetReaders([], false);
         UpdateView();
     }
@@ -80,61 +83,57 @@ public partial class DistanceStatsPage : UserControl, ISubPage
         {
             foreach (Distance d in database.GetDistances(theEvent.Identifier))
             {
-                if (d.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER && d.LinkedDistance == distanceId)
+                if (d.LinkedDistance == Constants.Timing.DISTANCE_DUMMYIDENTIFIER ||
+                    d.LinkedDistance != distanceId) continue;
+                Dictionary<int, List<Participant>> partDictLinked = database.GetDistanceParticipantsStatus(theEvent.Identifier, d.Identifier);
+                foreach (int status in partDictLinked.Keys)
                 {
-                    Dictionary<int, List<Participant>> partDictLinked = database.GetDistanceParticipantsStatus(theEvent.Identifier, d.Identifier);
-                    foreach (int status in partDictLinked.Keys)
+                    if (!partDict.TryGetValue(status, out List<Participant>? pList))
                     {
-                        if (!partDict.TryGetValue(status, out List<Participant>? pList))
-                        {
-                            pList = [];
-                        }
-                        pList.AddRange(partDictLinked[status]);
-                        pList.Sort(Participant.CompareByName);
-                        partDict[status] = pList;
+                        pList = [];
                     }
+                    pList.AddRange(partDictLinked[status]);
+                    pList.Sort(Participant.CompareByName);
+                    partDict[status] = pList;
                 }
             }
         }
         // Bib dictionary to add LastSeen string to active participants for display.
         Dictionary<string, TimeResult> lastSeenDictionary = [];
-        foreach (TimeResult timeResult in database.GetLastSeenResults(theEvent.Identifier))
+        foreach (TimeResult timeResult in database.GetLastSeenResults(theEvent.Identifier).Where(timeResult => timeResult.Bib != Constants.Timing.CHIPREAD_DUMMYBIB && timeResult.Bib.Length > 0))
         {
-            if (timeResult.Bib != Constants.Timing.CHIPREAD_DUMMYBIB && timeResult.Bib.Length > 0)
-            {
-                lastSeenDictionary[timeResult.Bib] = timeResult;
-            }
+            lastSeenDictionary[timeResult.Bib] = timeResult;
         }
         if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_STARTED, out List<Participant>? oActiveList)) // ACTIVE
         {
-            activePanel.IsVisible = true;
+            ActivePanel.IsVisible = true;
             foreach (Participant p in oActiveList)
             {
                 bool lastSeenExists = lastSeenDictionary.TryGetValue(p.Bib, out TimeResult? oLastSeenRes);
                 string lastSeen = lastSeenExists ? oLastSeenRes!.SegmentName : "";
                 string lastSeenTime = lastSeenExists ? oLastSeenRes!.SysTime : "";
-                activeParticipants.Add(new(p, lastSeen, lastSeenTime));
+                activeParticipants.Add(new StatsParticipant(p, lastSeen, lastSeenTime));
             }
         }
         else
         {
-            activePanel.IsVisible = false;
+            ActivePanel.IsVisible = false;
         }
-        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_DNS, out List<Participant>? oDNSList)) // DNS
+        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_DNS, out List<Participant>? oDnsList)) // DNS
         {
-            dnsPanel.IsVisible = true;
-            foreach (Participant p in oDNSList)
+            DnsPanel.IsVisible = true;
+            foreach (Participant p in oDnsList)
             {
                 dnsParticipants.Add(p);
             }
         }
         else
         {
-            dnsPanel.IsVisible = false;
+            DnsPanel.IsVisible = false;
         }
         if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_UNKNOWN, out List<Participant>? oUnknownList)) // UNKOWN
         {
-            unknownPanel.IsVisible = true;
+            UnknownPanel.IsVisible = true;
             foreach (Participant p in oUnknownList)
             {
                 unknownParticipants.Add(p);
@@ -142,23 +141,23 @@ public partial class DistanceStatsPage : UserControl, ISubPage
         }
         else
         {
-            unknownPanel.IsVisible = false;
+            UnknownPanel.IsVisible = false;
         }
-        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_DNF, out List<Participant>? oDNFList)) // DNF
+        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_DNF, out List<Participant>? oDnfList)) // DNF
         {
-            dnfPanel.IsVisible = true;
-            foreach (Participant p in oDNFList)
+            DnfPanel.IsVisible = true;
+            foreach (Participant p in oDnfList)
             {
                 dnfParticipants.Add(p);
             }
         }
         else
         {
-            dnfPanel.IsVisible = false;
+            DnfPanel.IsVisible = false;
         }
         if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_FINISHED, out List<Participant>? oFinishedList)) // FINISHED
         {
-            finishedPanel.IsVisible = true;
+            FinishedPanel.IsVisible = true;
             foreach (Participant p in oFinishedList)
             {
                 finishedParticipants.Add(p);
@@ -166,7 +165,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
         }
         else
         {
-            finishedPanel.IsVisible = false;
+            FinishedPanel.IsVisible = false;
         }
     }
 
@@ -174,28 +173,25 @@ public partial class DistanceStatsPage : UserControl, ISubPage
 
     public void Reader(string reader) { }
 
-    private void ListView_MouseDoubleClick(object? sender, Avalonia.Input.TappedEventArgs e)
+    private void ListView_MouseDoubleClick(object? sender, TappedEventArgs e)
     {
         Log.D("UI.Timing.DistanceStatsPage", "Mouse double clicked in a listview.");
-        if (sender is DataGrid)
+        if (sender is not DataGrid listView) return;
+        if (listView.SelectedItem == null) return;
+        Participant? selected;
+        if (listView.SelectedItem is StatsParticipant participant)
         {
-            DataGrid? listView = sender as DataGrid;
-            if (listView!.SelectedItem == null) return;
-            Participant? selected;
-            if (listView!.SelectedItem is StatsParticipant)
-            {
-                selected = ((StatsParticipant)listView.SelectedItem).GetParticipant();
-            }
-            else
-            {
-                selected = listView!.SelectedItem as Participant;
-            }
-            ModifyParticipantWindow modifyParticipant = new(window, database, selected!);
-            modifyParticipant.ShowDialog((Window)window);
+            selected = participant.GetParticipant();
         }
+        else
+        {
+            selected = listView.SelectedItem as Participant;
+        }
+        ModifyParticipantWindow modifyParticipant = new(window, database, selected!);
+        modifyParticipant.ShowDialog((Window)window);
     }
 
-    private void DoneButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void DoneButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.DistanceStatsPage", "Done button clicked.");
         parent.LoadMainDisplay();

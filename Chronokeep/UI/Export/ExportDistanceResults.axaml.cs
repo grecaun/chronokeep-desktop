@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -11,12 +10,15 @@ using Chronokeep.Objects;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
+using Chronokeep.Constants;
 
 namespace Chronokeep.UI.Export;
 
-public partial class ExportDistanceResults : Window
+public partial class ExportDistanceResults : ChronokeepWindow
 {
     private readonly IMainWindow window;
     private readonly IDBInterface database;
@@ -41,38 +43,34 @@ public partial class ExportDistanceResults : Window
         }
         distanceDictionary = [];
         Log.D("ExportDistanceResults", "Adding distances to combobox.");
-        foreach (Distance distance in database.GetDistances(theEvent.Identifier))
+        foreach (Distance distance in database.GetDistances(theEvent.Identifier).Where(distance => Constants.Timing.DISTANCE_NO_LINKED_ID == distance.LinkedDistance))
         {
-            // Don't list linked distances.
-            if (Constants.Timing.DISTANCE_NO_LINKED_ID == distance.LinkedDistance)
+            distanceDictionary[distance.Identifier.ToString()] = distance;
+            DistanceBox.Items.Add(new ComboBoxItem()
             {
-                distanceDictionary[distance.Identifier.ToString()] = distance;
-                distanceBox.Items.Add(new ComboBoxItem()
-                {
-                    Content = distance.Name,
-                    Tag = distance.Identifier.ToString(),
-                });
-            }
+                Content = distance.Name,
+                Tag = distance.Identifier.ToString(),
+            });
         }
         this.type = type;
         this.CanResize = false;
         bool supported = false;
-        if (OutputType.Boston == type)
+        switch (type)
         {
-            this.Title = "Export Boston Results";
-        }
-        else if (OutputType.UltraSignup == type)
-        {
-            this.Title = "Export UltraSignup Results";
-            supported = true;
-        }
-        else if (OutputType.Runsignup == type)
-        {
-            this.Title = "Export Runsignup Results";
-        }
-        else if (OutputType.Abbott == type)
-        {
-            this.Title = "Export AbbottWMM Results";
+            case OutputType.UltraSignup:
+                Title = "Export UltraSignup Results";
+                supported = true;
+                break;
+            case OutputType.Runsignup:
+                Title = "Export Runsignup Results";
+                break;
+            case OutputType.Abbott:
+                Title = "Export AbbottWMM Results";
+                break;
+            case OutputType.Boston:
+            default:
+                Title = "Export Boston Results";
+                break;
         }
         if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType && !supported)
         {
@@ -86,50 +84,51 @@ public partial class ExportDistanceResults : Window
             noOpen = true;
             return;
         }
-        if (distanceBox.Items.Count < 1)
+        switch (DistanceBox.Items.Count)
         {
-            DialogBox.Show("Oops, you don't appear to have any distances set up.");
-            noOpen = true;
-            return;
-        }
-        // don't open the window if we've only got one to output
-        if (distanceBox.Items.Count == 1)
-        {
-            distanceBox.SelectedIndex = 0;
-            Distance selected;
-            if (distanceBox.SelectedItem != null && distanceDictionary.TryGetValue((string)((ComboBoxItem)distanceBox.SelectedItem).Tag!, out Distance? oDist))
-            {
-                selected = oDist;
-            }
-            else
-            {
-                DialogBox.Show("Something went wrong with the distance. Exiting.");
+            case < 1:
+                DialogBox.Show("Oops, you don't appear to have any distances set up.");
                 noOpen = true;
                 return;
-            }
-            if (OutputType.Boston == type)
+            // don't open the window if we've only got one to output
+            case 1:
             {
-                SaveBoston(selected.Name);
+                DistanceBox.SelectedIndex = 0;
+                Distance selected;
+                if (DistanceBox.SelectedItem != null && distanceDictionary.TryGetValue((string)((ComboBoxItem)DistanceBox.SelectedItem).Tag!, out Distance? oDist))
+                {
+                    selected = oDist;
+                }
+                else
+                {
+                    DialogBox.Show("Something went wrong with the distance. Exiting.");
+                    noOpen = true;
+                    return;
+                }
+                switch (type)
+                {
+                    case OutputType.Boston:
+                        SaveBoston(selected.Name);
+                        break;
+                    case OutputType.UltraSignup:
+                        SaveUltraSignup(selected.Name);
+                        break;
+                    case OutputType.Runsignup:
+                        SaveRunsignup(selected.Name);
+                        break;
+                    case OutputType.Abbott:
+                        SaveAbbot(selected.Name);
+                        break;
+                    default:
+                        DialogBox.Show("Something went wrong. No known output type specified.");
+                        break;
+                }
+                noOpen = true;
+                break;
             }
-            else if (OutputType.UltraSignup == type)
-            {
-                SaveUltraSignup(selected.Name);
-            }
-            else if (OutputType.Runsignup == type)
-            {
-                SaveRunsignup(selected.Name);
-            }
-            else if (OutputType.Abbott == type)
-            {
-                SaveAbbot(selected.Name);
-            }
-            else
-            {
-                DialogBox.Show("Something went wrong. No known output type specified.");
-            }
-            noOpen = true;
         }
-        distanceBox.Items.Insert(0, new ComboBoxItem()
+
+        DistanceBox.Items.Insert(0, new ComboBoxItem()
         {
             Content = "All",
             Tag = "ALL_DISTANCES",
@@ -143,141 +142,153 @@ public partial class ExportDistanceResults : Window
 
     private async void SaveAllBoston()
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = string.Format("{0} {1} Boston.{2}", theEvent!.YearCode, theEvent.Name, "xlsx"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Boston.xlsx",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            string extension = Path.GetExtension(file.Name);
+            string fileName = Path.GetFileNameWithoutExtension(file.Name);
+            string filePath = file.TryGetLocalPath()!;
+            foreach (Distance distance in distanceDictionary!.Values)
             {
-                string extension = Path.GetExtension(file.Name);
-                string fileName = Path.GetFileNameWithoutExtension(file.Name);
-                string filePath = file.TryGetLocalPath()!;
-                foreach (Distance distance in distanceDictionary!.Values)
-                {
-                    SaveBostonInternal(
-                        distance.Name,
-                        Path.Combine(filePath, string.Format("{0} {1}{2}", fileName, distance.Name, extension)),
-                        extension
-                        );
-                }
-                DialogBox.Show("Files saved.");
+                SaveBostonInternal(
+                    distance.Name,
+                    Path.Combine(filePath, $"{fileName} {distance.Name}{extension}"),
+                    extension
+                );
             }
+            DialogBox.Show("Files saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving all boston.");
         }
     }
 
     private async void SaveAllUltraSignup()
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CSVType],
-                SuggestedFileName = string.Format("{0} {1} Ultrasignup.{2}", theEvent!.YearCode, theEvent.Name, "csv"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Ultrasignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            string extension = Path.GetExtension(file.Name);
+            string fileName = Path.GetFileNameWithoutExtension(file.Name);
+            string filePath = file.TryGetLocalPath()!;
+            foreach (Distance distance in distanceDictionary!.Values)
             {
-                string extension = Path.GetExtension(file.Name);
-                string fileName = Path.GetFileNameWithoutExtension(file.Name);
-                string filePath = file.TryGetLocalPath()!;
-                foreach (Distance distance in distanceDictionary!.Values)
-                {
-                    SaveUltraSignupInternal(
-                        distance.Name,
-                        Path.Combine(filePath, string.Format("{0} {1}{2}", fileName, distance.Name, extension))
-                        );
-                }
-                DialogBox.Show("Files saved.");
+                SaveUltraSignupInternal(
+                    distance.Name,
+                    Path.Combine(filePath, $"{fileName} {distance.Name}{extension}")
+                );
             }
+            DialogBox.Show("Files saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving all ultrasignup.");
         }
     }
 
     private async void SaveAllRunsignup()
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CSVType],
-                SuggestedFileName = string.Format("{0} {1} Runsignup.{2}", theEvent!.YearCode, theEvent.Name, "csv"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Runsignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            string extension = Path.GetExtension(file.Name);
+            string fileName = Path.GetFileNameWithoutExtension(file.Name);
+            string filePath = file.TryGetLocalPath()!;
+            foreach (Distance distance in distanceDictionary!.Values)
             {
-                string extension = Path.GetExtension(file.Name);
-                string fileName = Path.GetFileNameWithoutExtension(file.Name);
-                string filePath = file.TryGetLocalPath()!;
-                foreach (Distance distance in distanceDictionary!.Values)
-                {
-                    SaveRunsignupInternal(
-                        distance.Name,
-                        Path.Combine(filePath, string.Format("{0} {1}{2}", fileName, distance.Name, extension))
-                        );
-                }
-                DialogBox.Show("Files saved.");
+                SaveRunsignupInternal(
+                    distance.Name,
+                    Path.Combine(filePath, $"{fileName} {distance.Name}{extension}")
+                );
             }
+            DialogBox.Show("Files saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving all runsignup.");
         }
     }
 
     private async void SaveAbbot(string distance)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = string.Format("{0} {1} {2} AbbotWMM.{3}", theEvent!.YearCode, theEvent.Name, distance, "xlsx"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} AbbotWMM.xlsx",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
-            {
-                SaveAbbotInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
-                DialogBox.Show("File saved.");
-            }
+            if (file is null) return;
+            SaveAbbotInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
+            DialogBox.Show("File saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving abbot.");
         }
     }
     private void SaveAbbotInternal(string distance, string fileName, string extension)
@@ -307,128 +318,128 @@ public partial class ExportDistanceResults : Window
         List<TimeResult> results = database.GetTimingResults(theEvent.Identifier);
         foreach (TimeResult result in results)
         {
-            if (Constants.Timing.SEGMENT_FINISH == result.SegmentId && participantDictionary.TryGetValue(result.Bib, out Participant? oPart) && (result.DistanceName == distance) && result.Time.Length > 4)
+            if (Constants.Timing.SEGMENT_FINISH != result.SegmentId ||
+                !participantDictionary.TryGetValue(result.Bib, out Participant? oPart) ||
+                (result.DistanceName != distance) || result.Time.Length <= 4) continue;
+            string country = oPart.Country;
+            if (country.Length != 3)
             {
-                string country = oPart.Country;
-                if (country.Length != 3)
+                if (country.Equals("ca", StringComparison.OrdinalIgnoreCase) || country.Equals("canada", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (country.Equals("ca", System.StringComparison.OrdinalIgnoreCase) || country.Equals("canada", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "CAN";
-                    }
-                    else if (country.Equals("ae", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "ARE";
-                    }
-                    else if (country.Equals("au", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "AUS";
-                    }
-                    else if (country.Equals("br", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "BRA";
-                    }
-                    else if (country.Equals("United States of America", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "USA";
-                    }
-                    else if (country.Equals("cr", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "CRI";
-                    }
-                    else if (country.Equals("cw", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "CUW";
-                    }
-                    else if (country.Equals("ch", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "CHE";
-                    }
-                    else if (country.Equals("de", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "DEU";
-                    }
-                    else if (country.Equals("do", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "DOM";
-                    }
-                    else if (country.Equals("es", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "ESP";
-                    }
-                    else if (country.Equals("gb", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "GBR";
-                    }
-                    else if (country.Equals("hn", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "HND";
-                    }
-                    else if (country.Equals("ie", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "IRL";
-                    }
-                    else if (country.Equals("jp", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "JPN";
-                    }
-                    else if (country.Equals("lv", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "LVA";
-                    }
-                    else if (country.Equals("mx", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "MEX";
-                    }
-                    else if (country.Equals("nl", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "NLD";
-                    }
-                    else if (country.Equals("nz", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "NZL";
-                    }
-                    else if (country.Equals("ru", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "RUS";
-                    }
-                    else if (country.Equals("tw", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "TWN";
-                    }
-                    else if (country.Equals("um", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "UMI";
-                    }
-                    else if (country.Equals("za", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        country = "ZAF";
-                    }
-                    else
-                    {
-                        country = "";
-                    }
+                    country = "CAN";
                 }
-                data.Add(
-                [
-                    "",
-                    "",
-                    result.Last,
-                    result.First,
-                    "",
-                    result.Bib,
-                    oPart.Birthdate,
-                    country,
-                    result.Gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "F" : "",
-                    result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
-                    result.PlaceStr,
-                    result.GenderPlaceStr
-                ]);
+                else if (country.Equals("ae", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "ARE";
+                }
+                else if (country.Equals("au", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "AUS";
+                }
+                else if (country.Equals("br", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "BRA";
+                }
+                else if (country.Equals("United States of America", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "USA";
+                }
+                else if (country.Equals("cr", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "CRI";
+                }
+                else if (country.Equals("cw", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "CUW";
+                }
+                else if (country.Equals("ch", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "CHE";
+                }
+                else if (country.Equals("de", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "DEU";
+                }
+                else if (country.Equals("do", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "DOM";
+                }
+                else if (country.Equals("es", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "ESP";
+                }
+                else if (country.Equals("gb", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "GBR";
+                }
+                else if (country.Equals("hn", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "HND";
+                }
+                else if (country.Equals("ie", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "IRL";
+                }
+                else if (country.Equals("jp", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "JPN";
+                }
+                else if (country.Equals("lv", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "LVA";
+                }
+                else if (country.Equals("mx", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "MEX";
+                }
+                else if (country.Equals("nl", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "NLD";
+                }
+                else if (country.Equals("nz", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "NZL";
+                }
+                else if (country.Equals("ru", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "RUS";
+                }
+                else if (country.Equals("tw", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "TWN";
+                }
+                else if (country.Equals("um", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "UMI";
+                }
+                else if (country.Equals("za", StringComparison.OrdinalIgnoreCase))
+                {
+                    country = "ZAF";
+                }
+                else
+                {
+                    country = "";
+                }
             }
+            data.Add(
+            [
+                "",
+                "",
+                result.Last,
+                result.First,
+                "",
+                result.Bib,
+                oPart.Birthdate,
+                country,
+                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : "",
+                result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
+                result.PlaceStr,
+                result.GenderPlaceStr
+            ]);
         }
         IDataExporter exporter;
-        Log.D("UI.Export.ExportDistanceResults", string.Format("Extension is '{0}'", extension));
-        if (extension.Contains("xls", System.StringComparison.CurrentCulture))
+        Log.D("UI.Export.ExportDistanceResults", $"Extension is '{extension}'");
+        if (extension.Contains("xls", StringComparison.CurrentCulture))
         {
             exporter = new ExcelExporter();
         }
@@ -442,7 +453,7 @@ public partial class ExportDistanceResults : Window
                 format.Append("}\",");
             }
             format.Remove(format.Length - 1, 1);
-            Log.D("UI.Export.ExportDistanceResults", string.Format("The format is '{0}'", format.ToString()));
+            Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
             exporter = new CSVExporter(format.ToString());
         }
         exporter.SetData(headers, data);
@@ -451,29 +462,32 @@ public partial class ExportDistanceResults : Window
 
     private async void SaveBoston(string distance)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = string.Format("{0} {1} {2} Boston.{3}", theEvent!.YearCode, theEvent.Name, distance, "xlsx"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Boston.xlsx",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
-            {
-                SaveBostonInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
-                DialogBox.Show("File saved.");
-            }
+            if (file is null) return;
+            SaveBostonInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
+            DialogBox.Show("File saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving boston.");
         }
     }
 
@@ -536,12 +550,10 @@ public partial class ExportDistanceResults : Window
             "Wheelchair"
         ];
         // Get segments for header.
-        Dictionary<int, int> segmentsHeaderPos = [];
         foreach (Segment seg in segments)
         {
             Log.D("UI.Export.ExportDistanceResults", "Segment:  " + seg.Name);
-            segmentsHeaderPos[seg.Identifier] = data[0].Length;
-            tmp.Add(string.Format("{0} {1}", seg.CumulativeDistance, Constants.Distances.DistanceString(seg.DistanceUnit)));
+            tmp.Add($"{seg.CumulativeDistance} {Distances.DistanceString(seg.DistanceUnit)}");
         }
         data.Add([.. tmp]);
         List<Participant> participants = database.GetParticipants(theEvent.Identifier);
@@ -558,38 +570,33 @@ public partial class ExportDistanceResults : Window
         }
         foreach (TimeResult result in results)
         {
-            if (Constants.Timing.SEGMENT_FINISH == result.SegmentId && participantDictionary.TryGetValue(result.Bib, out Participant? tPart) && (result.DistanceName == distance) && result.Time.Length > 4)
+            if (Constants.Timing.SEGMENT_FINISH != result.SegmentId ||
+                !participantDictionary.TryGetValue(result.Bib, out Participant? tPart) ||
+                (result.DistanceName != distance) || result.Time.Length <= 4) continue;
+            List<string> values =
+            [
+                result.Last,
+                result.First,
+                tPart.City,
+                tPart.State,
+                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
+                tPart.Birthdate,
+                result.Age(theEvent.Date).ToString(),
+                result.Time[..(result.Time.Length > 4 ? result.Time.Length - 4 : 0)],
+                result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
+                ""
+            ];
+            foreach (Segment seg in segments)
             {
-                List<string> values =
-                [
-                        result.Last,
-                            result.First,
-                            tPart.City,
-                            tPart.State,
-                            result.Gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", System.StringComparison.OrdinalIgnoreCase) ? "X" : "",
-                            tPart.Birthdate,
-                            result.Age(theEvent.Date).ToString(),
-                            result.Time[..(result.Time.Length > 4 ? result.Time.Length - 4 : 0)],
-                            result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
-                            ""
-                ];
-                foreach (Segment seg in segments)
-                {
-                    if (segmentResults.TryGetValue((result.Bib, seg.Identifier), out TimeResult? res))
-                    {
-                        values.Add(res.ChipTime[..(res.ChipTime.Length > 4 ? res.ChipTime.Length - 4 : 0)]);
-                    }
-                    else
-                    {
-                        values.Add("");
-                    }
-                }
-                data.Add([.. values]);
+                values.Add(segmentResults.TryGetValue((result.Bib, seg.Identifier), out TimeResult? res)
+                    ? res.ChipTime[..(res.ChipTime.Length > 4 ? res.ChipTime.Length - 4 : 0)]
+                    : "");
             }
+            data.Add([.. values]);
         }
         IDataExporter exporter;
-        Log.D("UI.Export.ExportDistanceResults", string.Format("Extension is '{0}'", extension));
-        if (extension.Contains("xls", System.StringComparison.CurrentCulture))
+        Log.D("UI.Export.ExportDistanceResults", $"Extension is '{extension}'");
+        if (extension.Contains("xls", StringComparison.CurrentCulture))
         {
             exporter = new ExcelExporter();
         }
@@ -603,7 +610,7 @@ public partial class ExportDistanceResults : Window
                 format.Append("}\",");
             }
             format.Remove(format.Length - 1, 1);
-            Log.D("UI.Export.ExportDistanceResults", string.Format("The format is '{0}'", format.ToString()));
+            Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
             exporter = new CSVExporter(format.ToString());
         }
         exporter.SetData([.. headers], data);
@@ -612,79 +619,85 @@ public partial class ExportDistanceResults : Window
 
     private async void SaveUltraSignup(string distance)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CSVType],
-                SuggestedFileName = string.Format("{0} {1} {2} Ultrasignup.{3}", theEvent!.YearCode, theEvent.Name, distance, "csv"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Ultrasignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            string filename = file.TryGetLocalPath()!;
+            string[] fileSplit = filename.Split('.');
+            if (fileSplit.Length != 2)
             {
-                string filename = file.TryGetLocalPath()!;
-                string[] fileSplit = filename.Split('.');
-                if (fileSplit.Length != 2)
-                {
-                    DialogBox.Show("Filename appears to be invalid.");
-                    return;
-                }
-                if (!fileSplit[1].Equals("csv"))
-                {
-                    filename = string.Format("{0}.{1}", fileSplit[0], "csv");
-                }
-                SaveUltraSignupInternal(distance, filename);
-                DialogBox.Show("File saved.");
+                DialogBox.Show("Filename appears to be invalid.");
+                return;
             }
+            if (!fileSplit[1].Equals("csv"))
+            {
+                filename = $"{fileSplit[0]}.csv";
+            }
+            SaveUltraSignupInternal(distance, filename);
+            DialogBox.Show("File saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving ultrasignup.");
         }
     }
 
     private async void SaveRunsignup(string distance)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            TopLevel? topLevel = GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
             catch
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CSVType],
-                SuggestedFileName = string.Format("{0} {1} {2} Runsignup.{3}", theEvent!.YearCode, theEvent.Name, distance, "csv"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Runsignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            string filename = file.TryGetLocalPath()!;
+            string[] fileSplit = filename.Split('.');
+            if (fileSplit.Length != 2)
             {
-                string filename = file.TryGetLocalPath()!;
-                string[] fileSplit = filename.Split('.');
-                if (fileSplit.Length != 2)
-                {
-                    DialogBox.Show("Filename appears to be invalid.");
-                    return;
-                }
-                if (!fileSplit[1].Equals("csv"))
-                {
-                    filename = string.Format("{0}.{1}", fileSplit[0], "csv");
-                }
-                SaveRunsignupInternal(distance, filename);
-                DialogBox.Show("File saved.");
+                DialogBox.Show("Filename appears to be invalid.");
+                return;
             }
+            if (!fileSplit[1].Equals("csv"))
+            {
+                filename = $"{fileSplit[0]}.csv";
+            }
+            SaveRunsignupInternal(distance, filename);
+            DialogBox.Show("File saved.");
+        }
+        catch (Exception)
+        {
+            Log.D("ExportDistanceResults", "Error saving runsignup.");
         }
     }
 
@@ -731,58 +744,58 @@ public partial class ExportDistanceResults : Window
         }
         foreach (TimeResult result in results)
         {
-            if (Constants.Timing.SEGMENT_FINISH == result.SegmentId && participantDictionary.TryGetValue(result.Bib, out Participant? yPart) && (result.DistanceName == distance))
+            if (Constants.Timing.SEGMENT_FINISH != result.SegmentId ||
+                !participantDictionary.TryGetValue(result.Bib, out Participant? yPart) ||
+                (result.DistanceName != distance)) continue;
+            int status = 1;
+            if (Constants.Timing.TIMERESULT_STATUS_DNF == result.Status)
             {
-                int status = 1;
-                if (Constants.Timing.TIMERESULT_STATUS_DNF == result.Status)
-                {
-                    status = 2;
-                }
-                else if (Constants.Timing.DISTANCE_TYPE_UNOFFICIAL == result.Type)
-                {
-                    status = 4;
-                }
-                var newLine = new object[]
-                {
-                            result.Place > 0 ? result.Place.ToString() : "",
-                            result.ChipTime,
-                            result.First,
-                            result.Last,
-                            result.Gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", System.StringComparison.OrdinalIgnoreCase) ? "X" : "",
-                            result.Age(theEvent.Date),
-                            yPart.Birthdate,
-                            result.Bib,
-                            yPart.City,
-                            yPart.State,
-                            status
-                };
-                if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType || Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
-                {
-                    Dictionary<string, Distance> distances = [];
-                    foreach (Distance dist in database.GetDistances(theEvent.Identifier))
-                    {
-                        distances[dist.Name] = dist;
-                    }
-                    int hour = (result.Occurrence / 2) + 1;
-                    if (result.LinkedDistanceName.Length > 0
-                        && distances.TryGetValue(result.LinkedDistanceName, out Distance? localLinked)
-                        && localLinked.DistanceValue > 0)
-                    {
-                        newLine[1] = (localLinked.DistanceValue * hour).ToString();
-                    }
-                    else if (result.DistanceName.Length > 0
-                        && distances.TryGetValue(result.DistanceName, out Distance? localDist)
-                        && localDist.DistanceValue > 0)
-                    {
-                        newLine[1] = (localDist.DistanceValue * hour).ToString();
-                    }
-                    else
-                    {
-                        newLine[1] = "0";
-                    }
-                }
-                data.Add(newLine);
+                status = 2;
             }
+            else if (Constants.Timing.DISTANCE_TYPE_UNOFFICIAL == result.Type)
+            {
+                status = 4;
+            }
+            object[] newLine =
+            [
+                result.Place > 0 ? result.Place.ToString() : "",
+                result.ChipTime,
+                result.First,
+                result.Last,
+                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
+                result.Age(theEvent.Date),
+                yPart.Birthdate,
+                result.Bib,
+                yPart.City,
+                yPart.State,
+                status
+            ];
+            if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType || Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
+            {
+                Dictionary<string, Distance> distances = [];
+                foreach (Distance dist in database.GetDistances(theEvent.Identifier))
+                {
+                    distances[dist.Name] = dist;
+                }
+                int hour = (result.Occurrence / 2) + 1;
+                if (result.LinkedDistanceName.Length > 0
+                    && distances.TryGetValue(result.LinkedDistanceName, out Distance? localLinked)
+                    && localLinked.DistanceValue > 0)
+                {
+                    newLine[1] = (localLinked.DistanceValue * hour).ToString(CultureInfo.InvariantCulture);
+                }
+                else if (result.DistanceName.Length > 0
+                         && distances.TryGetValue(result.DistanceName, out Distance? localDist)
+                         && localDist.DistanceValue > 0)
+                {
+                    newLine[1] = (localDist.DistanceValue * hour).ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    newLine[1] = "0";
+                }
+            }
+            data.Add(newLine);
         }
         StringBuilder format = new();
         for (int i = 0; i < headers.Length; i++)
@@ -792,7 +805,7 @@ public partial class ExportDistanceResults : Window
             format.Append("}\",");
         }
         format.Remove(format.Length - 1, 1);
-        Log.D("UI.Export.ExportDistanceResults", string.Format("The format is '{0}'", format.ToString()));
+        Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
         CSVExporter exporter = new(format.ToString());
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
@@ -803,15 +816,15 @@ public partial class ExportDistanceResults : Window
         string[] headers =
         [
             "place",
-                "clock time",
-                "chip time",
-                "first",
-                "last",
-                "gender",
-                "age",
-                "bib",
-                "city",
-                "state"
+            "clock time",
+            "chip time",
+            "first",
+            "last",
+            "gender",
+            "age",
+            "bib",
+            "city",
+            "state"
         ];
         Dictionary<string, Participant> participantDictionary = [];
         foreach (Participant person in database.GetParticipants(theEvent!.Identifier))
@@ -830,7 +843,7 @@ public partial class ExportDistanceResults : Window
                         result.ChipTime,
                         result.First,
                         result.Last,
-                        result.Gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", System.StringComparison.OrdinalIgnoreCase) ? "X" : "",
+                        result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
                         result.Age(theEvent.Date),
                         result.Bib,
                         zPart.City,
@@ -847,7 +860,7 @@ public partial class ExportDistanceResults : Window
             format.Append("}\",");
         }
         format.Remove(format.Length - 1, 1);
-        Log.D("UI.Export.ExportDistanceResults", string.Format("The format is '{0}'", format.ToString()));
+        Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
         CSVExporter exporter = new(format.ToString());
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
@@ -855,61 +868,54 @@ public partial class ExportDistanceResults : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
     private void Done_Click(object? sender, RoutedEventArgs e)
     {
-        Distance selected;
         // Ensure we've selected a distance and that distance is either known
-        if (distanceBox.SelectedItem != null
-            && distanceDictionary!.TryGetValue((string)((ComboBoxItem)distanceBox.SelectedItem).Tag!, out Distance? tDist))
+        if (DistanceBox.SelectedItem != null
+            && distanceDictionary!.TryGetValue((string)((ComboBoxItem)DistanceBox.SelectedItem).Tag!, out Distance? tDist))
         {
-            selected = tDist;
-            if (OutputType.Boston == type)
+            switch (type)
             {
-                SaveBoston(selected.Name);
-            }
-            else if (OutputType.UltraSignup == type)
-            {
-                SaveUltraSignup(selected.Name);
-            }
-            else if (OutputType.Runsignup == type)
-            {
-                SaveRunsignup(selected.Name);
-            }
-            else if (OutputType.Abbott == type)
-            {
-                SaveAbbot(selected.Name);
-            }
-            else
-            {
-                DialogBox.Show("Something went wrong. No known output type specified.");
+                case OutputType.Boston:
+                    SaveBoston(tDist.Name);
+                    break;
+                case OutputType.UltraSignup:
+                    SaveUltraSignup(tDist.Name);
+                    break;
+                case OutputType.Runsignup:
+                    SaveRunsignup(tDist.Name);
+                    break;
+                case OutputType.Abbott:
+                    SaveAbbot(tDist.Name);
+                    break;
+                default:
+                    DialogBox.Show("Something went wrong. No known output type specified.");
+                    break;
             }
         }
         // Check if they've told us to save all distances.
-        else if ((string)((ComboBoxItem)distanceBox.SelectedItem!).Tag! == "ALL_DISTANCES")
+        else if ((string)((ComboBoxItem)DistanceBox.SelectedItem!).Tag! == "ALL_DISTANCES")
         {
-            if (OutputType.Boston == type)
+            switch (type)
             {
-                SaveAllBoston();
-            }
-            else if (OutputType.UltraSignup == type)
-            {
-                SaveAllUltraSignup();
-            }
-            else if (OutputType.Runsignup == type)
-            {
-                SaveAllRunsignup();
-            }
-            else if (OutputType.Abbott == type)
-            {
-                DialogBox.Show("Exporting all for Abbott is not supported.");
-                return;
-            }
-            else
-            {
-                DialogBox.Show("Something went wrong. No known output type specified.");
+                case OutputType.Boston:
+                    SaveAllBoston();
+                    break;
+                case OutputType.UltraSignup:
+                    SaveAllUltraSignup();
+                    break;
+                case OutputType.Runsignup:
+                    SaveAllRunsignup();
+                    break;
+                case OutputType.Abbott:
+                    DialogBox.Show("Exporting all for Abbott is not supported.");
+                    return;
+                default:
+                    DialogBox.Show("Something went wrong. No known output type specified.");
+                    break;
             }
         }
         else
@@ -925,9 +931,9 @@ public partial class ExportDistanceResults : Window
         this.Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }
 public enum OutputType

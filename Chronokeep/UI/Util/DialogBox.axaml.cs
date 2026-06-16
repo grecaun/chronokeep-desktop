@@ -1,93 +1,113 @@
-using Avalonia;
+using System;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
+using Chronokeep.Helpers;
 
 namespace Chronokeep.UI.Util;
 
-public partial class DialogBox : Window
+public partial class DialogBox : ChronokeepWindow
 {
     public delegate void LeftClickDelegate();
+    private string copyText = "";
 
-    private string CopyText = "";
-
-    public DialogBox(string Message, string LeftButtonContent, string RightButtonContent, bool ShowLeftButton, LeftClickDelegate LeftClick)
+    public DialogBox(string message, string leftButtonContent, string rightButtonContent, bool showLeftButton, LeftClickDelegate leftClick)
     {
         InitializeComponent();
-        MessageBox.Text = Message;
-        LeftButton.Content = LeftButtonContent;
-        RightButton.Content = RightButtonContent;
-        if (ShowLeftButton)
-        {
-            LeftButton.IsVisible = true;
-        }
-        else
-        {
-            LeftButton.IsVisible = false;
-        }
-        LeftButton.Click += (sender, e) =>
+        MessageBox.Text = message;
+        LeftButton.Content = leftButtonContent;
+        RightButton.Content = rightButtonContent;
+        LeftButton.IsVisible = showLeftButton;
+        LeftButton.Click += (_, _) =>
         {
             Close();
-            LeftClick();
+            leftClick();
         };
-        RightButton.Click += (sender, e) =>
+        RightButton.Click += (_, _) =>
         {
             Close();
         };
-        this.MinWidth = 400.0;
-        this.Width = 400.0;
-        this.MinHeight = 200.0;
-        this.Topmost = true;
+        MinWidth = 400.0;
+        Width = 400.0;
+        MinHeight = 200.0;
+        Topmost = true;
     }
 
-    public async static void Show(string Message)
+    public static async void Show(string message)
     {
-        DialogBox output = new(
-            Message,
-            "",
-            "OK",
-            false,
-            () => { }
+        try
+        {
+            DialogBox output = new(
+                message,
+                "",
+                "OK",
+                false,
+                () => { }
             );
-        await output.ShowDialog(MainWindow.mWindow!);
+            await output.ShowDialog(MainWindow.MWindow!);
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Util.DialogBox","Error trying to show dialog box.");
+        }
     }
 
-    public async static void Show(string Message, string LeftButtonContent, string RightButtonContent, LeftClickDelegate LeftClick)
+    public static async void Show(string message, string leftButtonContent, string rightButtonContent, LeftClickDelegate leftClick)
     {
-        DialogBox output = new(
-            Message,
-            LeftButtonContent,
-            RightButtonContent,
-            true,
-            LeftClick
+        try
+        {
+            DialogBox output = new(
+                message,
+                leftButtonContent,
+                rightButtonContent,
+                true,
+                leftClick
             );
-        await output.ShowDialog(MainWindow.mWindow!);
+            await output.ShowDialog(MainWindow.MWindow!);
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Util.DialogBox","Error trying to show dialog box.");
+        }
     }
 
-    public async static void Show(string Message, string CopyText)
+    public static async void Show(string message, string copyText)
     {
-        DialogBox output = new(
-            Message,
-            "",
-            "OK",
-            false,
-            () => { }
+        try
+        {
+            DialogBox output = new(
+                message,
+                "",
+                "OK",
+                false,
+                () => { }
             )
+            {
+                copyText = copyText,
+                CopyBox =
+                {
+                    Text = copyText,
+                    IsVisible = true
+                },
+                Width = 500.0
+            };
+            await output.ShowDialog(MainWindow.MWindow!);
+        }
+        catch (Exception)
         {
-            CopyText = CopyText
-        };
-        output.CopyBox.Text = CopyText;
-        output.CopyBox.IsVisible = true;
-        output.Width = 500.0;
-        await output.ShowDialog(MainWindow.mWindow!);
+            Log.D("UI.Util.DialogBox","Error trying to show dialog box.");
+        }
     }
 
     private void CopyBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        CopyText = CopyBox.Text!;
+        CopyBox.Text = copyText;
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void SetMaximizeIcon()
+    {     
+    }
+
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

@@ -65,14 +65,13 @@ public partial class AlarmsPage : UserControl, ISubPage
     public void Closing()
     {
         Log.D("UI.Timing.AlarmsPage", "Closing Page.");
-        if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
+        if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value !=
+            Constants.Settings.SETTING_TRUE) return;
+        if (AlarmErrors(true))
         {
-            if (AlarmErrors(true))
-            {
-                return;
-            }
-            SaveAlarms();
+            return;
         }
+        SaveAlarms();
     }
 
     public void Keyboard_Ctrl_A() { }
@@ -133,10 +132,7 @@ public partial class AlarmsPage : UserControl, ISubPage
                 }
                 return true;
             }
-            else
-            {
-                bibs.Add(al.Bib);
-            }
+            bibs.Add(al.Bib);
             if (al.Chip.Length > 0 && chips.Contains(al.Chip))
             {
                 if (!silent)
@@ -145,25 +141,17 @@ public partial class AlarmsPage : UserControl, ISubPage
                 }
                 return true;
             }
-            else
+            chips.Add(al.Chip);
+            if (al.Bib.Length != 0 || al.Chip.Length != 0) continue;
+            if (notSetExists)
             {
-                chips.Add(al.Chip);
-            }
-            if (al.Bib.Length == 0 && al.Chip.Length == 0)
-            {
-                if (notSetExists)
+                if (!silent)
                 {
-                    if (!silent)
-                    {
-                        DialogBox.Show("Only one alarm without a bib & chip allowed at a time.");
-                    }
-                    return true;
+                    DialogBox.Show("Only one alarm without a bib & chip allowed at a time.");
                 }
-                else
-                {
-                    notSetExists = true;
-                }
+                return true;
             }
+            notSetExists = true;
         }
         return false;
     }
@@ -190,6 +178,6 @@ public partial class AlarmsPage : UserControl, ISubPage
     private void AddButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.AlarmsPage", "Add button clicked.");
-        AlarmsBox.Items.Add(new AlarmPart(this, new(-1, "", "", true, 0)));
+        AlarmsBox.Items.Add(new AlarmPart(this, new Alarm(-1, "", "", true, 0)));
     }
 }

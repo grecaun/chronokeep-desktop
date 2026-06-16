@@ -1,24 +1,26 @@
+using System;
+using System.Globalization;
 using Avalonia.Controls;
+using Chronokeep.Helpers;
 using Chronokeep.Network.API;
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.Util;
-using System;
 
-namespace Chronokeep.UI.API;
+namespace Chronokeep.UI.API.Pages;
 
 public partial class EditYearPage : UserControl
 {
-    private readonly EditAPIWindow window;
+    private readonly EditApiWindow window;
 
-    private readonly APIObject api;
+    private readonly ApiObject api;
     private readonly string slug;
     private readonly string year;
 
     private EventYearResponse? response;
 
-    public EditYearPage(EditAPIWindow window, APIObject api, string slug, string year)
+    public EditYearPage(EditApiWindow window, ApiObject api, string slug, string year)
     {
         InitializeComponent();
         this.window = window;
@@ -34,56 +36,63 @@ public partial class EditYearPage : UserControl
     {
         try
         {
-            response = await APIHandlers.GetEventYear(api, slug, year);
+            try
+            {
+                response = await ApiHandlers.GetEventYear(api, slug, year);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+                window.Close();
+                return;
+            }
+            YearBox.Text = response.EventYear.Year;
+            DateBox.Text = DateTime.Parse(response.EventYear.DateTime).ToString("MM/dd/yyyy");
+            if (response.Event.Type == Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA)
+            {
+                RankBox.Items.Add(new ComboBoxItem
+                {
+                    Content = "Elapsed",
+                    Tag = "Clock"
+                });
+                RankBox.Items.Add(new ComboBoxItem
+                {
+                    Content = "Cumulative",
+                    Tag = "Chip"
+                });
+            }
+            else
+            {
+                RankBox.Items.Add(new ComboBoxItem
+                {
+                    Content = "Clock",
+                    Tag = "Clock"
+                });
+                RankBox.Items.Add(new ComboBoxItem
+                {
+                    Content = "Chip",
+                    Tag = "Chip"
+                });
+            }
+            RankBox.SelectedIndex = response.EventYear.RankingType.Equals("chip", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+            LiveBox.IsChecked = response.EventYear.Live;
+            DaysAllowedText.Text = response.EventYear.DaysAllowed.ToString();
+            DaysAllowedSlider.Value = response.EventYear.DaysAllowed;
+            YearPanel.IsVisible = true;
+            HoldingLabel.IsVisible = false;
+            SaveButton.IsEnabled = true;
         }
-        catch (APIException ex)
+        catch (Exception)
         {
-            DialogBox.Show(ex.Message);
-            window.Close();
-            return;
+            Log.D("UI.API.Pages.EventYearPage","Error getting years.");
         }
-        yearBox.Text = response.EventYear.Year;
-        dateBox.Text = DateTime.Parse(response.EventYear.DateTime).ToString("MM/dd/yyyy");
-        if (response.Event.Type == Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA)
-        {
-            rankBox.Items.Add(new ComboBoxItem
-            {
-                Content = "Elapsed",
-                Tag = "Clock"
-            });
-            rankBox.Items.Add(new ComboBoxItem
-            {
-                Content = "Cumulative",
-                Tag = "Chip"
-            });
-        }
-        else
-        {
-            rankBox.Items.Add(new ComboBoxItem
-            {
-                Content = "Clock",
-                Tag = "Clock"
-            });
-            rankBox.Items.Add(new ComboBoxItem
-            {
-                Content = "Chip",
-                Tag = "Chip"
-            });
-        }
-        rankBox.SelectedIndex = response.EventYear.RankingType.Equals("chip", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-        LiveBox.IsChecked = response.EventYear.Live;
-        DaysAllowedText.Text = response.EventYear.DaysAllowed.ToString();
-        DaysAllowedSlider.Value = response.EventYear.DaysAllowed;
-        yearPanel.IsVisible = true;
-        holdingLabel.IsVisible = false;
-        SaveButton.IsEnabled = true;
     }
 
     private void DaysAllowed_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         if (DaysAllowedSlider != null && DaysAllowedText != null)
         {
-            DaysAllowedText.Text = DaysAllowedSlider.Value.ToString();
+            DaysAllowedText.Text = DaysAllowedSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -91,20 +100,23 @@ public partial class EditYearPage : UserControl
     {
         try
         {
-            await APIHandlers.UpdateEventYear(api, slug, new APIEventYear
+            await ApiHandlers.UpdateEventYear(api, slug, new ApiEventYear
             {
-                Year = yearBox.Text!,
-                DateTime = Convert.ToDateTime(dateBox.Text!.Replace('_', '0')).ToString("yyyy/MM/dd HH:mm:ss zzz"),
+                Year = YearBox.Text!,
+                DateTime = Convert.ToDateTime((string?)DateBox.Text!.Replace('_', '0')).ToString("yyyy/MM/dd HH:mm:ss zzz"),
                 Live = LiveBox.IsChecked == true,
                 DaysAllowed = Convert.ToInt32(DaysAllowedSlider.Value),
-                RankingType = ((string)((ComboBoxItem)rankBox.SelectedItem!).Tag!).Equals("Chip", StringComparison.OrdinalIgnoreCase) ? "chip" : "gun",
+                RankingType = ((string)((ComboBoxItem)RankBox.SelectedItem!).Tag!).Equals("Chip", StringComparison.OrdinalIgnoreCase) ? "chip" : "gun",
             });
             window.Close();
         }
-        catch (APIException ex)
+        catch (ApiException ex)
         {
             DialogBox.Show(ex.Message);
-            return;
+        }
+        catch (Exception)
+        {
+            Log.D("UI.API.Pages.EventYearPage","Error updating.");
         }
     }
 

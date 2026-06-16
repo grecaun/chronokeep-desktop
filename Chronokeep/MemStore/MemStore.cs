@@ -26,7 +26,7 @@ namespace Chronokeep.MemStore
         // key == setting name
         private static readonly Dictionary<string, AppSetting> settings = [];
         // key == api id
-        private static readonly Dictionary<int, APIObject> apis = [];
+        private static readonly Dictionary<int, ApiObject> apis = [];
         // key == ip
         private static readonly Dictionary<string, TimingSystem> timingSystems = [];
         private static readonly HashSet<string> bannedPhones = [];
@@ -59,7 +59,7 @@ namespace Chronokeep.MemStore
         private static readonly List<RemoteReader> remoteReaders = [];
         private static readonly HashSet<(int, int)> smsAlerts = [];
         private static readonly HashSet<int> emailAlerts = [];
-        private static readonly List<APISmsSubscription> smsSubscriptions = [];
+        private static readonly List<ApiSmsSubscription> smsSubscriptions = [];
         // key = (eventspecific_id, location_id, occurrence, unknown_id)
         private static readonly Dictionary<(int, int, int, string), TimeResult> timingResults = [];
         // Chip Read data
@@ -317,14 +317,14 @@ namespace Chronokeep.MemStore
                         settings[Constants.Settings.MAILGUN_API_KEY] = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!;
                         settings[Constants.Settings.MAILGUN_API_URL] = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!;
                         // Load apis
-                        foreach (APIObject api in database.GetAllAPI())
+                        foreach (ApiObject api in database.GetAllAPI())
                         {
                             apis[api.Identifier] = api;
                         }
                         // load timingsystems
                         foreach (TimingSystem system in database.GetTimingSystems())
                         {
-                            timingSystems[system.IPAddress.Trim()] = system;
+                            timingSystems[system.IpAddress.Trim()] = system;
                         }
                         // load banned phones
                         foreach (string phone in database.GetBannedPhones())

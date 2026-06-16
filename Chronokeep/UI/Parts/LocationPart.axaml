@@ -18,12 +18,8 @@
                    Margin="0,10,0,5"
                    VerticalContentAlignment="Center"/>
       </DockPanel>
-      <Grid>
-		  <Grid.ColumnDefinitions>
-			  <ColumnDefinition Width="*"/>
-			  <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <DockPanel Grid.Column="0" Name="OccPanel" IsVisible="True">
+      <Grid ColumnDefinitions="*,*">
+	      <DockPanel Grid.Column="0" Name="OccPanel" IsVisible="True">
 			  <TextBlock Text="Max Occurrences"
                          Width="140"
                          FontSize="16"

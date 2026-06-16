@@ -1,72 +1,71 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.UI.Util;
 using System.Collections.Generic;
+using Chronokeep.Constants;
 
 namespace Chronokeep.UI.API.Windows;
 
-public partial class APIWindow : Window
+public partial class ApiWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
     private readonly IDBInterface database;
     private readonly Event? theEvent;
 
     // Variables relating to information we're collecting.
-    private APIObject? api;
+    private ApiObject? api;
     private string slug = "", year = "";
 
-    public APIWindow(IMainWindow window, IDBInterface database)
+    private ApiWindow(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
         this.window = window;
         this.database = database;
-        this.MinHeight = 100;
-        this.MinWidth = 300;
-        this.Width = 330;
+        MinHeight = 100;
+        MinWidth = 300;
+        Width = 330;
         theEvent = database.GetCurrentEvent();
-        List<APIObject> apis = database.GetAllAPI();
-        apis.RemoveAll(x => !Constants.APIConstants.API_RESULTS[x.Type]);
+        List<ApiObject> apis = database.GetAllAPI();
+        apis.RemoveAll(x => !APIConstants.API_RESULTS[x.Type]);
         if (theEvent == null || theEvent.Identifier < 1 || apis.Count < 1)
         {
             Log.E("UI.API.APIWindow", "event not found or no apis set up");
-            APIFrame.Content = new APIErrorPage(this, apis.Count < 1);
+            ApiFrame.Content = new Pages.ApiErrorPage(this, apis.Count < 1);
         }
         else
         {
-            APIFrame.Content = new APIPage1(this, database);
+            ApiFrame.Content = new Pages.ApiPage1(this, database);
         }
     }
 
-    public static APIWindow NewWindow(IMainWindow window, IDBInterface database)
+    public static ApiWindow NewWindow(IMainWindow window, IDBInterface database)
     {
-        return new(window, database);
+        return new ApiWindow(window, database);
     }
 
-    public void GotoPage2(APIObject api)
+    public void GotoPage2(ApiObject iApi)
     {
-        this.api = api;
-        database.SetAppSetting(Constants.Settings.LAST_USED_API_ID, api.Identifier.ToString());
-        APIFrame.Content = new APIPage2(this, database, api, theEvent!);
+        api = iApi;
+        database.SetAppSetting(Constants.Settings.LAST_USED_API_ID, iApi.Identifier.ToString());
+        ApiFrame.Content = new Pages.ApiPage2(this, database, iApi, theEvent!);
     }
 
-    public void GotoPage3(string slug)
+    public void GotoPage3(string iSlug)
     {
-        this.slug = slug;
-        APIFrame.Content = new APIPage3(this, api!, theEvent!, slug);
+        slug = iSlug;
+        ApiFrame.Content = new Pages.ApiPage3(this, api!, theEvent!, iSlug);
     }
 
-    public void Finish(string year)
+    public void Finish(string iYear)
     {
-        this.year = year;
-        if (api!.Identifier > 0 && this.slug != "" && this.year != "")
+        year = iYear;
+        if (api!.Identifier > 0 && slug != "" && year != "")
         {
-            theEvent!.API_ID = api.Identifier;
-            theEvent.API_Event_ID = this.slug + "," + this.year;
+            theEvent!.ApiId = api.Identifier;
+            theEvent.ApiEventId = slug + "," + year;
             database.UpdateEvent(theEvent);
             window.NetworkUpdateResults();
         }
@@ -81,11 +80,11 @@ public partial class APIWindow : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

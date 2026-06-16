@@ -1,59 +1,59 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Helpers;
 using Chronokeep.Objects.ChronokeepPortal;
 using Chronokeep.Timing.Interfaces;
 
 namespace Chronokeep.UI.Timing.ReaderSettings.Parts;
 
-public partial class APIPart : UserControl
+public partial class ApiPart : UserControl
 {
-    private PortalAPI? api = null;
-    private readonly ChronokeepInterface? reader = null;
+    private PortalApi api;
+    private readonly ChronokeepInterface reader;
 
-    public APIPart(PortalAPI api, ChronokeepInterface reader)
+    public ApiPart(PortalApi api, ChronokeepInterface reader)
     {
         InitializeComponent();
         this.api = api;
         this.reader = reader;
-        nameBox.Text = api.Nickname;
-        kindBox.SelectedIndex = api.Kind switch
+        NameBox.Text = api.Nickname;
+        KindBox.SelectedIndex = api.Kind switch
         {
-            PortalAPI.API_TYPE_CHRONOKEEP_REMOTE => 0,
-            PortalAPI.API_TYPE_CHRONOKEEP_REMOTE_SELF => 1,
+            PortalApi.API_TYPE_CHRONOKEEP_REMOTE => 0,
+            PortalApi.API_TYPE_CHRONOKEEP_REMOTE_SELF => 1,
             _ => 0,
         };
-        tokenBox.Text = api.Token;
-        uriBox.Text = api.Uri;
-        PrivateUpdateURI();
+        TokenBox.Text = api.Token;
+        UriBox.Text = api.Uri;
+        PrivateUpdateUri();
     }
 
-    public void UpdateAPI(PortalAPI api)
+    public void UpdateApi(PortalApi iApi)
     {
-        this.api = api;
-        nameBox.Text = api.Nickname;
-        kindBox.SelectedIndex = api.Kind switch
+        api = iApi;
+        NameBox.Text = iApi.Nickname;
+        KindBox.SelectedIndex = iApi.Kind switch
         {
-            PortalAPI.API_TYPE_CHRONOKEEP_REMOTE => 0,
-            PortalAPI.API_TYPE_CHRONOKEEP_REMOTE_SELF => 1,
+            PortalApi.API_TYPE_CHRONOKEEP_REMOTE => 0,
+            PortalApi.API_TYPE_CHRONOKEEP_REMOTE_SELF => 1,
             _ => 0,
         };
-        tokenBox.Text = api.Token;
-        uriBox.Text = api.Uri;
-        PrivateUpdateURI();
+        TokenBox.Text = iApi.Token;
+        UriBox.Text = iApi.Uri;
+        PrivateUpdateUri();
     }
 
-    public void PrivateUpdateURI()
+    private void PrivateUpdateUri()
     {
-        switch (((ComboBoxItem)kindBox.SelectedItem!).Tag)
+        switch (((ComboBoxItem)KindBox.SelectedItem!).Tag)
         {
-            case PortalAPI.API_TYPE_CHRONOKEEP_REMOTE:
-                uriBox.IsVisible = false;
-                uriBox.Text = PortalAPI.API_URI_CHRONOKEEP_REMOTE;
+            case PortalApi.API_TYPE_CHRONOKEEP_REMOTE:
+                UriBox.IsVisible = false;
+                UriBox.Text = PortalApi.API_URI_CHRONOKEEP_REMOTE;
                 break;
-            case PortalAPI.API_TYPE_CHRONOKEEP_REMOTE_SELF:
             default:
-                uriBox.IsVisible = true;
-                uriBox.Text = api!.Uri;
+                UriBox.IsVisible = true;
+                UriBox.Text = api.Uri;
                 break;
         }
     }
@@ -61,21 +61,21 @@ public partial class APIPart : UserControl
     private void KindBox_ValueChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Selected type changed.");
-        PrivateUpdateURI();
+        PrivateUpdateUri();
     }
-    private void DeleteAPI(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void DeleteApi(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Deleting api " + api!.Id);
-        reader?.SendDeleteApi(api);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Deleting api " + api.Id);
+        reader.SendDeleteApi(api);
     }
 
-    private void SaveAPI(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void SaveApi(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Saving api " + api!.Id);
-        api.Nickname = nameBox.Text!.Trim();
-        api.Token = tokenBox.Text!.Trim();
-        api.Uri = uriBox.Text!.Trim();
-        api.Kind = (string)((ComboBoxItem)kindBox.SelectedItem!).Tag!;
-        reader?.SendSaveApi(api);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Saving api " + api.Id);
+        api.Nickname = NameBox.Text!.Trim();
+        api.Token = TokenBox.Text!.Trim();
+        api.Uri = UriBox.Text!.Trim();
+        api.Kind = (string)((ComboBoxItem)KindBox.SelectedItem!).Tag!;
+        reader.SendSaveApi(api);
     }
 }

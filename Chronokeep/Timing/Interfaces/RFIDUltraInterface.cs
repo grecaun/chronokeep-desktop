@@ -16,12 +16,12 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Timing.Interfaces
 {
-    public partial class RFIDUltraInterface(IDBInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
+    public partial class RfidUltraInterface(IDBInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
     {
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly StringBuilder buffer = new();
-        private RFIDSettings? settingsWindow = null;
-        Socket? sock;
+        private RfidSettings? settingsWindow;
+        private Socket? sock;
 
         [GeneratedRegex(@"^V=.*")]
         private static partial Regex Voltage();
@@ -40,14 +40,14 @@ namespace Chronokeep.Timing.Interfaces
         [GeneratedRegex(@"^[^\n]*\n")]
         private static partial Regex Msg();
 
-        public List<Socket>? Connect(string IpAddress, int Port)
+        public List<Socket>? Connect(string ipAddress, int port)
         {
             List<Socket> output = [];
-            sock = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Log.D("Timing.Interfaces.RFIDUltraInterface", "Attempting to connect to " + IpAddress + ":" + Port.ToString());
+            sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Log.D("Timing.Interfaces.RFIDUltraInterface", "Attempting to connect to " + ipAddress + ":" + port);
             try
             {
-                IAsyncResult result = sock.BeginConnect(IpAddress, Port, null, null);
+                IAsyncResult result = sock.BeginConnect(ipAddress, port, null, null);
                 result.AsyncWaitHandle.WaitOne(Constants.Readers.TIMEOUT, true);
                 if (sock.Connected)
                 {
@@ -71,7 +71,7 @@ namespace Chronokeep.Timing.Interfaces
             return output;
         }
 
-        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket sock)
+        public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket iSock)
         {
             Dictionary<MessageType, List<string>> output = [];
             buffer.Append(inMessage);
@@ -82,7 +82,7 @@ namespace Chronokeep.Timing.Interfaces
                 ignoredChips.Add(ignore.Chip);
             }
             List<ChipRead> chipReads = [];
-            RFIDSettingsHolder? settingsHolder = null;
+            RfidSettingsHolder? settingsHolder = null;
             while (m.Success)
             {
                 buffer.Remove(m.Index, m.Length);
@@ -126,13 +126,13 @@ namespace Chronokeep.Timing.Interfaces
                     double voltVal = 0;
                     try
                     {
-                        voltVal = Double.Parse(message[2..]);
+                        voltVal = double.Parse(message[2..]);
                     }
                     catch
                     {
                         if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                         {
-                            errorList = ([]);
+                            errorList = [];
                             output[MessageType.ERROR] = errorList;
                         }
                         errorList.Add("Invalid voltage value given.");
@@ -152,81 +152,79 @@ namespace Chronokeep.Timing.Interfaces
                 else if (Settinginfo().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a setting information message. " + message);
-                    settingsHolder ??= new();
-                    char settingID = message[1];
+                    settingsHolder ??= new RfidSettingsHolder();
+                    char settingId = message[1];
                     string subMsg = message[2..^1];
-                    int tmp = -1;
-                    switch (settingID)
+                    int tmp;
+                    switch (settingId)
                     {
-                        case RFIDUltraCodes.UltraId:
+                        case RfidUltraCodes.ULTRA_ID:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Ultra ID: " + subMsg);
                             if (int.TryParse(subMsg, out tmp))
                             {
-                                settingsHolder.UltraID = tmp;
+                                settingsHolder.UltraId = tmp;
                             }
                             break;
-                        case RFIDUltraCodes.ChipOutType:
+                        case RfidUltraCodes.CHIP_OUT_TYPE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Chip out type: " + message[2]);
                             settingsHolder.ChipType = message[2] switch
                             {
-                                '0' => RFIDSettingsHolder.ChipTypeEnum.DEC,
-                                '1' => RFIDSettingsHolder.ChipTypeEnum.HEX,
-                                _ => RFIDSettingsHolder.ChipTypeEnum.UNKNOWN,
+                                '0' => RfidSettingsHolder.ChipTypeEnum.DEC,
+                                '1' => RfidSettingsHolder.ChipTypeEnum.HEX,
+                                _ => RfidSettingsHolder.ChipTypeEnum.UNKNOWN,
                             };
                             break;
-                        case RFIDUltraCodes.GatingMode:
+                        case RfidUltraCodes.GATING_MODE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Mode: " + message[2]);
                             settingsHolder.GatingMode = message[2] switch
                             {
-                                '0' => RFIDSettingsHolder.GatingModeEnum.PER_READER,
-                                '1' => RFIDSettingsHolder.GatingModeEnum.PER_BOX,
-                                '2' => RFIDSettingsHolder.GatingModeEnum.FIRST_TIME_SEEN,
-                                _ => RFIDSettingsHolder.GatingModeEnum.UNKNOWN,
+                                '0' => RfidSettingsHolder.GatingModeEnum.PER_READER,
+                                '1' => RfidSettingsHolder.GatingModeEnum.PER_BOX,
+                                '2' => RfidSettingsHolder.GatingModeEnum.FIRST_TIME_SEEN,
+                                _ => RfidSettingsHolder.GatingModeEnum.UNKNOWN,
                             };
                             break;
-                        case RFIDUltraCodes.GatingInterval:
+                        case RfidUltraCodes.GATING_INTERVAL:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Interval: " + subMsg);
                             if (int.TryParse(subMsg, out tmp))
                             {
                                 settingsHolder.GatingInterval = tmp;
                             }
                             break;
-                        case RFIDUltraCodes.WhenBeep:
+                        case RfidUltraCodes.WHEN_BEEP:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "When beep: " + message[2]);
                             settingsHolder.Beep = message[2] switch
                             {
-                                '0' => RFIDSettingsHolder.BeepEnum.ALWAYS,
-                                '1' => RFIDSettingsHolder.BeepEnum.ONLY_FIRST_SEEN,
-                                _ => RFIDSettingsHolder.BeepEnum.UNKNOWN,
+                                '0' => RfidSettingsHolder.BeepEnum.ALWAYS,
+                                '1' => RfidSettingsHolder.BeepEnum.ONLY_FIRST_SEEN,
+                                _ => RfidSettingsHolder.BeepEnum.UNKNOWN,
                             };
                             break;
-                        case RFIDUltraCodes.BeeperVolume:
+                        case RfidUltraCodes.BEEPER_VOLUME:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Beeper volume: " + message[2]);
                             settingsHolder.BeepVolume = message[2] switch
                             {
-                                '0' => RFIDSettingsHolder.BeepVolumeEnum.OFF,
-                                '1' => RFIDSettingsHolder.BeepVolumeEnum.SOFT,
-                                '2' => RFIDSettingsHolder.BeepVolumeEnum.LOUD,
-                                _ => RFIDSettingsHolder.BeepVolumeEnum.UNKNOWN,
+                                '0' => RfidSettingsHolder.BeepVolumeEnum.OFF,
+                                '1' => RfidSettingsHolder.BeepVolumeEnum.SOFT,
+                                '2' => RfidSettingsHolder.BeepVolumeEnum.LOUD,
+                                _ => RfidSettingsHolder.BeepVolumeEnum.UNKNOWN,
                             };
                             break;
-                        case RFIDUltraCodes.AutoSetGPS:
+                        case RfidUltraCodes.AUTO_SET_GPS:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Auto set gps: " + message[2]);
-                            settingsHolder.SetFromGPS = message[2] switch
+                            settingsHolder.SetFromGps = message[2] switch
                             {
-                                '0' => RFIDSettingsHolder.GPSEnum.DONT_SET,
-                                '1' => RFIDSettingsHolder.GPSEnum.SET,
-                                _ => RFIDSettingsHolder.GPSEnum.UNKNOWN,
+                                '0' => RfidSettingsHolder.GpsEnum.DONT_SET,
+                                '1' => RfidSettingsHolder.GpsEnum.SET,
+                                _ => RfidSettingsHolder.GpsEnum.UNKNOWN,
                             };
                             break;
-                        case RFIDUltraCodes.TimeZone:
+                        case RfidUltraCodes.TIME_ZONE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Timezone: " + subMsg);
                             if (int.TryParse(subMsg, out tmp))
                             {
                                 settingsHolder.TimeZone = tmp;
                             }
-                            break;
-                        default:
                             break;
                     }
                     output[MessageType.SETTINGVALUE] = [];
@@ -235,67 +233,65 @@ namespace Chronokeep.Timing.Interfaces
                 else if (Settingconfirmation().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a settings confirmation message. " + message + BitConverter.ToString([.. message.Select(c => (byte)c)]));
-                    settingsHolder ??= new();
-                    char settingID = message[1];
-                    switch (settingID)
+                    settingsHolder ??= new RfidSettingsHolder();
+                    char settingId = message[1];
+                    switch (settingId)
                     {
-                        case RFIDUltraCodes.UltraId:
+                        case RfidUltraCodes.ULTRA_ID:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Ultra ID set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.ChipOutType:
+                        case RfidUltraCodes.CHIP_OUT_TYPE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Chip out type set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.GatingMode:
+                        case RfidUltraCodes.GATING_MODE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating mode set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.GatingInterval:
+                        case RfidUltraCodes.GATING_INTERVAL:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Interval set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.WhenBeep:
+                        case RfidUltraCodes.WHEN_BEEP:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "When to beep set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.BeeperVolume:
+                        case RfidUltraCodes.BEEPER_VOLUME:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Beeper volume set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.AutoSetGPS:
+                        case RfidUltraCodes.AUTO_SET_GPS:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Set time via gps set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
                             break;
-                        case RFIDUltraCodes.TimeZone:
+                        case RfidUltraCodes.TIME_ZONE:
                             Log.D("Timing.Interfaces.RFIDUltraInterface", "Timezone set");
                             if (message[2] != (char)0x02)
                             {
                                 Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
                             }
-                            break;
-                        default:
                             break;
                     }
                     output[MessageType.SETTINGCHANGE] = [];
@@ -312,14 +308,14 @@ namespace Chronokeep.Timing.Interfaces
                     }
 
                     timeList.Clear();
-                    DateTime timeDT = DateTime.ParseExact(match.Groups[1].Value, "H:m:s d-M-yyyy", CultureInfo.CurrentCulture);
-                    timeList.Add(timeDT.ToString("dd MMM yyyy HH:mm:ss"));
+                    DateTime timeDt = DateTime.ParseExact(match.Groups[1].Value, "H:m:s d-M-yyyy", CultureInfo.CurrentCulture);
+                    timeList.Add(timeDt.ToString("dd MMM yyyy HH:mm:ss"));
                 }
                 // If "S=[...]" then status
                 else if (Status().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a status message.");
-                    settingsHolder ??= new();
+                    settingsHolder ??= new RfidSettingsHolder();
                     Match match = Status().Match(message);
                     if (!output.TryGetValue(MessageType.STATUS, out List<string>? statusList))
                     {
@@ -330,15 +326,15 @@ namespace Chronokeep.Timing.Interfaces
                     {
                         case 0:
                             statusList.Add(TimingSystem.READING_STATUS_STOPPED);
-                            settingsHolder.Status = RFIDSettingsHolder.StatusEnum.STOPPED;
+                            settingsHolder.Status = RfidSettingsHolder.StatusEnum.STOPPED;
                             break;
                         case 1:
                             statusList.Add(TimingSystem.READING_STATUS_READING);
-                            settingsHolder.Status = RFIDSettingsHolder.StatusEnum.STARTED;
+                            settingsHolder.Status = RfidSettingsHolder.StatusEnum.STARTED;
                             break;
                         default:
                             statusList.Add(TimingSystem.READING_STATUS_UNKNOWN);
-                            settingsHolder.Status = RFIDSettingsHolder.StatusEnum.UNKNOWN;
+                            settingsHolder.Status = RfidSettingsHolder.StatusEnum.UNKNOWN;
                             break;
                     }
                 }
@@ -377,12 +373,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(DateTime start, DateTime end, int reader = 1)
         {
-            SendMessage("800" + Constants.Timing.RFIDDateToEpoch(start).ToString() + RFIDUltraCodes.RewindDelimiter + Constants.Timing.RFIDDateToEpoch(end).ToString());
+            SendMessage("800" + Constants.Timing.RFIDDateToEpoch(start).ToString() + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RFIDDateToEpoch(end).ToString());
         }
 
         public void Rewind(int reader = 1)
         {
-            SendMessage("8000" + RFIDUltraCodes.RewindDelimiter + "0");
+            SendMessage("8000" + RfidUltraCodes.REWIND_DELIMITER + "0");
         }
 
         public void Rewind(int start, int end, int reader = 1)
@@ -391,7 +387,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 start = 1;
             }
-            SendMessage("600" + start.ToString() + RFIDUltraCodes.RewindDelimiter + end.ToString());
+            SendMessage("600" + start.ToString() + RfidUltraCodes.REWIND_DELIMITER + end.ToString());
         }
 
         public void StopRewind()
@@ -401,12 +397,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SetTime(DateTime date)
         {
-            SendMessage("t" + RFIDUltraCodes.SetTime + date.ToString("HH:mm:ss dd-MM-yyyy"));
+            SendMessage("t" + RfidUltraCodes.SET_TIME + date.ToString("HH:mm:ss dd-MM-yyyy"));
         }
 
         public void SetTime()
         {
-            SendMessage("t" + RFIDUltraCodes.SetTime + DateTime.Now.ToString("HH:mm:ss dd-MM-yyyy"));
+            SendMessage("t" + RfidUltraCodes.SET_TIME + DateTime.Now.ToString("HH:mm:ss dd-MM-yyyy"));
         }
 
         public void GetTime()
@@ -439,12 +435,12 @@ namespace Chronokeep.Timing.Interfaces
         /**
          * Changing settings on the Ultra 
          */
-        public void SetGPRS(bool turnOn)
+        public void SetGprs(bool turnOn)
         {
-            SendMessage("u" + RFIDUltraCodes.GPRS + (turnOn ? "1" : "0") + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GPRS + (turnOn ? "1" : "0") + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetGPRSIp(string address)
+        public void SetGprsIp(string address)
         {
             string[] nums = address.Split('.');
             if (nums.Length != 4)
@@ -456,27 +452,27 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)Convert.ToByte(nums[i]);
             }
-            SendMessage("u" + RFIDUltraCodes.GPRSIp + vals[0] + vals[1] + vals[2] + vals[3] + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GPRS_IP + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetGPRSPort(int port)
+        public void SetGprsPort(int port)
         {
-            SendMessage("u" + RFIDUltraCodes.GPRSPort + port.ToString() + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GPRS_PORT + port.ToString() + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetAPNName(string name)
+        public void SetApnName(string name)
         {
-            SendMessage("u" + RFIDUltraCodes.APNName + name + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.APN_NAME + name + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetAPNUserName(string name)
+        public void SetApnUserName(string name)
         {
-            SendMessage("u" + RFIDUltraCodes.APNUser + name + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.APN_USER + name + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetAPNPassword(string name)
+        public void SetApnPassword(string name)
         {
-            SendMessage("u" + RFIDUltraCodes.APNPass + name + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.APN_PASS + name + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -494,7 +490,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetRegion(char regionCode)
         {
-            SendMessage("u" + RFIDUltraCodes.Region + regionCode + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.REGION + regionCode + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -503,7 +499,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetComProtocol(char protocol)
         {
-            SendMessage("u" + RFIDUltraCodes.ComProto + protocol + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.COM_PROTO + protocol + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -512,7 +508,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetChipOutputType(char type)
         {
-            SendMessage("u" + RFIDUltraCodes.ChipOutType + type + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.CHIP_OUT_TYPE + type + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -522,51 +518,52 @@ namespace Chronokeep.Timing.Interfaces
         public void SetAntennaStatus(int readerNo, int antennaNo, char status)
         {
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                switch (antennaNo)
-                {
-                    case 1:
-                        code = RFIDUltraCodes.Read1Ant1;
-                        break;
-                    case 2:
-                        code = RFIDUltraCodes.Read1Ant2;
-                        break;
-                    case 3:
-                        code = RFIDUltraCodes.Read1Ant3;
-                        break;
-                    case 4:
-                        code = RFIDUltraCodes.Read1Ant4;
-                        break;
-                    default:
-                        return;
-                }
+                case 1:
+                    switch (antennaNo)
+                    {
+                        case 1:
+                            code = RfidUltraCodes.READ1_ANT1;
+                            break;
+                        case 2:
+                            code = RfidUltraCodes.READ1_ANT2;
+                            break;
+                        case 3:
+                            code = RfidUltraCodes.READ1_ANT3;
+                            break;
+                        case 4:
+                            code = RfidUltraCodes.READ1_ANT4;
+                            break;
+                        default:
+                            return;
+                    }
+
+                    break;
+                case 2:
+                    switch (antennaNo)
+                    {
+                        case 1:
+                            code = RfidUltraCodes.READ2_ANT1;
+                            break;
+                        case 2:
+                            code = RfidUltraCodes.READ2_ANT2;
+                            break;
+                        case 3:
+                            code = RfidUltraCodes.READ2_ANT3;
+                            break;
+                        case 4:
+                            code = RfidUltraCodes.READ2_ANT4;
+                            break;
+                        default:
+                            return;
+                    }
+
+                    break;
+                default:
+                    return;
             }
-            else if (readerNo == 2)
-            {
-                switch (antennaNo)
-                {
-                    case 1:
-                        code = RFIDUltraCodes.Read2Ant1;
-                        break;
-                    case 2:
-                        code = RFIDUltraCodes.Read2Ant2;
-                        break;
-                    case 3:
-                        code = RFIDUltraCodes.Read2Ant3;
-                        break;
-                    case 4:
-                        code = RFIDUltraCodes.Read2Ant4;
-                        break;
-                    default:
-                        return;
-                }
-            }
-            else
-            {
-                return;
-            }
-            SendMessage("u" + code + status + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + status + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -581,17 +578,17 @@ namespace Chronokeep.Timing.Interfaces
             char code;
             if (readerNo == 1)
             {
-                code = RFIDUltraCodes.Read1Mode;
+                code = RfidUltraCodes.READ1_MODE;
             }
             else if (readerNo == 2)
             {
-                code = RFIDUltraCodes.Read2Mode;
+                code = RfidUltraCodes.READ2_MODE;
             }
             else
             {
                 return;
             }
-            SendMessage("u" + code + mode + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + mode + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -603,19 +600,18 @@ namespace Chronokeep.Timing.Interfaces
         public void SetReaderSession(int readerNo, char session)
         {
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                code = RFIDUltraCodes.Read1Session;
+                case 1:
+                    code = RfidUltraCodes.READ1_SESSION;
+                    break;
+                case 2:
+                    code = RfidUltraCodes.READ2_SESSION;
+                    break;
+                default:
+                    return;
             }
-            else if (readerNo == 2)
-            {
-                code = RFIDUltraCodes.Read2Session;
-            }
-            else
-            {
-                return;
-            }
-            SendMessage("u" + code + session + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + session + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -624,23 +620,22 @@ namespace Chronokeep.Timing.Interfaces
         public void SetReaderPower(int readerNo, int power)
         {
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                code = RFIDUltraCodes.Read1Power;
-            }
-            else if (readerNo == 2)
-            {
-                code = RFIDUltraCodes.Read2Power;
-            }
-            else
-            {
-                return;
+                case 1:
+                    code = RfidUltraCodes.READ1_POWER;
+                    break;
+                case 2:
+                    code = RfidUltraCodes.READ2_POWER;
+                    break;
+                default:
+                    return;
             }
             if (power > 30)
             {
                 power = 30;
             }
-            SendMessage("u" + code + power.ToString() + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + power.ToString() + RfidUltraCodes.SETTINGS_TERM);
         }
 
         public void SetReaderIp(int readerNo, string address)
@@ -656,19 +651,18 @@ namespace Chronokeep.Timing.Interfaces
                 vals[i] = (char)Convert.ToByte(nums[i]);
             }
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                code = RFIDUltraCodes.Read1Ip;
+                case 1:
+                    code = RfidUltraCodes.READ1_IP;
+                    break;
+                case 2:
+                    code = RfidUltraCodes.READ2_IP;
+                    break;
+                default:
+                    return;
             }
-            else if (readerNo == 2)
-            {
-                code = RFIDUltraCodes.Read2Ip;
-            }
-            else
-            {
-                return;
-            }
-            SendMessage("u" + code + vals[0] + vals[1] + vals[2] + vals[3] + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -678,7 +672,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetGatingMode(char mode)
         {
-            SendMessage("u" + RFIDUltraCodes.GatingMode + mode + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GATING_MODE + mode + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -686,7 +680,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetGatingInterval(int seconds)
         {
-            SendMessage("u" + RFIDUltraCodes.GatingInterval + seconds.ToString() + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GATING_INTERVAL + seconds.ToString() + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -696,7 +690,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetChannelNumber(char number)
         {
-            SendMessage("u" + RFIDUltraCodes.GatingInterval + number + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GATING_INTERVAL + number + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -706,7 +700,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetBeeperVolume(char vol)
         {
-            SendMessage("u" + RFIDUltraCodes.BeeperVolume + vol + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.BEEPER_VOLUME + vol + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -714,9 +708,9 @@ namespace Chronokeep.Timing.Interfaces
          * 0x01 - Set using GPS
          * 0x02 - Loud ? (Probably an error in documentation...)
          */
-        public void SetAutoGPSTime(char gps)
+        public void SetAutoGpsTime(char gps)
         {
-            SendMessage("u" + RFIDUltraCodes.AutoSetGPS + gps + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.AUTO_SET_GPS + gps + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -724,11 +718,11 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetTimeZone(int zone)
         {
-            if (zone > 23 || zone < -23)
+            if (zone is > 23 or < -23)
             {
                 return;
             }
-            SendMessage("u" + RFIDUltraCodes.TimeZone + zone + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.TIME_ZONE + zone + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -737,7 +731,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetDataSending(char value)
         {
-            SendMessage("u" + RFIDUltraCodes.DataSending + value + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.DATA_SENDING + value + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -745,11 +739,11 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetUltraId(int id)
         {
-            if (id > 255 || id < 1)
+            if (id is > 255 or < 1)
             {
                 return;
             }
-            SendMessage("u" + RFIDUltraCodes.UltraId + id + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.ULTRA_ID + id + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -759,19 +753,18 @@ namespace Chronokeep.Timing.Interfaces
         public void SetAntenna4Backup(int readerNo, bool value)
         {
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                code = RFIDUltraCodes.Read1Antenna4Backup;
+                case 1:
+                    code = RfidUltraCodes.READ1_ANTENNA4_BACKUP;
+                    break;
+                case 2:
+                    code = RfidUltraCodes.READ2_ANTENNA4_BACKUP;
+                    break;
+                default:
+                    return;
             }
-            else if (readerNo == 2)
-            {
-                code = RFIDUltraCodes.Read2Antenna4Backup;
-            }
-            else
-            {
-                return;
-            }
-            SendMessage("u" + code + (value ? 0x01 : 0x00) + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + code + (value ? 0x01 : 0x00) + RfidUltraCodes.SETTINGS_TERM);
         }
 
         /**
@@ -780,12 +773,12 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetWhenToBeep(char value)
         {
-            SendMessage("u" + RFIDUltraCodes.WhenBeep + value + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.WHEN_BEEP + value + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetUploadURL(string url)
+        public void SetUploadUrl(string url)
         {
-            SendMessage("u" + RFIDUltraCodes.UploadURL + url + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.UPLOAD_URL + url + RfidUltraCodes.SETTINGS_TERM);
         }
 
         public void SetGateway(string gateway)
@@ -800,10 +793,10 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)int.Parse(nums[i]);
             }
-            SendMessage("u" + RFIDUltraCodes.Gateway + vals[0] + vals[1] + vals[2] + vals[3] + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.GATEWAY + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
         }
 
-        public void SetDNSServer(string server)
+        public void SetDnsServer(string server)
         {
             string[] nums = server.Split('.');
             if (nums.Length != 4)
@@ -815,12 +808,12 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)int.Parse(nums[i]);
             }
-            SendMessage("u" + RFIDUltraCodes.DNSServer + vals[0] + vals[1] + vals[2] + vals[3] + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.DNS_SERVER + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
         }
 
         public void SaveSettings()
         {
-            SendMessage("u" + RFIDUltraCodes.SettingsTerm);
+            SendMessage("u" + RfidUltraCodes.SETTINGS_TERM);
         }
 
         public void QuerySettings()
@@ -834,14 +827,13 @@ namespace Chronokeep.Timing.Interfaces
             sock!.Send(Encoding.ASCII.GetBytes(msg + "\n"));
         }
 
-        public void SetMainSocket(Socket sock)
+        public void SetMainSocket(Socket iSock)
         {
-            this.sock = sock;
+            sock = iSock;
         }
 
-        public void SetSettingsSocket(Socket sock)
+        public void SetSettingsSocket(Socket iSock)
         {
-            return;
         }
 
         public bool SettingsEditable()
@@ -856,7 +848,7 @@ namespace Chronokeep.Timing.Interfaces
                 DialogBox.Show("Settings window already open.");
                 return;
             }
-            settingsWindow = new(this);
+            settingsWindow = new RfidSettings(this);
             window.AddWindow(settingsWindow);
             settingsWindow.Show();
         }
@@ -877,57 +869,57 @@ namespace Chronokeep.Timing.Interfaces
             return false;
         }
 
-        public enum RFIDMessage
+        public enum RfidMessage
         {
             CONNECTED, VOLTAGENORMAL, VOLTAGELOW, CHIPREAD, TIME, SETTINGVALUE, SETTINGCHANGE, STATUS, UNKNOWN, ERROR
         }
     }
 
-    public class RFIDUltraCodes
+    public abstract class RfidUltraCodes
     {
-        public const char SettingsTerm = (char)0xFF;
+        public const char SETTINGS_TERM = (char)0xFF;
         public const char GPRS = (char)0x01;
-        public const char GPRSIp = (char)0x02;
-        public const char GPRSPort = (char)0x03;
-        public const char APNName = (char)0x04;
-        public const char APNUser = (char)0x05;
-        public const char APNPass = (char)0x06;
-        public const char Region = (char)0x07;
-        public const char ComProto = (char)0x08;
-        public const char ChipOutType = (char)0x09;
-        public const char Read1Ant1 = (char)0x0C;
-        public const char Read1Ant2 = (char)0x0D;
-        public const char Read1Ant3 = (char)0x0E;
-        public const char Read1Ant4 = (char)0x0F;
-        public const char Read2Ant1 = (char)0x10;
-        public const char Read2Ant2 = (char)0x11;
-        public const char Read2Ant3 = (char)0x12;
-        public const char Read2Ant4 = (char)0x13;
-        public const char Read1Mode = (char)0x14;
-        public const char Read2Mode = (char)0x15;
-        public const char Read1Session = (char)0x16;
-        public const char Read2Session = (char)0x17;
-        public const char Read1Power = (char)0x18;
-        public const char Read2Power = (char)0x19;
-        public const char Read1Ip = (char)0x1A;
-        public const char Read2Ip = (char)0x1B;
-        public const char GatingMode = (char)0x1D;
-        public const char GatingInterval = (char)0x1E;
-        public const char ChannelNumber = (char)0x1F;
-        public const char BeeperVolume = (char)0x21;
-        public const char AutoSetGPS = (char)0x22;
-        public const char TimeZone = (char)0x23;
-        public const char DataSending = (char)0x24;
-        public const char UltraId = (char)0x25;
-        public const char Read1Antenna4Backup = (char)0x26;
-        public const char Read2Antenna4Backup = (char)0x27;
-        public const char WhenBeep = (char)0x28;
-        public const char UploadURL = (char)0x29;
-        public const char Gateway = (char)0x2A;
-        public const char DNSServer = (char)0x2B;
-        public const char SetTime = (char)0x20;
-        public const char RewindDelimiter = (char)0x0D;
-        public const char LogSize = (char)0x1C;
-        public const char LineFeed = (char)0x0A;
+        public const char GPRS_IP = (char)0x02;
+        public const char GPRS_PORT = (char)0x03;
+        public const char APN_NAME = (char)0x04;
+        public const char APN_USER = (char)0x05;
+        public const char APN_PASS = (char)0x06;
+        public const char REGION = (char)0x07;
+        public const char COM_PROTO = (char)0x08;
+        public const char CHIP_OUT_TYPE = (char)0x09;
+        public const char READ1_ANT1 = (char)0x0C;
+        public const char READ1_ANT2 = (char)0x0D;
+        public const char READ1_ANT3 = (char)0x0E;
+        public const char READ1_ANT4 = (char)0x0F;
+        public const char READ2_ANT1 = (char)0x10;
+        public const char READ2_ANT2 = (char)0x11;
+        public const char READ2_ANT3 = (char)0x12;
+        public const char READ2_ANT4 = (char)0x13;
+        public const char READ1_MODE = (char)0x14;
+        public const char READ2_MODE = (char)0x15;
+        public const char READ1_SESSION = (char)0x16;
+        public const char READ2_SESSION = (char)0x17;
+        public const char READ1_POWER = (char)0x18;
+        public const char READ2_POWER = (char)0x19;
+        public const char READ1_IP = (char)0x1A;
+        public const char READ2_IP = (char)0x1B;
+        public const char GATING_MODE = (char)0x1D;
+        public const char GATING_INTERVAL = (char)0x1E;
+        public const char CHANNEL_NUMBER = (char)0x1F;
+        public const char BEEPER_VOLUME = (char)0x21;
+        public const char AUTO_SET_GPS = (char)0x22;
+        public const char TIME_ZONE = (char)0x23;
+        public const char DATA_SENDING = (char)0x24;
+        public const char ULTRA_ID = (char)0x25;
+        public const char READ1_ANTENNA4_BACKUP = (char)0x26;
+        public const char READ2_ANTENNA4_BACKUP = (char)0x27;
+        public const char WHEN_BEEP = (char)0x28;
+        public const char UPLOAD_URL = (char)0x29;
+        public const char GATEWAY = (char)0x2A;
+        public const char DNS_SERVER = (char)0x2B;
+        public const char SET_TIME = (char)0x20;
+        public const char REWIND_DELIMITER = (char)0x0D;
+        public const char LOG_SIZE = (char)0x1C;
+        public const char LINE_FEED = (char)0x0A;
     }
 }

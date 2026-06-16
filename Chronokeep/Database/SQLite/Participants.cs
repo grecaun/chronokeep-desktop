@@ -67,8 +67,8 @@ namespace Chronokeep.Database.SQLite
                 new("@parent", person.Parent),
                 new("@country", person.Country),
                 new("@street2", person.Street2),
-                new("@ecname", person.ECName),
-                new("@ecphone", person.ECPhone),
+                new("@ecname", person.EcName),
+                new("@ecphone", person.EcPhone),
                 new("@gender", person.Gender) ]);
             command.ExecuteNonQuery();
             person.Identifier = GetParticipantID(person, connection);
@@ -184,8 +184,8 @@ namespace Chronokeep.Database.SQLite
                     new("@state", person.State),
                     new("@zip", person.Zip),
                     new("@birthdate", person.Birthdate),
-                    new("@ecname", person.ECName),
-                    new("@ecphone", person.ECPhone),
+                    new("@ecname", person.EcName),
+                    new("@ecphone", person.EcPhone),
                     new("@email", person.Email),
                     new("@participantid", person.Identifier),
                     new("@phone", person.Phone),
@@ -264,8 +264,8 @@ namespace Chronokeep.Database.SQLite
                     new("@state", person.State),
                     new("@zip", person.Zip),
                     new("@birthdate", person.Birthdate),
-                    new("@ecname", person.ECName),
-                    new("@ecphone", person.ECPhone),
+                    new("@ecname", person.EcName),
+                    new("@ecphone", person.EcPhone),
                     new("@email", person.Email),
                     new("@participantid", person.Identifier),
                     new("@mobile", person.Mobile),

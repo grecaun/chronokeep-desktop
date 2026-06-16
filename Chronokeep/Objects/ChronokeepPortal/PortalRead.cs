@@ -24,7 +24,7 @@ namespace Chronokeep.Objects.ChronokeepPortal
         [JsonPropertyName("reader")]
         public string Reader { get; set; } = "";
         [JsonPropertyName("rssi")]
-        public string RSSI { get; set; } = "";
+        public string Rssi { get; set; } = "";
         [JsonPropertyName("ident_type")]
         public string IdentType { get; set; } = "";
         [JsonPropertyName("type")]

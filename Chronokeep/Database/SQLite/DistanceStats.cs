@@ -22,10 +22,10 @@ namespace Chronokeep.Database.SQLite
             DistanceStat allstats = new()
             {
                 DistanceName = "All",
-                DistanceID = -1,
+                DistanceId = -1,
                 Active = 0,
-                DNF = 0,
-                DNS = 0,
+                Dnf = 0,
+                Dns = 0,
                 Finished = 0
             };
             Dictionary<int, DistanceStat> statsDictionary = [];
@@ -41,14 +41,14 @@ namespace Chronokeep.Database.SQLite
                 statsDictionary.TryAdd(distanceId, new()
                 {
                     DistanceName = distanceName,
-                    DistanceID = distanceId
+                    DistanceId = distanceId
                 });
                 if (int.TryParse(reader["status"].ToString(), out int status))
                 {
                     if (Constants.Timing.EVENTSPECIFIC_DNS == status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == status)
                     {
-                        statsDictionary[distanceId].DNS = Convert.ToInt32(reader["count"]);
-                        allstats.DNS += statsDictionary[distanceId].DNS;
+                        statsDictionary[distanceId].Dns = Convert.ToInt32(reader["count"]);
+                        allstats.Dns += statsDictionary[distanceId].Dns;
                     }
                     else if (Constants.Timing.EVENTSPECIFIC_FINISHED == status)
                     {
@@ -62,8 +62,8 @@ namespace Chronokeep.Database.SQLite
                     }
                     else if (Constants.Timing.EVENTSPECIFIC_DNF == status)
                     {
-                        statsDictionary[distanceId].DNF = Convert.ToInt32(reader["count"]);
-                        allstats.DNF += statsDictionary[distanceId].DNF;
+                        statsDictionary[distanceId].Dnf = Convert.ToInt32(reader["count"]);
+                        allstats.Dnf += statsDictionary[distanceId].Dnf;
                     }
                 }
             }

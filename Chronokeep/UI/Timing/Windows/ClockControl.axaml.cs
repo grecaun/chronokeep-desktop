@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -12,67 +11,65 @@ using System.Linq;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class ClockControl : Window
+public partial class ClockControl : ChronokeepWindow
 {
-    private static ClockControl? theOne = null;
+    private static ClockControl? theOne;
 
     private readonly IMainWindow window;
     private readonly IDBInterface database;
 
-    private readonly Dictionary<int, Chronoclock> ClockDict = [];
+    private readonly Dictionary<int, Chronoclock> clockDict = [];
 
     private ClockControl(IMainWindow window, IDBInterface database)
     {
         InitializeComponent();
         this.window = window;
         this.database = database;
-        this.MinWidth = 10;
-        this.MinHeight = 10;
+        MinWidth = 10;
+        MinHeight = 10;
         List<Chronoclock> clocks = database.GetClocks();
         foreach (Chronoclock clock in clocks)
         {
-            ClockDict[clock.Identifier] = clock;
+            clockDict[clock.Identifier] = clock;
         }
         UpdateView();
     }
     public static ClockControl CreateWindow(IMainWindow window, IDBInterface database)
     {
-        theOne ??= new(window, database);
+        theOne ??= new ClockControl(window, database);
         return theOne;
     }
 
     internal void RemoveClock(Chronoclock clock)
     {
         database.RemoveClocks([clock]);
-        ClockDict.Remove(clock.Identifier);
+        clockDict.Remove(clock.Identifier);
         UpdateView();
     }
 
     private void UpdateView()
     {
         Log.D("UI.Timing.ClockControl", "UpdateView");
-        foreach (object? clItem in clockListView.Items.Cast<ClockPart?>())
+        foreach (object? clItem in ClockListView.Items)
         {
-            if (clItem is ClockPart clPart)
-            {
-                Chronoclock clock = clPart.GetUpdatedClock();
-                ClockDict[clock.Identifier] = clock;
-            }
+            if (clItem is not ClockPart clPart) continue;
+            Chronoclock clock = clPart.GetUpdatedClock();
+            clockDict[clock.Identifier] = clock;
         }
-        clockListView.Items.Clear();
+        ClockListView.Items.Clear();
         Event? theEvent = database.GetCurrentEvent();
         if (theEvent == null) { return; }
-        foreach (Chronoclock clock in ClockDict.Values)
+        foreach (Chronoclock clock in clockDict.Values)
         {
-            clockListView.Items.Add(new ClockPart(clock, this, theEvent));
+            ClockListView.Items.Add(new ClockPart(clock, this, theEvent));
         }
     }
 
     internal void UpdateTime(string time)
     {
-        TimeLabel.Text = string.Format("Clock time is {0}", time);
+        TimeLabel.Text = $"Clock time is {time}";
         TimeLabel.IsVisible = true;
-        CurrentTimeLabel.Text = string.Format("System time is {0}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        CurrentTimeLabel.Text = $"System time is {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
         CurrentTimeLabel.IsVisible = true;
     }
 
@@ -80,7 +77,7 @@ public partial class ClockControl : Window
     {
         Log.D("UI.Timing.ClockControl", "Window is closed.");
         theOne = null;
-        foreach (ClockPart? clItem in clockListView.Items.Cast<ClockPart?>())
+        foreach (ClockPart? clItem in ClockListView.Items.Cast<ClockPart?>())
         {
             Chronoclock clock = clItem!.GetUpdatedClock();
             database.UpdateClock(clock);
@@ -99,19 +96,19 @@ public partial class ClockControl : Window
         Chronoclock newClock = new()
         {
             Name = "New Clock",
-            URL = "chronoclock.local",
+            Url = "chronoclock.local",
             Enabled = false,
         };
         newClock.Identifier = database.AddClock(newClock);
         if (newClock.Identifier >= 0)
         {
-            ClockDict[newClock.Identifier] = newClock;
+            clockDict[newClock.Identifier] = newClock;
         }
         UpdateView();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

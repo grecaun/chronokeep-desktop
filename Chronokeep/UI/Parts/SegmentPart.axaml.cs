@@ -7,16 +7,17 @@ using Chronokeep.UI.MainPages;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Chronokeep.UI.Parts;
 
 public partial class SegmentPart : UserControl
 {
-    readonly SegmentsPage page;
-    public Segment mySegment;
+    private readonly SegmentsPage page;
+    public readonly Segment MySegment;
     private readonly Dictionary<string, int> locationDictionary;
-    public Event theEvent;
+    public readonly Event TheEvent;
 
     [GeneratedRegex("[^0-9.]+")]
     private static partial Regex AllowedChars();
@@ -25,9 +26,9 @@ public partial class SegmentPart : UserControl
     {
         InitializeComponent();
         this.page = page;
-        this.theEvent = theEvent;
-        this.mySegment = segment;
-        this.locationDictionary = [];
+        TheEvent = theEvent;
+        MySegment = segment;
+        locationDictionary = [];
 
         ComboBoxItem? selected = null, current;
         foreach (TimingLocation loc in locations)
@@ -38,7 +39,7 @@ public partial class SegmentPart : UserControl
                 Tag = loc.Identifier.ToString()
             };
             Location.Items.Add(current);
-            if (mySegment.LocationId == loc.Identifier)
+            if (MySegment.LocationId == loc.Identifier)
             {
                 selected = current;
             }
@@ -48,7 +49,7 @@ public partial class SegmentPart : UserControl
         {
             Location.SelectedItem = selected;
         }
-        SegName.Text = mySegment.Name;
+        SegName.Text = MySegment.Name;
         // Occurrence
         Occurrence.Items.Clear();
         if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
@@ -59,19 +60,19 @@ public partial class SegmentPart : UserControl
             }
             selected = null;
             int start = 1;
-            if ((theEvent.CommonStartFinish == true && mySegment.LocationId == Constants.Timing.LOCATION_FINISH)
-                || mySegment.LocationId == Constants.Timing.LOCATION_START)
+            if ((theEvent.CommonStartFinish && MySegment.LocationId == Constants.Timing.LOCATION_FINISH)
+                || MySegment.LocationId == Constants.Timing.LOCATION_START)
             {
                 start = 0;
             }
             for (int i = start; i <= maxOccurrences; i++)
             {
-                current = new()
+                current = new ComboBoxItem
                 {
                     Content = i.ToString(),
                     Tag = i.ToString()
                 };
-                if (i == mySegment.Occurrence)
+                if (i == MySegment.Occurrence)
                 {
                     selected = current;
                 }
@@ -86,26 +87,17 @@ public partial class SegmentPart : UserControl
                 Occurrence.SelectedIndex = 0;
             }
         }
-        CumDistance.Text = mySegment.CumulativeDistance.ToString();
-        DistanceUnit.SelectedIndex = 0;
-        if (mySegment.DistanceUnit == Constants.Distances.KILOMETERS)
+        CumDistance.Text = MySegment.CumulativeDistance.ToString(CultureInfo.InvariantCulture);
+        DistanceUnit.SelectedIndex = MySegment.DistanceUnit switch
         {
-            DistanceUnit.SelectedIndex = 1;
-        }
-        else if (mySegment.DistanceUnit == Constants.Distances.METERS)
-        {
-            DistanceUnit.SelectedIndex = 2;
-        }
-        else if (mySegment.DistanceUnit == Constants.Distances.YARDS)
-        {
-            DistanceUnit.SelectedIndex = 3;
-        }
-        else if (mySegment.DistanceUnit == Constants.Distances.FEET)
-        {
-            DistanceUnit.SelectedIndex = 4;
-        }
-        GPS.Text = mySegment.GPS;
-        MapLink.Text = mySegment.MapLink;
+            Constants.Distances.KILOMETERS => 1,
+            Constants.Distances.METERS => 2,
+            Constants.Distances.YARDS => 3,
+            Constants.Distances.FEET => 4,
+            _ => 0
+        };
+        Gps.Text = MySegment.Gps;
+        MapLink.Text = MySegment.MapLink;
     }
 
     public void UpdateSegment()
@@ -113,17 +105,17 @@ public partial class SegmentPart : UserControl
         Log.D("UI.MainPages.SegmentsPage", "Segments - Updating segment.");
         try
         {
-            mySegment.Name = SegName.Text!;
+            MySegment.Name = SegName.Text!;
             try
             {
-                mySegment.LocationId = Convert.ToInt32(((ComboBoxItem)Location.SelectedItem!).Tag!);
+                MySegment.LocationId = Convert.ToInt32(((ComboBoxItem)Location.SelectedItem!).Tag!);
             }
             catch
             {
-                mySegment.LocationId = Constants.Timing.LOCATION_DUMMY;
+                MySegment.LocationId = Constants.Timing.LOCATION_DUMMY;
             }
-            mySegment.CumulativeDistance = Convert.ToDouble(CumDistance.Text);
-            mySegment.DistanceUnit = DistanceUnit.SelectedIndex switch
+            MySegment.CumulativeDistance = Convert.ToDouble(CumDistance.Text);
+            MySegment.DistanceUnit = DistanceUnit.SelectedIndex switch
             {
                 1 => Constants.Distances.KILOMETERS,
                 2 => Constants.Distances.METERS,
@@ -131,15 +123,14 @@ public partial class SegmentPart : UserControl
                 4 => Constants.Distances.FEET,
                 _ => Constants.Distances.MILES,
             };
-            if (Occurrence != null && Occurrence.SelectedItem != null) mySegment.Occurrence = Convert.ToInt32(((ComboBoxItem)Occurrence.SelectedItem).Tag!);
-            else mySegment.Occurrence = -1;
-            mySegment.GPS = GPS.Text!;
-            mySegment.MapLink = MapLink.Text!;
+            if (Occurrence is { SelectedItem: not null }) MySegment.Occurrence = Convert.ToInt32(((ComboBoxItem)Occurrence.SelectedItem).Tag!);
+            else MySegment.Occurrence = -1;
+            MySegment.Gps = Gps.Text!;
+            MySegment.MapLink = MapLink.Text!;
         }
         catch
         {
             DialogBox.Show("Error with values given.");
-            return;
         }
     }
 
@@ -157,14 +148,13 @@ public partial class SegmentPart : UserControl
             maxOccurrences = 1;
         }
         int start = 1;
-        if ((theEvent.CommonStartFinish == true && mySegment.LocationId == Constants.Timing.LOCATION_FINISH)
-            || mySegment.LocationId == Constants.Timing.LOCATION_START)
+        if ((TheEvent.CommonStartFinish && MySegment.LocationId == Constants.Timing.LOCATION_FINISH)
+            || MySegment.LocationId == Constants.Timing.LOCATION_START)
         {
             start = 0;
         }
         for (int i = start; i <= maxOccurrences; i++)
         {
-
             Occurrence.Items.Add(new ComboBoxItem()
             {
                 Content = i.ToString(),
@@ -182,6 +172,6 @@ public partial class SegmentPart : UserControl
     private void Remove_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.SegmentsPage", "Removing an item.");
-        page.RemoveSegment(mySegment);
+        page.RemoveSegment(MySegment);
     }
 }

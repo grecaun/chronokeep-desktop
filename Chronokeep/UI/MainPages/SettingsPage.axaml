@@ -74,27 +74,18 @@
 			<Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
     </UserControl.Styles>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" ColumnDefinitions="1*,1*,1*">
             <Button
                 Grid.Column="0"
-                Name="ResetDB"
+                Name="ResetDb"
                 Content="Reset Database"
                 Click="ResetDB_Click"
                 Classes="setting"
-                />
+            />
             <Button
                 Grid.Column="1"
-                Name="RebuildDB"
+                Name="RebuildDb"
                 Content="Rebuild Database"
                 Click="RebuildDB_Click"
                 Classes="setting"
@@ -107,14 +98,10 @@
                 Classes="setting"
                 />
         </Grid>
-        <Grid Grid.Row="1" Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="4*"/>
-                <ColumnDefinition Width="300"/>
-            </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" Margin="10" ColumnDefinitions="4*,300">
             <ScrollViewer VerticalScrollBarVisibility="Visible"
                           Padding="5,0,5,5">
-                <StackPanel Grid.Column="0">
+                <StackPanel>
                     <DockPanel>
                         <TextBlock Text="Company Name"
                                    Classes="settings"/>
@@ -127,24 +114,19 @@
                         <TextBox Name="ContactEmailBox"
                                  Classes="settings"/>
                     </DockPanel>
-                    <DockPanel Grid.Column="0">
+                    <DockPanel>
                         <TextBlock Text="Default Timing System"
                                    Classes="settings"/>
                         <ComboBox Name="DefaultTimingBox"
                                   Classes="settings"/>
                     </DockPanel>
-                    <DockPanel Grid.Column="0">
+                    <DockPanel>
                         <TextBlock Text="Theme Color"
                                    Classes="settings"/>
                         <ComboBox Name="ThemeColorBox"
                                   SelectionChanged="ThemeColorBox_SelectionChanged" />
                     </DockPanel>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="190,1*,100">
                         <TextBlock Text="Export Directory"
                                    Grid.Column="0"
                                    Classes="settings"/>
@@ -157,53 +139,38 @@
                                 Classes="setting_two"
                                 Click="ChangeExport_Click" />
                     </Grid>
-                    <Grid Margin="0,-5,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="40" />
-                        </Grid.ColumnDefinitions>
+                    <Grid Margin="0,-5,0,0" ColumnDefinitions="190,*,40">
                         <TextBlock Text="Upload Interval"
                                    Grid.Column="0"
                                    Classes="settings"/>
                         <Slider Grid.Column="1"
-                                Name="uploadSlider"
+                                Name="UploadSlider"
                                 ValueChanged="UploadSlider_ValueChanged" />
                         <TextBlock Grid.Column="2"
-                                   Name="uploadBlock"
+                                   Name="UploadBlock"
                                    Width="30"
                                    HorizontalAlignment="Center"
                                    TextAlignment="Center"
                                    Classes="settings"/>
                     </Grid>
-                    <Grid Margin="0,-10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="40" />
-                        </Grid.ColumnDefinitions>
+                    <Grid Margin="0,-10" ColumnDefinitions="190,*,40">
                         <TextBlock Text="Download Interval"
                                    Classes="settings"/>
                         <Slider Grid.Column="1"
-                                Name="downloadSlider"
+                                Name="DownloadSlider"
                                 ValueChanged="DownloadSlider_ValueChanged" />
                         <TextBlock Grid.Column="2"
-                                   Name="downloadBlock"
+                                   Name="DownloadBlock"
                                    Width="30"
                                    HorizontalAlignment="Center"
                                    TextAlignment="Center"
                                    Classes="settings"/>
                     </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="40" />
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="190,*,40">
                         <TextBlock Text="Announcer Window"
                                    Classes="settings"/>
                         <Slider Grid.Column="1"
-                                Name="announcerSlider"
+                                Name="AnnouncerSlider"
                                 ValueChanged="AnnouncerSlider_ValueChanged"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Stretch"
@@ -211,7 +178,7 @@
                                 Minimum="1"
                                 Maximum="120"/>
                         <TextBlock Grid.Column="2"
-                                   Name="announcerBlock"
+                                   Name="AnnouncerBlock"
                                    Width="30"
                                    HorizontalAlignment="Center"
                                    TextAlignment="Center"
@@ -239,21 +206,16 @@
                             <ComboBoxItem Content="Michael 3" />
                         </ComboBox>
                     </DockPanel>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="105"/>
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="190,*,105">
                         <TextBlock Grid.Column="0"
                                    Text="Program Identifier"
                                    Classes="settings"/>
                         <TextBox Grid.Column="1"
-                                 Name="UniqueProgramID"
+                                 Name="UniqueProgramId"
                                  HorizontalContentAlignment="Stretch"
                                  IsEnabled="False"/>
                         <Button Grid.Column="2"
-                                Name="RegenerateUniqueProgramIDButton"
+                                Name="RegenerateUniqueProgramIdButton"
                                 Content="Regenerate"
                                 Classes="setting_two"
                                 Click="RegenerateUniqueProgramIDButton_Click" />
@@ -267,7 +229,7 @@
                     <DockPanel>
                         <TextBlock Text="Twilio Account SID"
                                    Classes="settings"/>
-                        <TextBox Name="TwilioAccountSIDBox"
+                        <TextBox Name="TwilioAccountSidBox"
                                  Classes="settings"/>
                     </DockPanel>
                     <DockPanel>
@@ -297,13 +259,13 @@
                     <DockPanel>
                         <TextBlock Text="Mailgun API Key"
                                    Classes="settings"/>
-                        <TextBox Name="MailgunAPIKeyBox"
+                        <TextBox Name="MailgunApiKeyBox"
                                  Classes="settings"/>
                     </DockPanel>
                     <DockPanel>
                         <TextBlock Text="Mailgun Domain"
                                    Classes="settings"/>
-                        <TextBox Name="MailgunAPIURLBox"
+                        <TextBox Name="MailgunApiUrlBox"
                                  Classes="settings"/>
                     </DockPanel>
                 </StackPanel>

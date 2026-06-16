@@ -3,7 +3,7 @@ using Chronokeep.Objects.ChronokeepRemote;
 
 namespace Chronokeep.Objects.ChronokeepPortal
 {
-    internal class PortalNotification
+    internal static class PortalNotification
     {
         public const string UPS_DISCONNECTED = "UPS_DISCONNECTED";
         public const string UPS_CONNECTED = "UPS_CONNECTED";
@@ -19,7 +19,7 @@ namespace Chronokeep.Objects.ChronokeepPortal
 
         public static string GetRemoteNotificationMessage(string reader, string address, RemoteNotification message)
         {
-            if (message.Message != null && message.Message.Length > 0)
+            if (!string.IsNullOrEmpty(message.Message))
             {
                 Log.E("Objects.ChronokeepPortal.PortalNotification", $"Unknown message: '{message.Type}' '{message.Message}'");
             }
@@ -56,9 +56,9 @@ namespace Chronokeep.Objects.ChronokeepPortal
             };
         }
 
-        public static string GetRemoteNotificationMessage(string Type)
+        public static string GetRemoteNotificationMessage(string type)
         {
-            return Type switch
+            return type switch
             {
                 PortalError.TOO_MANY_REMOTE_API => "Only one remote api can be assigned to a portal. Please remove or update the currently defined remote api.",
                 PortalError.TOO_MANY_CONNECTIONS => "Unable to connect to the timing system, there are too many devices already connected.",
@@ -87,7 +87,7 @@ namespace Chronokeep.Objects.ChronokeepPortal
                 MAX_TEMP => $"Temperature is very high. Throttling wil most likely occur.",
                 BATTERY_LOW => $"Battery level is low.",
                 BATTERY_CRITICAL => $"Battery level is critical.",
-                _ => $"Unknown notification. {Type}",
+                _ => $"Unknown notification. {type}",
             };
         }
     }

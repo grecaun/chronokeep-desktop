@@ -16,7 +16,6 @@
     <DockPanel VerticalAlignment="Center">
         <TextBlock Name="WaveName" Width="60"/>
         <Button Name="WavePlus"
-                Classes="invis"
                 Click="SwapWaveType_Click"
                 Width="35"
                 Margin="0,0,3,0"

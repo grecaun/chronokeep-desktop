@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -6,14 +5,13 @@ using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
-using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Chronokeep.UI.EventWindows;
 
-public partial class ChangeEventWindow : Window
+public partial class ChangeEventWindow : ChronokeepWindow
 {
     private readonly IWindowCallback window;
     private readonly IDBInterface database;
@@ -31,23 +29,30 @@ public partial class ChangeEventWindow : Window
         return new ChangeEventWindow(window, database);
     }
 
-    internal async void UpdateEventBox()
+    private async void UpdateEventBox()
     {
-        List<Event> events = [];
-        await Task.Run(() =>
+        try
         {
-            events = database.GetEvents();
-        });
-        events.Sort();
-        if (searchBox.Text != null && searchBox.Text.Length > 0)
-        {
-            Log.D("UI.ChangeEventWindow", "searchBox.Text " + searchBox.Text);
-            events.RemoveAll(x => !x.Name.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase));
+            List<Event> events = [];
+            await Task.Run(() =>
+            {
+                events = database.GetEvents();
+            });
+            events.Sort();
+            if (SearchBox.Text is { Length: > 0 })
+            {
+                Log.D("UI.ChangeEventWindow", "searchBox.Text " + SearchBox.Text);
+                events.RemoveAll(x => !x.Name.Contains(SearchBox.Text, StringComparison.OrdinalIgnoreCase));
+            }
+            EventList.ItemsSource = events;
+            if (events.Count < 1)
+            {
+                ChangeButton.IsEnabled = false;
+            }
         }
-        eventList.ItemsSource = events;
-        if (events.Count < 1)
+        catch (Exception)
         {
-            ChangeButton.IsEnabled = false;
+            Log.D("UI.ChangeEventWindow", "Error updating event box.");
         }
     }
 
@@ -59,37 +64,20 @@ public partial class ChangeEventWindow : Window
     private void ChangeButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Change Button Clicked.");
-        Event one = (Event)eventList.SelectedItem!;
-        if (one != null)
-        {
-            Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
-            database.SetCurrentEvent(one.Identifier);
-            window.WindowFinalize(this);
-        }
-        else
-        {
-            Log.D("UI.ChangeEventWindow", "No event selected.");
-            DialogBox.Show("No event selected.");
-            return;
-        }
+        Event one = (Event)EventList.SelectedItem!;
+        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        database.SetCurrentEvent(one.Identifier);
+        window.WindowFinalize(this);
         Close();
     }
 
     private void DeleteButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Delete button clicked.");
-        Event one = (Event)eventList.SelectedItem!;
-        if (one != null)
-        {
-            Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
-            database.RemoveEvent(one.Identifier);
-            UpdateEventBox();
-        }
-        else
-        {
-            Log.D("UI.ChangeEventWindow", "No event selected.");
-            DialogBox.Show("No event selected.");
-        }
+        Event one = (Event)EventList.SelectedItem!;
+        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        database.RemoveEvent(one.Identifier);
+        UpdateEventBox();
     }
 
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
@@ -101,29 +89,20 @@ public partial class ChangeEventWindow : Window
     private void EventList_MouseDoubleClick(object? sender, TappedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Double Click detected.");
-        Event one = (Event)eventList.SelectedItem!;
-        if (one != null)
-        {
-            Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
-            database.SetCurrentEvent(one.Identifier);
-            window.WindowFinalize(this);
-        }
-        else
-        {
-            Log.D("UI.ChangeEventWindow", "No event selected.");
-            DialogBox.Show("No event selected.");
-            return;
-        }
+        Event one = (Event)EventList.SelectedItem!;
+        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        database.SetCurrentEvent(one.Identifier);
+        window.WindowFinalize(this);
         Close();
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window.WindowFinalize(this);
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

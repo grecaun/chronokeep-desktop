@@ -5,8 +5,8 @@ namespace Chronokeep.UI.Parts;
 
 public partial class BibChipHeaderPart : UserControl
 {
-    public int Index { get; set; }
-    public static readonly string[] human_fields =
+    public int Index { get; }
+    public static readonly string[] HUMAN_FIELDS =
     [
         "",
         "Bib",
@@ -18,23 +18,19 @@ public partial class BibChipHeaderPart : UserControl
         InitializeComponent();
         Index = ix;
         HeaderLabel.Text = s;
-        foreach (string field in human_fields)
+        foreach (string field in HUMAN_FIELDS)
         {
             HeaderBox.Items.Add(field);
         }
         HeaderBox.SelectedIndex = GetHeaderBoxIndex(s.Trim());
     }
 
-    internal static int GetHeaderBoxIndex(string s)
+    private static int GetHeaderBoxIndex(string s)
     {
         if (string.Equals(s, "bib", StringComparison.OrdinalIgnoreCase))
         {
             return 1;
-        }
-        else if (string.Equals(s, "chip", StringComparison.OrdinalIgnoreCase))
-        {
-            return 2;
-        }
-        return 0;
+        } 
+        return string.Equals(s, "chip", StringComparison.OrdinalIgnoreCase) ? 2 : 0;
     }
 }

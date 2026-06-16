@@ -11,7 +11,7 @@ namespace Chronokeep.UI.Parts;
 public partial class AgeGroupPart : UserControl
 {
     private readonly AgeGroupsPage page;
-    public AgeGroup MyGroup { get; private set; }
+    private AgeGroup MyGroup { get; }
 
     [GeneratedRegex("[^0-9]+")]
     private static partial Regex AllowedChars();
@@ -20,18 +20,21 @@ public partial class AgeGroupPart : UserControl
     {
         InitializeComponent();
         this.page = page;
-        this.MyGroup = group;
+        MyGroup = group;
         StartAge.Text = group.StartAge.ToString();
         EndAge.Text = group.EndAge.ToString();
     }
 
     public AgeGroup GetAgeGroup()
     {
-        int start = MyGroup.StartAge, end = MyGroup.EndAge;
-        int.TryParse(StartAge.Text, out start);
-        int.TryParse(EndAge.Text, out end);
-        MyGroup.StartAge = start;
-        MyGroup.EndAge = end;
+        if (int.TryParse(StartAge.Text, out int start))
+        {
+            MyGroup.StartAge = start;
+        }
+        if (int.TryParse(EndAge.Text, out int end))
+        {
+            MyGroup.EndAge = end;
+        }
         return MyGroup;
     }
 

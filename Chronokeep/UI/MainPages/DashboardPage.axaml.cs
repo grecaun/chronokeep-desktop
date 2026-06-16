@@ -20,20 +20,20 @@ public partial class DashboardPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
     private readonly IDBInterface database;
-    private Event? theEvent = null;
+    private Event? theEvent;
 
     public DashboardPage(IMainWindow mainWindow, IDBInterface db)
     {
         InitializeComponent();
-        this.mWindow = mainWindow;
-        this.database = db;
+        mWindow = mainWindow;
+        database = db;
         theEvent = database.GetCurrentEvent();
         UpdateView();
     }
 
     public void UpdateView()
     {
-        int oldEventId = theEvent == null ? -1 : theEvent.Identifier;
+        int oldEventId = theEvent?.Identifier ?? -1;
         theEvent = database.GetCurrentEvent();
         if (theEvent != null && oldEventId != -1 && oldEventId != theEvent.Identifier)
         {
@@ -82,7 +82,7 @@ public partial class DashboardPage : UserControl, IMainPage
         }
         EditButton.Content = Constants.DashboardLabels.EDIT;
         CancelButton.IsVisible = false;
-        if (theEvent.API_ID > 0 && theEvent.API_Event_ID != "")
+        if (theEvent.ApiId > 0 && theEvent.ApiEventId != "")
         {
             ApiLinkButton.Content = "Event Linked";
         }
@@ -90,17 +90,10 @@ public partial class DashboardPage : UserControl, IMainPage
         {
             ApiLinkButton.Content = "Link to API Event";
         }
-        if (mWindow.IsRegistrationRunning())
-        {
-            RegistrationButton.Content = "Stop Registration";
-        }
-        else
-        {
-            RegistrationButton.Content = "Start Registration";
-        }
+        RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
     }
 
-    public void DisableEditableFields()
+    private void DisableEditableFields()
     {
         EventNameTextBox.IsEnabled = false;
         EventYearCodeTextBox.IsEnabled = false;
@@ -114,7 +107,7 @@ public partial class DashboardPage : UserControl, IMainPage
         TypeBox.IsEnabled = false;
     }
 
-    public void EnableEditableFields()
+    private void EnableEditableFields()
     {
         EventNameTextBox.IsEnabled = true;
         EventYearCodeTextBox.IsEnabled = true;
@@ -140,27 +133,25 @@ public partial class DashboardPage : UserControl, IMainPage
     private bool CancelEventChangeAsync(EventClickType clickType)
     {
         Log.D("UI.DashboardPage", "Checking if we need to cancel the change.");
-        if (mWindow.BackgroundProcessesRunning())
-        {
-            DialogBox.Show(
-                "There are processes running in the background. Do you wish to stop these and continue?",
-                "Yes",
-                "No",
-                async () =>
+        if (!mWindow.BackgroundProcessesRunning()) return false;
+        DialogBox.Show(
+            "There are processes running in the background. Do you wish to stop these and continue?",
+            "Yes",
+            "No",
+            async void () =>
+            {
+                try
                 {
                     mWindow.StopBackgroundProcesses();
                     switch (clickType)
                     {
                         case EventClickType.NewEvent:
                             NewEventWindow newEventWindow = NewEventWindow.NewWindow(mWindow, database);
-                            if (newEventWindow != null)
-                            {
-                                mWindow.AddWindow(newEventWindow);
-                                _ = newEventWindow.ShowDialog((Window)mWindow);
-                            }
+                            mWindow.AddWindow(newEventWindow);
+                            _ = newEventWindow.ShowDialog((Window)mWindow);
                             break;
                         case EventClickType.ImportEvent:
-                            var topLevel = TopLevel.GetTopLevel(this);
+                            TopLevel? topLevel = TopLevel.GetTopLevel(this);
                             if (topLevel != null)
                             {
                                 IStorageFolder? startingFolder;
@@ -183,16 +174,12 @@ public partial class DashboardPage : UserControl, IMainPage
                                     SQLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
                                     savedDatabase.Initialize();
                                     List<Event> events = savedDatabase.GetEvents();
-                                    int lastID = -1;
-                                    foreach (Event ev in events)
+                                    int lastId = -1;
+                                    foreach (int tmp in events.Select(ev => Save_Event(ev, savedDatabase, database)).Where(tmp => tmp > 0))
                                     {
-                                        int tmp = Save_Event(ev, savedDatabase, database);
-                                        if (tmp > 0)
-                                        {
-                                            lastID = tmp;
-                                        }
+                                        lastId = tmp;
                                     }
-                                    database.SetCurrentEvent(lastID);
+                                    database.SetCurrentEvent(lastId);
                                     UpdateView();
                                     mWindow.UpdateStatus();
                                 }
@@ -200,11 +187,8 @@ public partial class DashboardPage : UserControl, IMainPage
                             break;
                         case EventClickType.ChangeEvent:
                             ChangeEventWindow changeEventWindow = ChangeEventWindow.NewWindow(mWindow, database);
-                            if (changeEventWindow != null)
-                            {
-                                mWindow.AddWindow(changeEventWindow);
-                                _ = changeEventWindow.ShowDialog((Window)mWindow);
-                            }
+                            mWindow.AddWindow(changeEventWindow);
+                            _ = changeEventWindow.ShowDialog((Window)mWindow);
                             break;
                         case EventClickType.DeleteEvent:
                             try
@@ -220,7 +204,7 @@ public partial class DashboardPage : UserControl, IMainPage
                                         database.SetCurrentEvent(-1);
                                         mWindow.WindowFinalize(null);
                                     }
-                                    );
+                                );
                             }
                             catch
                             {
@@ -232,10 +216,13 @@ public partial class DashboardPage : UserControl, IMainPage
                             break;
                     }
                 }
-                );
-            return true;
-        }
-        return false;
+                catch (Exception)
+                {
+                    Log.D("UI.DashboardPage", "Unable to remove the event.");
+                }
+            }
+        );
+        return true;
     }
 
     private enum EventClickType
@@ -251,244 +238,227 @@ public partial class DashboardPage : UserControl, IMainPage
         // Make some modifications, note that we cannot guarantee API compatibility between events.
         Event newEvent = new();
         newEvent.CopyAll(oldEvent);
-        newEvent.API_Event_ID = Constants.APIConstants.NULL_EVENT_ID;
-        newEvent.API_ID = Constants.APIConstants.NULL_ID;
+        newEvent.ApiEventId = Constants.APIConstants.NULL_EVENT_ID;
+        newEvent.ApiId = Constants.APIConstants.NULL_ID;
         newEvent.Identifier = -1;
         saveTo.AddEvent(newEvent);
         newEvent.Identifier = saveTo.GetEventID(newEvent);
         // Only proceed if we managed to add the event or we can find it.
-        if (newEvent.Identifier > 0)
+        if (newEvent.Identifier <= 0) return newEvent.Identifier;
+        // Get all of the parts that don't depend on other parts, then parts that do.
+        // Order of operation matters here.
+        // Bib chip associations do not have any linked ID's.
+        Log.D("UI.DashboardPage", "Adding bib chip associations.");
+        List<BibChipAssociation> bibChipAssociations = loadFrom.GetBibChips(oldEvent.Identifier);
+        saveTo.AddBibChipAssociation(newEvent.Identifier, bibChipAssociations);
+        // Distances can link to themselves. DistanceID is also used by EVENTSPECIFIC, SEGMENTS, and AGE_GROUPS
+        Log.D("UI.DashboardPage", "Adding distances.");
+        Dictionary<int, int> distanceIdTranslation = [];
+        Dictionary<string, int> oldDistanceIdDictionary = [];
+        List<Distance> normalDistances = [];
+        List<Distance> linkedDistances = [];
+        foreach (Distance item in loadFrom.GetDistances(oldEvent.Identifier))
         {
-            // Get all of the parts that don't depend on other parts, then parts that do.
-            // Order of operation matters here.
-            // Bib chip associations do not have any linked ID's.
-            Log.D("UI.DashboardPage", "Adding bib chip associations.");
-            List<BibChipAssociation> bibChipAssociations = loadFrom.GetBibChips(oldEvent.Identifier);
-            saveTo.AddBibChipAssociation(newEvent.Identifier, bibChipAssociations);
-            // Distances can link to themselves. DistanceID is also used by EVENTSPECIFIC, SEGMENTS, and AGE_GROUPS
-            Log.D("UI.DashboardPage", "Adding distances.");
-            Dictionary<int, int> distanceIDTranslation = [];
-            Dictionary<string, int> oldDistanceIDDictionary = [];
-            List<Distance> normalDistances = [];
-            List<Distance> linkedDistances = [];
-            foreach (Distance item in loadFrom.GetDistances(oldEvent.Identifier))
+            // Set event identifier to new event id.
+            item.EventIdentifier = newEvent.Identifier;
+            // Check if its a linked distance and place it in the correct list.
+            if (item.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
             {
-                // Set event identifier to new event id.
-                item.EventIdentifier = newEvent.Identifier;
-                // Check if its a linked distance and place it in the correct list.
-                if (item.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
-                {
-                    normalDistances.Add(item);
-                }
-                else
-                {
-                    linkedDistances.Add(item);
-                }
-                // Set it so we can get the old ID by the name of the distance.
-                oldDistanceIDDictionary[item.Name] = item.Identifier;
+                normalDistances.Add(item);
             }
-            // Insert the old distances
-            saveTo.AddDistances(normalDistances);
-            // Loop through all of the distances we just added and update our dictionary with their new ids.
-            foreach (Distance item in saveTo.GetDistances(newEvent.Identifier))
+            else
             {
-                if (oldDistanceIDDictionary.TryGetValue(item.Name, out int oldDistId))
-                {
-                    distanceIDTranslation[oldDistId] = item.Identifier;
-                }
+                linkedDistances.Add(item);
             }
-            // Update linked distances to their new division ID or set it to no linked if we can't find it.
-            foreach (Distance item in linkedDistances)
+            // Set it so we can get the old ID by the name of the distance.
+            oldDistanceIdDictionary[item.Name] = item.Identifier;
+        }
+        // Insert the old distances
+        saveTo.AddDistances(normalDistances);
+        // Loop through all of the distances we just added and update our dictionary with their new ids.
+        foreach (Distance item in saveTo.GetDistances(newEvent.Identifier))
+        {
+            if (oldDistanceIdDictionary.TryGetValue(item.Name, out int oldDistId))
             {
-                if (distanceIDTranslation.TryGetValue(item.LinkedDistance, out int linkedDistId))
-                {
-                    item.LinkedDistance = linkedDistId;
-                }
-                else
-                {
-                    item.LinkedDistance = Constants.Timing.DISTANCE_NO_LINKED_ID;
-                }
+                distanceIdTranslation[oldDistId] = item.Identifier;
             }
-            saveTo.AddDistances(linkedDistances);
-            // Age groups rely only on the event, and the distance.
-            // Age group id is used by EVENTSPECIFIC
-            Log.D("UI.DashboardPage", "Adding age groups.");
-            List<AgeGroup> ageGroups = [];
-            Dictionary<int, int> ageGroupIDTranslation = [];
-            // Key is START AGE
-            Dictionary<int, int> oldAgeGroupDictionary = [];
-            foreach (AgeGroup item in loadFrom.GetAgeGroups(oldEvent.Identifier))
+        }
+        // Update linked distances to their new division ID or set it to no linked if we can't find it.
+        foreach (Distance item in linkedDistances)
+        {
+            item.LinkedDistance = distanceIdTranslation.TryGetValue(item.LinkedDistance, out int linkedDistId) ? linkedDistId : Constants.Timing.DISTANCE_NO_LINKED_ID;
+        }
+        saveTo.AddDistances(linkedDistances);
+        // Age groups rely only on the event, and the distance.
+        // Age group id is used by EVENTSPECIFIC
+        Log.D("UI.DashboardPage", "Adding age groups.");
+        List<AgeGroup> ageGroups = [];
+        Dictionary<int, int> ageGroupIdTranslation = [];
+        // Key is START AGE
+        Dictionary<int, int> oldAgeGroupDictionary = [];
+        foreach (AgeGroup item in loadFrom.GetAgeGroups(oldEvent.Identifier))
+        {
+            item.EventId = newEvent.Identifier;
+            oldAgeGroupDictionary[item.StartAge] = item.GroupId;
+            // Add the item to our list to save IFF it has a corred DistanceID set to it.
+            if (item.DistanceId != Constants.Timing.COMMON_AGEGROUPS_DISTANCEID)
             {
-                item.EventId = newEvent.Identifier;
-                oldAgeGroupDictionary[item.StartAge] = item.GroupId;
-                // Add the item to our list to save IFF it has a corred DistanceID set to it.
-                if (item.DistanceId != Constants.Timing.COMMON_AGEGROUPS_DISTANCEID)
-                {
-                    if (distanceIDTranslation.TryGetValue(item.DistanceId, out int oDistId))
-                    {
-                        item.DistanceId = oDistId;
-                        ageGroups.Add(item);
-                    }
-                }
-                else
-                {
-                    ageGroups.Add(item);
-                }
+                if (!distanceIdTranslation.TryGetValue(item.DistanceId, out int oDistId)) continue;
+                item.DistanceId = oDistId;
             }
-            saveTo.AddAgeGroups(ageGroups);
-            foreach (AgeGroup item in saveTo.GetAgeGroups(newEvent.Identifier))
+            ageGroups.Add(item);
+        }
+        saveTo.AddAgeGroups(ageGroups);
+        foreach (AgeGroup item in saveTo.GetAgeGroups(newEvent.Identifier))
+        {
+            if (oldAgeGroupDictionary.TryGetValue(item.StartAge, out int oAgId))
             {
-                if (oldAgeGroupDictionary.TryGetValue(item.StartAge, out int oAGId))
-                {
-                    ageGroupIDTranslation[oAGId] = item.GroupId;
-                }
+                ageGroupIdTranslation[oAgId] = item.GroupId;
             }
-            // Locations are relied upon by SEGMENTS, CHIPREADS, and TIMERESULTS
-            Log.D("UI.DashboardPage", "Adding locations.");
-            List<TimingLocation> locations = loadFrom.GetTimingLocations(oldEvent.Identifier);
-            Dictionary<int, int> locationIDTranslation = [];
-            Dictionary<string, int> oldLocationDictionary = [];
-            foreach (TimingLocation item in locations)
+        }
+        // Locations are relied upon by SEGMENTS, CHIPREADS, and TIMERESULTS
+        Log.D("UI.DashboardPage", "Adding locations.");
+        List<TimingLocation> locations = loadFrom.GetTimingLocations(oldEvent.Identifier);
+        Dictionary<int, int> locationIdTranslation = [];
+        Dictionary<string, int> oldLocationDictionary = [];
+        foreach (TimingLocation item in locations)
+        {
+            item.EventIdentifier = newEvent.Identifier;
+            oldLocationDictionary[item.Name] = item.Identifier;
+        }
+        saveTo.AddTimingLocations(locations);
+        // Update the location translation dictionary with oldID key and newid value.
+        foreach (TimingLocation item in saveTo.GetTimingLocations(newEvent.Identifier))
+        {
+            if (oldLocationDictionary.TryGetValue(item.Name, out int oLocId))
             {
-                item.EventIdentifier = newEvent.Identifier;
-                oldLocationDictionary[item.Name] = item.Identifier;
+                locationIdTranslation[oLocId] = item.Identifier;
             }
-            saveTo.AddTimingLocations(locations);
-            // Update the location translation dictionary with oldID key and newid value.
-            foreach (TimingLocation item in saveTo.GetTimingLocations(newEvent.Identifier))
+        }
+        locationIdTranslation[Constants.Timing.LOCATION_FINISH] = Constants.Timing.LOCATION_FINISH;
+        locationIdTranslation[Constants.Timing.LOCATION_START] = Constants.Timing.LOCATION_START;
+        locationIdTranslation[Constants.Timing.LOCATION_ANNOUNCER] = Constants.Timing.LOCATION_ANNOUNCER;
+        locationIdTranslation[Constants.Timing.LOCATION_DUMMY] = Constants.Timing.LOCATION_DUMMY;
+        // Segments rely on Locations and Distances
+        // Segment ids are used by TIME_RESULTS
+        Log.D("UI.DashboardPage", "Adding segments");
+        List<Segment> segments = [];
+        Dictionary<int, int> segmentIdTranslator = [];
+        // key here is DISTANCE_ID, LOCATION_ID, OCCURRENCE (new values)
+        Dictionary<(int, int, int), int> oldSegmentDictionary = [];
+        foreach (Segment item in loadFrom.GetSegments(oldEvent.Identifier))
+        {
+            item.EventId = newEvent.Identifier;
+            // only insert segments when there were no issues with the distance and location translations
+            // Make sure to check if we're using common segments.
+            if (item.DistanceId == Constants.Timing.COMMON_SEGMENTS_DISTANCEID)
             {
-                if (oldLocationDictionary.TryGetValue(item.Name, out int oLocId))
-                {
-                    locationIDTranslation[oLocId] = item.Identifier;
-                }
+                if (!locationIdTranslation.TryGetValue(item.LocationId, out int tLocIt)) continue;
+                item.LocationId = tLocIt;
             }
-            locationIDTranslation[Constants.Timing.LOCATION_FINISH] = Constants.Timing.LOCATION_FINISH;
-            locationIDTranslation[Constants.Timing.LOCATION_START] = Constants.Timing.LOCATION_START;
-            locationIDTranslation[Constants.Timing.LOCATION_ANNOUNCER] = Constants.Timing.LOCATION_ANNOUNCER;
-            locationIDTranslation[Constants.Timing.LOCATION_DUMMY] = Constants.Timing.LOCATION_DUMMY;
-            // Segments rely on Locations and Distances
-            // Segment ids are used by TIME_RESULTS
-            Log.D("UI.DashboardPage", "Adding segments");
-            List<Segment> segments = [];
-            Dictionary<int, int> segmentIDTranslator = [];
-            // key here is DISTANCE_ID, LOCATION_ID, OCCURRENCE (new values)
-            Dictionary<(int, int, int), int> oldSegmentDictionary = [];
-            foreach (Segment item in loadFrom.GetSegments(oldEvent.Identifier))
+            else
             {
-                item.EventId = newEvent.Identifier;
-                // only insert segments when there were no issues with the distance and location translations
-                // Make sure to check if we're using common segments.
-                if (item.DistanceId == Constants.Timing.COMMON_SEGMENTS_DISTANCEID)
-                {
-                    if (locationIDTranslation.TryGetValue(item.LocationId, out int tLocIt))
-                    {
-                        item.LocationId = tLocIt;
-                        oldSegmentDictionary[(item.DistanceId, item.LocationId, item.Occurrence)] = item.Identifier;
-                        segments.Add(item);
-                    }
-                }
-                else
-                {
-                    if (distanceIDTranslation.TryGetValue(item.DistanceId, out int tDistId) && locationIDTranslation.TryGetValue(item.LocationId, out int yLocId))
-                    {
-                        item.DistanceId = tDistId;
-                        item.LocationId = yLocId;
-                        oldSegmentDictionary[(item.DistanceId, item.LocationId, item.Occurrence)] = item.Identifier;
-                        segments.Add(item);
-                    }
-                }
+                if (!distanceIdTranslation.TryGetValue(item.DistanceId, out int tDistId) ||
+                    !locationIdTranslation.TryGetValue(item.LocationId, out int yLocId)) continue;
+                item.DistanceId = tDistId;
+                item.LocationId = yLocId;
             }
-            saveTo.AddSegments(segments);
-            // Update our segmentIDTranslator
-            foreach (Segment item in saveTo.GetSegments(newEvent.Identifier))
+            oldSegmentDictionary[(item.DistanceId, item.LocationId, item.Occurrence)] = item.Identifier;
+            segments.Add(item);
+        }
+        saveTo.AddSegments(segments);
+        // Update our segmentIDTranslator
+        foreach (Segment item in saveTo.GetSegments(newEvent.Identifier))
+        {
+            if (oldSegmentDictionary.TryGetValue((item.DistanceId, item.LocationId, item.Occurrence), out int oSegId))
             {
-                if (oldSegmentDictionary.TryGetValue((item.DistanceId, item.LocationId, item.Occurrence), out int oSegId))
-                {
-                    segmentIDTranslator[oSegId] = item.Identifier;
-                }
+                segmentIdTranslator[oSegId] = item.Identifier;
             }
-            segmentIDTranslator[Constants.Timing.SEGMENT_FINISH] = Constants.Timing.SEGMENT_FINISH;
-            segmentIDTranslator[Constants.Timing.SEGMENT_START] = Constants.Timing.SEGMENT_START;
-            segmentIDTranslator[Constants.Timing.SEGMENT_NONE] = Constants.Timing.SEGMENT_NONE;
-            // Participants contain EVENTSPECIFIC which relies on distance and age groups.
-            // Eventspecific ID is used by TIME_RESULT
-            Log.D("UI.DashboardPage", "Adding participants.");
-            List<Participant> participants = [];
-            Dictionary<int, int> eventspecificIDTranslation = [];
-            // Bib is the key here
-            Dictionary<string, int> oldEventSpecificDictionary = [];
-            foreach (Participant item in loadFrom.GetParticipants(oldEvent.Identifier))
+        }
+        segmentIdTranslator[Constants.Timing.SEGMENT_FINISH] = Constants.Timing.SEGMENT_FINISH;
+        segmentIdTranslator[Constants.Timing.SEGMENT_START] = Constants.Timing.SEGMENT_START;
+        segmentIdTranslator[Constants.Timing.SEGMENT_NONE] = Constants.Timing.SEGMENT_NONE;
+        // Participants contain EVENTSPECIFIC which relies on distance and age groups.
+        // Eventspecific ID is used by TIME_RESULT
+        Log.D("UI.DashboardPage", "Adding participants.");
+        List<Participant> participants = [];
+        Dictionary<int, int> eventspecificIdTranslation = [];
+        // Bib is the key here
+        Dictionary<string, int> oldEventSpecificDictionary = [];
+        foreach (Participant item in loadFrom.GetParticipants(oldEvent.Identifier))
+        {
+            item.EventSpecific.EventIdentifier = newEvent.Identifier;
+            oldEventSpecificDictionary[item.EventSpecific.Bib] = item.EventSpecific.Identifier;
+            // Only add the participant if we can translate their distance identifier.
+            if (distanceIdTranslation.TryGetValue(item.EventSpecific.DistanceIdentifier, out int oDistId))
             {
-                item.EventSpecific.EventIdentifier = newEvent.Identifier;
-                oldEventSpecificDictionary[item.EventSpecific.Bib] = item.EventSpecific.Identifier;
-                // Only add the participant if we can translate their distance identifier.
-                if (distanceIDTranslation.TryGetValue(item.EventSpecific.DistanceIdentifier, out int oDistId))
-                {
-                    item.EventSpecific.DistanceIdentifier = oDistId;
-                    item.EventSpecific.AgeGroupId = ageGroupIDTranslation.TryGetValue(item.EventSpecific.AgeGroupId, out int oAGId) ? oAGId : Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                    participants.Add(item);
-                }
+                item.EventSpecific.DistanceIdentifier = oDistId;
+                item.EventSpecific.AgeGroupId = ageGroupIdTranslation.TryGetValue(item.EventSpecific.AgeGroupId, out int oAgId) ? oAgId : Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+                participants.Add(item);
             }
-            saveTo.AddParticipants(participants);
-            // Translate old ID's to new ID's
-            foreach (Participant item in saveTo.GetParticipants(newEvent.Identifier))
+        }
+        saveTo.AddParticipants(participants);
+        // Translate old ID's to new ID's
+        foreach (Participant item in saveTo.GetParticipants(newEvent.Identifier))
+        {
+            if (oldEventSpecificDictionary.TryGetValue(item.Bib, out int oEsId))
             {
-                if (oldEventSpecificDictionary.TryGetValue(item.Bib, out int oESId))
-                {
-                    eventspecificIDTranslation[oESId] = item.EventSpecific.Identifier;
-                }
+                eventspecificIdTranslation[oEsId] = item.EventSpecific.Identifier;
             }
-            // Chipreads depend on location_id.
-            Log.D("UI.DashboardPage", "Adding chipreads.");
-            List<ChipRead> chipReads = [];
-            Dictionary<int, int> readIDTranslation = [];
-            // (CHIPNUMBER, BIB, SECONDS, MILLISECONDS) for the key
-            Dictionary<(string, string, long, int), int> oldReadDictionary = [];
-            foreach (ChipRead item in loadFrom.GetChipReads(oldEvent.Identifier))
+        }
+        // Chipreads depend on location_id.
+        Log.D("UI.DashboardPage", "Adding chipreads.");
+        List<ChipRead> chipReads = [];
+        Dictionary<int, int> readIdTranslation = [];
+        // (CHIPNUMBER, BIB, SECONDS, MILLISECONDS) for the key
+        Dictionary<(string, string, long, int), int> oldReadDictionary = [];
+        foreach (ChipRead item in loadFrom.GetChipReads(oldEvent.Identifier))
+        {
+            item.EventId = newEvent.Identifier;
+            oldReadDictionary[(item.ChipNumber, item.Bib, item.Seconds, item.Milliseconds)] = item.ReadId;
+            // If the location is not a pre-set location, i.e. a custom location
+            if (item.LocationId != Constants.Timing.LOCATION_START && item.LocationId != Constants.Timing.LOCATION_FINISH && item.LocationId != Constants.Timing.LOCATION_ANNOUNCER)
             {
-                item.EventId = newEvent.Identifier;
-                oldReadDictionary[(item.ChipNumber, item.Bib, item.Seconds, item.Milliseconds)] = item.ReadId;
-                // If the location is not a pre-set location, i.e. a custom location
-                if (item.LocationID != Constants.Timing.LOCATION_START && item.LocationID != Constants.Timing.LOCATION_FINISH && item.LocationID != Constants.Timing.LOCATION_ANNOUNCER)
+                if (locationIdTranslation.TryGetValue(item.LocationId, out int oLocId))
                 {
-                    if (locationIDTranslation.TryGetValue(item.LocationID, out int oLocId))
-                    {
-                        item.LocationID = oLocId;
-                        chipReads.Add(item);
-                    }
-                }
-                else
-                {
-                    // this is a known location (start, finish, or announce)
+                    item.LocationId = oLocId;
                     chipReads.Add(item);
                 }
             }
-            saveTo.AddChipReads(chipReads);
-            foreach (ChipRead item in saveTo.GetChipReads(newEvent.Identifier))
+            else
             {
-                if (oldReadDictionary.TryGetValue((item.ChipNumber, item.Bib, item.Seconds, item.Milliseconds), out int oReadId))
-                {
-                    readIDTranslation[oReadId] = item.ReadId;
-                }
+                // this is a known location (start, finish, or announce)
+                chipReads.Add(item);
             }
-            // Results rely upon read_id, location_id, and segment_id.
-            Log.D("UI.DashboardPage", "Adding results.");
-            List<TimeResult> results = [];
-            foreach (TimeResult item in loadFrom.GetTimingResults(oldEvent.Identifier))
-            {
-                item.EventIdentifier = newEvent.Identifier;
-                if (readIDTranslation.TryGetValue(item.ReadId, out int tReadId) && locationIDTranslation.TryGetValue(item.LocationId, out int tLocId)
-                    && segmentIDTranslator.TryGetValue(item.SegmentId, out int tSegId) && eventspecificIDTranslation.TryGetValue(item.EventSpecificId, out int tESId))
-                {
-                    item.ReadId = tReadId;
-                    item.LocationId = tLocId;
-                    item.SegmentId = tSegId;
-                    item.EventSpecificId = tESId;
-                    results.Add(item);
-                }
-            }
-            saveTo.AddTimingResults(results);
         }
+        saveTo.AddChipReads(chipReads);
+        foreach (ChipRead item in saveTo.GetChipReads(newEvent.Identifier))
+        {
+            if (oldReadDictionary.TryGetValue((item.ChipNumber, item.Bib, item.Seconds, item.Milliseconds), out int oReadId))
+            {
+                readIdTranslation[oReadId] = item.ReadId;
+            }
+        }
+        // Results rely upon read_id, location_id, and segment_id.
+        Log.D("UI.DashboardPage", "Adding results.");
+        List<TimeResult> results = [];
+        foreach (TimeResult item in loadFrom.GetTimingResults(oldEvent.Identifier))
+        {
+            item.EventIdentifier = newEvent.Identifier;
+            if (!readIdTranslation.TryGetValue(item.ReadId, out int tReadId) || !locationIdTranslation.TryGetValue(
+                                                                                 item.LocationId, out int tLocId)
+                                                                             || !segmentIdTranslator.TryGetValue(
+                                                                                 item.SegmentId, out int tSegId) ||
+                                                                             !eventspecificIdTranslation.TryGetValue(
+                                                                                 item.EventSpecificId, out int tEsId))
+                continue;
+            item.ReadId = tReadId;
+            item.LocationId = tLocId;
+            item.SegmentId = tSegId;
+            item.EventSpecificId = tEsId;
+            results.Add(item);
+        }
+        saveTo.AddTimingResults(results);
         return newEvent.Identifier;
     }
 
@@ -516,11 +486,8 @@ public partial class DashboardPage : UserControl, IMainPage
             return;
         }
         NewEventWindow newEventWindow = NewEventWindow.NewWindow(mWindow, database);
-        if (newEventWindow != null)
-        {
-            mWindow.AddWindow(newEventWindow);
-            newEventWindow.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(newEventWindow);
+        newEventWindow.ShowDialog((Window)mWindow);
     }
 
     private void ChangeEvent_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -531,19 +498,17 @@ public partial class DashboardPage : UserControl, IMainPage
             return;
         }
         ChangeEventWindow changeEventWindow = ChangeEventWindow.NewWindow(mWindow, database);
-        if (changeEventWindow != null)
-        {
-            mWindow.AddWindow(changeEventWindow);
-            changeEventWindow.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(changeEventWindow);
+        changeEventWindow.ShowDialog((Window)mWindow);
     }
 
     private async void SaveEvent_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.DashboardPage", "Saving event.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
+            Log.D("UI.DashboardPage", "Saving event.");
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
             IStorageFolder? startingFolder;
             try
             {
@@ -553,82 +518,85 @@ public partial class DashboardPage : UserControl, IMainPage
             {
                 startingFolder = null;
             }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.SQLiteType],
-                SuggestedFileName = string.Format("{0} {1}.{2}", theEvent!.YearCode, theEvent.Name, "sqlite"),
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name}.sqlite",
                 SuggestedStartLocation = startingFolder,
             });
-            if (file is not null)
+            if (file is null) return;
+            Log.D("UI.DashboardPage", "Creating database file.");
+            string? filePath = file.TryGetLocalPath();
+            try
             {
-                Log.D("UI.DashboardPage", "Creating database file.");
-                var filePath = file.TryGetLocalPath();
-                try
-                {
-                    SQLiteConnection.CreateFile(filePath);
-                }
-                catch
-                {
-                    DialogBox.Show("Unable to save to file");
-                    return;
-                }
-                if (filePath == null)
-                {
-                    return;
-                }
-                SQLiteInterface savedDatabase = new(filePath);
-                savedDatabase.Initialize();
-                Event theEvent = database.GetCurrentEvent()!;
-                Save_Event(theEvent, database, savedDatabase);
-                Log.D("UI.DashboardPage", "Done saving file.");
-                DialogBox.Show("Event saved successfully.");
+                SQLiteConnection.CreateFile(filePath);
             }
+            catch
+            {
+                DialogBox.Show("Unable to save to file");
+                return;
+            }
+            if (filePath == null)
+            {
+                return;
+            }
+            SQLiteInterface savedDatabase = new(filePath);
+            savedDatabase.Initialize();
+            Event currentEvent = database.GetCurrentEvent()!;
+            Save_Event(currentEvent, database, savedDatabase);
+            Log.D("UI.DashboardPage", "Done saving file.");
+            DialogBox.Show("Event saved successfully.");
+        }
+        catch (Exception)
+        {
+            Log.D("UI.DashboardPage", "Error saving file.");
         }
     }
 
     private async void ImportEvent_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.DashboardPage", "Import event clicked.");
-        if (CancelEventChangeAsync(EventClickType.ImportEvent))
+        try
         {
-            return;
-        }
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
-        {
-            IStorageFolder? startingFolder;
-            try
+            Log.D("UI.DashboardPage", "Import event clicked.");
+            if (CancelEventChangeAsync(EventClickType.ImportEvent))
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                return;
             }
-            catch
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
             {
-                startingFolder = null;
-            }
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                FileTypeFilter = [Utils.SQLiteType, FilePickerFileTypes.All],
-                AllowMultiple = false,
-                SuggestedStartLocation = startingFolder,
-            });
-            if (files.Count > 0)
-            {
+                IStorageFolder? startingFolder;
+                try
+                {
+                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                }
+                catch
+                {
+                    startingFolder = null;
+                }
+                IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    FileTypeFilter = [Utils.SQLiteType, FilePickerFileTypes.All],
+                    AllowMultiple = false,
+                    SuggestedStartLocation = startingFolder,
+                });
+                if (files.Count <= 0) return;
                 SQLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
                 savedDatabase.Initialize();
                 List<Event> events = savedDatabase.GetEvents();
-                int lastID = -1;
-                foreach (Event ev in events)
+                int lastId = -1;
+                foreach (int tmp in events.Select(ev => Save_Event(ev, savedDatabase, database)).Where(tmp => tmp > 0))
                 {
-                    int tmp = Save_Event(ev, savedDatabase, database);
-                    if (tmp > 0)
-                    {
-                        lastID = tmp;
-                    }
+                    lastId = tmp;
                 }
-                database.SetCurrentEvent(lastID);
+                database.SetCurrentEvent(lastId);
                 UpdateView();
                 mWindow.UpdateStatus();
             }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.DashboardPage", "Erorr importing.");
         }
     }
 
@@ -760,7 +728,7 @@ public partial class DashboardPage : UserControl, IMainPage
             }
             database.UpdateEvent(theEvent);
             Log.D("UI.DashboardPage", "Updating view.");
-            mWindow.NotifyTimingWorker(); ;
+            mWindow.NotifyTimingWorker();
             UpdateView();
         }
         else
@@ -772,7 +740,7 @@ public partial class DashboardPage : UserControl, IMainPage
     private void ApiPageButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.DashboardPage", "Results API button clicked.");
-        mWindow.SwitchPage(new APIPage(mWindow, database));
+        mWindow.SwitchPage(new ApiPage(mWindow, database));
     }
 
     private void CancelButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -787,23 +755,17 @@ public partial class DashboardPage : UserControl, IMainPage
     private void ApiLinkButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.DashboardPage", "Link/Edit API Event.");
-        if (theEvent!.API_ID > 0 && theEvent.API_Event_ID != "")
+        if (theEvent!.ApiId > 0 && theEvent.ApiEventId != "")
         {
-            EditAPIWindow editWindow = EditAPIWindow.NewWindow(mWindow, database);
-            if (editWindow != null)
-            {
-                mWindow.AddWindow(editWindow);
-                editWindow.ShowDialog((Window)mWindow);
-            }
+            EditApiWindow editWindow = EditApiWindow.NewWindow(mWindow, database);
+            mWindow.AddWindow(editWindow);
+            editWindow.ShowDialog((Window)mWindow);
         }
         else
         {
-            APIWindow apiWindow = APIWindow.NewWindow(mWindow, database);
-            if (apiWindow != null)
-            {
-                mWindow.AddWindow(apiWindow);
-                apiWindow.ShowDialog((Window)mWindow);
-            }
+            ApiWindow apiWindow = ApiWindow.NewWindow(mWindow, database);
+            mWindow.AddWindow(apiWindow);
+            apiWindow.ShowDialog((Window)mWindow);
         }
     }
 
@@ -811,11 +773,8 @@ public partial class DashboardPage : UserControl, IMainPage
     {
         Log.D("UI.DashboardPage", "Tag Tester clicked.");
         ChipReaderWindow crWindow = ChipReaderWindow.NewWindow(mWindow, database);
-        if (crWindow != null)
-        {
-            mWindow.AddWindow(crWindow);
-            crWindow.Show();
-        }
+        mWindow.AddWindow(crWindow);
+        crWindow.Show();
     }
 
     private void RegistrationButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

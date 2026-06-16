@@ -7,33 +7,32 @@ using System.Collections.Generic;
 
 namespace Chronokeep.UI.API.Parts;
 
-public partial class APIExpanderPart : UserControl
+public partial class ApiExpanderPart : UserControl
 {
-
-    public APIExpanderPart(
-        APIObject api,
+    public ApiExpanderPart(
+        ApiObject api,
         List<RemoteReader> readers,
         Dictionary<(int, string), RemoteReader> savedReaders,
         IDBInterface database,
         IMainWindow mainWindow)
     {
         InitializeComponent();
-        APINameBlock.Text = api.Nickname;
+        ApiNameBlock.Text = api.Nickname;
         foreach (RemoteReader reader in readers)
         {
-            reader.APIIDentifier = api.Identifier;
-            if (savedReaders.TryGetValue((reader.APIIDentifier, reader.Name), out RemoteReader? rReader))
+            reader.ApiiDentifier = api.Identifier;
+            if (savedReaders.TryGetValue((reader.ApiiDentifier, reader.Name), out RemoteReader? rReader))
             {
-                reader.LocationID = rReader.LocationID;
+                reader.LocationId = rReader.LocationId;
             }
-            readerListView.Items.Add(new ReaderListItem(reader, api, savedReaders, database, mainWindow));
+            ReaderListView.Items.Add(new ReaderListItem(reader, api, savedReaders, database, mainWindow));
         }
     }
 
     public Dictionary<RemoteReader, bool> GetAutoDownloadDictionary()
     {
         Dictionary<RemoteReader, bool> output = [];
-        foreach (ReaderListItem? item in readerListView.Items)
+        foreach (ReaderListItem? item in ReaderListView.Items)
         {
             output[item!.GetUpdatedReader()] = item.AutoDownloadReads();
         }

@@ -13,32 +13,26 @@ namespace Chronokeep.Objects.Changelog
         [JsonPropertyName("fixes")]
         public List<string> FixesList { get; set; } = [];
 
-        public bool ChangesVisibility { get => ChangesList.Count > 0; }
-        public bool FixesVisibility { get => FixesList.Count > 0; }
+        public bool ChangesVisibility => ChangesList.Count > 0;
+        public bool FixesVisibility => FixesList.Count > 0;
         public bool IsExpanded { get; set; }
 
         public int CompareTo(object? other)
         {
             ArgumentNullException.ThrowIfNull(other);
-            if (other is not Entry) return -1;
+            if (other is not Entry entry) return -1;
             string[] thisSplit = Version.Replace("v", "").Split('.');
-            string[] otherSplit = ((Entry)other).Version.Replace("v", "").Split('.');
-            if (otherSplit.Length == 3 && thisSplit.Length == 3 &&
-                int.TryParse(thisSplit[0], out int thisMajor) &&
-                int.TryParse(thisSplit[1], out int thisMinor) &&
-                int.TryParse(thisSplit[2], out int thisPatch) &&
-                int.TryParse(otherSplit[0], out int otherMajor) &&
-                int.TryParse(otherSplit[1], out int otherMinor) &&
-                int.TryParse(otherSplit[2], out int otherPatch))
-            {
-                if (otherMajor != thisMajor) return otherMajor.CompareTo(thisMajor);
-                if (otherMinor != thisMinor) return otherMinor.CompareTo(thisMinor);
-                return otherPatch.CompareTo(thisPatch);
-            }
-            else
-            {
-                return Version.CompareTo(((Entry)other).Version);
-            }
+            string[] otherSplit = entry.Version.Replace("v", "").Split('.');
+            if (otherSplit.Length != 3 || thisSplit.Length != 3 ||
+                !int.TryParse(thisSplit[0], out int thisMajor) ||
+                !int.TryParse(thisSplit[1], out int thisMinor) ||
+                !int.TryParse(thisSplit[2], out int thisPatch) ||
+                !int.TryParse(otherSplit[0], out int otherMajor) ||
+                !int.TryParse(otherSplit[1], out int otherMinor) ||
+                !int.TryParse(otherSplit[2], out int otherPatch))
+                return string.Compare(entry.Version, Version, StringComparison.Ordinal);
+            if (otherMajor != thisMajor) return otherMajor.CompareTo(thisMajor);
+            return otherMinor != thisMinor ? otherMinor.CompareTo(thisMinor) : otherPatch.CompareTo(thisPatch);
         }
     }
 }

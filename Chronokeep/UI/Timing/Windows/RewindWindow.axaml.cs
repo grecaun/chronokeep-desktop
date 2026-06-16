@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
@@ -7,10 +6,11 @@ using Chronokeep.Timing.Interfaces;
 using Chronokeep.UI.Util;
 using System;
 using System.ComponentModel;
+using Chronokeep.Constants;
 
 namespace Chronokeep.UI.Timing.Windows;
 
-public partial class RewindWindow : Window
+public partial class RewindWindow : ChronokeepWindow
 {
     private readonly ITimingPage parent;
     private readonly TimingSystem system;
@@ -18,27 +18,25 @@ public partial class RewindWindow : Window
     public RewindWindow(TimingSystem system, ITimingPage parent)
     {
         InitializeComponent();
-        this.MinWidth = 0;
-        this.MinHeight = 0;
-        this.SizeToContent = SizeToContent.Height;
-        this.Width = 400;
+        MinWidth = 0;
+        MinHeight = 0;
+        SizeToContent = SizeToContent.Height;
+        Width = 400;
         this.system = system;
         this.parent = parent;
-        String dateStr = DateTime.Now.ToString("MM/dd/yyyy");
+        string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
         FromDate.Text = dateStr;
         ToDate.Text = dateStr;
         FromTime.Text = "00:00:00";
         ToTime.Text = "23:59:59";
-        if (system.Type == Constants.Readers.SYSTEM_IPICO || system.Type == Constants.Readers.SYSTEM_IPICO_LITE)
-        {
-            Reader1.IsVisible = true;
-            Reader2.IsVisible = true;
-        }
+        if (system.Type != Readers.SYSTEM_IPICO && system.Type != Readers.SYSTEM_IPICO_LITE) return;
+        Reader1.IsVisible = true;
+        Reader2.IsVisible = true;
     }
 
     public bool IsTimingSystem(TimingSystem timingSystem)
     {
-        return this.system.Equals(timingSystem);
+        return system.Equals(timingSystem);
     }
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
@@ -75,15 +73,15 @@ public partial class RewindWindow : Window
 
     private void Rewind_Click(object sender, RoutedEventArgs e)
     {
-        if (!DateTime.TryParse(string.Format("{0} {1}", FromDate.Text!, FromTime.Text!.Replace('_', '0')), out DateTime from))
+        if (!DateTime.TryParse($"{FromDate.Text!} {FromTime.Text!.Replace('_', '0')}", out DateTime from))
         {
             from = DateTime.Now;
         }
-        if (!DateTime.TryParse(string.Format("{0} {1}", ToDate.Text!, ToTime.Text!.Replace('_', '0')), out DateTime to))
+        if (!DateTime.TryParse($"{ToDate.Text!} {ToTime.Text!.Replace('_', '0')}", out DateTime to))
         {
             to = DateTime.Now;
         }
-        if (system.Type == Constants.Readers.SYSTEM_IPICO || system.Type == Constants.Readers.SYSTEM_IPICO_LITE)
+        if (system.Type is Readers.SYSTEM_IPICO or Readers.SYSTEM_IPICO_LITE)
         {
             DialogBox.Show(
                 "This process can take up to 3 minutes to complete. There is no guarantee that other processes will work properly while this is occuring. Are you sure you wish to proceed?",
@@ -92,12 +90,12 @@ public partial class RewindWindow : Window
                 () =>
                 {
                     BackgroundWorker worker = new();
-                    worker.DoWork += (o, ea) =>
+                    worker.DoWork += (_, _) =>
                     {
                         system.SystemInterface!.Rewind(from, to, Reader1.IsChecked == true ? 1 : 2);
                         ((IpicoInterface)system.SystemInterface).GetRewind();
                     };
-                    worker.RunWorkerCompleted += (o, ea) =>
+                    worker.RunWorkerCompleted += (_, _) =>
                     {
                         busyIndicator.IsVisible = false;
                     };
@@ -117,8 +115,8 @@ public partial class RewindWindow : Window
         Close();
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

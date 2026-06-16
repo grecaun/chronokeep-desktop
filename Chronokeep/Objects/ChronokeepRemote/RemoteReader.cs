@@ -2,28 +2,15 @@
 
 namespace Chronokeep.Objects.ChronokeepRemote
 {
-    public class RemoteReader
+    public class RemoteReader(string name, int apiId, int locationId, int eventId)
     {
-        public RemoteReader()
-        {
-            Name = string.Empty;
-            APIIDentifier = -1;
-            LocationID = Constants.Timing.LOCATION_DUMMY;
-            EventID = -1;
-        }
-
-        public RemoteReader(string name, int api_id, int location_id, int event_id)
-        {
-            this.Name = name;
-            this.APIIDentifier = api_id;
-            this.LocationID = location_id;
-            this.EventID = event_id;
-        }
+        public RemoteReader() : this(string.Empty, -1, Constants.Timing.LOCATION_DUMMY, -1) { }
 
         [JsonPropertyName("name")]
-        public string Name { get; set; }
-        public int APIIDentifier { get; set; }
-        public int LocationID { get; set; }
-        public int EventID { get; set; }
+        public string Name { get; init; } = name;
+
+        public int ApiiDentifier { get; set; } = apiId;
+        public int LocationId { get; set; } = locationId;
+        public int EventId { get; set; } = eventId;
     }
 }

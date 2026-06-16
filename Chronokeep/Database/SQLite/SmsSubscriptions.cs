@@ -6,14 +6,14 @@ namespace Chronokeep.Database.SQLite
 {
     internal class SmsSubscriptions
     {
-        public static List<APISmsSubscription> GetSmsSubscriptions(int eventId, SQLiteConnection connection)
+        public static List<ApiSmsSubscription> GetSmsSubscriptions(int eventId, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "SELECT * FROM sms_subscriptions WHERE event_id=@event;";
             command.Parameters.Add(new SQLiteParameter("@event", eventId));
             SQLiteDataReader reader = command.ExecuteReader();
-            List<APISmsSubscription> output = [];
+            List<ApiSmsSubscription> output = [];
             while (reader.Read())
             {
                 output.Add(new()
@@ -28,7 +28,7 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        public static void AddSmsSubscription(int eventId, APISmsSubscription subscription, SQLiteConnection connection)
+        public static void AddSmsSubscription(int eventId, ApiSmsSubscription subscription, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;

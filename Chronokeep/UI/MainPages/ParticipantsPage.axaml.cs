@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,12 +30,12 @@ public partial class ParticipantsPage : UserControl, IMainPage
     private List<Participant> allParticipants = [];
     private readonly List<Participant> conflicts = [];
 
-    private readonly bool loaded = false;
+    private readonly bool loaded;
 
     public ParticipantsPage(IMainWindow mainWindow, IDBInterface database)
     {
         InitializeComponent();
-        this.mWindow = mainWindow;
+        mWindow = mainWindow;
         this.database = database;
         theEvent = database.GetCurrentEvent();
         SortBox.SelectedIndex = 0;
@@ -44,79 +45,81 @@ public partial class ParticipantsPage : UserControl, IMainPage
 
     public async void UpdateView()
     {
-        Log.D("UI.MainPages.ParticipantsPage", "Updating Participants Page.");
-        if (theEvent == null || theEvent.Identifier < 0)
-        {
-            return;
-        }
-        int distanceId = -1;
         try
         {
-            distanceId = Convert.ToInt32((string)((ComboBoxItem)DistanceBox.SelectedItem!).Tag!);
-        }
-        catch
-        {
-            distanceId = -1;
-        }
-        Log.D("PartPage", string.Format("Distance ID is {0}", distanceId));
-        List<Participant> newList = [];
-        await Task.Run(() =>
-        {
-            allParticipants = database.GetParticipants(theEvent.Identifier);
-            if (distanceId == -1)
+            Log.D("UI.MainPages.ParticipantsPage", "Updating Participants Page.");
+            if (theEvent == null || theEvent.Identifier < 0)
             {
-                newList.AddRange(allParticipants);
+                return;
+            }
+            int distanceId;
+            try
+            {
+                distanceId = Convert.ToInt32((string)((ComboBoxItem)DistanceBox.SelectedItem!).Tag!);
+            }
+            catch
+            {
+                distanceId = -1;
+            }
+            Log.D("PartPage", $"Distance ID is {distanceId}");
+            List<Participant> newList = [];
+            await Task.Run(() =>
+            {
+                allParticipants = database.GetParticipants(theEvent.Identifier);
+                newList.AddRange(distanceId == -1
+                    ? allParticipants
+                    : database.GetParticipants(theEvent.Identifier, distanceId));
+            });
+            UpdateBibStats();
+            if (SortBox.SelectedItem != null)
+            {
+                switch (((ComboBoxItem)SortBox.SelectedItem).Content)
+                {
+                    case "Name":
+                        newList.Sort(Participant.CompareByName);
+                        break;
+                    case "Bib":
+                        newList.Sort(Participant.CompareByBib);
+                        break;
+                    default:
+                        newList.Sort();
+                        break;
+                }
             }
             else
             {
-                newList.AddRange(database.GetParticipants(theEvent.Identifier, distanceId));
+                newList.Sort();
             }
-        });
-        UpdateBibStats();
-        if (SortBox.SelectedItem != null)
-        {
-            switch (((ComboBoxItem)SortBox.SelectedItem).Content)
+            string search = SearchBox is { Text: not null } ? SearchBox.Text.Trim() : "";
+            newList.RemoveAll(x => x.IsNotMatch(search));
+            ParticipantsList.ItemsSource = newList;
+            if (theEvent.ApiId > 0 && theEvent.ApiEventId.Length > 1)
             {
-                case "Name":
-                    newList.Sort(Participant.CompareByName);
-                    break;
-                case "Bib":
-                    newList.Sort(Participant.CompareByBib);
-                    break;
-                default:
-                    newList.Sort();
-                    break;
+                ApiPanel.IsVisible = true;
             }
+            else
+            {
+                ApiPanel.IsVisible = false;
+            }
+            // Make conflict check HERE
+            if (conflicts.Count > 0)
+            {
+                ConflictsBtn.Content = $"Conflicts - {conflicts.Count}";
+                ConflictsBtn.IsVisible = true;
+            }
+            else
+            {
+                ConflictsBtn.IsVisible = false;
+            }
+            Log.D("UI.MainPages.ParticipantsPage", "Participants updated.");
         }
-        else
+        catch (Exception)
         {
-            newList.Sort();
+            Log.D("UI.MainPages.ParticipantsPage", "Error updating view.");
         }
-        string search = SearchBox != null && SearchBox.Text != null ? SearchBox.Text.Trim() : "";
-        newList.RemoveAll(x => x.IsNotMatch(search));
-        ParticipantsList.ItemsSource = newList;
-        if (theEvent.API_ID > 0 && theEvent.API_Event_ID.Length > 1)
-        {
-            apiPanel.IsVisible = true;
-        }
-        else
-        {
-            apiPanel.IsVisible = false;
-        }
-        // Make conflict check HERE
-        if (conflicts.Count > 0)
-        {
-            ConflictsBtn.Content = string.Format("Conflicts - {0}", conflicts.Count);
-            ConflictsBtn.IsVisible = true;
-        }
-        else
-        {
-            ConflictsBtn.IsVisible = false;
-        }
-        Log.D("UI.MainPages.ParticipantsPage", "Participants updated.");
     }
 
-    public void UpdateDistancesBox()
+    private void UpdateDistancesBox()
     {
         Log.D("UI.MainPages.ParticipantsPage", "Updating distances box.");
         DistanceBox.Items.Clear();
@@ -142,7 +145,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
         DistanceBox.SelectedIndex = 0;
     }
 
-    public static void UpdateDatabase() { }
+    private static void UpdateDatabase() { }
 
     public void Keyboard_Ctrl_A()
     {
@@ -161,130 +164,126 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
     }
 
-    public async void DownloadParticipants()
+    private async void DownloadParticipants()
     {
-        // Get API to upload.
-        if (theEvent!.API_ID < 0 && theEvent.API_Event_ID.Length > 1)
-        {
-            Download.Content = "Download";
-            return;
-        }
-        APIObject api = database.GetAPI(theEvent.API_ID)!;
-        string[] event_ids = theEvent.API_Event_ID.Split(',');
-        if (event_ids.Length != 2)
-        {
-            Download.Content = "Download";
-            return;
-        }
         try
         {
-            int page = 1;
-            List<APIPerson> newPersons = [];
-            do
+            // Get API to upload.
+            if (theEvent!.ApiId < 0 && theEvent.ApiEventId.Length > 1)
             {
-                GetParticipantsResponse response = await APIHandlers.GetParticipants(api, event_ids[0], event_ids[1], 50, page);
-                newPersons.AddRange(response.Participants);
-                Log.D("UI.MainPages.ParticipantsPage", response.Participants.Count.ToString() + " participants downloaded.");
-                if (response.Participants.Count != 50)
+                Download.Content = "Download";
+                return;
+            }
+            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            string[] eventIds = theEvent.ApiEventId.Split(',');
+            if (eventIds.Length != 2)
+            {
+                Download.Content = "Download";
+                return;
+            }
+            try
+            {
+                int page = 1;
+                List<ApiPerson> newPersons = [];
+                do
                 {
-                    break;
+                    GetParticipantsResponse response = await ApiHandlers.GetParticipants(api, eventIds[0], eventIds[1], 50, page);
+                    newPersons.AddRange(response.Participants);
+                    Log.D("UI.MainPages.ParticipantsPage", response.Participants.Count.ToString() + " participants downloaded.");
+                    if (response.Participants.Count != 50)
+                    {
+                        break;
+                    }
+                    page++;
+                } while (true);
+                Log.D("UI.MainPages.ParticipantsPage", newPersons.Count.ToString() + " total participants downloaded.");
+                // Key is (First, Last, Birthdate, Distance)
+                Dictionary<(string, string, string, string), Participant> partDictionary = [];
+                Dictionary<string, Participant> partEsDictionary = [];
+                Dictionary<string, Distance> distDictionary = [];
+                string uniqueId = "";
+                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)! is { } programId)
+                {
+                    uniqueId = $"{programId.Value}-";
                 }
-                page++;
-            } while (true);
-            Log.D("UI.MainPages.ParticipantsPage", newPersons.Count.ToString() + " total participants downloaded.");
-            // Key is (First, Last, Birthdate, Distance)
-            Dictionary<(string, string, string, string), Participant> partDictionary = [];
-            Dictionary<string, Participant> partESDictionary = [];
-            Dictionary<string, Distance> distDictionary = [];
-            string uniqueID = "";
-            AppSetting programID = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!;
-            if (programID != null)
-            {
-                uniqueID = string.Format("{0}-", programID.Value);
-            }
-            foreach (Participant p in database.GetParticipants(theEvent.Identifier))
-            {
-                partDictionary[(p.FirstName, p.LastName, p.Birthdate, p.Distance.ToLower())] = p;
-                partESDictionary[string.Format("{0}{1}", uniqueID, p.EventSpecific.Identifier)] = p;
-            }
-            foreach (Distance d in database.GetDistances(theEvent.Identifier))
-            {
-                distDictionary[d.Name.ToLower()] = d;
-            }
-            foreach (APIPerson person in newPersons)
-            {
-                if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? dist))
+                foreach (Participant p in database.GetParticipants(theEvent.Identifier))
                 {
-                    distDictionary[person.Distance.ToLower()] = new(person.Distance, theEvent.Identifier);
-                    database.AddDistance(new(person.Distance, theEvent.Identifier));
+                    partDictionary[(p.FirstName, p.LastName, p.Birthdate, p.Distance.ToLower())] = p;
+                    partEsDictionary[$"{uniqueId}{p.EventSpecific.Identifier}"] = p;
                 }
-            }
-            foreach (Distance d in database.GetDistances(theEvent.Identifier))
-            {
-                distDictionary[d.Name.ToLower()] = d;
-            }
-            conflicts.Clear();
-            List<Participant> partsToUpdate = [];
-            List<Participant> partsToAdd = [];
-            foreach (APIPerson person in newPersons)
-            {
-                person.Trim();
-                person.FormatData();
-                if (distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? distance))
+                foreach (Distance d in database.GetDistances(theEvent.Identifier))
                 {
-                    if (partESDictionary.TryGetValue(person.Identifier, out Participant? old) && old != null && old.IsSimilar(person))
+                    distDictionary[d.Name.ToLower()] = d;
+                }
+                foreach (ApiPerson person in newPersons.Where(person => !distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _)))
+                {
+                    distDictionary[person.Distance.ToLower()] = new Distance(person.Distance, theEvent.Identifier);
+                    database.AddDistance(new Distance(person.Distance, theEvent.Identifier));
+                }
+                foreach (Distance d in database.GetDistances(theEvent.Identifier))
+                {
+                    distDictionary[d.Name.ToLower()] = d;
+                }
+                conflicts.Clear();
+                List<Participant> partsToUpdate = [];
+                List<Participant> partsToAdd = [];
+                foreach (ApiPerson person in newPersons)
+                {
+                    person.Trim();
+                    person.FormatData();
+                    if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _)) continue;
+                    if (partEsDictionary.TryGetValue(person.Identifier, out Participant? old) && old.IsSimilar(person))
                     {
                         // Only update if a bib exists and it has not been updated in the software since it was uploaded
                         // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length > 0 && old.EventSpecific.UploadedVersion >= old.EventSpecific.Version)
+                        if (person.Bib.Length <= 0 || old.EventSpecific.UploadedVersion < old.EventSpecific.Version)
+                            continue;
+                        Participant newPart = new(
+                            old.Identifier,
+                            person.First.Length > 0 ? person.First : old.FirstName,
+                            person.Last.Length > 0 ? person.Last : old.LastName,
+                            old.Street,
+                            old.City,
+                            old.State,
+                            old.Zip,
+                            person.Birthdate,
+                            new EventSpecific(
+                                old.EventSpecific.Identifier,
+                                theEvent.Identifier,
+                                distDictionary[person.Distance.ToLower()].Identifier,
+                                distDictionary[person.Distance.ToLower()].Name,
+                                person.Bib,
+                                old.EventSpecific.CheckedIn,
+                                old.EventSpecific.Comments,
+                                old.EventSpecific.Owes,
+                                old.EventSpecific.Other,
+                                old.EventSpecific.Status,
+                                old.EventSpecific.AgeGroupName,
+                                old.EventSpecific.AgeGroupId,
+                                person.Anonymous,
+                                person.SmsEnabled,
+                                person.Apparel,
+                                old.EventSpecific.Division,
+                                old.EventSpecific.Version,
+                                old.EventSpecific.UploadedVersion
+                            ),
+                            old.Email,
+                            old.Phone,
+                            person.Mobile.Length > 0 ? person.Mobile : old.Mobile,
+                            old.Parent,
+                            old.Country,
+                            old.Street2,
+                            person.Gender,
+                            old.EcName,
+                            old.EcPhone
+                        );
+                        // Check if we've updated the Bib
+                        if (old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
-                            Participant newPart = new(
-                                old.Identifier,
-                                person.First.Length > 0 ? person.First : old.FirstName,
-                                person.Last.Length > 0 ? person.Last : old.LastName,
-                                old.Street,
-                                old.City,
-                                old.State,
-                                old.Zip,
-                                person.Birthdate,
-                                new(
-                                    old.EventSpecific.Identifier,
-                                    theEvent.Identifier,
-                                    distDictionary[person.Distance.ToLower()].Identifier,
-                                    distDictionary[person.Distance.ToLower()].Name,
-                                    person.Bib,
-                                    old.EventSpecific.CheckedIn,
-                                    old.EventSpecific.Comments,
-                                    old.EventSpecific.Owes,
-                                    old.EventSpecific.Other,
-                                    old.EventSpecific.Status,
-                                    old.EventSpecific.AgeGroupName,
-                                    old.EventSpecific.AgeGroupId,
-                                    person.Anonymous,
-                                    person.SMSEnabled,
-                                    person.Apparel,
-                                    old.EventSpecific.Division,
-                                    old.EventSpecific.Version,
-                                    old.EventSpecific.UploadedVersion
-                                    ),
-                                old.Email,
-                                old.Phone,
-                                person.Mobile.Length > 0 ? person.Mobile : old.Mobile,
-                                old.Parent,
-                                old.Country,
-                                old.Street2,
-                                person.Gender,
-                                old.ECName,
-                                old.ECPhone
-                                );
-                            // Check if we've updated the Bib
-                            if (old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
-                            {
-                                conflicts.Add(old);
-                                conflicts.Add(newPart);
-                            }
-                            partsToUpdate.Add(newPart);
+                            conflicts.Add(old);
+                            conflicts.Add(newPart);
                         }
+                        partsToUpdate.Add(newPart);
                     }
                     else if (partDictionary.TryGetValue((person.First, person.Last, person.Birthdate, person.Distance.ToLower()), out Participant? oldTwo))
                     {
@@ -315,12 +314,12 @@ public partial class ParticipantsPage : UserControl, IMainPage
                                     oldTwo.EventSpecific.AgeGroupName,
                                     oldTwo.EventSpecific.AgeGroupId,
                                     person.Anonymous,
-                                    person.SMSEnabled,
+                                    person.SmsEnabled,
                                     person.Apparel,
                                     oldTwo.EventSpecific.Division,
                                     oldTwo.EventSpecific.Version,
                                     oldTwo.EventSpecific.UploadedVersion
-                                    ),
+                                ),
                                 oldTwo.Email,
                                 oldTwo.Phone,
                                 person.Mobile.Length > 0 ? person.Mobile : oldTwo.Mobile,
@@ -328,9 +327,9 @@ public partial class ParticipantsPage : UserControl, IMainPage
                                 oldTwo.Country,
                                 oldTwo.Street2,
                                 person.Gender,
-                                oldTwo.ECName,
-                                oldTwo.ECPhone
-                                );
+                                oldTwo.EcName,
+                                oldTwo.EcPhone
+                            );
                             // Check if we've updated the Bib.
                             if (old!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                             {
@@ -343,7 +342,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     else if (person.First.Length > 0 || person.Last.Length > 0)
                     {
                         partsToAdd.Add(
-                            new(
+                            new Participant(
                                 person.First,
                                 person.Last,
                                 "",
@@ -351,7 +350,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                                 "",
                                 "",
                                 person.Birthdate,
-                                new(
+                                new EventSpecific(
                                     theEvent.Identifier,
                                     distDictionary[person.Distance.ToLower()].Identifier,
                                     distDictionary[person.Distance.ToLower()].Name,
@@ -361,7 +360,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                                     "",
                                     "",
                                     person.Anonymous,
-                                    person.SMSEnabled,
+                                    person.SmsEnabled,
                                     person.Apparel,
                                     ""
                                 ),
@@ -378,28 +377,49 @@ public partial class ParticipantsPage : UserControl, IMainPage
                         );
                     }
                 }
-            }
-            if (partsToUpdate.Count > 0)
-            {
-                database.UpdateParticipants(partsToUpdate);
-            }
-            if (partsToAdd.Count > 0)
-            {
-                database.AddParticipants(partsToAdd);
-            }
-            Dictionary<string, Participant> knownBibs = [];
-            // This checks for doubles of bibs in existing information.
-            foreach (Participant part in partESDictionary.Values)
-            {
-                if (part.Bib.Length > 0)
+                if (partsToUpdate.Count > 0)
+                {
+                    database.UpdateParticipants(partsToUpdate);
+                }
+                if (partsToAdd.Count > 0)
+                {
+                    database.AddParticipants(partsToAdd);
+                }
+                Dictionary<string, Participant> knownBibs = [];
+                // This checks for doubles of bibs in existing information.
+                foreach (Participant part in partEsDictionary.Values.Where(part => part.Bib.Length > 0))
                 {
                     if (knownBibs.TryGetValue(part.Bib, out Participant? known))
                     {
-                        if (!part.IsSimilar(known))
-                        {
-                            conflicts.Add(part);
-                            conflicts.Add(known);
-                        }
+                        if (part.IsSimilar(known)) continue;
+                        conflicts.Add(part);
+                        conflicts.Add(known);
+                    }
+                    else
+                    {
+                        knownBibs.Add(part.Bib, part);
+                    }
+                }
+                foreach (Participant part in partsToUpdate.Where(part => part.Bib.Length > 0))
+                {
+                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
+                    {
+                        if (part.IsSimilar(known)) continue;
+                        conflicts.Add(part);
+                        conflicts.Add(known);
+                    }
+                    else
+                    {
+                        knownBibs.Add(part.Bib, part);
+                    }
+                }
+                foreach (Participant part in partsToAdd.Where(part => part.Bib.Length > 0))
+                {
+                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
+                    {
+                        if (part.IsSimilar(known)) continue;
+                        conflicts.Add(part);
+                        conflicts.Add(known);
                     }
                     else
                     {
@@ -407,221 +427,171 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     }
                 }
             }
-            foreach (Participant part in partsToUpdate)
+            catch (ApiException ex)
             {
-                if (part.Bib.Length > 0)
-                {
-                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
-                    {
-                        if (!part.IsSimilar(known))
-                        {
-                            conflicts.Add(part);
-                            conflicts.Add(known);
-                        }
-                    }
-                    else
-                    {
-                        knownBibs.Add(part.Bib, part);
-                    }
-                }
+                DialogBox.Show(ex.Message);
+                Download.Content = "Download";
+                return;
             }
-            foreach (Participant part in partsToAdd)
-            {
-                if (part.Bib.Length > 0)
-                {
-                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
-                    {
-                        if (!part.IsSimilar(known))
-                        {
-                            conflicts.Add(part);
-                            conflicts.Add(known);
-                        }
-                    }
-                    else
-                    {
-                        knownBibs.Add(part.Bib, part);
-                    }
-                }
-            }
-        }
-        catch (APIException ex)
-        {
-            DialogBox.Show(ex.Message);
             Download.Content = "Download";
-            return;
+            UpdateView();
         }
-        Download.Content = "Download";
-        UpdateView();
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ParticipantsPage", "Error downloading participants.");
+        }
     }
 
     private async void UploadParticipants()
     {
-        // Get API to upload.
-        if (theEvent!.API_ID < 0 || theEvent.API_Event_ID.Length < 1)
+        try
         {
-            Upload.Content = "Upload";
-            return;
-        }
-        APIObject api = database.GetAPI(theEvent.API_ID)!;
-        string[] event_ids = theEvent.API_Event_ID.Split(',');
-        if (event_ids.Length != 2)
-        {
-            Upload.Content = "Upload";
-            return;
-        }
-        // Get results to upload.
-        List<Participant> participants = database.GetParticipants(theEvent.Identifier);
-        List<BibChipAssociation> bibChips = database.GetBibChips(theEvent.Identifier);
-        if (participants.Count < 1)
-        {
-            Log.D("UI.MainPages.ParticipantsPage", "Nothing to upload.");
-            Upload.Content = "Upload";
-            return;
-        }
-        // Change Participant to APIPerson
-        List<APIPerson> upParticipants = [];
-        List<BibChip> upBibChips = [];
-        Log.D("UI.MainPages.ParticipantsPage", "Participants count: " + participants.Count.ToString());
-        string uniqueID = "";
-        AppSetting programID = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!;
-        if (programID != null)
-        {
-            uniqueID = string.Format("{0}-", programID.Value);
-        }
-        foreach (Participant part in participants)
-        {
-            upParticipants.Add(new(part, uniqueID));
-        }
-        Log.D("UI.MainPages.ParticipantsPage", "BibChips count: " + bibChips.Count.ToString());
-        foreach (BibChipAssociation bc in bibChips)
-        {
-            upBibChips.Add(new()
+            // Get API to upload.
+            if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1)
             {
-                Bib = bc.Bib,
-                Chip = bc.Chip,
-            });
-        }
-        Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upParticipants.Count.ToString() + " participants.");
-        int total = 0;
-        int loops = upParticipants.Count / Constants.Timing.API_LOOP_COUNT;
-        AddResultsResponse response;
-        for (int i = 0; i < loops; i += 1)
-        {
-            try
-            {
-                response = await APIHandlers.UploadParticipants(api, event_ids[0], event_ids[1], upParticipants.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
                 Upload.Content = "Upload";
                 return;
             }
-            if (response != null)
+            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            string[] eventIds = theEvent.ApiEventId.Split(',');
+            if (eventIds.Length != 2)
             {
+                Upload.Content = "Upload";
+                return;
+            }
+            // Get results to upload.
+            List<Participant> participants = database.GetParticipants(theEvent.Identifier);
+            List<BibChipAssociation> bibChips = database.GetBibChips(theEvent.Identifier);
+            if (participants.Count < 1)
+            {
+                Log.D("UI.MainPages.ParticipantsPage", "Nothing to upload.");
+                Upload.Content = "Upload";
+                return;
+            }
+            // Change Participant to APIPerson
+            List<ApiPerson> upParticipants = [];
+            List<BibChip> upBibChips = [];
+            Log.D("UI.MainPages.ParticipantsPage", "Participants count: " + participants.Count);
+            AppSetting programId = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!;
+            string uniqueId = programId.Value + "-";
+            upParticipants.AddRange(participants.Select(part => new ApiPerson(part, uniqueId)));
+            Log.D("UI.MainPages.ParticipantsPage", "BibChips count: " + bibChips.Count);
+            upBibChips.AddRange(bibChips.Select(bc => new BibChip() { Bib = bc.Bib, Chip = bc.Chip, }));
+            Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upParticipants.Count + " participants.");
+            int total = 0;
+            int loops = upParticipants.Count / Constants.Timing.API_LOOP_COUNT;
+            AddResultsResponse response;
+            for (int i = 0; i < loops; i += 1)
+            {
+                try
+                {
+                    response = await ApiHandlers.UploadParticipants(api, eventIds[0], eventIds[1], upParticipants.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                    Upload.Content = "Upload";
+                    return;
+                }
                 total += response.Count;
                 Log.D("UI.MainPages.ParticipantsPage", "Total: " + total + " Count: " + response.Count);
             }
-        }
-        int leftovers = upParticipants.Count - (loops * Constants.Timing.API_LOOP_COUNT);
-        if (leftovers > 0)
-        {
-            try
+            int leftovers = upParticipants.Count - (loops * Constants.Timing.API_LOOP_COUNT);
+            if (leftovers > 0)
             {
-                response = await APIHandlers.UploadParticipants(api, event_ids[0], event_ids[1], upParticipants.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
-                Upload.Content = "Upload";
-                return;
-            }
-            if (response != null)
-            {
+                try
+                {
+                    response = await ApiHandlers.UploadParticipants(api, eventIds[0], eventIds[1], upParticipants.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                    Upload.Content = "Upload";
+                    return;
+                }
                 total += response.Count;
                 Log.D("UI.MainPages.TimingPage", "Total: " + total + " Count: " + response.Count);
+                Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
             }
-            Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
-        }
-        foreach (Participant part in participants)
-        {
-            // record the version number that we uploaded, should default to 0 for anything we haven't touched
-            part.EventSpecific.UploadedVersion = part.EventSpecific.Version;
-        }
-        database.UpdateParticipants(participants);
-        Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upBibChips.Count.ToString() + " bibchips.");
-        total = 0;
-        loops = upBibChips.Count / Constants.Timing.API_LOOP_COUNT;
-        for (int i = 0; i < loops; i += 1)
-        {
-            try
+            foreach (Participant part in participants)
             {
-                response = await APIHandlers.UploadBibChips(api, event_ids[0], event_ids[1], upBibChips.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
+                // record the version number that we uploaded, should default to 0 for anything we haven't touched
+                part.EventSpecific.UploadedVersion = part.EventSpecific.Version;
             }
-            catch (APIException ex)
+            database.UpdateParticipants(participants);
+            Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upBibChips.Count + " bibchips.");
+            total = 0;
+            loops = upBibChips.Count / Constants.Timing.API_LOOP_COUNT;
+            for (int i = 0; i < loops; i += 1)
             {
-                DialogBox.Show(ex.Message);
-                Upload.Content = "Upload";
-                return;
-            }
-            if (response != null)
-            {
+                try
+                {
+                    response = await ApiHandlers.UploadBibChips(api, eventIds[0], eventIds[1], upBibChips.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                    Upload.Content = "Upload";
+                    return;
+                }
                 total += response.Count;
                 Log.D("UI.MainPages.ParticipantsPage", "Total: " + total + " Count: " + response.Count);
             }
-        }
-        leftovers = upBibChips.Count - (loops * Constants.Timing.API_LOOP_COUNT);
-        if (leftovers > 0)
-        {
-            try
+            leftovers = upBibChips.Count - (loops * Constants.Timing.API_LOOP_COUNT);
+            if (leftovers > 0)
             {
-                response = await APIHandlers.UploadBibChips(api, event_ids[0], event_ids[1], upBibChips.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
-            }
-            catch (APIException ex)
-            {
-                DialogBox.Show(ex.Message);
-                Upload.Content = "Upload";
-                return;
-            }
-            if (response != null)
-            {
+                try
+                {
+                    response = await ApiHandlers.UploadBibChips(api, eventIds[0], eventIds[1], upBibChips.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
+                }
+                catch (ApiException ex)
+                {
+                    DialogBox.Show(ex.Message);
+                    Upload.Content = "Upload";
+                    return;
+                }
                 total += response.Count;
                 Log.D("UI.MainPages.TimingPage", "Total: " + total + " Count: " + response.Count);
+                Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
             }
-            Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
+            Upload.Content = "Upload";
         }
-        Upload.Content = "Upload";
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ParticipantsPage", "Error uploading participants.");
+        }
     }
 
     private async void Import_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.ParticipantsPage", "Import Excel clicked.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
-            IStorageFolder? startingFolder;
-            try
+            Log.D("UI.MainPages.ParticipantsPage", "Import Excel clicked.");
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-            }
-            catch
-            {
-                startingFolder = null;
-            }
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                FileTypeFilter = [Utils.ExcelType, FilePickerFileTypes.All],
-                AllowMultiple = false,
-                SuggestedStartLocation = startingFolder,
-            });
-            if (files.Count > 0)
-            {
+                IStorageFolder? startingFolder;
+                try
+                {
+                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                }
+                catch
+                {
+                    startingFolder = null;
+                }
+                IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    FileTypeFilter = [Utils.ExcelType, FilePickerFileTypes.All],
+                    AllowMultiple = false,
+                    SuggestedStartLocation = startingFolder,
+                });
+                if (files.Count <= 0) return;
                 string ext = Path.GetExtension(files[0].Name);
                 Log.D("UI.MainPages.ParticipantsPage", $"Extension found: {ext}");
                 try
                 {
                     IDataImporter importer;
-                    if (ext == ".xlsx" || ext == ".xls")
+                    if (ext is ".xlsx" or ".xls")
                     {
                         importer = new ExcelImporter(files[0].TryGetLocalPath()!);
                     }
@@ -631,11 +601,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     }
                     importer.FetchHeaders();
                     ImportFileWindow importWindow = ImportFileWindow.NewWindow(mWindow, importer, database);
-                    if (importWindow != null)
-                    {
-                        mWindow.AddWindow(importWindow);
-                        _ = importWindow.ShowDialog((Window)mWindow);
-                    }
+                    mWindow.AddWindow(importWindow);
+                    _ = importWindow.ShowDialog((Window)mWindow);
                 }
                 catch (Exception ex)
                 {
@@ -644,129 +611,106 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
             }
         }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ParticipantsPage", "Error importing participants.");
+        }
     }
 
     private async void Export_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.ParticipantsPage", "Export clicked.");
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel != null)
+        try
         {
-            IStorageFolder? startingFolder;
-            try
+            Log.D("UI.MainPages.ParticipantsPage", "Export clicked.");
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
             {
-                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-            }
-            catch
-            {
-                startingFolder = null;
-            }
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = string.Format("{0} {1} Entrants.{2}", theEvent!.YearCode, theEvent.Name, "xlsx"),
-                SuggestedStartLocation = startingFolder,
-            });
-            if (file is not null)
-            {
-                if (theEvent != null)
+                IStorageFolder? startingFolder;
+                try
                 {
-                    await Task.Run(() =>
-                    {
-                        Log.D("UI.MainPages.ParticipantsPage", "Event has name " + theEvent.Name + " and date of " + theEvent.Date + " and finally has ID " + theEvent.Identifier);
-                        List<Participant> parts = database.GetParticipants(theEvent.Identifier);
-                        string[] headers = [
-                            "Bib",
-                                "Distance",
-                                "Status",
-                                "First",
-                                "Last",
-                                "Birthday",
-                                "Age",
-                                "Age Group",
-                                "Division",
-                                "Street",
-                                "Apartment",
-                                "City",
-                                "State",
-                                "Zip",
-                                "Country",
-                                "Phone",
-                                "Mobile",
-                                "Email",
-                                "Parent",
-                                "Gender",
-                                "Comments",
-                                "Other",
-                                "Owes",
-                                "Emergency Contact Name",
-                                "Emergency Contact Phone",
-                                "Anonymous",
-                                "Apparel" // new
-                        ];
-                        List<object[]> data = [];
-                        foreach (Participant p in parts)
-                        {
-                            data.Add([
-                                p.Bib,
-                                    p.Distance,
-                                    p.EventSpecific.StatusStr,
-                                    p.FirstName,
-                                    p.LastName,
-                                    p.Birthdate,
-                                    p.Age(theEvent.Date),
-                                    p.EventSpecific.AgeGroupName,
-                                    p.EventSpecific.Division,
-                                    p.Street,
-                                    p.Street2,
-                                    p.City,
-                                    p.State,
-                                    p.Zip,
-                                    p.Country,
-                                    p.Phone,
-                                    p.Mobile,
-                                    p.Email,
-                                    p.Parent,
-                                    p.Gender,
-                                    // Get rid of all the quote and newline characters.
-                                    p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '),
-                                    p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '),
-                                    p.Owes,
-                                    p.ECName,
-                                    p.ECPhone,
-                                    p.PrettyAnonymous,
-                                    p.Apparel,
-                                ]);
-                        }
-                        IDataExporter? exporter = null;
-                        string extension = Path.GetExtension(file.Name);
-                        Log.D("UI.MainPages.ParticipantsPage", string.Format("Extension is '{0}'", extension));
-                        if (extension.Contains("xls", StringComparison.CurrentCulture))
-                        {
-                            exporter = new ExcelExporter();
-                        }
-                        else
-                        {
-                            StringBuilder format = new();
-                            for (int i = 0; i < headers.Length; i++)
-                            {
-                                format.Append("\"{");
-                                format.Append(i);
-                                format.Append("}\",");
-                            }
-                            format.Remove(format.Length - 1, 1);
-                            Log.D("UI.MainPages.ParticipantsPage", string.Format("The format is '{0}'", format.ToString()));
-                            exporter = new CSVExporter(format.ToString());
-                        }
-                        if (exporter != null)
-                        {
-                            exporter.SetData(headers, data);
-                            exporter.ExportData(file.TryGetLocalPath()!);
-                        }
-                    });
-                    DialogBox.Show("File saved.");
+                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
                 }
+                catch
+                {
+                    startingFolder = null;
+                }
+                IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    FileTypeChoices = [Utils.ExcelType],
+                    SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Entrants.xlsx",
+                    SuggestedStartLocation = startingFolder,
+                });
+                if (file is null) return;
+                if (theEvent == null) return;
+                await Task.Run(() =>
+                {
+                    Log.D("UI.MainPages.ParticipantsPage", "Event has name " + theEvent.Name + " and date of " + theEvent.Date + " and finally has ID " + theEvent.Identifier);
+                    List<Participant> parts = database.GetParticipants(theEvent.Identifier);
+                    string[] headers = [
+                        "Bib",
+                        "Distance",
+                        "Status",
+                        "First",
+                        "Last",
+                        "Birthday",
+                        "Age",
+                        "Age Group",
+                        "Division",
+                        "Street",
+                        "Apartment",
+                        "City",
+                        "State",
+                        "Zip",
+                        "Country",
+                        "Phone",
+                        "Mobile",
+                        "Email",
+                        "Parent",
+                        "Gender",
+                        "Comments",
+                        "Other",
+                        "Owes",
+                        "Emergency Contact Name",
+                        "Emergency Contact Phone",
+                        "Anonymous",
+                        "Apparel" // new
+                    ];
+                    List<object[]> data = [];
+                    data.AddRange(parts.Select(p => (object[])
+                    [
+                        p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
+                        // Get rid of all the quote and newline characters.
+                        p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
+                    ]));
+                    IDataExporter? exporter;
+                    string extension = Path.GetExtension(file.Name);
+                    Log.D("UI.MainPages.ParticipantsPage", $"Extension is '{extension}'");
+                    if (extension.Contains("xls", StringComparison.CurrentCulture))
+                    {
+                        exporter = new ExcelExporter();
+                    }
+                    else
+                    {
+                        StringBuilder format = new();
+                        for (int i = 0; i < headers.Length; i++)
+                        {
+                            format.Append("\"{");
+                            format.Append(i);
+                            format.Append("}\",");
+                        }
+                        format.Remove(format.Length - 1, 1);
+                        Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
+                        exporter = new CSVExporter(format.ToString());
+                    }
+                    exporter.SetData(headers, data);
+                    exporter.ExportData(file.TryGetLocalPath()!);
+                });
+                DialogBox.Show("File saved.");
             }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ParticipantsPage", "Error exporting participants.");
         }
     }
 
@@ -798,49 +742,56 @@ public partial class ParticipantsPage : UserControl, IMainPage
 
     private async void Delete_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.ParticipantsPage", "Delete clicked.");
-        if (Delete.Content!.ToString() != "Working")
+        try
         {
-            Log.D("UI.MainPages.ParticipantsPage", "Deleting uploaded participants data.");
-            Delete.Content = "Working";
-            APIObject? api = null;
-            try
+            Log.D("UI.MainPages.ParticipantsPage", "Delete clicked.");
+            if (Delete.Content!.ToString() != "Working")
             {
-                api = database.GetAPI(theEvent!.API_ID);
-                Log.D("UI.MainPages.ParticipantsPage", "API found.");
-            }
-            catch { }
-            // Get the event id values. Exit if not valid.
-            string[] event_ids = theEvent!.API_Event_ID.Split(',');
-            // Create a bool for checking if we've grabbed the APIController's lock so we release it later
-            if (event_ids.Length == 2)
-            {
+                Log.D("UI.MainPages.ParticipantsPage", "Deleting uploaded participants data.");
+                Delete.Content = "Working";
+                ApiObject? api = null;
                 try
                 {
-                    Log.D("UI.MainPages.ParticipantsPage", "Deleting participants from API.");
-                    await APIHandlers.DeleteParticipants(api!, event_ids[0], event_ids[1]);
-                    await APIHandlers.DeleteBibChips(api!, event_ids[0], event_ids[1]);
+                    api = database.GetAPI(theEvent!.ApiId);
+                    Log.D("UI.MainPages.ParticipantsPage", "API found.");
                 }
-                catch (APIException ex)
+                catch
                 {
-                    DialogBox.Show(ex.Message);
+                    Log.D("UI.MainPages.ParticipantsPage", "Error finding API.");
                 }
+                // Get the event id values. Exit if not valid.
+                string[] eventIds = theEvent!.ApiEventId.Split(',');
+                // Create a bool for checking if we've grabbed the APIController's lock so we release it later
+                if (eventIds.Length == 2)
+                {
+                    try
+                    {
+                        Log.D("UI.MainPages.ParticipantsPage", "Deleting participants from API.");
+                        await ApiHandlers.DeleteParticipants(api!, eventIds[0], eventIds[1]);
+                        await ApiHandlers.DeleteBibChips(api!, eventIds[0], eventIds[1]);
+                    }
+                    catch (ApiException ex)
+                    {
+                        DialogBox.Show(ex.Message);
+                    }
+                }
+                Delete.Content = "Delete Uploaded";
+                return;
             }
-            Delete.Content = "Delete Uploaded";
-            return;
+            Log.D("UI.MainPages.ParticipantsPage", "Already deleting.");
         }
-        Log.D("UI.MainPages.ParticipantsPage", "Already deleting.");
+        catch (Exception)
+        {
+            Log.D("UI.MainPages.ParticipantsPage", "Error deleting participants.");
+        }
     }
 
     private void ConflictsBtn_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.ParticipantsPage", "Conflicts clicked.");
         ParticipantConflicts conflictWindow = ParticipantConflicts.NewWindow(mWindow, conflicts);
-        if (conflictWindow != null)
-        {
-            mWindow.AddWindow(conflictWindow);
-            conflictWindow.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(conflictWindow);
+        conflictWindow.ShowDialog((Window)mWindow);
     }
 
     private void DistanceBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -894,22 +845,16 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
         if (part == null) return;
         ModifyParticipantWindow modifyParticipant = ModifyParticipantWindow.NewWindow(mWindow, database, part);
-        if (modifyParticipant != null)
-        {
-            mWindow.AddWindow(modifyParticipant);
-            modifyParticipant.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(modifyParticipant);
+        modifyParticipant.ShowDialog((Window)mWindow);
     }
 
     private void Add_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ParticipantsPage", "Add clicked.");
         ModifyParticipantWindow addParticipant = ModifyParticipantWindow.NewWindow(mWindow, database);
-        if (addParticipant != null)
-        {
-            mWindow.AddWindow(addParticipant);
-            addParticipant.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(addParticipant);
+        addParticipant.ShowDialog((Window)mWindow);
     }
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
@@ -951,11 +896,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
     {
         if (ParticipantsList.SelectedItem == null) return;
         ModifyParticipantWindow modifyParticipant = ModifyParticipantWindow.NewWindow(mWindow, database, (Participant)ParticipantsList.SelectedItem);
-        if (modifyParticipant != null)
-        {
-            mWindow.AddWindow(modifyParticipant);
-            modifyParticipant.ShowDialog((Window)mWindow);
-        }
+        mWindow.AddWindow(modifyParticipant);
+        modifyParticipant.ShowDialog((Window)mWindow);
     }
 
     private void UpdateBibStats()
@@ -984,7 +926,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
                 if (!bibStats.TryGetValue(divId, out BibStats? bStats))
                 {
-                    bStats = new()
+                    bStats = new BibStats
                     {
                         With = 0,
                         Without = 0,
@@ -1008,7 +950,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 if (!bibStats.TryGetValue(p.EventSpecific.DistanceIdentifier, out BibStats? bStats))
                 {
-                    bStats = new()
+                    bStats = new BibStats
                     {
                         With = 0,
                         Without = 0,
@@ -1049,14 +991,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             ViewPanel.IsVisible = false;
         }
         StatsListView.ItemsSource = listStats;
-        if (totals.Without > 0)
-        {
-            StatsExpander.IsVisible = true;
-        }
-        else
-        {
-            StatsExpander.IsVisible = false;
-        }
+        StatsExpander.IsVisible = totals.Without > 0;
     }
 
     private void CondenseSwitch_IsCheckedChanged(object? sender, RoutedEventArgs e)
@@ -1067,6 +1002,6 @@ public partial class ParticipantsPage : UserControl, IMainPage
     private void StatsExpander_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
     {
         if (CondenseSwitch == null || StatsExpander == null) { return; }
-        CondenseSwitch.IsVisible = StatsExpander.IsExpanded == true;
+        CondenseSwitch.IsVisible = StatsExpander.IsExpanded;
     }
 }

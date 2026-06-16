@@ -28,7 +28,7 @@ public partial class DistanceAlternatePart : UserControl
 
     public string NameFromFile()
     {
-        return DistanceName.Text!.ToString().Trim();
+        return DistanceName.Text!.Trim();
     }
 
     public int DistanceId()

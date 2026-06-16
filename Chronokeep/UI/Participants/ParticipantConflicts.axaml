@@ -57,8 +57,8 @@
                 <DataGridTextColumn Header="Goodies" Binding="{Binding Apparel}" MinWidth="150" x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="120" x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="120" x:DataType="objects:Participant"/>
-                <DataGridTextColumn Header="EC Name" Binding="{Binding ECName}" MinWidth="150" x:DataType="objects:Participant"/>
-                <DataGridTextColumn Header="EC Phone" Binding="{Binding ECPhone}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="EC Name" Binding="{Binding EcName}" MinWidth="150" x:DataType="objects:Participant"/>
+                <DataGridTextColumn Header="EC Phone" Binding="{Binding EcPhone}" MinWidth="150" x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Anon" Binding="{Binding PrettyAnonymous}" MinWidth="35" x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Comments" Binding="{Binding Comments}" MinWidth="200" x:DataType="objects:Participant"/>
                 <DataGridTextColumn Header="Other" Binding="{Binding Other}" MinWidth="150" x:DataType="objects:Participant"/>

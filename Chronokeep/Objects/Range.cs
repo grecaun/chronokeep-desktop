@@ -2,21 +2,12 @@
 
 namespace Chronokeep.Objects
 {
-    class Range : IComparable<Range>, IEquatable<Range>
+    internal class Range : IComparable<Range>, IEquatable<Range>
     {
-        public int StartBib { get; set; }
-        public int EndBib { get; set; }
-        public int StartChip { get; set; }
-        public int EndChip { get; set; }
-
-        public int CompareTo(object obj)
-        {
-            if (Object.ReferenceEquals(obj.GetType(), this.GetType()))
-            {
-                return StartBib.CompareTo(((Range)obj).StartBib);
-            }
-            return -1;
-        }
+        public int StartBib { get; init; }
+        public int EndBib { get; init; }
+        public int StartChip { get; init; }
+        public int EndChip { get; init; }
 
         public int CompareTo(Range? other)
         {
@@ -37,10 +28,10 @@ namespace Chronokeep.Objects
 
         public bool Violates(Range other)
         {
-            return (other.StartBib >= this.StartBib && other.StartBib <= this.EndBib) || (other.EndBib >= this.StartBib && other.EndBib <= this.EndBib)
-                || (this.StartBib >= other.StartBib && this.StartBib <= other.EndBib) || (this.EndBib >= other.StartBib && this.EndBib <= other.EndBib)
-                || (other.StartChip >= this.StartChip && other.StartChip <= this.EndChip) || (other.EndChip >= this.StartChip && other.EndChip <= this.EndChip)
-                || (this.StartChip >= other.StartChip && this.StartChip <= other.EndChip) || (this.EndChip >= other.StartChip && this.EndChip <= other.EndChip);
+            return (other.StartBib >= StartBib && other.StartBib <= EndBib) || (other.EndBib >= StartBib && other.EndBib <= EndBib)
+                || (StartBib >= other.StartBib && StartBib <= other.EndBib) || (EndBib >= other.StartBib && EndBib <= other.EndBib)
+                || (other.StartChip >= StartChip && other.StartChip <= EndChip) || (other.EndChip >= StartChip && other.EndChip <= EndChip)
+                || (StartChip >= other.StartChip && StartChip <= other.EndChip) || (EndChip >= other.StartChip && EndChip <= other.EndChip);
         }
     }
 }

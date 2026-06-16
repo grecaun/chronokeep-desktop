@@ -4,6 +4,7 @@ using Chronokeep.Objects.ChronoKeepAPI;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ using static Chronokeep.Network.Util.Helpers;
 
 namespace Chronokeep.Network.API
 {
-    public class APIHandlers
+    public static class ApiHandlers
     {
-        public static async Task<bool> IsHealthy(APIObject api)
+        public static async Task<bool> IsHealthy(ApiObject api)
         {
             string content;
             try
@@ -22,10 +23,10 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new(api.URL + "health"),
+                    RequestUri = new Uri($"{api.Url}health"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                if (response.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.NoContent)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
                     return true;
@@ -35,12 +36,12 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown checking health: " + ex.Message);
+                throw new ApiException("Exception thrown checking health: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetEventsResponse> GetEvents(APIObject api)
+        public static async Task<GetEventsResponse> GetEvents(ApiObject api)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting events.");
@@ -50,31 +51,31 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new(api.URL + "event/my")
+                    RequestUri = new Uri($"{api.Url}event/my")
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetEventsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetEventsResponse result = JsonSerializer.Deserialize<GetEventsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException("Exception thrown getting events: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetEventResponse> GetEvent(APIObject api, string slug)
+        public static async Task<GetEventResponse> GetEvent(ApiObject api, string slug)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting specific event.");
@@ -84,7 +85,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "event"),
+                    RequestUri = new Uri($"{api.Url}event"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetEventRequest
                         {
@@ -94,29 +95,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetEventResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetEventResponse result = JsonSerializer.Deserialize<GetEventResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException("Exception thrown getting events: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetEventYearsResponse> GetEventYears(APIObject api, string slug)
+        public static async Task<GetEventYearsResponse> GetEventYears(ApiObject api, string slug)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting event years.");
@@ -126,7 +127,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "event-year/event"),
+                    RequestUri = new Uri($"{api.Url}event-year/event"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetEventRequest
                         {
@@ -136,29 +137,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetEventYearsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetEventYearsResponse result = JsonSerializer.Deserialize<GetEventYearsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting event years: " + ex.Message);
+                throw new ApiException("Exception thrown getting event years: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<EventYearResponse> GetEventYear(APIObject api, string slug, string year)
+        public static async Task<EventYearResponse> GetEventYear(ApiObject api, string slug, string year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting specific event year.");
@@ -168,7 +169,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "event-year"),
+                    RequestUri = new Uri($"{api.Url}event-year"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetEventYearRequest
                         {
@@ -179,29 +180,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    EventYearResponse result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting event years: " + ex.Message);
+                throw new ApiException("Exception thrown getting event years: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<ModifyEventResponse> AddEvent(APIObject api, APIEvent ev)
+        public static async Task<ModifyEventResponse> AddEvent(ApiObject api, ApiEvent ev)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Adding event.");
@@ -211,7 +212,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "event/add"),
+                    RequestUri = new Uri($"{api.Url}event/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyEventRequest
                         {
@@ -221,29 +222,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ModifyEventResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    ModifyEventResponse result = JsonSerializer.Deserialize<ModifyEventResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding event: " + ex.Message);
+                throw new ApiException("Exception thrown adding event: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<ModifyEventResponse> UpdateEvent(APIObject api, APIEvent ev)
+        public static async Task<ModifyEventResponse> UpdateEvent(ApiObject api, ApiEvent ev)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Updating event.");
@@ -253,7 +254,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Put,
-                    RequestUri = new(api.URL + "event/update"),
+                    RequestUri = new Uri($"{api.Url}event/update"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyEventRequest
                         {
@@ -263,29 +264,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ModifyEventResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    ModifyEventResponse result = JsonSerializer.Deserialize<ModifyEventResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding event: " + ex.Message);
+                throw new ApiException("Exception thrown adding event: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<EventYearResponse> AddEventYear(APIObject api, string slug, APIEventYear year)
+        public static async Task<EventYearResponse> AddEventYear(ApiObject api, string slug, ApiEventYear year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Adding event year.");
@@ -295,7 +296,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "event-year/add"),
+                    RequestUri = new Uri($"{api.Url}event-year/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyEventYearRequest
                         {
@@ -306,29 +307,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    EventYearResponse result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding event year: " + ex.Message);
+                throw new ApiException("Exception thrown adding event year: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<EventYearResponse> UpdateEventYear(APIObject api, string slug, APIEventYear year)
+        public static async Task<EventYearResponse> UpdateEventYear(ApiObject api, string slug, ApiEventYear year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Updating event year.");
@@ -338,7 +339,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Put,
-                    RequestUri = new(api.URL + "event-year/update"),
+                    RequestUri = new Uri($"{api.Url}event-year/update"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyEventYearRequest
                         {
@@ -349,29 +350,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    EventYearResponse result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding event year: " + ex.Message);
+                throw new ApiException("Exception thrown adding event year: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> UploadResults(APIObject api, string slug, string year, List<APIResult> results)
+        public static async Task<AddResultsResponse> UploadResults(ApiObject api, string slug, string year, List<ApiResult> results)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Uploading results.");
@@ -381,7 +382,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "results/add"),
+                    RequestUri = new Uri($"{api.Url}results/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new AddResultsRequest
                         {
@@ -393,29 +394,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown uploading results: " + ex.Message);
+                throw new ApiException("Exception thrown uploading results: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> DeleteResults(APIObject api, string slug, string year)
+        public static async Task<AddResultsResponse> DeleteResults(ApiObject api, string slug, string year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Deleting results.");
@@ -425,7 +426,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "results/delete"),
+                    RequestUri = new Uri($"{api.Url}results/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetResultsRequest
                         {
@@ -436,29 +437,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting results: " + ex.Message);
+                throw new ApiException("Exception thrown deleting results: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> DeleteDistanceResults(APIObject api, string slug, string year, string distance)
+        public static async Task<AddResultsResponse> DeleteDistanceResults(ApiObject api, string slug, string year, string distance)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Deleting distance results.");
@@ -468,7 +469,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "results/delete"),
+                    RequestUri = new Uri($"{api.Url}results/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetResultsDistanceRequest
                         {
@@ -480,29 +481,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting results: " + ex.Message);
+                throw new ApiException("Exception thrown deleting results: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> UploadBibChips(APIObject api, string slug, string year, List<BibChip> bibChips)
+        public static async Task<AddResultsResponse> UploadBibChips(ApiObject api, string slug, string year, List<BibChip> bibChips)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Uploading bibchips.");
@@ -512,7 +513,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "bibchips/add"),
+                    RequestUri = new Uri($"{api.Url}bibchips/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new AddBibChipsRequest
                         {
@@ -524,29 +525,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding bibchips: " + ex.Message);
+                throw new ApiException("Exception thrown adding bibchips: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> DeleteBibChips(APIObject api, string slug, string year)
+        public static async Task<AddResultsResponse> DeleteBibChips(ApiObject api, string slug, string year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Deleting bibchips.");
@@ -556,7 +557,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "bibchips/delete"),
+                    RequestUri = new Uri($"{api.Url}bibchips/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetBibChipsRequest
                         {
@@ -567,29 +568,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting bibchips: " + ex.Message);
+                throw new ApiException("Exception thrown deleting bibchips: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetBibChipsResponse> GetBibChips(APIObject api, string slug, string year)
+        public static async Task<GetBibChipsResponse> GetBibChips(ApiObject api, string slug, string year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting bibchips.");
@@ -599,7 +600,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "bibchips"),
+                    RequestUri = new Uri($"{api.Url}bibchips"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetBibChipsRequest
                         {
@@ -610,29 +611,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetBibChipsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetBibChipsResponse result = JsonSerializer.Deserialize<GetBibChipsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting bibchips: " + ex.Message);
+                throw new ApiException("Exception thrown getting bibchips: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> UploadParticipants(APIObject api, string slug, string year, List<APIPerson> people)
+        public static async Task<AddResultsResponse> UploadParticipants(ApiObject api, string slug, string year, List<ApiPerson> people)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Uploading participants.");
@@ -642,7 +643,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "participants/add"),
+                    RequestUri = new Uri($"{api.Url}participants/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new AddParticipantsRequest
                         {
@@ -654,29 +655,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown uploading participants: " + ex.Message);
+                throw new ApiException("Exception thrown uploading participants: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddResultsResponse> DeleteParticipants(APIObject api, string slug, string year)
+        public static async Task<AddResultsResponse> DeleteParticipants(ApiObject api, string slug, string year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Deleting participants.");
@@ -686,7 +687,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "participants/delete"),
+                    RequestUri = new Uri($"{api.Url}participants/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new DeleteParticipantsRequest
                         {
@@ -697,29 +698,29 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddResultsResponse result = JsonSerializer.Deserialize<AddResultsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting participants: " + ex.Message);
+                throw new ApiException("Exception thrown deleting participants: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<GetParticipantsResponse> GetParticipants(APIObject api, string slug, string year, int limit, int page)
+        public static async Task<GetParticipantsResponse> GetParticipants(ApiObject api, string slug, string year, int limit, int page)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Getting participants.");
@@ -729,7 +730,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "participants"),
+                    RequestUri = new Uri($"{api.Url}participants"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetParticipantsRequest
                         {
@@ -742,26 +743,26 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetParticipantsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetParticipantsResponse result = JsonSerializer.Deserialize<GetParticipantsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting participants: " + ex.Message);
+                throw new ApiException("Exception thrown getting participants: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public static async Task<GetBannedPhonesResponse> GetBannedPhones()
@@ -774,35 +775,35 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/phones/get"),
+                    RequestUri = new Uri(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/phones/get"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetBannedPhonesResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetBannedPhonesResponse result = JsonSerializer.Deserialize<GetBannedPhonesResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting banned phone numbers: " + ex.Message);
+                throw new ApiException("Exception thrown getting banned phone numbers: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public static async Task<int> AddBannedPhone(string phone)
         {
             string validPhone = Constants.GlobalVars.GetValidPhone(phone);
-            if (validPhone == null || validPhone.Length == 0)
+            if (string.IsNullOrEmpty(validPhone))
             {
-                throw new APIException("Invalid phone number.");
+                throw new ApiException("Invalid phone number.");
             }
             string content;
             Log.D("Network.API.APIHandlers", "Blocking phone number.");
@@ -812,7 +813,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/phones/add"),
+                    RequestUri = new Uri($"{Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS]}blocked/phones/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyBannedPhoneRequest
                         {
@@ -822,31 +823,31 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                HttpResponseMessage response = await client.SendAsync(request)!;
+                HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
                     return 200;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown blocking phone number: " + ex.Message);
+                throw new ApiException("Exception thrown blocking phone number: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async void UnblockBannedPhone(string phone)
+        public static async Task UnblockBannedPhone(string phone)
         {
             string validPhone = Constants.GlobalVars.GetValidPhone(phone);
-            if (validPhone == null || validPhone.Length == 0)
+            if (string.IsNullOrEmpty(validPhone))
             {
-                throw new APIException("Invalid phone number.");
+                throw new ApiException("Invalid phone number.");
             }
             string content;
             Log.D("Network.API.APIHandlers", "Unblocking phone number.");
@@ -856,7 +857,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/phones/unblock"),
+                    RequestUri = new Uri($"{Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS]}blocked/phones/unblock"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyBannedPhoneRequest
                         {
@@ -866,23 +867,23 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                HttpResponseMessage response = await client.SendAsync(request)!;
+                HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
                     return;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown unblocking phone number: " + ex.Message);
+                throw new ApiException("Exception thrown unblocking phone number: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
         public static async Task<GetBannedEmailsResponse> GetBannedEmails()
@@ -895,30 +896,30 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/emails/get"),
+                    RequestUri = new Uri($"{Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS]}blocked/emails/get"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetBannedEmailsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetBannedEmailsResponse result = JsonSerializer.Deserialize<GetBannedEmailsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting banned emails: " + ex.Message);
+                throw new ApiException("Exception thrown getting banned emails: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async void AddBannedEmail(string email)
+        public static async Task AddBannedEmail(string email)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Blocking email.");
@@ -928,46 +929,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/emails/add"),
-                    Content = new StringContent(
-                        JsonSerializer.Serialize(new ModifyBannedEmailRequest
-                        {
-                            Email = email,
-                        }),
-                        Encoding.UTF8,
-                        "application/json"
-                        )
-                };
-                HttpResponseMessage response = await client.SendAsync(request)!;
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    Log.D("Network.API.APIHandlers", "Status code ok.");
-                    return;
-                }
-                Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                content = errresult.Message;
-            }
-            catch (Exception ex)
-            {
-                Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown blocking email: " + ex.Message);
-            }
-            throw new APIException(content);
-        }
-
-        public static async void UnblockBannedEmail(string email)
-        {
-            string content;
-            Log.D("Network.API.APIHandlers", "Unblocking email.");
-            try
-            {
-                using HttpClient client = GetHttpClient();
-                HttpRequestMessage request = new()
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new(Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS] + "blocked/emails/unblock"),
+                    RequestUri = new Uri($"{Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS]}blocked/emails/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new ModifyBannedEmailRequest
                         {
@@ -984,20 +946,60 @@ namespace Chronokeep.Network.API
                     return;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
                 content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown unblocking email: " + ex.Message);
+                throw new ApiException("Exception thrown blocking email: " + ex.Message);
             }
-            throw new APIException(content);
+            throw new ApiException(content);
         }
 
-        public static async Task<AddSegmentsResponse> AddSegments(APIObject api, string slug, string year, List<APISegment> segments)
+        public static async Task UnblockBannedEmail(string email)
         {
+            string content;
+            Log.D("Network.API.APIHandlers", "Unblocking email.");
+            try
+            {
+                using HttpClient client = GetHttpClient();
+                HttpRequestMessage request = new()
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri($"{Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS]}blocked/emails/unblock"),
+                    Content = new StringContent(
+                        JsonSerializer.Serialize(new ModifyBannedEmailRequest
+                        {
+                            Email = email,
+                        }),
+                        Encoding.UTF8,
+                        "application/json"
+                        )
+                };
+                HttpResponseMessage response = await client.SendAsync(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    Log.D("Network.API.APIHandlers", "Status code ok.");
+                    return;
+                }
+                Log.D("Network.API.APIHandlers", "Status code not ok.");
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
+            }
+            catch (Exception ex)
+            {
+                Log.D("Network.API.APIHandlers", "Exception thrown.");
+                throw new ApiException("Exception thrown unblocking email: " + ex.Message);
+            }
+            throw new ApiException(content);
+        }
+
+        public static async Task<AddSegmentsResponse> AddSegments(ApiObject api, string slug, string year, List<ApiSegment> segments)
+        {
+            string content;
             Log.D("Network.API.APIHandlers", "Adding Segments.");
             try
             {
@@ -1005,7 +1007,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "segments/add"),
+                    RequestUri = new Uri($"{api.Url}segments/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new AddSegmentsRequest
                         {
@@ -1017,29 +1019,31 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<AddSegmentsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    AddSegmentsResponse result = JsonSerializer.Deserialize<AddSegmentsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                throw new APIException(errresult.Message);
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding segments: " + ex.Message);
+                throw new ApiException("Exception thrown adding segments: " + ex.Message);
             }
+            throw new ApiException(content);
         }
 
-        public static async Task<DeleteSegmentsResponse> DeleteSegments(APIObject api, string slug, string year)
+        public static async Task<DeleteSegmentsResponse> DeleteSegments(ApiObject api, string slug, string year)
         {
+            string content;
             Log.D("Network.API.APIHandlers", "Deleting Segments.");
             try
             {
@@ -1047,7 +1051,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "segments/delete"),
+                    RequestUri = new Uri($"{api.Url}segments/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new DeleteSegmentsRequest
                         {
@@ -1058,29 +1062,31 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<DeleteSegmentsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    DeleteSegmentsResponse result = JsonSerializer.Deserialize<DeleteSegmentsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                throw new APIException(errresult.Message);
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting segments: " + ex.Message);
+                throw new ApiException("Exception thrown deleting segments: " + ex.Message);
             }
+            throw new ApiException(content);
         }
 
-        public static async Task<GetDistancesResponse> AddDistances(APIObject api, string slug, string year, List<APIDistance> distances)
+        public static async Task<GetDistancesResponse> AddDistances(ApiObject api, string slug, string year, List<ApiDistance> distances)
         {
+            string content;
             Log.D("Network.API.APIHandlers", "Adding Distances.");
             try
             {
@@ -1088,7 +1094,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "distances/add"),
+                    RequestUri = new Uri($"{api.Url}distances/add"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new AddDistancesRequest
                         {
@@ -1100,29 +1106,31 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetDistancesResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetDistancesResponse result = JsonSerializer.Deserialize<GetDistancesResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                throw new APIException(errresult.Message);
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown adding distances: " + ex.Message);
+                throw new ApiException("Exception thrown adding distances: " + ex.Message);
             }
+            throw new ApiException(content);
         }
 
-        public static async Task<DeleteDistancesResponse> DeleteDistances(APIObject api, string slug, string year)
+        public static async Task<DeleteDistancesResponse> DeleteDistances(ApiObject api, string slug, string year)
         {
+            string content;
             Log.D("Network.API.APIHandlers", "Deleting Distances.");
             try
             {
@@ -1130,7 +1138,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Delete,
-                    RequestUri = new(api.URL + "distances/delete"),
+                    RequestUri = new Uri($"{api.Url}distances/delete"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new DeleteDistancesRequest
                         {
@@ -1141,29 +1149,31 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<DeleteDistancesResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    DeleteDistancesResponse result = JsonSerializer.Deserialize<DeleteDistancesResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                throw new APIException(errresult.Message);
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown deleting distances: " + ex.Message);
+                throw new ApiException("Exception thrown deleting distances: " + ex.Message);
             }
+            throw new ApiException(content);
         }
 
-        public static async Task<GetSmsSubscriptionsResponse> GetSmsSubscriptions(APIObject api, string slug, string year)
+        public static async Task<GetSmsSubscriptionsResponse> GetSmsSubscriptions(ApiObject api, string slug, string year)
         {
+            string content;
             Log.D("Network.API.APIHandlers", "Adding Segments.");
             try
             {
@@ -1171,7 +1181,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new(api.URL + "sms"),
+                    RequestUri = new Uri($"{api.Url}sms"),
                     Content = new StringContent(
                         JsonSerializer.Serialize(new GetSmsSubscriptionsRequest
                         {
@@ -1182,25 +1192,26 @@ namespace Chronokeep.Network.API
                         "application/json"
                         )
                 };
-                request.Headers.Authorization = new("Bearer", api.AuthToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", api.AuthToken);
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     Log.D("Network.API.APIHandlers", "Status code ok.");
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<GetSmsSubscriptionsResponse>(json)!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    GetSmsSubscriptionsResponse result = JsonSerializer.Deserialize<GetSmsSubscriptionsResponse>(json)!;
                     return result;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
-                var errjson = await response.Content.ReadAsStringAsync();
-                var errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
-                throw new APIException(errresult.Message);
+                string errjson = await response.Content.ReadAsStringAsync();
+                ErrorResponse errresult = JsonSerializer.Deserialize<ErrorResponse>(errjson)!;
+                content = errresult.Message;
             }
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new APIException("Exception thrown getting sms subscriptions: " + ex.Message);
+                throw new ApiException("Exception thrown getting sms subscriptions: " + ex.Message);
             }
+            throw new ApiException(content);
         }
     }
 }

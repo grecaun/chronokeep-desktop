@@ -2,27 +2,32 @@
 
 namespace Chronokeep.Objects
 {
-    public class Segment : IEquatable<Segment>, IComparable<Segment>
+    public class Segment(
+        int id,
+        int e,
+        int d,
+        int l,
+        int occ,
+        double dseg,
+        double dcum,
+        int dunit,
+        string n,
+        string gps,
+        string ml)
+        : IEquatable<Segment>, IComparable<Segment>
     {
-        private int id, event_id, distance_id, location_id, occurrence;
-        private double distance_segment, distance_cumulative;
-        private int distance_unit;
-        private string name, gps, map_link;
-
-        public Segment(Segment seg)
-        {
-            id = -1;
-            event_id = seg.event_id;
-            distance_id = seg.distance_id;
-            location_id = seg.location_id;
-            occurrence = seg.occurrence;
-            distance_segment = seg.distance_segment;
-            distance_cumulative = seg.distance_cumulative;
-            distance_unit = seg.distance_unit;
-            name = seg.name ?? "";
-            gps = seg.gps;
-            map_link = seg.map_link;
-        }
+        public Segment(Segment seg) : this(
+            -1,
+            seg.EventId,
+            seg.DistanceId,
+            seg.LocationId,
+            seg.Occurrence,
+            seg.SegmentDistance,
+            seg.CumulativeDistance,
+            seg.DistanceUnit,
+            seg.Name,
+            seg.Gps,
+            seg.MapLink) { }
 
         public Segment(
             int e,
@@ -35,89 +40,45 @@ namespace Chronokeep.Objects
             string n,
             string gps,
             string ml
-            )
-        {
-            id = -1;
-            event_id = e;
-            distance_id = d;
-            location_id = l;
-            occurrence = occ;
-            distance_segment = dseg;
-            distance_cumulative = dcum;
-            distance_unit = dunit;
-            name = n ?? "";
-            this.gps = gps;
-            map_link = ml;
-        }
+            ) : this(-1, e, d, l, occ, dseg, dcum, dunit, n, gps, ml) { }
 
-        public Segment(
-            int id,
-            int e,
-            int d,
-            int l,
-            int occ,
-            double dseg,
-            double dcum,
-            int dunit,
-            string n,
-            string gps,
-            string ml
-            )
-        {
-            this.id = id;
-            event_id = e;
-            distance_id = d;
-            location_id = l;
-            occurrence = occ;
-            distance_segment = dseg;
-            distance_cumulative = dcum;
-            distance_unit = dunit;
-            name = n ?? "";
-            this.gps = gps;
-            map_link = ml;
-        }
-
-        public string Name { get => name; set => name = value ?? ""; }
-        public int DistanceUnit { get => distance_unit; set => distance_unit = value; }
-        public double SegmentDistance { get => distance_segment; set => distance_segment = value; }
-        public double CumulativeDistance { get => distance_cumulative; set => distance_cumulative = value; }
-        public int EventId { get => event_id; set => event_id = value; }
-        public int DistanceId { get => distance_id; set => distance_id = value; }
-        public int LocationId { get => location_id; set => location_id = value; }
-        public int Occurrence { get => occurrence; set => occurrence = value; }
-        public int Identifier { get => id; set => id = value; }
-        public string GPS { get => gps; set => gps = value; }
-        public string MapLink { get => map_link; set => map_link = value; }
+        public string Name { get; set; } = n;
+        public int DistanceUnit { get; set; } = dunit;
+        public double SegmentDistance { get; private set; } = dseg;
+        public double CumulativeDistance { get; set; } = dcum;
+        public int EventId { get; set; } = e;
+        public int DistanceId { get; set; } = d;
+        public int LocationId { get; set; } = l;
+        public int Occurrence { get; set; } = occ;
+        public int Identifier { get; set; } = id;
+        public string Gps { get; set; } = gps;
+        public string MapLink { get; set; } = ml;
 
         public int CompareTo(Segment? other)
         {
             if (other == null) return 1;
-            if (event_id != other.event_id)
+            if (EventId != other.EventId)
             {
-                return event_id.CompareTo(other.event_id);
+                return EventId.CompareTo(other.EventId);
             }
-            if (other.distance_id != distance_id)
+            if (other.DistanceId != DistanceId)
             {
-                return distance_id.CompareTo(other.distance_id);
+                return DistanceId.CompareTo(other.DistanceId);
             }
-            if (distance_cumulative != other.distance_cumulative)
+            if (Math.Abs(CumulativeDistance - other.CumulativeDistance) > 0.001)
             {
-                return distance_cumulative.CompareTo(other.distance_cumulative);
+                return CumulativeDistance.CompareTo(other.CumulativeDistance);
             }
-            if (location_id != other.location_id)
-            {
-                return location_id.CompareTo(other.location_id);
-            }
-            return occurrence.CompareTo(other.occurrence);
+            return LocationId != other.LocationId ? LocationId.CompareTo(other.LocationId) : Occurrence.CompareTo(other.Occurrence);
         }
 
         public bool Equals(Segment? other)
         {
             if (other == null) return false;
-            return event_id == other.event_id &&
-                distance_id == other.distance_id &&
-                location_id == other.location_id &&
-                occurrence == other.occurrence;
+            return EventId == other.EventId &&
+                DistanceId == other.DistanceId &&
+                LocationId == other.LocationId &&
+                Occurrence == other.Occurrence;
         }
 
         public void CopyFrom(Segment other)
@@ -130,7 +91,7 @@ namespace Chronokeep.Objects
             SegmentDistance = other.SegmentDistance;
             CumulativeDistance = other.CumulativeDistance;
             DistanceUnit = other.DistanceUnit;
-            GPS = other.GPS;
+            Gps = other.Gps;
             MapLink = other.MapLink;
         }
     }

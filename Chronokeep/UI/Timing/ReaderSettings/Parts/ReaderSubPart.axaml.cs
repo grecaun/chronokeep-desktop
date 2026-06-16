@@ -15,7 +15,7 @@ public partial class ReaderSubPart : UserControl
     private readonly ChronokeepInterface readerInterface;
 
     [GeneratedRegex("^([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])$")]
-    private static partial Regex IPPattern();
+    private static partial Regex IpPattern();
     [GeneratedRegex("[^0-9.]")]
     private static partial Regex AllowedChars();
     [GeneratedRegex("[^0-9]")]
@@ -26,35 +26,32 @@ public partial class ReaderSubPart : UserControl
         InitializeComponent();
         this.reader = reader;
         this.readerInterface = readerInterface;
-        nameBox.Text = reader.Name;
-        kindBox.SelectedIndex = reader.Kind.Equals(PortalReader.READER_KIND_ZEBRA) ? 0
+        NameBox.Text = reader.Name;
+        KindBox.SelectedIndex = reader.Kind.Equals(PortalReader.READER_KIND_ZEBRA) ? 0
                     //: reader.Kind.Equals(PortalReader.READER_KIND_IMPINJ) ? 1 
                     //: reader.Kind.Equals(PortalReader.READER_KIND_RFID) ? 2 
                     : -1;
-        ipBox.Text = reader.IPAddress;
-        portBox.Text = reader.Port.ToString();
-        autoConnectSwitch.IsChecked = reader.AutoConnect;
-        connectedSwitch.IsChecked = reader.Connected;
-        if (reader.Antennas != null)
+        IpBox.Text = reader.IpAddress;
+        PortBox.Text = reader.Port.ToString();
+        AutoConnectSwitch.IsChecked = reader.AutoConnect;
+        ConnectedSwitch.IsChecked = reader.Connected;
+        for (int ix = 0; ix < reader.Antennas.Length; ix++)
         {
-            for (int ix = 0; ix < reader.Antennas.Length; ix++)
+            // TODO -- update border background with correct coloring
+            if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
             {
-                // TODO -- update border background with correct coloring
-                if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
+                AntennaPanel.Children.Add(new Border()
                 {
-                    antennaPanel.Children.Add(new Border()
+                    Child = new TextBlock()
                     {
-                        Child = new TextBlock()
-                        {
-                            Text = (ix + 1).ToString(),
-                            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                        },
-                        Width = 30,
-                        Height = 30,
-                        CornerRadius = Avalonia.CornerRadius.Parse("15"),
-                    });
-                }
+                        Text = (ix + 1).ToString(),
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    },
+                    Width = 30,
+                    Height = 30,
+                    CornerRadius = Avalonia.CornerRadius.Parse("15"),
+                });
             }
         }
     }
@@ -67,12 +64,12 @@ public partial class ReaderSubPart : UserControl
     public void UpdateAntennas(int[] antennas)
     {
         reader.Antennas = antennas;
-        antennaPanel.Children.Clear();
+        AntennaPanel.Children.Clear();
         for (int ix = 0; ix < reader.Antennas.Length; ix++)
         {
             if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
             {
-                antennaPanel.Children.Add(new Border()
+                AntennaPanel.Children.Add(new Border
                 {
                     Child = new TextBlock()
                     {
@@ -88,29 +85,29 @@ public partial class ReaderSubPart : UserControl
         }
     }
 
-    public void UpdateReader(PortalReader reader)
+    public void UpdateReader(PortalReader iReader)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Updating reader " + reader.Id);
-        this.reader = reader;
-        this.nameBox.Text = reader.Name;
-        this.kindBox.SelectedIndex = reader.Kind switch
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Updating reader " + iReader.Id);
+        reader = iReader;
+        NameBox.Text = iReader.Name;
+        KindBox.SelectedIndex = iReader.Kind switch
         {
             PortalReader.READER_KIND_ZEBRA => 0,
             PortalReader.READER_KIND_IMPINJ => 1,
             PortalReader.READER_KIND_RFID => 2,
             _ => -1,
         };
-        this.ipBox.Text = reader.IPAddress;
-        this.portBox.Text = reader.Port.ToString();
-        autoConnectSwitch.IsChecked = reader.AutoConnect;
-        connectedSwitch.IsChecked = reader.Connected;
-        connectedSwitch.IsEnabled = true;
-        antennaPanel.Children.Clear();
-        for (int ix = 0; ix < reader.Antennas.Length; ix++)
+        this.IpBox.Text = iReader.IpAddress;
+        this.PortBox.Text = iReader.Port.ToString();
+        AutoConnectSwitch.IsChecked = iReader.AutoConnect;
+        ConnectedSwitch.IsChecked = iReader.Connected;
+        ConnectedSwitch.IsEnabled = true;
+        AntennaPanel.Children.Clear();
+        for (int ix = 0; ix < iReader.Antennas.Length; ix++)
         {
             if (this.reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
             {
-                antennaPanel.Children.Add(new Border()
+                AntennaPanel.Children.Add(new Border()
                 {
                     Child = new TextBlock()
                     {
@@ -126,41 +123,27 @@ public partial class ReaderSubPart : UserControl
         }
     }
 
-    private void ConnectReader(object? sender, RoutedEventArgs e)
-    {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Connecting/disconnecting reader " + reader.Id);
-        if (reader.Connected)
-        {
-            readerInterface.SendStopReader(reader);
-        }
-        else
-        {
-            readerInterface.SendStartReader(reader);
-        }
-        connectedSwitch.IsEnabled = false;
-    }
-
     private void KindBox_ValueChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Changing port for reader " + reader.Id);
-        switch (kindBox.SelectedIndex)
+        switch (KindBox.SelectedIndex)
         {
             case 0:
-                portBox.Text = PortalReader.READER_DEFAULT_PORT_ZEBRA;
+                PortBox.Text = PortalReader.READER_DEFAULT_PORT_ZEBRA;
                 break;
             /*case 1:
-                portBox.Text = PortalReader.READER_DEFAULT_PORT_IMPINJ;
+                PortBox.Text = PortalReader.READER_DEFAULT_PORT_IMPINJ;
                 break;
             case 2:
-                portBox.Text = PortalReader.READER_DEFAULT_PORT_RFID;
+                PortBox.Text = PortalReader.READER_DEFAULT_PORT_RFID;
                 break;//*/
             default:
-                portBox.Text = "";
+                PortBox.Text = "";
                 return;
         }
     }
 
-    private void IPValidation(object? sender, TextInputEventArgs e)
+    private void IpValidation(object? sender, TextInputEventArgs e)
     {
         e.Handled = AllowedChars().IsMatch(e.Text!);
     }
@@ -179,8 +162,8 @@ public partial class ReaderSubPart : UserControl
     private void SaveReader(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Saving reader " + reader.Id);
-        reader.Name = nameBox.Text!.Trim();
-        switch (kindBox.SelectedIndex)
+        reader.Name = NameBox.Text!.Trim();
+        switch (KindBox.SelectedIndex)
         {
             case 0:
                 reader.Kind = PortalReader.READER_KIND_ZEBRA;
@@ -195,21 +178,14 @@ public partial class ReaderSubPart : UserControl
                 DialogBox.Show("Unknown kind specified. Unable to save.");
                 return;
         }
-        if (!IPPattern().IsMatch(ipBox.Text!.Trim()))
-        {
-            reader.IPAddress = "";
-        }
-        else
-        {
-            reader.IPAddress = ipBox.Text.Trim();
-        }
-        _ = uint.TryParse(portBox.Text!.Trim(), out uint portNo);
+        reader.IpAddress = !IpPattern().IsMatch(IpBox.Text!.Trim()) ? "" : IpBox.Text.Trim();
+        _ = uint.TryParse(PortBox.Text!.Trim(), out uint portNo);
         if (portNo > 65535)
         {
             portNo = 0;
         }
         reader.Port = portNo;
-        reader.AutoConnect = autoConnectSwitch.IsChecked == true;
+        reader.AutoConnect = AutoConnectSwitch.IsChecked == true;
 
         readerInterface.SendSaveReader(reader);
     }

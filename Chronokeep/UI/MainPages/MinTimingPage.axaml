@@ -13,15 +13,10 @@
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
     </UserControl.Styles>
-
-    <Grid Grid.Column="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid Grid.Column="0" RowDefinitions="Auto,*">
         <Expander 
             Grid.Row="0"
-            Name="readerExpander"
+            Name="ReaderExpander"
             Margin="5,0,5,5"
             MaxHeight="235"
             HorizontalAlignment="Stretch"

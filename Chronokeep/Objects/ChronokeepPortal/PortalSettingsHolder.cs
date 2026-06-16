@@ -37,7 +37,7 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public bool PlaySound { get; set; } = false;
         public double Volume { get; set; } = 0.0;
         public List<PortalReader> Readers { get; set; } = [];
-        public List<PortalAPI> APIs { get; set; } = [];
+        public List<PortalApi> ApIs { get; set; } = [];
         public PortalStatus AutoUpload { get; set; } = PortalStatus.NOTSET;
         public VoiceType Voice { get; set; } = VoiceType.EMILY;
         public ReaderAntennas Antennas { get; set; } = new();
@@ -45,11 +45,11 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public string PortalVersion { get; set; } = "";
         public int UploadInterval { get; set; }
         public int BeepInterval { get; set; }
-        public string NtfyURL { get; set; } = "";
+        public string NtfyUrl { get; set; } = "";
         public string NtfyTopic { get; set; } = "";
         public string NtfyUser { get; set; } = "";
         public string NtfyPass { get; set; } = "";
-        public bool EnableNTFY { get; set; } = false;
+        public bool EnableNtfy { get; set; } = false;
         public string ScreenType { get; set; } = "";
     }
 }

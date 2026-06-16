@@ -1,18 +1,18 @@
-using Avalonia;
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Chronokeep.Objects;
 using System.Threading;
 using System.Threading.Tasks;
+using Chronokeep.Helpers;
 
 namespace Chronokeep.UI.UhfRfidReader;
 
-public partial class ChipPersonWindow : Window
+public partial class ChipPersonWindow : ChronokeepWindow
 {
     private readonly ChipReaderWindow readerWindow;
     private readonly string eventDate;
-    private readonly object _locker = new();
+    private readonly object locker = new();
 
     public ChipPersonWindow(ChipReaderWindow reader, string eventDate)
     {
@@ -21,52 +21,59 @@ public partial class ChipPersonWindow : Window
         InitializeComponent();
     }
 
-    public async void UpdateInfo(Participant person, string chip)
+    public async void UpdateInfo(Participant? person, string chip)
     {
-        await Task.Run(() =>
+        try
         {
-            lock (_locker)
+            await Task.Run(() =>
             {
-                Monitor.Pulse(_locker);
+                lock (locker)
+                {
+                    Monitor.Pulse(locker);
+                }
+                Thread.Sleep(100);
+            });
+            if (person != null)
+            {
+                Bib.Text = "Bib: " + person.EventSpecific.Bib;
+                Chip.Text = "Chip: " + chip;
+                PersonName.Text = $"{person.FirstName} {person.LastName}";
+                AgeGender.Text = $"{person.Age(eventDate)} {person.Gender}";
+                Distance.Text = "" + person.EventSpecific.DistanceName;
+                Unknown.Text = "";
+                Unknown.IsVisible = false;
+                InfoHolder.IsVisible = true;
             }
-            Thread.Sleep(100);
-        });
-        if (person != null)
-        {
-            Bib.Text = "Bib: " + person.EventSpecific.Bib;
-            Chip.Text = "Chip: " + chip;
-            PersonName.Text = string.Format("{0} {1}", person.FirstName, person.LastName);
-            AgeGender.Text = string.Format("{0} {1}", person.Age(eventDate), person.Gender);
-            Distance.Text = "" + person.EventSpecific.DistanceName;
-            Unknown.Text = "";
-            Unknown.IsVisible = false;
-            InfoHolder.IsVisible = true;
-        }
-        else
-        {
+            else
+            {
+                Bib.Text = "";
+                Chip.Text = "";
+                PersonName.Text = "";
+                AgeGender.Text = "";
+                Distance.Text = "";
+                Unknown.Text = "Information not found.";
+                Unknown.IsVisible = true;
+                InfoHolder.IsVisible = false;
+            }
+            await Task.Run(() =>
+            {
+                lock (locker)
+                {
+                    Monitor.Wait(locker, 5000);
+                }
+            });
             Bib.Text = "";
-            Chip.Text = "";
             PersonName.Text = "";
             AgeGender.Text = "";
             Distance.Text = "";
-            Unknown.Text = "Information not found.";
-            Unknown.IsVisible = true;
+            Unknown.Text = "";
+            Unknown.IsVisible = false;
             InfoHolder.IsVisible = false;
         }
-        await Task.Run(() =>
+        catch (Exception)
         {
-            lock (_locker)
-            {
-                Monitor.Wait(_locker, 5000);
-            }
-        });
-        Bib.Text = "";
-        PersonName.Text = "";
-        AgeGender.Text = "";
-        Distance.Text = "";
-        Unknown.Text = "";
-        Unknown.IsVisible = false;
-        InfoHolder.IsVisible = false;
+            Log.D("UI.Timing.UhfRfidReader.ChipPersonWindow", "Error updating info.");
+        }
     }
 
 
@@ -83,13 +90,12 @@ public partial class ChipPersonWindow : Window
         readerWindow.PersonWindowClosing();
     }
 
-    private void Exit_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
+    protected override void SetMaximizeIcon()
+    {      
     }
 
-    private void OnClose(object sender, RoutedEventArgs e)
+    protected override void Maximize()
     {
-        Close();
+        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

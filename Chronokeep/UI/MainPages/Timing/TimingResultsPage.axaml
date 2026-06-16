@@ -17,25 +17,25 @@
         </Style>
     </UserControl.Styles>
     
-    <DataGrid Name="updateListView" RowHeight="25">
+    <DataGrid Name="UpdateListView" RowHeight="25" x:DataType="objects:TimeResult">
         <DataGrid.Columns>
-            <DataGridTextColumn Header="Loc" Binding="{Binding LocationName}" Width="90" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Occ" Binding="{Binding Occurrence}" Width="35" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="System Time" Binding="{Binding SysTime}" Width="150" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="105" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Chip Time" Binding="{Binding ChipLapTime}" Width="105" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" Width="50" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Name" Binding="{Binding ParticipantName}" Width="150" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Pl" Binding="{Binding PlaceStr}" Width="40" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="G" Binding="{Binding PrettyGender}" Width="35" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="GP" Binding="{Binding GenderPlaceStr}" Width="40" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Age Grp" Binding="{Binding AgeGroupName}" Width="60" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="AP" Binding="{Binding AgePlaceStr}" Width="40" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Division" Binding="{Binding Division}" Width="100" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="DP" Binding="{Binding DivisionPlaceStr}" Width="35" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Distance" Binding="{Binding DistanceName}" Width="110" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="T" Binding="{Binding PrettyType}" Width="35" x:DataType="objects:TimeResult"/>
-            <DataGridTextColumn Header="Segment" Binding="{Binding SegmentName}" Width="120" x:DataType="objects:TimeResult"/>
+            <DataGridTextColumn Header="Loc" Binding="{Binding LocationName}" Width="90"/>
+            <DataGridTextColumn Header="Occ" Binding="{Binding Occurrence}" Width="35"/>
+            <DataGridTextColumn Header="System Time" Binding="{Binding SysTime}" Width="150"/>
+            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="105"/>
+            <DataGridTextColumn Header="Chip Time" Binding="{Binding ChipLapTime}" Width="105"/>
+            <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" Width="50"/>
+            <DataGridTextColumn Header="Name" Binding="{Binding ParticipantName}" Width="150"/>
+            <DataGridTextColumn Header="Pl" Binding="{Binding PlaceStr}" Width="40"/>
+            <DataGridTextColumn Header="G" Binding="{Binding PrettyGender}" Width="35"/>
+            <DataGridTextColumn Header="GP" Binding="{Binding GenderPlaceStr}" Width="40"/>
+            <DataGridTextColumn Header="Age Grp" Binding="{Binding AgeGroupName}" Width="60"/>
+            <DataGridTextColumn Header="AP" Binding="{Binding AgePlaceStr}" Width="40"/>
+            <DataGridTextColumn Header="Division" Binding="{Binding Division}" Width="100"/>
+            <DataGridTextColumn Header="DP" Binding="{Binding DivisionPlaceStr}" Width="35"/>
+            <DataGridTextColumn Header="Distance" Binding="{Binding DistanceName}" Width="110"/>
+            <DataGridTextColumn Header="T" Binding="{Binding PrettyType}" Width="35"/>
+            <DataGridTextColumn Header="Segment" Binding="{Binding SegmentName}" Width="120"/>
         </DataGrid.Columns>
     </DataGrid>
 </UserControl>

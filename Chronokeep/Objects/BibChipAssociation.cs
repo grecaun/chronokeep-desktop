@@ -4,16 +4,9 @@ namespace Chronokeep.Objects
 {
     public class BibChipAssociation : IEquatable<BibChipAssociation>, IComparable<BibChipAssociation>
     {
-        public BibChipAssociation()
-        {
-            EventId = -1;
-            Bib = Constants.Timing.CHIPREAD_DUMMYBIB;
-            Chip = Constants.Timing.CHIPREAD_DUMMYCHIP;
-        }
-
-        public int EventId { get; set; }
-        public string Bib { get; set; }
-        public string Chip { get; set; }
+        public int EventId { get; init; } = -1;
+        public string Bib { get; set; } = Constants.Timing.CHIPREAD_DUMMYBIB;
+        public string Chip { get; set; } = Constants.Timing.CHIPREAD_DUMMYCHIP;
 
         public int CompareTo(BibChipAssociation? other)
         {
@@ -24,7 +17,7 @@ namespace Chronokeep.Objects
                 {
                     return bibOne.CompareTo(bibTwo);
                 }
-                return Bib.CompareTo(other.Bib);
+                return string.Compare(Bib, other.Bib, StringComparison.Ordinal);
             }
             return EventId.CompareTo(other.EventId);
         }

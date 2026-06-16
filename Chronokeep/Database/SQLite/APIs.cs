@@ -7,7 +7,7 @@ namespace Chronokeep.Database.SQLite
 {
     class APIs
     {
-        internal static int AddAPI(APIObject anAPI, SQLiteConnection connection)
+        internal static int AddAPI(ApiObject anAPI, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "INSERT INTO results_api (api_type, api_url, api_auth_token, api_nickname, api_web_url)" +
@@ -15,28 +15,28 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new("@type", anAPI.Type),
-                new("@url", anAPI.URL),
+                new("@url", anAPI.Url),
                 new("@token", anAPI.AuthToken),
                 new("@nickname", anAPI.Nickname),
-                new("@weburl", anAPI.WebURL)
+                new("@weburl", anAPI.WebUrl)
             ]);
             command.ExecuteNonQuery();
             long outVal = connection.LastInsertRowId;
             return (int)outVal;
         }
 
-        internal static void UpdateAPI(APIObject anAPI, SQLiteConnection connection)
+        internal static void UpdateAPI(ApiObject anAPI, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "UPDATE results_api SET api_type=@type, api_url=@url, api_auth_token=@token, api_nickname=@nickname, api_web_url=@weburl WHERE api_id=@id;";
             command.Parameters.AddRange(
             [
                 new("@type", anAPI.Type),
-                new("@url", anAPI.URL),
+                new("@url", anAPI.Url),
                 new("@token", anAPI.AuthToken),
                 new("@nickname", anAPI.Nickname),
                 new("@id", anAPI.Identifier),
-                new("@weburl", anAPI.WebURL)
+                new("@weburl", anAPI.WebUrl)
             ]);
             command.ExecuteNonQuery();
         }
@@ -51,7 +51,7 @@ namespace Chronokeep.Database.SQLite
             transaction.Commit();
         }
 
-        internal static APIObject? GetAPI(int identifier, SQLiteConnection connection)
+        internal static ApiObject? GetAPI(int identifier, SQLiteConnection connection)
         {
             if (identifier < 0)
             {
@@ -61,10 +61,10 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "SELECT * FROM results_api WHERE api_id=@id";
             command.Parameters.Add(new("@id", identifier));
             SQLiteDataReader reader = command.ExecuteReader();
-            APIObject? output = null;
+            ApiObject? output = null;
             if (reader.Read())
             {
-                output = new APIObject(
+                output = new ApiObject(
                     Convert.ToInt32(reader["api_id"]),
                     reader["api_type"].ToString()!,
                     reader["api_url"].ToString()!,
@@ -77,15 +77,15 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        internal static List<APIObject> GetAllAPI(SQLiteConnection connection)
+        internal static List<ApiObject> GetAllAPI(SQLiteConnection connection)
         {
-            List<APIObject> output = [];
+            List<ApiObject> output = [];
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * FROM results_api;";
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new APIObject(
+                output.Add(new ApiObject(
                     Convert.ToInt32(reader["api_id"]),
                     reader["api_type"].ToString()!,
                     reader["api_url"].ToString()!,

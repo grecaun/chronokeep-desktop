@@ -26,7 +26,7 @@ namespace Chronokeep.MemStore
                         {
                             foreach (RemoteReader reader in readers)
                             {
-                                remoteReaders.RemoveAll(x => reader.APIIDentifier == x.APIIDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                                remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
                                 remoteReaders.Add(reader);
                             }
                         }
@@ -56,7 +56,7 @@ namespace Chronokeep.MemStore
                     {
                         if (theEvent != null && theEvent.Identifier == eventId)
                         {
-                            remoteReaders.RemoveAll(x => reader.APIIDentifier == x.APIIDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                            remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
                         }
                     }
                     finally
@@ -86,7 +86,7 @@ namespace Chronokeep.MemStore
                         {
                             foreach (RemoteReader reader in readers)
                             {
-                                remoteReaders.RemoveAll(x => reader.APIIDentifier == x.APIIDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                                remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
                             }
                         }
                     }

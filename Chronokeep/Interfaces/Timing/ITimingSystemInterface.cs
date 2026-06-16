@@ -19,7 +19,7 @@ namespace Chronokeep.Interfaces.Timing
         void Rewind(DateTime start, DateTime end, int reader = 1);
         void Rewind(int from, int to, int reader = 1);
         void Rewind(int reader = 1);
-        void SetMainSocket(Socket sock);
+        void SetMainSocket(Socket iSock);
         void SetSettingsSocket(Socket sock);
         bool SettingsEditable();
         void OpenSettings();
