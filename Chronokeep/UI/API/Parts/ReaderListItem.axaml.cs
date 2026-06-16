@@ -16,14 +16,14 @@ public partial class ReaderListItem : UserControl
 {
     private readonly RemoteReader reader;
     private readonly ApiObject api;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly IMainWindow mWindow;
 
     public ReaderListItem(
         RemoteReader reader,
         ApiObject api,
         Dictionary<(int, string), RemoteReader> savedReaders,
-        IDBInterface database,
+        IdbInterface database,
         IMainWindow mWindow
         )
     {

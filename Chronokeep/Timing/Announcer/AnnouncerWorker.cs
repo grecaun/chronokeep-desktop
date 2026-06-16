@@ -11,7 +11,7 @@ namespace Chronokeep.Timing.Announcer
 {
     public class AnnouncerWorker
     {
-        private readonly IDBInterface database;
+        private readonly IdbInterface database;
         private readonly IMainWindow window;
         private static AnnouncerWorker? announcer;
 
@@ -24,13 +24,13 @@ namespace Chronokeep.Timing.Announcer
 
         private const int SeenWindow = 5; // minutes
 
-        private AnnouncerWorker(IMainWindow window, IDBInterface database)
+        private AnnouncerWorker(IMainWindow window, IdbInterface database)
         {
             this.window = window;
             this.database = database;
         }
 
-        public static AnnouncerWorker NewAnnouncer(IMainWindow window, IDBInterface database)
+        public static AnnouncerWorker NewAnnouncer(IMainWindow window, IdbInterface database)
         {
             announcer ??= new AnnouncerWorker(window, database);
             quittingTime = false;

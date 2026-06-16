@@ -17,7 +17,7 @@ namespace Chronokeep.UI.MainPages;
 public partial class SegmentsPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
     private readonly List<TimingLocation>? locations;
     private readonly List<Distance> distances = [];
@@ -26,7 +26,7 @@ public partial class SegmentsPage : UserControl, IMainPage
 
     private readonly Dictionary<int, List<Segment>> allSegments = [];
 
-    public SegmentsPage(IMainWindow mWindow, IDBInterface database)
+    public SegmentsPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -142,21 +142,21 @@ public partial class SegmentsPage : UserControl, IMainPage
         database.AddSegments(newSegs);
         updateTimingWorker = true;
         database.UpdateSegments(upSegs);
-        if (database is SQLiteInterface)
+        if (database is SqLiteInterface)
         {
             Results.GetStaticVariables(database);
         }
     }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         UpdateDatabase();
         UpdateView();
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateView();
     }
@@ -228,7 +228,7 @@ public partial class SegmentsPage : UserControl, IMainPage
                 UploadButton.Content = "Error";
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {
@@ -276,7 +276,7 @@ public partial class SegmentsPage : UserControl, IMainPage
                             Name = seg.Name,
                             DistanceValue = seg.CumulativeDistance,
                             DistanceUnit = distanceUnits[seg.DistanceUnit],
-                            GPS = seg.Gps,
+                            Gps = seg.Gps,
                             MapLink = seg.MapLink,
                         });
                     }
@@ -290,7 +290,7 @@ public partial class SegmentsPage : UserControl, IMainPage
                         Name = seg.Name,
                         DistanceValue = seg.CumulativeDistance,
                         DistanceUnit = distanceUnits[seg.DistanceUnit],
-                        GPS = seg.Gps,
+                        Gps = seg.Gps,
                         MapLink = seg.MapLink,
                     }));
                 }
@@ -307,7 +307,7 @@ public partial class SegmentsPage : UserControl, IMainPage
                         Name = "Finish",
                         DistanceValue = d.DistanceValue,
                         DistanceUnit = oDistUnit,
-                        GPS = "",
+                        Gps = "",
                         MapLink = "",
                     });
                 }
@@ -349,7 +349,7 @@ public partial class SegmentsPage : UserControl, IMainPage
                 DeleteButton.Content = "Error";
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {

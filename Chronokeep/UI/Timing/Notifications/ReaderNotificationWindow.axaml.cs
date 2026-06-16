@@ -14,6 +14,7 @@ public partial class ReaderNotificationWindow : ChronokeepWindow
     private ReaderNotificationWindow(IWindowCallback window)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         UpdateNotificatonsBox();
     }
@@ -37,17 +38,12 @@ public partial class ReaderNotificationWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.Notifications.ReaderNotificationWindow", "Done button clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

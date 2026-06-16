@@ -16,13 +16,13 @@ namespace Chronokeep.UI.API.Pages;
 public partial class ApiPage2 : UserControl
 {
     private readonly ApiWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly ApiObject api;
     private readonly Event theEvent;
 
     private GetEventsResponse? events;
 
-    public ApiPage2(ApiWindow window, IDBInterface database, ApiObject api, Event theEvent)
+    public ApiPage2(ApiWindow window, IdbInterface database, ApiObject api, Event theEvent)
     {
         InitializeComponent();
         this.window = window;
@@ -117,18 +117,18 @@ public partial class ApiPage2 : UserControl
             {
                 try
                 {
-                    string type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
+                    string type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
                     if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
                     {
-                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
+                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
                     }
                     else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
                     {
-                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
+                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_TIME;
                     }
                     else if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
                     {
-                        type = Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
+                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
                     }
 
                     ModifyEventResponse addResponse = await ApiHandlers.AddEvent(api, new ApiEvent

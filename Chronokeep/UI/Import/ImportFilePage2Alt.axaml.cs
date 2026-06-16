@@ -8,21 +8,18 @@ namespace Chronokeep.UI.Import;
 
 public partial class ImportFilePage2Alt : UserControl
 {
-    private readonly bool no_distance = false;
-
     public ImportFilePage2Alt(string[] fileDistances, List<Distance> dbDistances, bool noDistances)
     {
         InitializeComponent();
-        no_distance = noDistances;
-        if (no_distance)
+        if (noDistances)
         {
-            distanceListBox.Items.Add(new DistanceAlternatePart("Default Distance", dbDistances));
+            DistanceListBox.Items.Add(new DistanceAlternatePart("Default Distance", dbDistances));
         }
         else
         {
             foreach (string distance in fileDistances)
             {
-                distanceListBox.Items.Add(new DistanceAlternatePart(distance, dbDistances));
+                DistanceListBox.Items.Add(new DistanceAlternatePart(distance, dbDistances));
             }
         }
     }
@@ -30,20 +27,13 @@ public partial class ImportFilePage2Alt : UserControl
     public List<ImportDistance> GetDistances()
     {
         List<ImportDistance> output = [];
-        foreach (DistanceAlternatePart distanceItem in distanceListBox.Items.Cast<DistanceAlternatePart>())
-        {
-            output.Add(new ImportDistance()
-            {
-                NameFromFile = distanceItem.NameFromFile(),
-                DistanceId = distanceItem.DistanceId()
-            });
-        }
+        output.AddRange(DistanceListBox.Items.Cast<DistanceAlternatePart>().Select(distanceItem => new ImportDistance() { NameFromFile = distanceItem.NameFromFile(), DistanceId = distanceItem.DistanceId() }));
         return output;
     }
 
     public class ImportDistance
     {
-        public string NameFromFile { get; set; } = "";
-        public int DistanceId { get; set; }
+        public string NameFromFile { get; init; } = "";
+        public int DistanceId { get; init; }
     }
 }

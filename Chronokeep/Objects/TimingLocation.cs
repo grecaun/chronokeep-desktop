@@ -4,14 +4,10 @@ namespace Chronokeep.Objects
 {
     public class TimingLocation : IEquatable<TimingLocation>, IComparable<TimingLocation>
     {
-        private string name = "";
-
-        public TimingLocation() { }
-
         public TimingLocation(int eventIdentifier, string nameString)
         {
             EventIdentifier = eventIdentifier;
-            name = nameString ?? "";
+            Name = nameString;
             MaxOccurrences = 1;
             IgnoreWithin = -1;
         }
@@ -20,7 +16,7 @@ namespace Chronokeep.Objects
         {
             Identifier = identifier;
             EventIdentifier = eventIdentifier;
-            name = nameString ?? "";
+            Name = nameString;
             MaxOccurrences = 1;
             IgnoreWithin = -1;
         }
@@ -29,15 +25,14 @@ namespace Chronokeep.Objects
         {
             Identifier = id;
             EventIdentifier = eventId;
-            this.name = name ?? "";
+            Name = name;
             MaxOccurrences = maxOcc;
             IgnoreWithin = ignore;
         }
 
         public int Identifier { get; set; } = -1;
         public int EventIdentifier { get; set; }
-
-        public string Name { get => name; set => name = value ?? ""; }
+        public string Name { get; set; }
         public int MaxOccurrences { get; set; }
 
         public int IgnoreWithin { get; set; }

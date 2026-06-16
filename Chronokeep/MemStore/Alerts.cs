@@ -1,42 +1,39 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects.ChronoKeepAPI;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * EmailAlert Functions
          */
 
-        public void AddEmailAlert(int eventId, int eventspecific_id)
+        public void AddEmailAlert(int eventId, int eventspecificId)
         {
             Log.D("MemStore", "AddEmailAlert");
-            database.AddEmailAlert(eventId, eventspecific_id);
+            database.AddEmailAlert(eventId, eventspecificId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            emailAlerts.Add(eventspecific_id);
-                        }
+                        emailAlerts.Add(eventspecificId);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -46,26 +43,24 @@ namespace Chronokeep.MemStore
             List<int> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            output.AddRange(emailAlerts);
-                        }
+                        output.AddRange(emailAlerts);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -73,31 +68,29 @@ namespace Chronokeep.MemStore
          * SMS Functions
          */
 
-        public void AddSMSAlert(int eventId, int eventspecific_id, int segment_id)
+        public void AddSmsAlert(int eventId, int eventspecificId, int segmentId)
         {
             Log.D("MemStore", "AddSMSAlert");
-            database.AddSMSAlert(eventId, eventspecific_id, segment_id);
+            database.AddSmsAlert(eventId, eventspecificId, segmentId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            smsAlerts.Add((eventspecific_id, segment_id));
-                        }
+                        smsAlerts.Add((eventspecificId, segmentId));
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -107,25 +100,23 @@ namespace Chronokeep.MemStore
             database.AddSmsSubscriptions(eventId, subscriptions);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            smsSubscriptions.AddRange(subscriptions);
-                        }
+                        smsSubscriptions.AddRange(subscriptions);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -135,54 +126,50 @@ namespace Chronokeep.MemStore
             database.DeleteSmsSubscriptions(eventId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            smsSubscriptions.Clear();
-                        }
+                        smsSubscriptions.Clear();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
-        public List<(int, int)> GetSMSAlerts(int eventId)
+        public List<(int, int)> GetSmsAlerts(int eventId)
         {
             Log.D("MemStore", "GetSMSAlerts");
             List<(int, int)> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            output.AddRange(smsAlerts);
-                        }
+                        output.AddRange(smsAlerts);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -192,26 +179,24 @@ namespace Chronokeep.MemStore
             List<ApiSmsSubscription> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            output.AddRange(smsSubscriptions);
-                        }
+                        output.AddRange(smsSubscriptions);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

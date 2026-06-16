@@ -656,7 +656,7 @@ namespace Chronokeep.Objects
             EventSpecific.DistanceIdentifier = d.Identifier;
             EventSpecific.DistanceName = d.Name;
             EventSpecific.Bib = bib;
-            EventSpecific.SMSEnabled = smsEnabled;
+            EventSpecific.SmsEnabled = smsEnabled;
             Mobile = mobile;
             Trim();
             FormatData();

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.IO
 {
-    public partial class LogImporter(string filePath) : CSVImporter(filePath)
+    public partial class LogImporter(string filePath) : CsvImporter(filePath)
     {
         [GeneratedRegex("^\\d,[0-9A-Fa-f]+,\\d,\"(\\d{4}-\\d{2}-\\d{2} )?\\d{1,2}:\\d{2}:\\d{2}\\.\\d{3}\"$|" + // RFID Timing style?
                                 "^[0-9A-Fa-f]+\\t(\\d{4}-\\d{2}-\\d{2} )?\\d{1,2}:\\d{2}:\\d{2}\\.\\d{3}$")]    // RFID Server style?    
@@ -13,26 +13,26 @@ namespace Chronokeep.IO
         [GeneratedRegex("[\"]?status[\"]?,[\"]?chip_number[\"]?,[\"]?seconds[\"]?,[\"]?milliseconds[\"]?,[\"]?time_seconds[\"]?,[\"]?time_milliseconds[\"]?,[\"]?antenna[\"]?,[\"]?reader[\"]?,[\"]?box[\"]?,[\"]?log_index[\"]?,[\"]?rssi[\"]?,[\"]?is_rewind[\"]?,[\"]?reader_time[\"]?,[\"]?start_time[\"]?,[\"]?read_bib[\"]?,[\"]?type[\"]?")]
         private static partial Regex Chronokeep();
 
-        public Type type = Type.CUSTOM;
+        public Type Kind = Type.CUSTOM;
 
         public void FindType()
         {
-            string headerLine = file!.ReadLine()!;
+            string headerLine = File.ReadLine()!;
             Log.D("IO.LogImporter", "HeaderLine: " + headerLine);
             if (Rfid().IsMatch(headerLine))
             {
                 Log.D("IO.LogImporter", "Found a match! RFID");
-                type = Type.RFID;
+                Kind = Type.RFID;
             }
             if (Ipico().IsMatch(headerLine))
             {
                 Log.D("IO.LogImporter", "Found a match! Ipico");
-                type = Type.IPICO;
+                Kind = Type.IPICO;
             }
             if (Chronokeep().IsMatch(headerLine))
             {
                 Log.D("IO.LogImporter", "Found a match! Chronokeep");
-                type = Type.CHRONOKEEP;
+                Kind = Type.CHRONOKEEP;
             }
             ProcessFirstLine(headerLine);
         }

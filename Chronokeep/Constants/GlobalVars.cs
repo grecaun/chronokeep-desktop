@@ -1,25 +1,27 @@
-﻿using Chronokeep.Database;
+﻿using System;
+using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Network.API;
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.Objects.Notifications;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Twilio;
 
 namespace Chronokeep.Constants
 {
-    public partial class GlobalVars
+    public static partial class GlobalVars
     {
         // keep track of TWILIO credentials
-        public static readonly TwilioCredentials TwilioCredentials = new();
+        internal static readonly TwilioCredentials TwilioCredentials = new();
         // keep track of banned phones
-        public static readonly HashSet<string> BannedPhones = [];
+        internal static readonly HashSet<string> BannedPhones = [];
         // keep track of local list of banned phone numbers that we need to add to the api's list
-        public static readonly HashSet<string> NewBannedPhones = [];
+        private static readonly HashSet<string> NewBannedPhones = [];
         // keep track of banned emails
-        public static readonly HashSet<string> BannedEmails = [];
+        internal static readonly HashSet<string> BannedEmails = [];
 
         [GeneratedRegex("^(?:\\+?1)?\\s*\\-?\\s*(?:\\d{3}|\\(\\d{3}\\))\\s*\\-?\\s*\\d{3}\\s*\\-?\\s*\\d{4}$")]
         private static partial Regex Phone();
@@ -30,40 +32,30 @@ namespace Chronokeep.Constants
         {
             try
             {
-                GetBannedPhonesResponse phonesResponse = await ApiHandlers.GetBannedPhones();
-                BannedPhones.Clear();
-                if (phonesResponse.Phones != null)
+                try
                 {
-                    foreach (string phone in phonesResponse.Phones)
+                    GetBannedPhonesResponse phonesResponse = await ApiHandlers.GetBannedPhones();
+                    BannedPhones.Clear();
+                    foreach (string p in phonesResponse.Phones.Select(GetValidPhone).Where(p => p.Length > 0))
                     {
-                        string p = GetValidPhone(phone);
-                        if (p.Length > 0)
-                        {
-                            BannedPhones.Add(p);
-                        }
+                        BannedPhones.Add(p);
                     }
                     // make sure we've got all our new banned phone numbers in there too
-                    foreach (string phone in NewBannedPhones)
+                    foreach (string p in NewBannedPhones.Select(GetValidPhone).Where(p => p.Length > 0))
                     {
-                        string p = GetValidPhone(phone);
-                        if (p.Length > 0)
-                        {
-                            BannedPhones.Add(p);
-                        }
+                        BannedPhones.Add(p);
                     }
-                }
 
-            }
-            catch
-            {
-                Log.E("Constants.Globals", "Exception getting banned phones.");
-            }
-            // attempt to upload all the new phone numbers
-            foreach (string phone in NewBannedPhones)
-            {
-                string p = GetValidPhone(phone);
-                if (p.Length > 0)
+                }
+                catch
                 {
+                    Log.E("Constants.Globals", "Exception getting banned phones.");
+                }
+                // attempt to upload all the new phone numbers
+                foreach (string phone in NewBannedPhones)
+                {
+                    string p = GetValidPhone(phone);
+                    if (p.Length <= 0) continue;
                     try
                     {
                         await ApiHandlers.AddBannedPhone(p);
@@ -75,21 +67,32 @@ namespace Chronokeep.Constants
                     }
                 }
             }
+            catch (Exception)
+            {
+                Log.E("Constants.Globals", "Error updating banned phones.");
+            }
         }
 
         public static async void AddBannedPhone(string phone)
         {
-            string p = GetValidPhone(phone);
-            BannedPhones.Add(p);
-            NewBannedPhones.Add(phone);
             try
             {
-                await ApiHandlers.AddBannedPhone(p);
-                NewBannedPhones.Remove(phone);
+                string p = GetValidPhone(phone);
+                BannedPhones.Add(p);
+                NewBannedPhones.Add(phone);
+                try
+                {
+                    await ApiHandlers.AddBannedPhone(p);
+                    NewBannedPhones.Remove(phone);
+                }
+                catch
+                {
+                    Log.E("Constants.Globals", "Exception uploading banned phone number.");
+                }
             }
-            catch
+            catch (Exception)
             {
-                Log.E("Constants.Globals", "Exception uploading banned phone number.");
+                Log.E("Constants.Globals", "Error adding banned phone.");
             }
         }
 
@@ -99,12 +102,9 @@ namespace Chronokeep.Constants
             {
                 GetBannedEmailsResponse emailsResponse = await ApiHandlers.GetBannedEmails();
                 BannedEmails.Clear();
-                if (emailsResponse.Emails != null)
+                foreach (string email in emailsResponse.Emails)
                 {
-                    foreach (string email in emailsResponse.Emails)
-                    {
-                        BannedEmails.Add(email);
-                    }
+                    BannedEmails.Add(email);
                 }
             }
             catch
@@ -116,51 +116,35 @@ namespace Chronokeep.Constants
         public static string GetValidPhone(string phone)
         {
             string output = "";
-            if (Phone().Match(phone).Success)
+            if (!Phone().IsMatch(phone)) return output;
+            string tmp = WhiteSpace().Replace(phone.Replace("-", "").Replace(")", "").Replace("(", ""), "");
+            output = tmp.Length switch
             {
-                string tmp = WhiteSpace().Replace(phone.Replace("-", "").Replace(")", "").Replace("(", ""), "");
-                if (tmp.Length == 10)
-                {
-                    output = string.Format("+1{0}", tmp);
-                }
-                else if (tmp.Length == 11)
-                {
-                    output = string.Format("+{0}", tmp);
-                }
-                else if (tmp.Length == 12 && tmp.StartsWith('+'))
-                {
-                    output = tmp;
-                }
-            }
+                10 => $"+1{tmp}",
+                11 => $"+{tmp}",
+                12 when tmp.StartsWith('+') => tmp,
+                _ => output
+            };
             return output;
         }
 
-        public static void SetTwilioCredentials(IDBInterface database)
+        public static void SetTwilioCredentials(IdbInterface database)
         {
             AppSetting sid = database.GetAppSetting(Settings.TWILIO_ACCOUNT_SID)!;
             AppSetting auth = database.GetAppSetting(Settings.TWILIO_AUTH_TOKEN)!;
             AppSetting phone = database.GetAppSetting(Settings.TWILIO_PHONE_NUMBER)!;
-            if (sid != null)
-            {
-                TwilioCredentials.AccountSid = sid.Value;
-            }
-            if (auth != null)
-            {
-                TwilioCredentials.AuthToken = auth.Value;
-            }
-            if (phone != null)
-            {
-                TwilioCredentials.PhoneNumber = phone.Value;
-            }
+            TwilioCredentials.AccountSid = sid.Value;
+            TwilioCredentials.AuthToken = auth.Value;
+            TwilioCredentials.PhoneNumber = phone.Value;
             if (TwilioCredentials.AccountSid.Length > 0 && TwilioCredentials.AuthToken.Length > 0)
             {
                 TwilioClient.Init(TwilioCredentials.AccountSid, TwilioCredentials.AuthToken);
             }
         }
 
-        public static void SetTwilioCredentials(string accountSID, string authToken, string phoneNumber)
+        public static void SetTwilioCredentials(string accountSid, string authToken, string phoneNumber)
         {
-            TwilioCredentials.AccountSid = accountSID;
+            TwilioCredentials.AccountSid = accountSid;
             TwilioCredentials.AuthToken = authToken;
             TwilioCredentials.PhoneNumber = GetValidPhone(phoneNumber);
             if (TwilioCredentials.AccountSid.Length > 0 && TwilioCredentials.AuthToken.Length > 0)

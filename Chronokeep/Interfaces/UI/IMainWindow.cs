@@ -40,7 +40,7 @@ namespace Chronokeep.Interfaces.UI
         bool InDidNotStartMode();
         bool StartDidNotStartMode();
         bool StopDidNotStartMode();
-        void NotifyAlarm(string Bib, string Chip);
+        void NotifyAlarm(string bib, string chip);
 
         // Announcer related calls.
         bool AnnouncerConnected();
@@ -49,17 +49,17 @@ namespace Chronokeep.Interfaces.UI
         void StopAnnouncer();
 
         // API System related calls.
-        void StartAPIController();
-        bool StopAPIController();
-        bool IsAPIControllerRunning();
-        int APIErrors();
+        void StartApiController();
+        bool StopApiController();
+        bool IsApiControllerRunning();
+        int ApiErrors();
 
         // Remote Controller related calls.
         void StartRemote();
         void StopRemote();
         RemoteStatus IsRemoteRunning();
         int RemoteErrors();
-        void ShowNotificationDialog(string ReaderName, string Address, RemoteNotification notification);
+        void ShowNotificationDialog(string readerName, string address, RemoteNotification notification);
 
         // Theme related calls
         void UpdateTheme(string theme);

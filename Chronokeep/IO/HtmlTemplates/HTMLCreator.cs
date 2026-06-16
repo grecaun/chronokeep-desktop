@@ -8,7 +8,7 @@ namespace Chronokeep.IO.HtmlTemplates
     {
         private readonly Event theEvent;
         private readonly Dictionary<string, List<TimeResult>> distanceResults = [];
-        private readonly bool linkPart = false;
+        private readonly bool linkPart;
 
         public HtmlResultsTemplate(
             Event theEvent,
@@ -66,18 +66,12 @@ namespace Chronokeep.IO.HtmlTemplates
                     || (r.SegmentId == Constants.Timing.SEGMENT_START)
                     );
                 rankingGender = finish.Gender.ToUpper();
-                if (rankingGender == "WOMAN")
+                rankingGender = rankingGender switch
                 {
-                    rankingGender = "Women";
-                }
-                else if (rankingGender == "MAN")
-                {
-                    rankingGender = "Men";
-                }
-                else
-                {
-                    rankingGender = finish.Gender;
-                }
+                    "WOMAN" => "Women",
+                    "MAN" => "Men",
+                    _ => finish.Gender
+                };
             }
             Log.D("IO.HtmlTemplates.HtmlParticipantTemplate", "Template created.");
         }
@@ -85,13 +79,13 @@ namespace Chronokeep.IO.HtmlTemplates
 
     public partial class HtmlCertificateEmailTemplate
     {
-        readonly string eventName;
-        readonly string distanceName;
-        readonly string participantName;
-        readonly string time;
-        readonly string certificateUrl;
-        readonly string resultsLink;
-        readonly string unsubscribe;
+        private readonly string eventName;
+        private readonly string distanceName;
+        private readonly string participantName;
+        private readonly string time;
+        private readonly string certificateUrl;
+        private readonly string resultsLink;
+        private readonly string unsubscribe;
 
         public HtmlCertificateEmailTemplate(
             Event theEvent,
@@ -100,29 +94,22 @@ namespace Chronokeep.IO.HtmlTemplates
             bool singleDist,
             ApiObject? api)
         {
-            eventName = string.Format("{0} {1}", theEvent.Year, theEvent.Name);
+            eventName = $"{theEvent.Year} {theEvent.Name}";
             distanceName = "";
             if (!singleDist)
             {
-                distanceName = string.Format(" {0}", result.DistanceName);
+                distanceName = $" {result.DistanceName}";
             }
             participantName = result.First;
             time = result.ChipTimeNoMilliseconds;
-            certificateUrl = string.Format("https://cert.chronokeep.com/{0} {1}/{2}{3}/{4}/{5}", result.First, result.Last, eventName, distanceName, time, theEvent.LongDate);
+            certificateUrl = $"https://cert.chronokeep.com/{result.First} {result.Last}/{eventName}{distanceName}/{time}/{theEvent.LongDate}";
             resultsLink = "";
-            string[] event_ids = theEvent.ApiEventId.Split(',');
-            if (api != null && api.WebUrl.Length > 1)
+            string[] eventIds = theEvent.ApiEventId.Split(',');
+            if (api is { WebUrl.Length: > 1 })
             {
-                if (event_ids.Length == 2)
-                {
-                    resultsLink = string.Format("<p><a href=\"{2}results/{0}/{1}\">Click here for more results.</a></p>", event_ids[0], event_ids[1], api.WebUrl);
-                }
-                else
-                {
-                    resultsLink = string.Format("<p><a href=\"{0}\">Click here for more results.</a></p>", api.WebUrl);
-                }
+                resultsLink = eventIds.Length == 2 ? string.Format("<p><a href=\"{2}results/{0}/{1}\">Click here for more results.</a></p>", eventIds[0], eventIds[1], api.WebUrl) : $"<p><a href=\"{api.WebUrl}\">Click here for more results.</a></p>";
             }
-            unsubscribe = string.Format("<br>If you don't want to receive these emails <a href=\"https://www.chronokeep.com/unsubscribe/{0}\">click here</a>.", email);
+            unsubscribe = $"<br>If you don't want to receive these emails <a href=\"https://www.chronokeep.com/unsubscribe/{email}\">click here</a>.";
         }
     }
 }

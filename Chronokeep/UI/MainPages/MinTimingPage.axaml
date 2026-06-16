@@ -13,7 +13,7 @@
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
     </UserControl.Styles>
-    <Grid Grid.Column="0" RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*">
         <Expander 
             Grid.Row="0"
             Name="ReaderExpander"

@@ -1,12 +1,12 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * Age Group Functions
@@ -16,20 +16,17 @@ namespace Chronokeep.MemStore
         {
             currentAgeGroups.Clear();
             lastAgeGroup.Clear();
-            foreach (List<AgeGroup> groups in ageGroups.Values)
+            foreach (AgeGroup g in ageGroups.Values.SelectMany(groups => groups))
             {
-                foreach (AgeGroup g in groups)
+                for (int i = g.StartAge; i <= g.EndAge; i++)
                 {
-                    for (int i = g.StartAge; i <= g.EndAge; i++)
-                    {
-                        currentAgeGroups[(g.DistanceId, i)] = g;
-                    }
-                    if (!lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) || group.StartAge < g.StartAge)
-                    {
-                        group = g;
-                        lastAgeGroup[g.DistanceId] = group;
-                    }
+                    currentAgeGroups[(g.DistanceId, i)] = g;
                 }
+
+                if (lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) &&
+                    group.StartAge >= g.StartAge) continue;
+                group = g;
+                lastAgeGroup[g.DistanceId] = group;
             }
         }
 
@@ -39,29 +36,27 @@ namespace Chronokeep.MemStore
             group.GroupId = database.AddAgeGroup(group);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return group.GroupId;
+                try
                 {
-                    try
+                    if (!ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? value))
                     {
-                        if (!ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? value))
-                        {
-                            value = [];
-                            ageGroups[group.DistanceId] = value;
-                        }
-                        value.Add(group);
-                        SetAgeGroups();
+                        value = [];
+                        ageGroups[group.DistanceId] = value;
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    value.Add(group);
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return group.GroupId;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -71,32 +66,30 @@ namespace Chronokeep.MemStore
             List<AgeGroup> output = database.AddAgeGroups(groups);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    foreach (AgeGroup group in output)
                     {
-                        foreach (AgeGroup group in output)
+                        if (!ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? value))
                         {
-                            if (!ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? value))
-                            {
-                                value = [];
-                                ageGroups[group.DistanceId] = value;
-                            }
-                            value.Add(group);
+                            value = [];
+                            ageGroups[group.DistanceId] = value;
                         }
-                        SetAgeGroups();
+                        value.Add(group);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -106,33 +99,31 @@ namespace Chronokeep.MemStore
             List<AgeGroup> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
+                        foreach (List<AgeGroup> groups in ageGroups.Values)
                         {
-                            foreach (List<AgeGroup> groups in ageGroups.Values)
-                            {
-                                output.AddRange(groups);
-                            }
-                        }
-                        else
-                        {
-                            output.AddRange(database.GetAgeGroups(eventId));
+                            output.AddRange(groups);
                         }
                     }
-                    finally
+                    else
                     {
-                        memStoreLock.Exit();
+                        output.AddRange(database.GetAgeGroups(eventId));
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -142,33 +133,31 @@ namespace Chronokeep.MemStore
             List<AgeGroup> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
+                        if (ageGroups.TryGetValue(distanceId, out List<AgeGroup>? groups))
                         {
-                            if (ageGroups.TryGetValue(distanceId, out List<AgeGroup>? groups))
-                            {
-                                output.AddRange(groups);
-                            }
-                        }
-                        else
-                        {
-                            output.AddRange(database.GetAgeGroups(eventId, distanceId));
+                            output.AddRange(groups);
                         }
                     }
-                    finally
+                    else
                     {
-                        memStoreLock.Exit();
+                        output.AddRange(database.GetAgeGroups(eventId, distanceId));
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -178,26 +167,24 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroup(group);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
                     {
-                        if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
-                        {
-                            list.Remove(group);
-                        }
-                        SetAgeGroups();
+                        list.Remove(group);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -207,29 +194,25 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroups(eventId, distanceId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent == null || theEvent.Identifier != eventId) return;
+                    if (ageGroups.TryGetValue(distanceId, out List<AgeGroup>? list))
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            if (ageGroups.TryGetValue(distanceId, out List<AgeGroup>? list))
-                            {
-                                list.Clear();
-                            }
-                            SetAgeGroups();
-                        }
+                        list.Clear();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -239,29 +222,27 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroups(groups);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (AgeGroup group in groups)
                     {
-                        foreach (AgeGroup group in groups)
+                        if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
                         {
-                            if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
-                            {
-                                list.Remove(group);
-                            }
+                            list.Remove(group);
                         }
-                        SetAgeGroups();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -271,26 +252,22 @@ namespace Chronokeep.MemStore
             database.ResetAgeGroups(eventId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            ageGroups.Clear();
-                            SetAgeGroups();
-                        }
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    if (theEvent == null || theEvent.Identifier != eventId) return;
+                    ageGroups.Clear();
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -300,35 +277,30 @@ namespace Chronokeep.MemStore
             database.UpdateAgeGroup(group);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
                     {
-                        if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
+                        foreach (AgeGroup ageGroup in list.Where(ageGroup => ageGroup.GroupId == group.GroupId))
                         {
-                            foreach (AgeGroup ageGroup in list)
-                            {
-                                if (ageGroup.GroupId == group.GroupId)
-                                {
-                                    ageGroup.StartAge = group.StartAge;
-                                    ageGroup.EndAge = group.EndAge;
-                                    ageGroup.LastGroup = group.LastGroup;
-                                    ageGroup.CustomName = group.CustomName;
-                                }
-                            }
+                            ageGroup.StartAge = group.StartAge;
+                            ageGroup.EndAge = group.EndAge;
+                            ageGroup.LastGroup = group.LastGroup;
+                            ageGroup.CustomName = group.CustomName;
                         }
-                        SetAgeGroups();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    SetAgeGroups();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

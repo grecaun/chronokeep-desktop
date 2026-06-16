@@ -12,8 +12,8 @@ namespace Chronokeep.Helpers
         private readonly WaveOutEvent outputDevice = new();
         private readonly MixingSampleProvider mixer;
 
-        private static AudioPlaybackEngine? Instance = null;
-        private static int CurrentIndex = 0;
+        private static AudioPlaybackEngine? instance;
+        private static int currentIndex;
         private static CachedSound alert = new(Path.Combine("sounds", "alert-1.wav"));
 
         private AudioPlaybackEngine(int sampleRate = 44100, int channelCount = 2)
@@ -28,24 +28,24 @@ namespace Chronokeep.Helpers
 
         public static void PlaySound(string fileName)
         {
-            Instance ??= new(44100, 1);
-            var input = new AudioFileReader(fileName);
-            Instance.AddMixerInput(new AutoDisposeFileReader(input));
+            instance ??= new AudioPlaybackEngine(44100, 1);
+            AudioFileReader input = new AudioFileReader(fileName);
+            instance.AddMixerInput(new AutoDisposeFileReader(input));
         }
 
         public static void PlaySound(int index)
         {
-            if (index != CurrentIndex)
+            if (index != currentIndex)
             {
                 LoadCachedSound(index);
             }
-            Instance ??= new(44100, 1);
-            Instance.AddMixerInput(new CachedSoundSampleProvider(alert));
+            instance ??= new AudioPlaybackEngine(44100, 1);
+            instance.AddMixerInput(new CachedSoundSampleProvider(alert));
         }
 
-        public static void LoadCachedSound(int index)
+        private static void LoadCachedSound(int index)
         {
-            CurrentIndex = index;
+            currentIndex = index;
             string soundFile = Path.Combine("sounds", "alert-1.wav");
             switch (index)
             {
@@ -80,22 +80,23 @@ namespace Chronokeep.Helpers
                     soundFile = Path.Combine("sounds", "michael-alert-runner-here.wav");
                     break;
             }
-            alert = new(soundFile);
+            alert = new CachedSound(soundFile);
         }
 
-        public void AddMixerInput(ISampleProvider input)
+        private void AddMixerInput(ISampleProvider input)
         {
             if (input.WaveFormat.Channels == mixer.WaveFormat.Channels)
             {
                 mixer.AddMixerInput(input);
             }
-            else if (input.WaveFormat.Channels == 1 && mixer.WaveFormat.Channels == 2)
+            else switch (input.WaveFormat.Channels)
             {
-                mixer.AddMixerInput(new MonoToStereoSampleProvider(input));
-            }
-            else if (input.WaveFormat.Channels == 2 && mixer.WaveFormat.Channels == 1)
-            {
-                mixer.AddMixerInput(new StereoToMonoSampleProvider(input));
+                case 1 when mixer.WaveFormat.Channels == 2:
+                    mixer.AddMixerInput(new MonoToStereoSampleProvider(input));
+                    break;
+                case 2 when mixer.WaveFormat.Channels == 1:
+                    mixer.AddMixerInput(new StereoToMonoSampleProvider(input));
+                    break;
             }
         }
 
@@ -107,27 +108,25 @@ namespace Chronokeep.Helpers
 
     internal class CachedSoundSampleProvider(CachedSound cachedSound) : ISampleProvider
     {
-        private readonly CachedSound cachedSound = cachedSound;
         private long position;
 
         public int Read(float[] buffer, int offset, int count)
         {
-            var availableSamples = cachedSound.AudioData.Length - position;
-            var samplesToCopy = Math.Min(availableSamples, count);
+            long availableSamples = cachedSound.AudioData.Length - position;
+            long samplesToCopy = Math.Min(availableSamples, count);
             Array.Copy(cachedSound.AudioData, position, buffer, offset, samplesToCopy);
             position += samplesToCopy;
             return (int)samplesToCopy;
         }
 
-        public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
+        public WaveFormat WaveFormat => cachedSound.WaveFormat;
     }
 
     internal class AutoDisposeFileReader(AudioFileReader reader) : ISampleProvider
     {
-        private readonly AudioFileReader reader = reader;
         private bool isDisposed;
 
-        public WaveFormat WaveFormat { get; private set; } = reader.WaveFormat;
+        public WaveFormat WaveFormat { get; } = reader.WaveFormat;
 
         public int Read(float[] buffer, int offset, int count)
         {
@@ -136,26 +135,24 @@ namespace Chronokeep.Helpers
                 return 0;
             }
             int read = reader.Read(buffer, offset, count);
-            if (read == 0)
-            {
-                reader.Dispose();
-                isDisposed = true;
-            }
+            if (read != 0) return read;
+            reader.Dispose();
+            isDisposed = true;
             return read;
         }
     }
 
     internal class CachedSound
     {
-        public float[] AudioData { get; private set; }
-        public WaveFormat WaveFormat { get; private set; }
+        public float[] AudioData { get; }
+        public WaveFormat WaveFormat { get; }
 
         public CachedSound(string audioFileName)
         {
-            using var audioFileReader = new AudioFileReader(audioFileName);
+            using AudioFileReader audioFileReader = new(audioFileName);
             WaveFormat = audioFileReader.WaveFormat;
-            var wholeFile = new List<float>((int)(audioFileReader.Length / 4));
-            var readBuffer = new float[audioFileReader.WaveFormat.SampleRate * audioFileReader.WaveFormat.Channels];
+            List<float> wholeFile = new((int)(audioFileReader.Length / 4));
+            float[] readBuffer = new float[audioFileReader.WaveFormat.SampleRate * audioFileReader.WaveFormat.Channels];
             int samplesRead;
             while ((samplesRead = audioFileReader.Read(readBuffer, 0, readBuffer.Length)) > 0)
             {

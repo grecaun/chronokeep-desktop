@@ -7,7 +7,7 @@
         Background="{DynamicResource SecondaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Chronokeep"
         Height="700"
@@ -18,12 +18,14 @@
         Loaded="Window_Loaded"
         PropertyChanged="Window_PropertyChanged"
         >
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"

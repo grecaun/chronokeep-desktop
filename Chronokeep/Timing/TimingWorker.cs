@@ -17,7 +17,7 @@ namespace Chronokeep.Timing
 {
     internal partial class TimingWorker
     {
-        private readonly IDBInterface database;
+        private readonly IdbInterface database;
         private readonly IMainWindow window;
         private static TimingWorker? worker;
 
@@ -35,13 +35,13 @@ namespace Chronokeep.Timing
         [GeneratedRegex("[^A-Za-z]")]
         private static partial Regex AlphaOnly();
 
-        private TimingWorker(IMainWindow window, IDBInterface database)
+        private TimingWorker(IMainWindow window, IdbInterface database)
         {
             this.window = window;
             this.database = database;
         }
 
-        public static TimingWorker NewWorker(IMainWindow window, IDBInterface database)
+        public static TimingWorker NewWorker(IMainWindow window, IdbInterface database)
         {
             worker ??= new TimingWorker(window, database);
             return worker;
@@ -173,7 +173,7 @@ namespace Chronokeep.Timing
             // Get the start time for the event. (Net time of 0:00:00.000)
             Dictionary.DistanceStartDict.Clear();
             DateTime startTime = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds);
-            Dictionary.DistanceStartDict[0] = (Constants.Timing.RFIDDateToEpoch(startTime), theEvent.StartMilliseconds);
+            Dictionary.DistanceStartDict[0] = (Constants.Timing.RfidDateToEpoch(startTime), theEvent.StartMilliseconds);
             // And the end time (for time based events)
             Dictionary.DistanceEndDict.Clear();
             Dictionary.DistanceEndDict[0] = Dictionary.DistanceStartDict[0];
@@ -255,7 +255,7 @@ namespace Chronokeep.Timing
                 }
             }
             Dictionary.Apis.Clear();
-            foreach (ApiObject api in database.GetAllAPI())
+            foreach (ApiObject api in database.GetAllApi())
             {
                 Dictionary.Apis[api.Identifier] = api;
             }
@@ -296,7 +296,7 @@ namespace Chronokeep.Timing
             // Get a list of DNS entries.
             Dictionary.DnsChips.Clear();
             Dictionary.DnsBibs.Clear();
-            List<ChipRead> dnsReads = database.GetDNSChipReads(theEvent.Identifier);
+            List<ChipRead> dnsReads = database.GetDnsChipReads(theEvent.Identifier);
             foreach (ChipRead read in dnsReads)
             {
                 Dictionary.DnsChips.Add(read.ChipNumber);
@@ -355,7 +355,7 @@ namespace Chronokeep.Timing
                     }
                     bool touched = false;
                     // Check if we have new DNS entries and reset if necessary.
-                    if (database.GetDNSChipReads(theEvent.Identifier).Count > Dictionary.DnsEntryCount)
+                    if (database.GetDnsChipReads(theEvent.Identifier).Count > Dictionary.DnsEntryCount)
                     {
                         RecalculateDns(theEvent);
                     }
@@ -427,7 +427,7 @@ namespace Chronokeep.Timing
                     {
                         // Build list of potential SMS Alerts to send out.
                         // First check for any alerts already sent out.
-                        List<(int, int)> alerts = database.GetSMSAlerts(theEvent.Identifier);
+                        List<(int, int)> alerts = database.GetSmsAlerts(theEvent.Identifier);
                         // If null, db lookup failed, so soft fail here.
                         {
                             DateTime now = DateTime.Now;
@@ -481,7 +481,7 @@ namespace Chronokeep.Timing
                             {
                                 if (lastSubscriptionFetch.AddSeconds(30).CompareTo(now) < 0)
                                 {
-                                    ApiObject lapi = database.GetAPI(theEvent.ApiId)!;
+                                    ApiObject lapi = database.GetApi(theEvent.ApiId)!;
                                     string[] eventIds = theEvent.ApiEventId.Split(',');
                                     if (eventIds.Length == 2)
                                     {
@@ -600,7 +600,7 @@ namespace Chronokeep.Timing
                                         // update status if there's no network error or we send a message out
                                         if (sent || !networkError)
                                         {
-                                            database.AddSMSAlert(theEvent.Identifier, result.EventSpecificId, result.SegmentId);
+                                            database.AddSmsAlert(theEvent.Identifier, result.EventSpecificId, result.SegmentId);
                                         }
                                     }
                                 }

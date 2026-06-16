@@ -19,7 +19,7 @@ namespace Chronokeep.UI.Export;
 public partial class ExportResults : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private readonly bool noOpen;
@@ -42,10 +42,10 @@ public partial class ExportResults : ChronokeepWindow
         "Laps Completed", "Ellapsed Time (Clock)", "Ellapsed Time (Chip)"
     ];
 
-    public ExportResults(IMainWindow window, IDBInterface database)
+    public ExportResults(IMainWindow window, IdbInterface database)
     {
-        int maxNumSegments1;
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -61,7 +61,7 @@ public partial class ExportResults : ChronokeepWindow
             // Get the maximum number of segments.
             // if greater than 0, add (SEGMENT 1...X GUN TIME, SEGMENT 1...X
             // CHIP TIME and SEGMENT 1...X NAME) to the list of common headers
-            maxNumSegments1 = database.GetMaxSegments(theEvent.Identifier);
+            int maxNumSegments1 = database.GetMaxSegments(theEvent.Identifier);
             if (maxNumSegments1 > 0)
             {
                 // Go backwards so we don't have to recalculate where the insert is each lap
@@ -85,7 +85,7 @@ public partial class ExportResults : ChronokeepWindow
             commonHeaders.Remove("");
             // Get the maximum number of laps a person completed.
             // if greater than 0, add LAP 1...X to the list of common headers
-            maxNumSegments1 = database.GetSegmentTimes(theEvent.Identifier, Constants.Timing.SEGMENT_FINISH).Select(result => result.Occurrence).Prepend(0).Max();
+            int maxNumSegments1 = database.GetSegmentTimes(theEvent.Identifier, Constants.Timing.SEGMENT_FINISH).Select(result => result.Occurrence).Prepend(0).Max();
             for (int i = maxNumSegments1; i > 0; i--)
             {
                 commonHeaders.Insert(10, $"Lap {i}");
@@ -104,7 +104,7 @@ public partial class ExportResults : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private async void Done_Click(object? sender, RoutedEventArgs e)
@@ -540,7 +540,7 @@ public partial class ExportResults : ChronokeepWindow
                         }
                         format.Remove(format.Length - 1, 1);
                         Log.D("UI.Export.ExportResults", $"The format is '{format}'");
-                        exporter = new CSVExporter(format.ToString());
+                        exporter = new CsvExporter(format.ToString());
                     }
                     exporter.SetData(headers, data);
                     try
@@ -568,10 +568,5 @@ public partial class ExportResults : ChronokeepWindow
     {
         Log.D("UI.Export.ExportResults", "Cancel clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

@@ -3,26 +3,27 @@ using Chronokeep.Interfaces.IO;
 using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.IO
 {
-    class ExcelImporter : IDataImporter
+    internal class ExcelImporter : IDataImporter
     {
         public ImportData? Data { get; private set; }
-        readonly string FilePath;
+        private readonly string filePath;
 
-        XLWorkbook workbook;
-        IXLWorksheet? worksheet;
+        private XLWorkbook? workbook;
+        private IXLWorksheet? worksheet;
 
-        public List<string> SheetNames { get; private set; } = [];
-        public int NumSheets { get; private set; }
+        public List<string> SheetNames { get; }
+        private int NumSheets { get; }
 
         public ExcelImporter(string filename)
         {
             Log.D("IO.ExcelImporter", "Creating importer object.");
-            FilePath = filename;
+            filePath = filename;
             Log.D("IO.ExcelImporter", "Opening workbook.");
-            workbook = new(filename);
+            workbook = new XLWorkbook(filename);
             NumSheets = workbook.Worksheets.Count;
             if (NumSheets > 0)
             {
@@ -43,7 +44,7 @@ namespace Chronokeep.IO
             {
                 if (ix <= NumSheets && ix >= 0)
                 {
-                    worksheet = workbook!.Worksheets.Worksheet(ix);
+                    worksheet = workbook?.Worksheets.Worksheet(ix);
                 }
             }
             catch
@@ -58,16 +59,12 @@ namespace Chronokeep.IO
             try
             {
                 Log.D("IO.ExcelImporter", "Used range set.");
-                var rows = worksheet!.RowsUsed();
+                IXLRows rows = worksheet!.RowsUsed();
                 int numHeaders = 0;
                 int numDataRows = 0;
-                foreach (var row in rows)
+                foreach (IXLRow? row in rows)
                 {
-                    int tmp = 0;
-                    foreach (var col in row.CellsUsed())
-                    {
-                        tmp++;
-                    }
+                    int tmp = row.CellsUsed().Count();
                     numHeaders = numHeaders > tmp ? numHeaders : tmp;
                     numDataRows++;
                 }
@@ -77,13 +74,13 @@ namespace Chronokeep.IO
                 {
                     headers[i - 1] = worksheet.Cell(1, i).Value.IsBlank ? "" : worksheet.Cell(1, i).Value.ToString();
                 }
-                Data = new(headers, FilePath, ImportData.FileType.EXCEL);
+                Data = new ImportData(headers, filePath, ImportData.FileType.EXCEL);
             }
             catch (Exception excep)
             {
                 Log.E("IO.ExcelImporter", $"Something went wrong when trying to get headers. {excep.StackTrace}");
                 string[] headers = [];
-                Data = new(headers, FilePath, ImportData.FileType.EXCEL);
+                Data = new ImportData(headers, filePath, ImportData.FileType.EXCEL);
             }
         }
 
@@ -92,16 +89,12 @@ namespace Chronokeep.IO
             Log.D("IO.ExcelImporter", "Getting data from excel file.");
             try
             {
-                var rows = worksheet!.RowsUsed();
+                IXLRows rows = worksheet!.RowsUsed();
                 int numHeaders = 0;
                 int numDataRows = 0;
-                foreach (var row in rows)
+                foreach (IXLRow? row in rows)
                 {
-                    int tmp = 0;
-                    foreach (var col in row.CellsUsed())
-                    {
-                        tmp++;
-                    }
+                    int tmp = row.CellsUsed().Count();
                     numHeaders = numHeaders > tmp ? numHeaders : tmp;
                     numDataRows++;
                 }
@@ -119,7 +112,7 @@ namespace Chronokeep.IO
                     string[] dataLine = new string[numHeaders];
                     for (int column = 0; column < numHeaders; column++)
                     {
-                        dataLine[column] = valueArray[row, column] == null ? "" : valueArray[row, column].ToString()!;
+                        dataLine[column] = valueArray[row, column].ToString()!;
                     }
                     Data!.AddData(dataLine);
                 }

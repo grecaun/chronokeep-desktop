@@ -1,12 +1,12 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * Event Functions
@@ -18,23 +18,21 @@ namespace Chronokeep.MemStore
             int output = database.AddEvent(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        anEvent.Identifier = output;
-                        allEvents.Add(anEvent);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    anEvent.Identifier = output;
+                    allEvents.Add(anEvent);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -45,48 +43,44 @@ namespace Chronokeep.MemStore
             Event? output = null;
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output = theEvent;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output = theEvent;
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
 
-        public void SetCurrentEvent(int eventID)
+        public void SetCurrentEvent(int eventId)
         {
             Log.D("MemStore", "SetCurrentEvent");
-            database.SetCurrentEvent(eventID);
+            database.SetCurrentEvent(eventId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        LoadEvent();
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    LoadEvent();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -96,62 +90,52 @@ namespace Chronokeep.MemStore
             Event? output = null;
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    foreach (Event ev in allEvents.Where(ev => ev.Identifier == id))
                     {
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Identifier == id)
-                            {
-                                output = ev;
-                                break;
-                            }
-                        }
+                        output = ev;
+                        break;
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
 
-        public int GetEventID(Event anEvent)
+        public int GetEventId(Event anEvent)
         {
             Log.D("MemStore", "GetEventID");
             int output = -1;
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    foreach (Event ev in allEvents.Where(ev => ev.Name.Equals(anEvent.Name, StringComparison.OrdinalIgnoreCase) && ev.Date.Equals(anEvent.Date, StringComparison.OrdinalIgnoreCase)))
                     {
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Name.Equals(anEvent.Name, StringComparison.OrdinalIgnoreCase) && ev.Date.Equals(anEvent.Date, StringComparison.OrdinalIgnoreCase))
-                            {
-                                output = ev.Identifier;
-                                break;
-                            }
-                        }
+                        output = ev.Identifier;
+                        break;
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -162,22 +146,20 @@ namespace Chronokeep.MemStore
             List<Event> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(allEvents);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(allEvents);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -188,26 +170,24 @@ namespace Chronokeep.MemStore
             database.RemoveEvent(identifier);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    allEvents.RemoveAll(x => x.Identifier == identifier);
+                    if (theEvent != null && theEvent.Identifier == identifier)
                     {
-                        allEvents.RemoveAll(x => x.Identifier == identifier);
-                        if (theEvent != null && theEvent.Identifier == identifier)
-                        {
-                            LoadEvent();
-                        }
+                        LoadEvent();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -217,26 +197,24 @@ namespace Chronokeep.MemStore
             database.RemoveEvent(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    allEvents.RemoveAll(x => x.Identifier == anEvent.Identifier);
+                    if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        allEvents.RemoveAll(x => x.Identifier == anEvent.Identifier);
-                        if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
-                        {
-                            LoadEvent();
-                        }
+                        LoadEvent();
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -246,33 +224,28 @@ namespace Chronokeep.MemStore
             database.UpdateEvent(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
-                        {
-                            theEvent.CopyFrom(anEvent);
-                        }
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Identifier == anEvent.Identifier)
-                            {
-                                ev.CopyFrom(anEvent);
-                                break;
-                            }
-                        }
+                        theEvent.CopyFrom(anEvent);
                     }
-                    finally
+                    foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
-                        memStoreLock.Exit();
+                        ev.CopyFrom(anEvent);
+                        break;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
         public void UpdateDivisionsEnabled()
@@ -280,29 +253,25 @@ namespace Chronokeep.MemStore
             Log.D("MemStore", "UpdateDivisionsEnabled");
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent == null) return;
+                    // Update all TimingResults in MemStore
+                    foreach (TimeResult tr in timingResults.Values)
                     {
-                        if (theEvent != null)
-                        {
-                            // Update all TimingResults in MemStore
-                            foreach (TimeResult tr in timingResults.Values)
-                            {
-                                tr.UpdateEvent(theEvent);
-                            }
-                        }
+                        tr.UpdateEvent(theEvent);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -311,31 +280,29 @@ namespace Chronokeep.MemStore
             Log.D("MemStore", "UpdateStart");
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    // Update start in chip reads
+                    DateTime start = DateTime.Now;
+                    if (theEvent != null)
                     {
-                        // Update start in chipreads
-                        DateTime start = DateTime.Now;
-                        if (theEvent != null)
-                        {
-                            start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
-                        }
-                        foreach (ChipRead cr in chipReads.Values)
-                        {
-                            cr.Start = start;
-                        }
+                        start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
                     }
-                    finally
+                    foreach (ChipRead cr in chipReads.Values)
                     {
-                        memStoreLock.Exit();
+                        cr.Start = start;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -345,35 +312,30 @@ namespace Chronokeep.MemStore
             database.SetFinishOptions(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
-                        {
-                            theEvent.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
-                            theEvent.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
-                        }
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Identifier == anEvent.Identifier)
-                            {
-                                ev.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
-                                ev.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
-                                break;
-                            }
-                        }
+                        theEvent.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
+                        theEvent.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
                     }
-                    finally
+                    foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
-                        memStoreLock.Exit();
+                        ev.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
+                        ev.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
+                        break;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -383,34 +345,29 @@ namespace Chronokeep.MemStore
             database.SetStartOptions(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
-                        {
-                            theEvent.StartWindow = anEvent.StartWindow;
-                        }
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Identifier == anEvent.Identifier)
-                            {
-                                ev.StartWindow = anEvent.StartWindow;
-                                ev.StartMaxOccurrences = anEvent.StartMaxOccurrences;
-                                break;
-                            }
-                        }
+                        theEvent.StartWindow = anEvent.StartWindow;
                     }
-                    finally
+                    foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
-                        memStoreLock.Exit();
+                        ev.StartWindow = anEvent.StartWindow;
+                        ev.StartMaxOccurrences = anEvent.StartMaxOccurrences;
+                        break;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -420,36 +377,31 @@ namespace Chronokeep.MemStore
             database.SetStartFinishOptions(anEvent);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
-                        {
-                            theEvent.StartWindow = anEvent.StartWindow;
-                        }
-                        foreach (Event ev in allEvents)
-                        {
-                            if (ev.Identifier == anEvent.Identifier)
-                            {
-                                ev.StartWindow = anEvent.StartWindow;
-                                ev.StartMaxOccurrences = anEvent.StartMaxOccurrences;
-                                ev.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
-                                ev.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
-                                break;
-                            }
-                        }
+                        theEvent.StartWindow = anEvent.StartWindow;
                     }
-                    finally
+                    foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
-                        memStoreLock.Exit();
+                        ev.StartWindow = anEvent.StartWindow;
+                        ev.StartMaxOccurrences = anEvent.StartMaxOccurrences;
+                        ev.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
+                        ev.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
+                        break;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

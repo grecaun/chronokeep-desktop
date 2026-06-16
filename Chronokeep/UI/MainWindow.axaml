@@ -7,7 +7,7 @@
         Background="{DynamicResource SecondaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Chronokeep"
         Height="700"
@@ -69,11 +69,11 @@
         <Style Selector="Rectangle.nav">
 			<Setter Property="VerticalAlignment" Value="Center"/>
 			<Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/>
-			<Setter Property="Height" Value="16"/>
+			<Setter Property="Height" Value="14"/>
 			<Setter Property="Width" Value="3"/>
 			<Setter Property="RadiusX" Value="2"/>
 			<Setter Property="RadiusY" Value="2"/>
-			<Setter Property="Margin" Value="0,0,5,0"/>
+			<Setter Property="Margin" Value="0,0,2,0"/>
         </Style>
         <!-- Icon for Buttons -->
         <Style Selector="PathIcon.nav">
@@ -82,15 +82,17 @@
 			<Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Styles>
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}"
                 >
             <DockPanel Margin="0">
-			    <Button Name="NavigationButton" Click="NavigationButton_Click" Width="52" Height="32" Classes="nav" WindowDecorationProperties.ElementRole="User">
+			    <Button Name="NavigationButton" Click="NavigationButton_Click" Width="48" Height="32" Classes="nav" WindowDecorationProperties.ElementRole="User">
                     <PathIcon Data="{StaticResource navigation_regular}" Margin="0,4,0,0" Width="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <StackPanel DockPanel.Dock="Right"
@@ -141,7 +143,13 @@
 		    <SplitView.Pane>
                 <Grid RowDefinitions="*,auto" Background="{DynamicResource SecondaryBackground}">
                     <StackPanel Grid.Row="0">
-			            <ToggleButton Name="DashboardButton" Click="DashboardButton_Click" Classes="nav" IsChecked="True" Margin="2,5,2,0">
+                        <Button Click="NavigationButton_Click" Classes="nav" IsVisible="{OnPlatform Default='True', Windows='False'}">
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Classes="nav" Fill="Transparent"/>
+                                <PathIcon Data="{StaticResource navigation_regular}" Classes="nav" Width="15" Margin="2,5,0,0"/>
+                            </StackPanel>
+                        </Button>
+			            <ToggleButton Name="DashboardButton" Click="DashboardButton_Click" Classes="nav" IsChecked="True">
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Classes="nav"/>
                                 <PathIcon Data="{StaticResource home_regular}" Classes="nav"/>

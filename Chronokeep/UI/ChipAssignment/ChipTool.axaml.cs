@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -15,23 +14,21 @@ namespace Chronokeep.UI.ChipAssignment;
 public partial class ChipTool : ChronokeepWindow
 {
     private readonly IWindowCallback? window;
-    private readonly IDBInterface? database;
+    private readonly IdbInterface? database;
 
     public bool ImportComplete;
 
-    private ChipTool(IWindowCallback window, IDBInterface database)
+    private ChipTool(IWindowCallback window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         CorrelationBox.Items.Add(new TagRangePart(CorrelationBox));
         this.window = window;
         this.database = database;
-        MinHeight = 100;
-        MinWidth = 550;
-        Width = 600;
         CanResize = false;
     }
 
-    public static ChipTool NewWindow(IWindowCallback window, IDBInterface database)
+    public static ChipTool NewWindow(IWindowCallback window, IdbInterface database)
     {
         return new ChipTool(window, database);
     }
@@ -98,11 +95,6 @@ public partial class ChipTool : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window?.WindowFinalize();
     }
 }

@@ -11,10 +11,10 @@ namespace Chronokeep.UI.MainPages.Dashboard;
 public partial class ApiPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private List<ApiObject>? resultsApi;
 
-    public ApiPage(IMainWindow mWindow, IDBInterface database)
+    public ApiPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -22,20 +22,20 @@ public partial class ApiPage : UserControl, IMainPage
         UpdateView();
     }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         Log.D("UI.MainPages.APIPage", "Ctrl + A Passed to this page.");
         Add_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         Log.D("UI.MainPages.APIPage", "Ctrl + S Passed to this page.");
         UpdateResultsApi();
         UpdateView();
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateView();
     }
@@ -43,7 +43,7 @@ public partial class ApiPage : UserControl, IMainPage
     public void UpdateView()
     {
         ApiBox.Items.Clear();
-        resultsApi = database.GetAllAPI();
+        resultsApi = database.GetAllApi();
         foreach (ApiObject api in resultsApi)
         {
             ApiBox.Items.Add(new ApiPart(this, api));
@@ -64,7 +64,7 @@ public partial class ApiPage : UserControl, IMainPage
         {
             if (listDiv is not ApiPart part) continue;
             part.UpdateResultsApi();
-            database.UpdateAPI(part.TheApi);
+            database.UpdateApi(part.TheApi);
         }
     }
 
@@ -74,7 +74,7 @@ public partial class ApiPage : UserControl, IMainPage
         {
             UpdateResultsApi();
         }
-        database.RemoveAPI(api.Identifier);
+        database.RemoveApi(api.Identifier);
         UpdateView();
     }
 
@@ -85,7 +85,7 @@ public partial class ApiPage : UserControl, IMainPage
         {
             UpdateResultsApi();
         }
-        database.AddAPI(new ApiObject());
+        database.AddApi(new ApiObject());
         UpdateView();
     }
 

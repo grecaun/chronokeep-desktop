@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,10 +10,10 @@ namespace Chronokeep.IO
 {
     public partial class ImportData
     {
-        public string FileName { get; private set; }
+        private string FileName { get; }
         public FileType Type { get; private set; }
-        public string[] Headers { get; private set; }
-        public List<string[]> Data { get; private set; }
+        public string[] Headers { get; }
+        public List<string[]> Data { get; }
 
         [GeneratedRegex("[^\\\\]*\\.")]
         private static partial Regex DataRegex();
@@ -60,12 +61,9 @@ namespace Chronokeep.IO
         public string[] GetDistanceNames(int index)
         {
             HashSet<string> values = [];
-            foreach (string[] line in Data)
+            foreach (string[] line in Data.Where(line => line[index].Length > 0))
             {
-                if (line[index] != null && line[index].Length > 0)
-                {
-                    values.Add(line[index].Trim());
-                }
+                values.Add(line[index].Trim());
             }
             string[] output = new string[values.Count];
             values.CopyTo(output);

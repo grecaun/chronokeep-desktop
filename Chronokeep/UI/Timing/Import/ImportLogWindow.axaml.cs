@@ -16,7 +16,7 @@ namespace Chronokeep.UI.Timing.Import;
 public partial class ImportLogWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly LogImporter importer;
 
     private readonly Event theEvent;
@@ -25,15 +25,13 @@ public partial class ImportLogWindow : ChronokeepWindow
     [GeneratedRegex("\\d{4}-\\d{2}-\\d{2}")]
     private static partial Regex DateRegex();
 
-    private ImportLogWindow(IMainWindow window, LogImporter importer, IDBInterface database)
+    private ImportLogWindow(IMainWindow window, LogImporter importer, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.importer = importer;
         this.database = database;
-        MinHeight = 0;
-        MinWidth = 100;
-        Width = 300;
         theEvent = database.GetCurrentEvent()!;
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
         if (!theEvent.CommonStartFinish)
@@ -67,7 +65,7 @@ public partial class ImportLogWindow : ChronokeepWindow
         }
     }
 
-    public static ImportLogWindow NewWindow(IMainWindow window, LogImporter importer, IDBInterface database)
+    public static ImportLogWindow NewWindow(IMainWindow window, LogImporter importer, IdbInterface database)
     {
         return new ImportLogWindow(window, importer, database);
     }
@@ -80,7 +78,7 @@ public partial class ImportLogWindow : ChronokeepWindow
     public void Next(int iLocationId)
     {
         locationId = iLocationId;
-        importer.type = LogImporter.Type.CUSTOM;
+        importer.Kind = LogImporter.Type.CUSTOM;
         Frame.Content = new ImportLogPage2(this, importer);
     }
 
@@ -198,11 +196,6 @@ public partial class ImportLogWindow : ChronokeepWindow
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
         importer.Finish();
-        window.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window.WindowFinalize();
     }
 }

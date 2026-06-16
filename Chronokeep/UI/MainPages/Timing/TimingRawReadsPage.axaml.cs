@@ -15,14 +15,14 @@ namespace Chronokeep.UI.MainPages.Timing;
 
 public partial class TimingRawReadsPage : UserControl, ISubPage
 {
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly ITimingPage parent;
     private readonly Event? theEvent;
     private readonly IMainWindow mWindow;
 
     private readonly List<ChipRead> chipReads = [];
 
-    public TimingRawReadsPage(ITimingPage parent, IDBInterface database, IMainWindow mWindow)
+    public TimingRawReadsPage(ITimingPage parent, IdbInterface database, IMainWindow mWindow)
     {
         InitializeComponent();
         Log.D("UI.Timing.TimingRawReadsPage", "Page initialized.");
@@ -51,7 +51,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
 
     public void CancelableUpdateView(CancellationToken token) { }
 
-    public void Search(CancellationToken token, string searchText)
+    public void Search(CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         PrivateUpdateView();
@@ -115,11 +115,11 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
 
     public static void UpdateDatabase() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void EditSelected() { }
 
@@ -253,7 +253,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         }
     }
 
-    public void Reader(string reader)
+    public void Reader()
     {
         List<ChipRead> reads = [.. chipReads];
         string search = parent.GetSearchValue();

@@ -6,9 +6,9 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    class Participants
+    internal class Participants
     {
-        internal static Participant? AddParticipant(Participant person, SQLiteConnection connection)
+        internal static Participant AddParticipant(Participant person, SQLiteConnection connection)
         {
             person.FormatData();
             SQLiteCommand command = connection.CreateCommand();
@@ -54,24 +54,24 @@ namespace Chronokeep.Database.SQLite
                 "AND participant_last=@last AND participant_street=@street AND participant_city=@city AND " +
                 "participant_state=@state AND participant_zip=@zip;";
             command.Parameters.AddRange([
-                new("@first", person.FirstName),
-                new("@last", person.LastName),
-                new("@street", person.Street),
-                new("@city", person.City),
-                new("@state", person.State),
-                new("@zip", person.Zip),
-                new("@birthdate", person.Birthdate),
-                new("@email", person.Email),
-                new("@phone", person.Phone),
-                new("@mobile", person.Mobile),
-                new("@parent", person.Parent),
-                new("@country", person.Country),
-                new("@street2", person.Street2),
-                new("@ecname", person.EcName),
-                new("@ecphone", person.EcPhone),
-                new("@gender", person.Gender) ]);
+                new SQLiteParameter("@first", person.FirstName),
+                new SQLiteParameter("@last", person.LastName),
+                new SQLiteParameter("@street", person.Street),
+                new SQLiteParameter("@city", person.City),
+                new SQLiteParameter("@state", person.State),
+                new SQLiteParameter("@zip", person.Zip),
+                new SQLiteParameter("@birthdate", person.Birthdate),
+                new SQLiteParameter("@email", person.Email),
+                new SQLiteParameter("@phone", person.Phone),
+                new SQLiteParameter("@mobile", person.Mobile),
+                new SQLiteParameter("@parent", person.Parent),
+                new SQLiteParameter("@country", person.Country),
+                new SQLiteParameter("@street2", person.Street2),
+                new SQLiteParameter("@ecname", person.EcName),
+                new SQLiteParameter("@ecphone", person.EcPhone),
+                new SQLiteParameter("@gender", person.Gender) ]);
             command.ExecuteNonQuery();
-            person.Identifier = GetParticipantID(person, connection);
+            person.Identifier = GetParticipantId(person, connection);
             command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "INSERT INTO eventspecific " +
@@ -113,22 +113,22 @@ namespace Chronokeep.Database.SQLite
                 "@uploaded" +
                 ")";
             command.Parameters.AddRange([
-                new("@participant", person.Identifier),
-                new("@event", person.EventSpecific.EventIdentifier),
-                new("@distance", person.EventSpecific.DistanceIdentifier),
-                new("@bib", person.EventSpecific.Bib),
-                new("@checkedin", person.EventSpecific.CheckedIn),
-                new("@comments", person.EventSpecific.Comments),
-                new("@owes", person.EventSpecific.Owes),
-                new("@other", person.EventSpecific.Other),
-                new("@ageGroupName", person.EventSpecific.AgeGroupName),
-                new("@ageGroupId", person.EventSpecific.AgeGroupId),
-                new("@anon", person.EventSpecific.Anonymous ? 1 : 0),
-                new("@sms", person.EventSpecific.SMSEnabled ? 1 : 0),
-                new("@apparel", person.EventSpecific.Apparel),
-                new("@division", person.EventSpecific.Division),
-                new("@version", person.EventSpecific.Version),
-                new("@uploaded", person.EventSpecific.UploadedVersion)
+                new SQLiteParameter("@participant", person.Identifier),
+                new SQLiteParameter("@event", person.EventSpecific.EventIdentifier),
+                new SQLiteParameter("@distance", person.EventSpecific.DistanceIdentifier),
+                new SQLiteParameter("@bib", person.EventSpecific.Bib),
+                new SQLiteParameter("@checkedin", person.EventSpecific.CheckedIn),
+                new SQLiteParameter("@comments", person.EventSpecific.Comments),
+                new SQLiteParameter("@owes", person.EventSpecific.Owes),
+                new SQLiteParameter("@other", person.EventSpecific.Other),
+                new SQLiteParameter("@ageGroupName", person.EventSpecific.AgeGroupName),
+                new SQLiteParameter("@ageGroupId", person.EventSpecific.AgeGroupId),
+                new SQLiteParameter("@anon", person.EventSpecific.Anonymous ? 1 : 0),
+                new SQLiteParameter("@sms", person.EventSpecific.SmsEnabled ? 1 : 0),
+                new SQLiteParameter("@apparel", person.EventSpecific.Apparel),
+                new SQLiteParameter("@division", person.EventSpecific.Division),
+                new SQLiteParameter("@version", person.EventSpecific.Version),
+                new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion)
             ]);
             command.ExecuteNonQuery();
             long outVal = connection.LastInsertRowId;
@@ -141,7 +141,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM eventspecific WHERE participant_id=@0; DELETE FROM participants WHERE participant_id=@0";
             command.Parameters.AddRange([
-                    new("@0", identifier) ]);
+                    new SQLiteParameter("@0", identifier) ]);
             command.ExecuteNonQuery();
         }
 
@@ -150,7 +150,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM eventspecific WHERE participant_id=@0;";
             command.Parameters.AddRange([
-                    new("@0", identifier) ]);
+                    new SQLiteParameter("@0", identifier) ]);
             command.ExecuteNonQuery();
         }
 
@@ -177,23 +177,23 @@ namespace Chronokeep.Database.SQLite
                 "participant_gender=@gender " +
                 "WHERE participant_id=@participantid";
             command.Parameters.AddRange([
-                    new("@first", person.FirstName),
-                    new("@last", person.LastName),
-                    new("@street", person.Street),
-                    new("@city", person.City),
-                    new("@state", person.State),
-                    new("@zip", person.Zip),
-                    new("@birthdate", person.Birthdate),
-                    new("@ecname", person.EcName),
-                    new("@ecphone", person.EcPhone),
-                    new("@email", person.Email),
-                    new("@participantid", person.Identifier),
-                    new("@phone", person.Phone),
-                    new("@mobile", person.Mobile),
-                    new("@parent", person.Parent),
-                    new("@country", person.Country),
-                    new("@street2", person.Street2),
-                    new("@gender", person.Gender) ]);
+                    new SQLiteParameter("@first", person.FirstName),
+                    new SQLiteParameter("@last", person.LastName),
+                    new SQLiteParameter("@street", person.Street),
+                    new SQLiteParameter("@city", person.City),
+                    new SQLiteParameter("@state", person.State),
+                    new SQLiteParameter("@zip", person.Zip),
+                    new SQLiteParameter("@birthdate", person.Birthdate),
+                    new SQLiteParameter("@ecname", person.EcName),
+                    new SQLiteParameter("@ecphone", person.EcPhone),
+                    new SQLiteParameter("@email", person.Email),
+                    new SQLiteParameter("@participantid", person.Identifier),
+                    new SQLiteParameter("@phone", person.Phone),
+                    new SQLiteParameter("@mobile", person.Mobile),
+                    new SQLiteParameter("@parent", person.Parent),
+                    new SQLiteParameter("@country", person.Country),
+                    new SQLiteParameter("@street2", person.Street2),
+                    new SQLiteParameter("@gender", person.Gender) ]);
             command.ExecuteNonQuery();
             command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
@@ -215,22 +215,22 @@ namespace Chronokeep.Database.SQLite
                 "eventspecific_uploaded_version=@uploaded " +
                 "WHERE eventspecific_id=@eventspecid";
             command.Parameters.AddRange([
-                    new("@distanceId", person.EventSpecific.DistanceIdentifier),
-                    new("@bib", person.EventSpecific.Bib),
-                    new("@checkedin", person.EventSpecific.CheckedIn),
-                    new("@eventspecid", person.EventSpecific.Identifier),
-                    new("@owes", person.EventSpecific.Owes),
-                    new("@other", person.EventSpecific.Other),
-                    new("@comments", person.EventSpecific.Comments),
-                    new("@status", person.EventSpecific.Status),
-                    new("@ageGroupName", person.EventSpecific.AgeGroupName),
-                    new("@ageGroupId", person.EventSpecific.AgeGroupId),
-                    new("@anon", person.EventSpecific.Anonymous ? 1 : 0),
-                    new("@sms", person.EventSpecific.SMSEnabled ? 1 : 0),
-                    new("@apparel", person.EventSpecific.Apparel),
-                    new("@division", person.EventSpecific.Division),
-                    new("@version", person.EventSpecific.Version),
-                    new("@uploaded", person.EventSpecific.UploadedVersion)
+                    new SQLiteParameter("@distanceId", person.EventSpecific.DistanceIdentifier),
+                    new SQLiteParameter("@bib", person.EventSpecific.Bib),
+                    new SQLiteParameter("@checkedin", person.EventSpecific.CheckedIn),
+                    new SQLiteParameter("@eventspecid", person.EventSpecific.Identifier),
+                    new SQLiteParameter("@owes", person.EventSpecific.Owes),
+                    new SQLiteParameter("@other", person.EventSpecific.Other),
+                    new SQLiteParameter("@comments", person.EventSpecific.Comments),
+                    new SQLiteParameter("@status", person.EventSpecific.Status),
+                    new SQLiteParameter("@ageGroupName", person.EventSpecific.AgeGroupName),
+                    new SQLiteParameter("@ageGroupId", person.EventSpecific.AgeGroupId),
+                    new SQLiteParameter("@anon", person.EventSpecific.Anonymous ? 1 : 0),
+                    new SQLiteParameter("@sms", person.EventSpecific.SmsEnabled ? 1 : 0),
+                    new SQLiteParameter("@apparel", person.EventSpecific.Apparel),
+                    new SQLiteParameter("@division", person.EventSpecific.Division),
+                    new SQLiteParameter("@version", person.EventSpecific.Version),
+                    new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion)
                 ]);
             command.ExecuteNonQuery();
         }
@@ -257,22 +257,22 @@ namespace Chronokeep.Database.SQLite
                 "participant_gender=@gender " +
                 "WHERE participant_id=@participantid";
             command.Parameters.AddRange([
-                    new("@first", person.FirstName),
-                    new("@last", person.LastName),
-                    new("@street", person.Street),
-                    new("@city", person.City),
-                    new("@state", person.State),
-                    new("@zip", person.Zip),
-                    new("@birthdate", person.Birthdate),
-                    new("@ecname", person.EcName),
-                    new("@ecphone", person.EcPhone),
-                    new("@email", person.Email),
-                    new("@participantid", person.Identifier),
-                    new("@mobile", person.Mobile),
-                    new("@parent", person.Parent),
-                    new("@country", person.Country),
-                    new("@street2", person.Street2),
-                    new("@gender", person.Gender) ]);
+                    new SQLiteParameter("@first", person.FirstName),
+                    new SQLiteParameter("@last", person.LastName),
+                    new SQLiteParameter("@street", person.Street),
+                    new SQLiteParameter("@city", person.City),
+                    new SQLiteParameter("@state", person.State),
+                    new SQLiteParameter("@zip", person.Zip),
+                    new SQLiteParameter("@birthdate", person.Birthdate),
+                    new SQLiteParameter("@ecname", person.EcName),
+                    new SQLiteParameter("@ecphone", person.EcPhone),
+                    new SQLiteParameter("@email", person.Email),
+                    new SQLiteParameter("@participantid", person.Identifier),
+                    new SQLiteParameter("@mobile", person.Mobile),
+                    new SQLiteParameter("@parent", person.Parent),
+                    new SQLiteParameter("@country", person.Country),
+                    new SQLiteParameter("@street2", person.Street2),
+                    new SQLiteParameter("@gender", person.Gender) ]);
             command.ExecuteNonQuery();
             command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
@@ -288,16 +288,16 @@ namespace Chronokeep.Database.SQLite
                 "eventspecific_age_group_id=@ageGroupId " +
                 "WHERE eventspecific_id=@eventspecid";
             command.Parameters.AddRange([
-                    new("@distanceId", person.EventSpecific.DistanceIdentifier),
-                    new("@bib", person.EventSpecific.Bib),
-                    new("@checkedin", person.EventSpecific.CheckedIn),
-                    new("@eventspecid", person.EventSpecific.Identifier),
-                    new("@owes", person.EventSpecific.Owes),
-                    new("@other", person.EventSpecific.Other),
-                    new("@comments", person.EventSpecific.Comments),
-                    new("@status", person.EventSpecific.Status),
-                    new("@ageGroupName", person.EventSpecific.AgeGroupName),
-                    new("@ageGroupId", person.EventSpecific.AgeGroupId),
+                    new SQLiteParameter("@distanceId", person.EventSpecific.DistanceIdentifier),
+                    new SQLiteParameter("@bib", person.EventSpecific.Bib),
+                    new SQLiteParameter("@checkedin", person.EventSpecific.CheckedIn),
+                    new SQLiteParameter("@eventspecid", person.EventSpecific.Identifier),
+                    new SQLiteParameter("@owes", person.EventSpecific.Owes),
+                    new SQLiteParameter("@other", person.EventSpecific.Other),
+                    new SQLiteParameter("@comments", person.EventSpecific.Comments),
+                    new SQLiteParameter("@status", person.EventSpecific.Status),
+                    new SQLiteParameter("@ageGroupName", person.EventSpecific.AgeGroupName),
+                    new SQLiteParameter("@ageGroupId", person.EventSpecific.AgeGroupId),
                 ]);
             command.ExecuteNonQuery();
         }
@@ -340,18 +340,18 @@ namespace Chronokeep.Database.SQLite
                 eventId, distanceId, connection);
         }
 
-        internal static List<Participant> GetParticipantsWorker(string query, int eventId, int distanceId, SQLiteConnection connection)
+        private static List<Participant> GetParticipantsWorker(string query, int eventId, int distanceId, SQLiteConnection connection)
         {
             List<Participant> output = [];
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = query;
             if (eventId != -1)
             {
-                command.Parameters.Add(new("@event", eventId));
+                command.Parameters.Add(new SQLiteParameter("@event", eventId));
             }
             if (distanceId != -1)
             {
-                command.Parameters.Add(new("@distance", distanceId));
+                command.Parameters.Add(new SQLiteParameter("@distance", distanceId));
             }
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
@@ -400,7 +400,7 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        internal static Participant? GetParticipantWorker(SQLiteDataReader reader)
+        private static Participant? GetParticipantWorker(SQLiteDataReader reader)
         {
             if (reader.Read())
             {
@@ -456,8 +456,8 @@ namespace Chronokeep.Database.SQLite
                 "LEFT JOIN bib_chip_assoc c ON c.bib = s.eventspecific_bib " +
                 "WHERE s.event_id=@eventid " +
                 "AND s.eventspecific_id=@eventSpecId";
-            command.Parameters.Add(new("@eventid", eventIdentifier));
-            command.Parameters.Add(new("@eventSpecId", eventSpecificId));
+            command.Parameters.Add(new SQLiteParameter("@eventid", eventIdentifier));
+            command.Parameters.Add(new SQLiteParameter("@eventSpecId", eventSpecificId));
             SQLiteDataReader reader = command.ExecuteReader();
             Participant? output = GetParticipantWorker(reader);
             reader.Close();
@@ -473,8 +473,8 @@ namespace Chronokeep.Database.SQLite
                 "LEFT JOIN bib_chip_assoc c ON c.bib = s.eventspecific_bib " +
                 "WHERE s.event_id=@eventid " +
                 "AND s.eventspecific_bib=@bib";
-            command.Parameters.Add(new("@eventid", eventIdentifier));
-            command.Parameters.Add(new("@bib", bib));
+            command.Parameters.Add(new SQLiteParameter("@eventid", eventIdentifier));
+            command.Parameters.Add(new SQLiteParameter("@bib", bib));
             SQLiteDataReader reader = command.ExecuteReader();
             Participant? output = GetParticipantWorker(reader);
             reader.Close();
@@ -489,8 +489,8 @@ namespace Chronokeep.Database.SQLite
                     "AND d.distance_id=s.distance_id AND " +
                     "s.eventspecific_bib=b.bib AND b.chip=@chip AND b.event_id=s.event_id;";
             command.Parameters.AddRange([
-                new("@eventid", eventIdentifier),
-                new("@chip", chip)
+                new SQLiteParameter("@eventid", eventIdentifier),
+                new SQLiteParameter("@chip", chip)
                 ]);
             SQLiteDataReader reader = command.ExecuteReader();
             Participant? output = GetParticipantWorker(reader);
@@ -506,8 +506,8 @@ namespace Chronokeep.Database.SQLite
                 "JOIN distances AS d ON s.distance_id=d.distance_id " +
                 "LEFT JOIN bib_chip_assoc c ON c.bib = s.eventspecific_bib " +
                 "WHERE s.event_id=@eventid AND p.participant_id=@partId";
-            command.Parameters.Add(new("@eventid", eventId));
-            command.Parameters.Add(new("@partId", identifier));
+            command.Parameters.Add(new SQLiteParameter("@eventid", eventId));
+            command.Parameters.Add(new SQLiteParameter("@partId", identifier));
             SQLiteDataReader reader = command.ExecuteReader();
             Participant? output = GetParticipantWorker(reader);
             reader.Close();
@@ -526,14 +526,14 @@ namespace Chronokeep.Database.SQLite
                     "AND p.participant_city=@city AND p.participant_state=@state AND p.participant_zip=@zip " +
                     "AND p.participant_birthday=@birthday";
             command.Parameters.AddRange([
-                    new("@eventid", eventId),
-                    new("@first", unknown.FirstName),
-                    new("@last", unknown.LastName),
-                    new("@street", unknown.Street),
-                    new("@city", unknown.City),
-                    new("@state", unknown.State),
-                    new("@zip", unknown.Zip),
-                    new("@birthday", unknown.Birthdate)
+                    new SQLiteParameter("@eventid", eventId),
+                    new SQLiteParameter("@first", unknown.FirstName),
+                    new SQLiteParameter("@last", unknown.LastName),
+                    new SQLiteParameter("@street", unknown.Street),
+                    new SQLiteParameter("@city", unknown.City),
+                    new SQLiteParameter("@state", unknown.State),
+                    new SQLiteParameter("@zip", unknown.Zip),
+                    new SQLiteParameter("@birthday", unknown.Birthdate)
                 ]);
             SQLiteDataReader reader = command.ExecuteReader();
             Participant? output = GetParticipantWorker(reader);
@@ -541,7 +541,7 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        internal static int GetParticipantID(Participant person, SQLiteConnection connection)
+        internal static int GetParticipantId(Participant person, SQLiteConnection connection)
         {
             int output = -1;
             SQLiteCommand command = connection.CreateCommand();
@@ -550,11 +550,11 @@ namespace Chronokeep.Database.SQLite
                 "participant_zip=@zip AND participant_birthday=@birthday";
             command.Parameters.AddRange(
             [
-                new("@first", person.FirstName),
-                new("@last", person.LastName),
-                new("@street", person.Street),
-                new("@zip", person.Zip),
-                new("@birthday", person.Birthdate)
+                new SQLiteParameter("@first", person.FirstName),
+                new SQLiteParameter("@last", person.LastName),
+                new SQLiteParameter("@street", person.Street),
+                new SQLiteParameter("@zip", person.Zip),
+                new SQLiteParameter("@birthday", person.Birthdate)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             if (reader.Read())

@@ -18,11 +18,11 @@ public partial class ApiPart : UserControl
         this.page = page;
         ApiNickname.Text = api.Nickname;
         ComboBoxItem? selected = null;
-        foreach (string uid in Constants.APIConstants.API_TYPE_NAMES.Keys)
+        foreach (string uid in Constants.ApiConstants.API_TYPE_NAMES.Keys)
         {
             ComboBoxItem newItem = new()
             {
-                Content = Constants.APIConstants.API_TYPE_NAMES[uid],
+                Content = Constants.ApiConstants.API_TYPE_NAMES[uid],
                 Tag = uid,
                 IsSelected = TheApi.Type.Equals(uid),
             };
@@ -33,7 +33,7 @@ public partial class ApiPart : UserControl
             ApiType.Items.Add(newItem);
         }
         ApiUrl.Text = api.Url;
-        ApiUrl.IsEnabled = Constants.APIConstants.API_SELF_HOSTED[TheApi.Type];
+        ApiUrl.IsEnabled = Constants.ApiConstants.API_SELF_HOSTED[TheApi.Type];
         ApiToken.Text = api.AuthToken;
         ApiWebUrl.Text = api.WebUrl;
         if (selected != null)
@@ -70,9 +70,9 @@ public partial class ApiPart : UserControl
         // Ensure we've got something selected, and then change the URL if they've selected Chronokeep.
         if (ApiType.SelectedItem == null) return;
         string type = (string)((ComboBoxItem)ApiType.SelectedItem).Tag!;
-        if (!Constants.APIConstants.API_SELF_HOSTED[type])
+        if (!Constants.ApiConstants.API_SELF_HOSTED[type])
         {
-            TheApi.Url = Constants.APIConstants.API_URL[type];
+            TheApi.Url = Constants.ApiConstants.API_URL[type];
             ApiUrl.Text = TheApi.Url;
             ApiUrl.IsEnabled = false;
         }
@@ -80,7 +80,7 @@ public partial class ApiPart : UserControl
         {
             ApiUrl.IsEnabled = true;
         }
-        if (Constants.APIConstants.API_RESULTS[type])
+        if (Constants.ApiConstants.API_RESULTS[type])
         {
             ApiWebUrl.Text = TheApi.WebUrl;
             ApiWebUrl.IsEnabled = true;

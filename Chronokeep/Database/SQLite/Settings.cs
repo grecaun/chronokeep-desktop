@@ -4,7 +4,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    class Settings
+    internal class Settings
     {
         internal static AppSetting? GetAppSetting(string name, SQLiteConnection connection)
         {
@@ -27,12 +27,11 @@ namespace Chronokeep.Database.SQLite
 
         internal static void SetAppSetting(AppSetting setting, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction? transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO settings (setting, value)" +
-                " VALUES (@name,@value)";
+            command.CommandText = "INSERT INTO settings (setting, value) VALUES (@name,@value)";
             command.Parameters.AddRange([
-            new SQLiteParameter("@name", setting.Name),
+                new SQLiteParameter("@name", setting.Name),
                 new SQLiteParameter("@value", setting.Value) ]);
             command.ExecuteNonQuery();
             transaction.Commit();

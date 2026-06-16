@@ -108,7 +108,7 @@ namespace Chronokeep.Objects
             Type = other.Type;
         }
 
-        public void CreateTimingSystemInterface(IDBInterface database, IMainWindow window)
+        public void CreateTimingSystemInterface(IdbInterface database, IMainWindow window)
         {
             switch (Type)
             {

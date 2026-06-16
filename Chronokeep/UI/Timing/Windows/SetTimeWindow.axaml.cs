@@ -14,6 +14,7 @@ public partial class SetTimeWindow : ChronokeepWindow
     public SetTimeWindow(ITimingPage parent, TimingSystem timingSystem)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.parent = parent;
         this.timingSystem = timingSystem;
     }
@@ -64,10 +65,5 @@ public partial class SetTimeWindow : ChronokeepWindow
     private void Done_Click(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

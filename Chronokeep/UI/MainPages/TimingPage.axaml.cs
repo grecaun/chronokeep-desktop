@@ -42,7 +42,7 @@ namespace Chronokeep.UI.MainPages;
 public partial class TimingPage : UserControl, IMainPage, ITimingPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private ISubPage? subPage;
 
     private CancellationTokenSource? cts;
@@ -78,7 +78,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     private readonly bool loaded;
 
-    public TimingPage(IMainWindow window, IDBInterface database)
+    public TimingPage(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
         this.database = database;
@@ -267,7 +267,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             ApiPanel.IsVisible = false;
         }
-        if (mWindow.IsAPIControllerRunning())
+        if (mWindow.IsApiControllerRunning())
         {
             AutoApiButton.Content = "Stop Uploads";
             ManualApiButton.IsEnabled = false;
@@ -296,9 +296,9 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         UpdateDnsButton();
 
         // check if we have a remote api set up
-        foreach (ApiObject api in database.GetAllAPI())
+        foreach (ApiObject api in database.GetAllApi())
         {
-            if (api.Type == APIConstants.CHRONOKEEP_REMOTE_SELF || api.Type == APIConstants.CHRONOKEEP_REMOTE)
+            if (api.Type == ApiConstants.CHRONOKEEP_REMOTE_SELF || api.Type == ApiConstants.CHRONOKEEP_REMOTE)
             {
                 RemoteControllerSwitch?.IsVisible = true;
                 RemoteReadersButton?.IsVisible = ReaderExpander.IsExpanded;
@@ -330,11 +330,11 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         RecalculateButton.Content = alreadyRecalculating ? "Working..." : "Recalculate";
     }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public static void UpdateDatabase() { }
 
@@ -458,9 +458,9 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             ApiPanel.IsVisible = false;
         }
-        if (mWindow.IsAPIControllerRunning())
+        if (mWindow.IsApiControllerRunning())
         {
-            AutoApiButton.Content = mWindow.APIErrors() > 0 ? $"Stop Uploads ({mWindow.APIErrors()})" : "Stop Uploads";
+            AutoApiButton.Content = mWindow.ApiErrors() > 0 ? $"Stop Uploads ({mWindow.ApiErrors()})" : "Stop Uploads";
             ManualApiButton.IsEnabled = false;
         }
         else
@@ -718,7 +718,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {
@@ -935,7 +935,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.CSVType],
+                FileTypeChoices = [Utils.CsvType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Log.csv",
                 SuggestedStartLocation = startingFolder,
             });
@@ -984,7 +984,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 List<object[]> data = [];
                 data.AddRange(chipReads.Select(read => (object[])[read.Status, read.ChipNumber, read.Seconds, read.Milliseconds, read.TimeSeconds, read.TimeMilliseconds, read.Antenna, read.Reader, read.Box, read.LogId, read.Rssi, read.IsRewind, read.ReaderTime, read.StartTime, read.ReadBib, read.Type]));
-                CSVExporter exporter = new(format.ToString());
+                CsvExporter exporter = new(format.ToString());
                 exporter.SetData(headers, data);
                 exporter.ExportData(file.TryGetLocalPath()!);
             }
@@ -995,7 +995,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 {
                     List<object[]> data = [];
                     data.AddRange(locationReadDict[key].Select(read => (object[])[read.Status, read.ChipNumber, read.Seconds, read.Milliseconds, read.TimeSeconds, read.TimeMilliseconds, read.Antenna, read.Reader, read.Box, read.LogId, read.Rssi, read.IsRewind, read.ReaderTime, read.StartTime, read.ReadBib, read.Type]));
-                    CSVExporter exporter = new(format.ToString());
+                    CsvExporter exporter = new(format.ToString());
                     exporter.SetData(headers, data);
                     string outFileName =
                         $"{Path.GetDirectoryName(file.TryGetLocalPath()!)}\\{FileSaveRegex().Replace(key.ToLower(), "")}-{file.Name}";
@@ -1016,10 +1016,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         Log.D("UI.MainPages.TimingPage", "Searchbox text has changed");
         cts?.Cancel();
         cts = null;
-        cts = new();
+        cts = new CancellationTokenSource();
         try
         {
-            subPage!.Search(cts.Token, SearchBox.Text!.Trim());
+            subPage!.Search(cts.Token);
             cts = null;
         }
         catch
@@ -1064,9 +1064,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     private void ReaderSelectionBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (!loaded) { return; }
-        if (subPage == null) return;
-        string readerItem = (string)ReaderSelectionBox.SelectedItem!;
-        subPage.Reader(readerItem);
+        subPage?.Reader();
     }
 
     private void LocationBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -1159,7 +1157,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             ApiObject? api = null;
             try
             {
-                api = database.GetAPI(theEvent!.ApiId);
+                api = database.GetApi(theEvent!.ApiId);
                 Log.D("UI.MainPages.TimingPage", "API found.");
             }
             catch
@@ -1176,7 +1174,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     Log.D("UI.MainPages.TimingPage", "Deleting results from API.");
                     if (theEvent.UploadSpecific)
                     {
-                        foreach (Distance d in database.GetDistances(theEvent.Identifier).Where(d => d.Upload && d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID))
+                        foreach (Distance d in database.GetDistances(theEvent.Identifier).Where(d => d is { Upload: true, LinkedDistance: Constants.Timing.DISTANCE_NO_LINKED_ID }))
                         {
                             await ApiController.DeleteResults(api, eventIds[0], eventIds[1], d.Name);
                         }
@@ -1226,12 +1224,12 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         if ((string)AutoApiButton.Content! == "Auto Upload")
         {
             AutoApiButton.Content = "Starting...";
-            mWindow.StartAPIController();
+            mWindow.StartApiController();
         }
         else
         {
             AutoApiButton.Content = "Stopping...";
-            mWindow.StopAPIController();
+            mWindow.StopApiController();
         }
     }
 
@@ -1274,7 +1272,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     sentIDs.Add(esId);
                 }
                 List<TimeResult> finishTimes = database.GetFinishTimes(theEvent.Identifier);
-                ApiObject api = database.GetAPI(theEvent.ApiId)!;
+                ApiObject api = database.GetApi(theEvent.ApiId)!;
                 Dictionary<string, Participant> participantDictionary = [];
                 int distances = 0;
                 foreach (Participant p in database.GetParticipants(theEvent.Identifier))
@@ -1446,7 +1444,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.HTMLType],
+                FileTypeChoices = [Utils.HtmlType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Web.html",
                 SuggestedStartLocation = startingFolder,
             });

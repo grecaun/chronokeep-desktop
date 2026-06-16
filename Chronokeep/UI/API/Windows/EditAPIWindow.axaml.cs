@@ -14,13 +14,11 @@ public partial class EditApiWindow : ChronokeepWindow
     private readonly ApiObject? api;
     private readonly string? slug, year;
 
-    private EditApiWindow(IMainWindow window, IDBInterface database)
+    private EditApiWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
-        MinHeight = 100;
-        MinWidth = 300;
-        Width = 330;
         Event? theEvent1 = database.GetCurrentEvent();
         // Get API to upload.
         if (theEvent1 == null || theEvent1.Identifier < 1 || theEvent1.ApiId < 0 || theEvent1.ApiEventId.Length < 1)
@@ -29,7 +27,7 @@ public partial class EditApiWindow : ChronokeepWindow
             EditApiFrame.Content = new Pages.EditApiErrorPage(this, true);
             return;
         }
-        api = database.GetAPI(theEvent1.ApiId);
+        api = database.GetApi(theEvent1.ApiId);
         string[] eventIds = theEvent1.ApiEventId.Split(',');
         if (eventIds.Length != 2)
         {
@@ -45,7 +43,7 @@ public partial class EditApiWindow : ChronokeepWindow
         window?.NetworkUpdateResults();
     }
 
-    public static EditApiWindow NewWindow(IMainWindow window, IDBInterface database)
+    public static EditApiWindow NewWindow(IMainWindow window, IdbInterface database)
     {
         return new EditApiWindow(window, database);
     }
@@ -62,11 +60,6 @@ public partial class EditApiWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window?.WindowFinalize();
     }
 }

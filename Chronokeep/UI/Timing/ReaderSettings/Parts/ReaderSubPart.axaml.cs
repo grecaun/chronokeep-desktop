@@ -97,15 +97,15 @@ public partial class ReaderSubPart : UserControl
             PortalReader.READER_KIND_RFID => 2,
             _ => -1,
         };
-        this.IpBox.Text = iReader.IpAddress;
-        this.PortBox.Text = iReader.Port.ToString();
+        IpBox.Text = iReader.IpAddress;
+        PortBox.Text = iReader.Port.ToString();
         AutoConnectSwitch.IsChecked = iReader.AutoConnect;
         ConnectedSwitch.IsChecked = iReader.Connected;
         ConnectedSwitch.IsEnabled = true;
         AntennaPanel.Children.Clear();
         for (int ix = 0; ix < iReader.Antennas.Length; ix++)
         {
-            if (this.reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
+            if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
             {
                 AntennaPanel.Children.Add(new Border()
                 {

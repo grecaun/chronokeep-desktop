@@ -2,17 +2,6 @@
 {
     public class EventSpecific
     {
-        private int identifier, eventIdentifier, distanceIdentifier,
-            checkedIn = 0,
-            status = Constants.Timing.EVENTSPECIFIC_UNKNOWN,
-            ageGroupId = Constants.Timing.TIMERESULT_DUMMYAGEGROUP,
-            version = 0,
-            uploaded_version = -1;
-        private string comments = "", distanceName = "", owes = "", other = "", ageGroupName = "", bib = "", apparel = "", division = "";
-        private bool anonymous, sms_enabled;
-
-        public EventSpecific() { }
-
         // Constructor to be used when adding to db
         public EventSpecific(
             int eid,
@@ -24,25 +13,25 @@
             string owes,
             string other,
             bool anonymous,
-            bool sms_enabled,
+            bool smsEnabled,
             string apparel,
             string division
             )
         {
-            eventIdentifier = eid;
-            distanceIdentifier = did;
-            this.distanceName = distanceName ?? "";
-            this.bib = bib ?? "";
-            checkedIn = ci == 0 ? 0 : 1;
-            this.comments = comments ?? "";
-            this.owes = owes ?? "";
-            this.other = other ?? "";
-            this.anonymous = anonymous;
-            this.sms_enabled = sms_enabled;
-            this.apparel = apparel ?? "";
-            this.division = division ?? "";
-            version = Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION;
-            uploaded_version = Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION;
+            EventIdentifier = eid;
+            DistanceIdentifier = did;
+            DistanceName = distanceName;
+            Bib = bib;
+            CheckedIn = ci == 0 ? 0 : 1;
+            Comments = comments;
+            Owes = owes;
+            Other = other;
+            Anonymous = anonymous;
+            SmsEnabled = smsEnabled;
+            Apparel = apparel;
+            Division = division;
+            Version = Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION;
+            UploadedVersion = Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION;
         }
 
         // Constructor the database uses
@@ -60,43 +49,43 @@
             string ageGroupName,
             int ageGroupId,
             bool anonymous,
-            bool sms_enabled,
+            bool smsEnabled,
             string apparel,
             string division,
             int version,
-            int uploaded_version
+            int uploadedVersion
             )
         {
-            identifier = id;
-            eventIdentifier = eid;
-            distanceIdentifier = did;
-            this.distanceName = distanceName ?? "";
-            this.bib = bib ?? "";
-            checkedIn = ci != 0 ? 1 : 0;
-            this.owes = owes ?? "";
-            this.other = other ?? "";
-            this.comments = comments ?? "";
-            this.status = status;
-            this.ageGroupName = ageGroupName ?? "";
-            this.ageGroupId = ageGroupId;
-            this.anonymous = anonymous;
-            this.sms_enabled = sms_enabled;
-            this.apparel = apparel ?? "";
-            this.division = division ?? "";
-            this.version = version;
-            this.uploaded_version = uploaded_version;
+            Identifier = id;
+            EventIdentifier = eid;
+            DistanceIdentifier = did;
+            DistanceName = distanceName;
+            Bib = bib;
+            CheckedIn = ci != 0 ? 1 : 0;
+            Owes = owes;
+            Other = other;
+            Comments = comments;
+            Status = status;
+            AgeGroupName = ageGroupName;
+            AgeGroupId = ageGroupId;
+            Anonymous = anonymous;
+            SmsEnabled = smsEnabled;
+            Apparel = apparel;
+            Division = division;
+            Version = version;
+            UploadedVersion = uploadedVersion;
         }
 
         internal void Trim()
         {
-            distanceName = distanceName.Trim();
-            bib = bib.Trim();
-            owes = owes.Trim();
-            other = other.Trim();
-            comments = comments.Trim();
-            ageGroupName = ageGroupName.Trim();
-            apparel = apparel.Trim();
-            division = division.Trim();
+            DistanceName = DistanceName.Trim();
+            Bib = Bib.Trim();
+            Owes = Owes.Trim();
+            Other = Other.Trim();
+            Comments = Comments.Trim();
+            AgeGroupName = AgeGroupName.Trim();
+            Apparel = Apparel.Trim();
+            Division = Division.Trim();
         }
 
         internal static EventSpecific Blank()
@@ -104,25 +93,26 @@
             return new EventSpecific(-1, -1, -1, "None", "", 0, "", "", "", 0, "", Constants.Timing.TIMERESULT_DUMMYAGEGROUP, false, false, "", "", Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION, Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION);
         }
 
-        public int Identifier { get => identifier; set => identifier = value; }
-        public int EventIdentifier { get => eventIdentifier; set => eventIdentifier = value; }
-        public int DistanceIdentifier { get => distanceIdentifier; set => distanceIdentifier = value; }
-        public string Bib { get => bib; set => bib = value ?? ""; }
-        public int CheckedIn { get => checkedIn; set => checkedIn = value; }
-        public string Comments { get => comments; set => comments = value ?? ""; }
-        public string DistanceName { get => distanceName; set => distanceName = value ?? ""; }
-        public string Owes { get => owes; set => owes = value ?? ""; }
-        public string Other { get => other; set => other = value ?? ""; }
-        public int Status { get => status; set => status = value; }
-        public string StatusStr { get => Constants.Timing.EVENTSPECIFIC_STATUS_NAMES[status]; }
-        public string AgeGroupName { get => ageGroupName; set => ageGroupName = value ?? ""; }
-        public int AgeGroupId { get => ageGroupId; set => ageGroupId = value; }
-        public bool Anonymous { get => anonymous; set => anonymous = value; }
-        public bool SMSEnabled { get => sms_enabled; set => sms_enabled = value; }
-        public string Apparel { get => apparel; set => apparel = value ?? ""; }
-        public string Division { get => division; set => division = value ?? ""; }
-        public int Version { get => version; set => version = value; }
-        public int UploadedVersion { get => uploaded_version; set => uploaded_version = value; }
+        public int Identifier { get; set; }
+        public int EventIdentifier { get; set; }
+        public int DistanceIdentifier { get; set; }
+        public string Bib { get; set; } = "";
+        public int CheckedIn { get; private set; }
+        public string Comments { get; private set; } = "";
+        public string DistanceName { get; set; } = "";
+        public string Owes { get; private set; } = "";
+        public string Other { get; private set; } = "";
+        public int Status { get; set; } = Constants.Timing.EVENTSPECIFIC_UNKNOWN;
+        public string StatusStr => Constants.Timing.EVENTSPECIFIC_STATUS_NAMES[Status];
+        public string AgeGroupName { get; set; } = "";
+        public int AgeGroupId { get; set; } = Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
+        public bool Anonymous { get; private set; }
+
+        public bool SmsEnabled { get; set; }
+        public string Apparel { get; private set; } = "";
+        public string Division { get; private set; } = "";
+        public int Version { get; set; }
+        public int UploadedVersion { get; set; } = -1;
 
         public void CopyFrom(EventSpecific other)
         {
@@ -138,26 +128,25 @@
             AgeGroupName = other.AgeGroupName;
             AgeGroupId = other.AgeGroupId;
             Anonymous = other.Anonymous;
-            SMSEnabled = other.SMSEnabled;
+            SmsEnabled = other.SmsEnabled;
             Apparel = other.Apparel;
             Division = other.Division;
-            version = other.version;
-            uploaded_version = other.uploaded_version;
+            Version = other.Version;
+            UploadedVersion = other.UploadedVersion;
         }
 
         public bool Equals(EventSpecific other)
         {
-            if (other == null) return false;
             return EventIdentifier == other.EventIdentifier
-                && DistanceIdentifier == other.DistanceIdentifier
-                && Bib == other.Bib
-                && Comments == other.Comments
-                && Owes == other.Owes
-                && Other == other.Other
-                && Anonymous == other.Anonymous
-                && SMSEnabled == other.SMSEnabled
-                && Apparel == other.Apparel
-                && Division == other.Division;
+                   && DistanceIdentifier == other.DistanceIdentifier
+                   && Bib == other.Bib
+                   && Comments == other.Comments
+                   && Owes == other.Owes
+                   && Other == other.Other
+                   && Anonymous == other.Anonymous
+                   && SmsEnabled == other.SmsEnabled
+                   && Apparel == other.Apparel
+                   && Division == other.Division;
         }
     }
 }

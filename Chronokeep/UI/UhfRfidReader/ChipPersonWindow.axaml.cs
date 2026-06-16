@@ -16,9 +16,10 @@ public partial class ChipPersonWindow : ChronokeepWindow
 
     public ChipPersonWindow(ChipReaderWindow reader, string eventDate)
     {
-        this.readerWindow = reader;
-        this.eventDate = eventDate;
         InitializeComponent();
+        ChronokeepInitialize();
+        readerWindow = reader;
+        this.eventDate = eventDate;
     }
 
     public async void UpdateInfo(Participant? person, string chip)
@@ -88,14 +89,5 @@ public partial class ChipPersonWindow : ChronokeepWindow
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
         readerWindow.PersonWindowClosing();
-    }
-
-    protected override void SetMaximizeIcon()
-    {      
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

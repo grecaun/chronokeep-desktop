@@ -25,7 +25,7 @@ public partial class ImportLogPage1 : UserControl
                 Tag = type.ToString()
             };
             TypeHolder.Items.Add(current);
-            if (type == importer.type)
+            if (type == importer.Kind)
             {
                 selected = current;
             }

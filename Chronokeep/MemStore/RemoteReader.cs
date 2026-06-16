@@ -1,12 +1,11 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects.ChronokeepRemote;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * RemoteReader Functions
@@ -18,29 +17,25 @@ namespace Chronokeep.MemStore
             database.AddRemoteReaders(eventId, readers);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent == null || theEvent.Identifier != eventId) return;
+                    foreach (RemoteReader reader in readers)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            foreach (RemoteReader reader in readers)
-                            {
-                                remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
-                                remoteReaders.Add(reader);
-                            }
-                        }
+                        remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                        remoteReaders.Add(reader);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -50,25 +45,23 @@ namespace Chronokeep.MemStore
             database.DeleteRemoteReader(eventId, reader);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
-                        }
+                        remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -78,28 +71,24 @@ namespace Chronokeep.MemStore
             database.DeleteRemoteReaders(eventId, readers);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (theEvent == null || theEvent.Identifier != eventId) return;
+                    foreach (RemoteReader reader in readers)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            foreach (RemoteReader reader in readers)
-                            {
-                                remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
-                            }
-                        }
+                        remoteReaders.RemoveAll(x => reader.ApiiDentifier == x.ApiiDentifier && reader.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -109,29 +98,27 @@ namespace Chronokeep.MemStore
             List<RemoteReader> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
-                        {
-                            output.AddRange(remoteReaders);
-                        }
-                        else
-                        {
-                            output.AddRange(database.GetRemoteReaders(eventId));
-                        }
+                        output.AddRange(remoteReaders);
                     }
-                    finally
+                    else
                     {
-                        memStoreLock.Exit();
+                        output.AddRange(database.GetRemoteReaders(eventId));
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }

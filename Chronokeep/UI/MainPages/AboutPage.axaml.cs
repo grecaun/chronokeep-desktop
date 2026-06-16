@@ -15,9 +15,9 @@ namespace Chronokeep.UI.MainPages;
 public partial class AboutPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
-    public AboutPage(IMainWindow mWindow, IDBInterface database)
+    public AboutPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -42,11 +42,11 @@ public partial class AboutPage : UserControl, IMainPage
 
     public void Closing() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void UpdateView() { }
 
@@ -79,16 +79,14 @@ public partial class AboutPage : UserControl, IMainPage
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                using Process dbusShowItemsProcess = new Process
+                using Process dbusShowItemsProcess = new Process();
+                dbusShowItemsProcess.StartInfo = new ProcessStartInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "dbus-send",
-                        Arguments =
-                            "--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://" +
-                            dirPath + "\" string:\"\"",
-                        UseShellExecute = true
-                    }
+                    FileName = "dbus-send",
+                    Arguments =
+                        "--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://" +
+                        dirPath + "\" string:\"\"",
+                    UseShellExecute = true
                 };
                 dbusShowItemsProcess.Start();
                 await dbusShowItemsProcess.WaitForExitAsync();

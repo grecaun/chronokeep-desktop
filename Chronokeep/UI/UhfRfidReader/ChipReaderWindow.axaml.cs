@@ -20,15 +20,16 @@ public partial class ChipReaderWindow : ChronokeepWindow
     private static int readNo = 1;
     private RfidSerial? serial;
     private static ChipPersonWindow? personWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly IWindowCallback? window;
     private readonly int eventId;
 
     private readonly ObservableCollection<RfidInfo> chipInfo = [];
 
-    private ChipReaderWindow(IWindowCallback window, IDBInterface database)
+    private ChipReaderWindow(IWindowCallback window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         InstantiateSerialPortList();
         reader = new NewReader(this);
         this.window = window;
@@ -40,7 +41,7 @@ public partial class ChipReaderWindow : ChronokeepWindow
         ChipNumbers.ItemsSource = chipInfo;
     }
 
-    public static ChipReaderWindow NewWindow(IWindowCallback window, IDBInterface database)
+    public static ChipReaderWindow NewWindow(IWindowCallback window, IdbInterface database)
     {
         return new ChipReaderWindow(window, database);
     }
@@ -105,7 +106,7 @@ public partial class ChipReaderWindow : ChronokeepWindow
         {
             Log.E("ChipReaderWindow", "Things are already closed.");
         }
-        window?.WindowFinalize(this);
+        window?.WindowFinalize();
     }
 
     private void RefreshBtn_Click(object? sender, RoutedEventArgs e)

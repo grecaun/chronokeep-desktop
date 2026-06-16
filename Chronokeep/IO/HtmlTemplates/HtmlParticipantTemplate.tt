@@ -23,7 +23,7 @@
             <div class="container-sm sm-max-width m-5 mt-0 p-4 mx-auto shadow">
                 <div class="p-2">
                     <div class="text-center text-important display-4 m-0"><#= finish != null ? finish.PrettyParticipantName : "Unknown" #></div>
-                    <div class="text-center text-important text-secondary m-0"><#= finish == null ? "" : finish.Gender.Length < 1 || finish.Gender == "Not Specified" ? finish.Age(theEvent.Date) : string.Format("{0} - {1}", finish.Gender, finish.Age(theEvent.Date)) #></div>
+                    <div class="text-center text-important text-secondary m-0"><#= finish == null ? "" : finish.Gender.Length < 1 || finish.Gender == "Not Specified" ? finish.Age(theEvent.Date) : $"{finish.Gender} - {finish.Age(theEvent.Date)}" #></div>
                 </div>
                 <div class="h3 m-2 mt-0 text-center text-important text-secondary mx-auto"><#= finish != null ? finish.DistanceName : "" #></div>
                 <div class="bib-box h4 m-2 p-2 mx-auto"><#= finish != null ? finish.Bib : "" #></div>
@@ -34,23 +34,23 @@
                         <# if (start != null) { #>
                             <div class="col col-cst text-center">
                                 <div class="h5 border-bottom">Start Time</div>
-                                <div class="h5"><#= start.Time.Substring(0, start.Time.Length > 3 ? start.Time.Length -2 : start.Time.Length) #></div>
+                                <div class="h5"><#= start.Time[..(start.Time.Length > 3 ? start.Time.Length -2 : start.Time.Length)] #></div>
                             </div>
                         <# } #>
-                        <# if (finish != null && finish.Finish) { #>
+                        <# if (finish is {Finish: true }) { #>
                             <div class="col col-cst text-center">
                                 <div class="h5 border-bottom">Chip Time</div>
-                                <div class="h5"><#= finish.ChipTime.Substring(0, finish.ChipTime.Length > 3 ? finish.ChipTime.Length -2 : finish.ChipTime.Length) #></div>
+                                <div class="h5"><#= finish.ChipTime[..(finish.ChipTime.Length > 3 ? finish.ChipTime.Length -2 : finish.ChipTime.Length)] #></div>
                             </div>
                         <# } #>
-                        <# if (finish != null && finish.Finish) { #>
+                        <# if (finish is {Finish: true }) { #>
                             <div class="col col-cst text-center">
                                 <div class="h5 border-bottom">Time</div>
-                                <div class="h5"><#= finish != null ? finish.Time.Substring(0, finish.Time.Length > 3 ? finish.Time.Length -2 : finish.Time.Length) : "" #></div>
+                                <div class="h5"><#= finish != null ? finish.Time[..(finish.Time.Length > 3 ? finish.Time.Length -2 : finish.Time.Length)] : "" #></div>
                             </div>
                         <# } #>
                     </div>
-                    <# if (finish != null && finish.Finish && finish.Place > 0) { #>
+                    <# if (finish is {Finish: true,Place: > 0 }) { #>
                         <div class="row d-flex justify-content-center align-items-center gx-4 gy-3">
                             <div class="col-sm-4 text-center">
                                 <div class="h5 border-bottom">Overall</div>
@@ -64,7 +64,7 @@
                             <# } #>
                             <# if (finish.Gender.Length > 0 && finish.AgeGroupName.Length > 0 && finish.AgePlace > 0) { #>
                                 <div class="col-sm-4 text-center">
-                                    <div class="h5 border-bottom"><#= string.Format("{0} {1}", rankingGender, finish.AgeGroupName) #></div>
+                                    <div class="h5 border-bottom"><#= $"{rankingGender} {finish.AgeGroupName}" #></div>
                                     <div class="h5"><#= finish.AgePlace #></div>
                                 </div>
                             <# } #>
@@ -88,10 +88,10 @@
                             </thead>
                             <tbody>
                                 <# foreach (TimeResult r in resultList) { #>
-                                    <tr key="<#= string.Format("segment-{0}-{1}", r.LocationId, r.Occurrence) #>">
-                                        <td><#= (r.SegmentName == "Finish")? string.Format("Lap {0}", r.Occurrence) : r.SegmentName #></td>
-                                        <td class="overflow-hidden-sm"><#= r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length) #></td>
-                                        <td><#= r.ChipTime.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length) #></td>
+                                    <tr key="<#= $"segment-{r.LocationId}-{r.Occurrence}" #>">
+                                        <td><#= r.SegmentName == "Finish"? $"Lap {r.Occurrence}" : r.SegmentName #></td>
+                                        <td class="overflow-hidden-sm"><#= r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)] #></td>
+                                        <td><#= r.ChipTime[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)] #></td>
                                     </tr>
                                 <# } #>
                             </tbody>
@@ -110,11 +110,11 @@
                                 </thead>
                                 <tbody>
                                 <# foreach (TimeResult r in resultList) { #>
-                                    <tr key="<#= string.Format("segment-{0}-{1}", r.LocationId, r.Occurrence) #>">
+                                    <tr key="<#= $"segment-{r.LocationId}-{r.Occurrence}" #>">
                                         <td class="overflow-hidden-sm"><#= r.Place > 0 ? r.Place : "" #></td>
                                         <td class="overflow-hidden-sm"><#= r.AgePlace > 0 ? r.AgePlace : "" #></td>
                                         <td class="overflow-hidden-sm"><#= r.GenderPlace > 0 ? r.GenderPlace : "" #></td>
-                                        <td><#= r.ChipTime.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length) #></td>
+                                        <td><#= r.ChipTime[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)] #></td>
                                     </tr>
                                 <# } #>
                             </tbody>

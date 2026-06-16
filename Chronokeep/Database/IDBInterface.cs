@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Chronokeep.Database
 {
-    public interface IDBInterface
+    public interface IdbInterface
     {
         // Database Functions
         void Initialize();
@@ -18,23 +18,23 @@ namespace Chronokeep.Database
         void SetAppSetting(AppSetting setting);
 
         // Results API Functions
-        int AddAPI(ApiObject anAPI);
-        void UpdateAPI(ApiObject anAPI);
-        void RemoveAPI(int identifier);
-        ApiObject? GetAPI(int identifier);
-        List<ApiObject> GetAllAPI();
+        int AddApi(ApiObject anApi);
+        void UpdateApi(ApiObject anApi);
+        void RemoveApi(int identifier);
+        ApiObject? GetApi(int identifier);
+        List<ApiObject> GetAllApi();
 
         // Event Functions
         int AddEvent(Event anEvent);
         void RemoveEvent(int identifier);
         void RemoveEvent(Event anEvent);
         void UpdateEvent(Event anEvent);
-        int GetEventID(Event anEvent);
+        int GetEventId(Event anEvent);
         void SetStartOptions(Event anEvent);
         void SetFinishOptions(Event anEvent);
         void SetStartFinishOptions(Event anEvent);
         Event? GetCurrentEvent();
-        void SetCurrentEvent(int eventID);
+        void SetCurrentEvent(int eventId);
         Event? GetEvent(int id);
         List<Event> GetEvents();
         void UpdateDivisionsEnabled();
@@ -46,7 +46,7 @@ namespace Chronokeep.Database
         void RemoveDistance(int identifier);
         void RemoveDistance(Distance div);
         void UpdateDistance(Distance div);
-        int GetDistanceID(Distance div);
+        int GetDistanceId(Distance div);
         List<Distance> GetDistances(int eventId);
         Distance? GetDistance(int divId);
         void SetWaveTimes(int eventId, int wave, long seconds, int milliseconds);
@@ -57,7 +57,7 @@ namespace Chronokeep.Database
         void RemoveTimingLocation(TimingLocation tp);
         void RemoveTimingLocation(int identifier);
         void UpdateTimingLocation(TimingLocation tp);
-        int GetTimingLocationID(TimingLocation tp);
+        int GetTimingLocationId(TimingLocation tp);
         List<TimingLocation> GetTimingLocations(int eventId);
 
         // Segment Functions
@@ -81,7 +81,7 @@ namespace Chronokeep.Database
         void RemoveParticipantEntries(List<Participant> participants);
         void UpdateParticipant(Participant person);
         void UpdateParticipants(List<Participant> participants);
-        int GetParticipantID(Participant person);
+        int GetParticipantId(Participant person);
         List<Participant> GetParticipants();
         List<Participant> GetParticipants(int eventId);
         List<Participant> GetParticipants(int eventId, int distanceId);
@@ -136,7 +136,7 @@ namespace Chronokeep.Database
         List<ChipRead> GetUsefulChipReads(int eventId);
         List<ChipRead> GetAnnouncerChipReads(int eventId);
         List<ChipRead> GetAnnouncerUsedChipReads(int eventId);
-        List<ChipRead> GetDNSChipReads(int eventId);
+        List<ChipRead> GetDnsChipReads(int eventId);
 
         // Age Group Functions
         int AddAgeGroup(AgeGroup group);
@@ -171,11 +171,11 @@ namespace Chronokeep.Database
         List<RemoteReader> GetRemoteReaders(int eventId);
 
         // SMS Alerts
-        void AddSMSAlert(int eventId, int eventspecific_id, int segment_id);
-        List<(int, int)> GetSMSAlerts(int eventId);
+        void AddSmsAlert(int eventId, int eventspecificId, int segmentId);
+        List<(int, int)> GetSmsAlerts(int eventId);
 
         // Email Alerts
-        void AddEmailAlert(int eventId, int eventspecific_id);
+        void AddEmailAlert(int eventId, int eventspecificId);
         List<int> GetEmailAlerts(int eventId);
 
         // Banned phones/emails functions

@@ -1,11 +1,10 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * Banned Email/Phone Functions
@@ -17,22 +16,20 @@ namespace Chronokeep.MemStore
             database.AddBannedEmail(email);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedEmails.Add(email);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedEmails.Add(email);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -42,25 +39,23 @@ namespace Chronokeep.MemStore
             database.AddBannedEmails(emails);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (string email in emails)
                     {
-                        foreach (string email in emails)
-                        {
-                            bannedEmails.Add(email);
-                        }
+                        bannedEmails.Add(email);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -70,22 +65,20 @@ namespace Chronokeep.MemStore
             database.AddBannedPhone(phone);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedPhones.Add(phone);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedPhones.Add(phone);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -95,25 +88,23 @@ namespace Chronokeep.MemStore
             database.AddBannedPhones(phones);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (string phone in phones)
                     {
-                        foreach (string phone in phones)
-                        {
-                            bannedPhones.Add(phone);
-                        }
+                        bannedPhones.Add(phone);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -123,22 +114,20 @@ namespace Chronokeep.MemStore
             List<string> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(bannedEmails);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(bannedEmails);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -149,22 +138,20 @@ namespace Chronokeep.MemStore
             List<string> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(bannedPhones);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(bannedPhones);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -175,22 +162,20 @@ namespace Chronokeep.MemStore
             database.RemoveBannedEmail(email);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedEmails.Remove(email);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedEmails.Remove(email);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -200,25 +185,23 @@ namespace Chronokeep.MemStore
             database.RemoveBannedEmails(emails);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (string email in emails)
                     {
-                        foreach (string email in emails)
-                        {
-                            bannedEmails.Remove(email);
-                        }
+                        bannedEmails.Remove(email);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -228,22 +211,20 @@ namespace Chronokeep.MemStore
             database.RemoveBannedPhone(phone);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedPhones.Remove(phone);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedPhones.Remove(phone);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -253,25 +234,23 @@ namespace Chronokeep.MemStore
             database.RemoveBannedPhones(phones);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (string phone in phones)
                     {
-                        foreach (string phone in phones)
-                        {
-                            bannedPhones.Remove(phone);
-                        }
+                        bannedPhones.Remove(phone);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -281,22 +260,20 @@ namespace Chronokeep.MemStore
             database.ClearBannedEmails();
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedEmails.Clear();
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedEmails.Clear();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -306,22 +283,20 @@ namespace Chronokeep.MemStore
             database.ClearBannedPhones();
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        bannedPhones.Clear();
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    bannedPhones.Clear();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

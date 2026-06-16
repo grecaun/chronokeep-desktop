@@ -11,8 +11,8 @@ namespace Chronokeep.Objects
     {
         public ApiObject() : this(
             0,
-            Constants.APIConstants.CHRONOKEEP_RESULTS,
-            Constants.APIConstants.API_URL[Constants.APIConstants.CHRONOKEEP_RESULTS],
+            Constants.ApiConstants.CHRONOKEEP_RESULTS,
+            Constants.ApiConstants.API_URL[Constants.ApiConstants.CHRONOKEEP_RESULTS],
             "",
             "",
             "") { }
@@ -26,7 +26,7 @@ namespace Chronokeep.Objects
 
         public async Task<List<RemoteReader>> GetReaders()
         {
-            if (Type != Constants.APIConstants.CHRONOKEEP_REMOTE && Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF)
+            if (Type != Constants.ApiConstants.CHRONOKEEP_REMOTE && Type != Constants.ApiConstants.CHRONOKEEP_REMOTE_SELF)
             {
                 throw new Exception("not a valid reader type");
             }
@@ -36,7 +36,7 @@ namespace Chronokeep.Objects
 
         public async Task<(List<ChipRead>, RemoteNotification)> GetReads(RemoteReader reader, DateTime start, DateTime end)
         {
-            if (Type != Constants.APIConstants.CHRONOKEEP_REMOTE && Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF)
+            if (Type != Constants.ApiConstants.CHRONOKEEP_REMOTE && Type != Constants.ApiConstants.CHRONOKEEP_REMOTE_SELF)
             {
                 throw new Exception("not a valid reader type");
             }
@@ -53,7 +53,7 @@ namespace Chronokeep.Objects
 
         public async Task<long> DeleteReads(RemoteReader reader, DateTime start, DateTime end)
         {
-            if (Type != Constants.APIConstants.CHRONOKEEP_REMOTE && Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF)
+            if (Type != Constants.ApiConstants.CHRONOKEEP_REMOTE && Type != Constants.ApiConstants.CHRONOKEEP_REMOTE_SELF)
             {
                 throw new Exception("not a valid reader type");
             }

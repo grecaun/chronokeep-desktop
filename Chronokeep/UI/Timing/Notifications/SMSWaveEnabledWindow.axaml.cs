@@ -11,18 +11,16 @@ namespace Chronokeep.UI.Timing.Notifications;
 public partial class SmsWaveEnabledWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
     private readonly Dictionary<int, bool> initialValues = [];
     private readonly Dictionary<int, bool> updatedValues = [];
     private readonly Dictionary<int, List<Distance>> waveDistanceDictionary = [];
 
-    public SmsWaveEnabledWindow(IMainWindow window, IDBInterface database)
+    public SmsWaveEnabledWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
-        MinHeight = 275;
-        MinWidth = 300;
-        Width = 300;
+        ChronokeepInitialize();
         Topmost = true;
         this.window = window;
         this.database = database;
@@ -50,7 +48,7 @@ public partial class SmsWaveEnabledWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
         if (updatedValues.Keys.Count > 0)
         {
             window.NotifyTimingWorker();
@@ -82,10 +80,5 @@ public partial class SmsWaveEnabledWindow : ChronokeepWindow
     private void Done_Click(object? sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

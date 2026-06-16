@@ -14,17 +14,18 @@ namespace Chronokeep.UI.EventWindows;
 public partial class ChangeEventWindow : ChronokeepWindow
 {
     private readonly IWindowCallback window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
-    private ChangeEventWindow(IWindowCallback window, IDBInterface database)
+    private ChangeEventWindow(IWindowCallback window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
         UpdateEventBox();
     }
 
-    public static ChangeEventWindow NewWindow(IWindowCallback window, IDBInterface database)
+    public static ChangeEventWindow NewWindow(IWindowCallback window, IdbInterface database)
     {
         return new ChangeEventWindow(window, database);
     }
@@ -67,7 +68,7 @@ public partial class ChangeEventWindow : ChronokeepWindow
         Event one = (Event)EventList.SelectedItem!;
         Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
         database.SetCurrentEvent(one.Identifier);
-        window.WindowFinalize(this);
+        window.WindowFinalize();
         Close();
     }
 
@@ -92,17 +93,12 @@ public partial class ChangeEventWindow : ChronokeepWindow
         Event one = (Event)EventList.SelectedItem!;
         Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
         database.SetCurrentEvent(one.Identifier);
-        window.WindowFinalize(this);
+        window.WindowFinalize();
         Close();
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window.WindowFinalize();
     }
 }

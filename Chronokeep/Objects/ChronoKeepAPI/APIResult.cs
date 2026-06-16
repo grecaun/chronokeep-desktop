@@ -9,7 +9,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         public ApiResult(Event theEvent, TimeResult result, DateTime start, string uniquePad)
         {
             PersonId = $"{result.EventSpecificId}-{uniquePad}";
-            Bib = result.Bib.ToString();
+            Bib = result.Bib;
             First = result.Anonymous ? "" : result.First;
             Last = result.Anonymous ? "" : result.Last;
             Age = result.Age(theEvent.Date);

@@ -1,6 +1,6 @@
 ﻿namespace Chronokeep.Constants
 {
-    internal class Network
+    internal static class Network
     {
         public const string DEFAULT_CHRONOKEEP_SERVER_NAME = "Chronokeep Registration";
         public const string CHRONOKEEP_ZCONF_MULTICAST_IP  = "224.0.44.88";

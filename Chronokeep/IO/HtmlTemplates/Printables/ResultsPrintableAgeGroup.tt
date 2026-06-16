@@ -82,10 +82,10 @@
 			{ #>
 			<div>
 				<div class='text-important table-header header-margin-top'><#= d #></div>
-				<# foreach ((int AgeGroupID, string gender) in distanceResults[d].Keys.OrderBy(c => c.Item2).ThenBy(i => ageGroups[i.Item1].StartAge))
+				<# foreach ((int ageGroupId, string gender) in distanceResults[d].Keys.OrderBy(c => c.Item2).ThenBy(i => ageGroups[i.Item1].StartAge))
 				{ #>
 					<table>
-						<tr><td colspan='9' class='table-header text-important'><#= string.Format("{0} {1} - {2}", gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "Men" : gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "Women" : gender, ageGroups[AgeGroupID].StartAge, ageGroups[AgeGroupID].EndAge) #></td></tr>
+						<tr><td colspan='9' class='table-header text-important'><#= $"{(gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "Men" : gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "Women" : gender)} {ageGroups[ageGroupId].StartAge} - {ageGroups[ageGroupId].EndAge}" #></td></tr>
 						<tr>
 							<td class="text-important table-label">Pl</td>
 							<td class="text-important table-label">Bib</td>
@@ -94,36 +94,36 @@
 							<td class="text-important table-label"><#= theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME ? "Laps" : "Finish (Clock)" #></td>
 							<td class="text-important table-label"><#= theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME ? "Time" : "Finish (Chip)" #></td>
 						</tr>
-						<# foreach (TimeResult r in distanceResults[d][(AgeGroupID, gender)])
+						<# foreach (TimeResult r in distanceResults[d][(ageGroupId, gender)])
 						{ #>
 						<tr>
 							<td><#= r.AgePlaceStr #></td>
-							<td><#= r.Bib.ToString() #></td>
+							<td><#= r.Bib #></td>
 							<td><#= r.PrettyParticipantName #></td>
 							<td><#= r.PlaceStr #></td>
 							<td>
 								<#= 
 									theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
 									? r.Occurrence
-									: r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
+									: r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
 								#>
 							</td>
 							<td>
 								<#= 
 									theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
-									? r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
-									: r.ChipTime.Substring(0, r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)
+									? r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
+									: r.ChipTime[..(r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)]
 								#>
 							</td>
 						</tr>
 						<# } #>
-						<#  if (dnfResultsDictionary.ContainsKey(d) && dnfResultsDictionary[d].ContainsKey((AgeGroupID, gender)))
+						<#  if (dnfResultsDictionary.ContainsKey(d) && dnfResultsDictionary[d].ContainsKey((ageGroupId, gender)))
 						{
-							foreach (TimeResult r in dnfResultsDictionary[d][(AgeGroupID, gender)])
+							foreach (TimeResult r in dnfResultsDictionary[d][(ageGroupId, gender)])
 							{ #>
 							<tr>
 								<td></td>
-								<td><#= r.Bib.ToString() #></td>
+								<td><#= r.Bib #></td>
 								<td><#= r.PrettyParticipantName #></td>
 								<td></td>
 								<td>DNF</td>

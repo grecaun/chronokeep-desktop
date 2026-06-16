@@ -25,7 +25,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 {
 
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
     private AppSetting chipType;
 
@@ -36,7 +36,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     [GeneratedRegex("[^0-9a-fA-F]")]
     private static partial Regex AllowedHexChars();
 
-    public ChipAssignmentPage(IMainWindow mWindow, IDBInterface database)
+    public ChipAssignmentPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -145,17 +145,17 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     private static void UpdateDatabase() { }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         UseTool_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         Export_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void Closing()
     {
@@ -321,7 +321,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                 }
                 else
                 {
-                    importer = new CSVImporter(filePath!);
+                    importer = new CsvImporter(filePath!);
                 }
                 await Task.Run(() =>
                 {
@@ -409,7 +409,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                 }
                 format.Remove(format.Length - 1, 1);
                 Log.D("UI.MainPages.ChipAssignmentPage", $"The format is '{format}'");
-                exporter = new CSVExporter(format.ToString());
+                exporter = new CsvExporter(format.ToString());
             }
             exporter.SetData(headers, data);
             exporter.ExportData(file.TryGetLocalPath()!);

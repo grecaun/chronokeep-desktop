@@ -29,14 +29,11 @@ namespace Chronokeep.UI.Util
         public DownloadWindow(GithubRelease r, Updates.Version v, IMainWindow mWindow)
         {
             InitializeComponent();
+            ChronokeepInitialize();
             Topmost = true;
             this.mWindow = mWindow;
-            MinHeight = 0;
-            Height = 250;
-            MinWidth = 0;
-            Width = 400;
             DownloadProgress.IsVisible = false;
-            this.version = v.ToString();
+            version = v.ToString();
             if (App.IsWindows)
             {
                 downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-setup-{version}.exe";
@@ -49,8 +46,8 @@ namespace Chronokeep.UI.Util
                 DialogBox.Show("Linux downloads not yet implemented.");
                 return;
             }
-            Log.D("Updates.Check", $"Download URL - {r.Assets[0].BrowserDownloadURL}");
-            uri = r.Assets[0].BrowserDownloadURL;
+            Log.D("Updates.Check", $"Download URL - {r.Assets[0].BrowserDownloadUrl}");
+            uri = r.Assets[0].BrowserDownloadUrl;
             Activate();
         }
 
@@ -197,15 +194,6 @@ namespace Chronokeep.UI.Util
             {
                 BackupBlock.Text = $"{BackupBlock.Text}\nError backing up database.";
             }
-        }
-
-        protected override void SetMaximizeIcon()
-        {     
-        }
-
-        protected override void Maximize()
-        {
-            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
         }
     }
 }

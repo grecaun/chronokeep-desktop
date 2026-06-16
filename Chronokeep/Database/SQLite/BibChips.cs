@@ -6,21 +6,21 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    class BibChips
+    internal class BibChips
     {
         internal static void AddBibChipAssociation(int eventId, List<BibChipAssociation> assoc, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "INSERT INTO bib_chip_assoc (event_id, bib, chip) VALUES (@eventId, @bib, @chip);";
             foreach (BibChipAssociation item in assoc)
             {
                 Log.D("Database.SQLite.BibChips", "Event id " + eventId + " Bib " + item.Bib + " Chip " + item.Chip);
                 command.Parameters.AddRange(
-                [
-                    new("@eventId", eventId),
-                        new("@bib", item.Bib),
-                        new("@chip", item.Chip),
+                    [
+                        new SQLiteParameter("@eventId", eventId),
+                        new SQLiteParameter("@bib", item.Bib),
+                        new SQLiteParameter("@chip", item.Chip),
                     ]);
                 command.ExecuteNonQuery();
             }
@@ -35,7 +35,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new()
+                output.Add(new BibChipAssociation
                 {
                     EventId = Convert.ToInt32(reader["event_id"]),
                     Bib = reader["bib"].ToString()!,
@@ -51,11 +51,11 @@ namespace Chronokeep.Database.SQLite
             List<BibChipAssociation> output = [];
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * FROM bib_chip_assoc WHERE event_id=@eventId";
-            command.Parameters.Add(new("@eventId", eventId));
+            command.Parameters.Add(new SQLiteParameter("@eventId", eventId));
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new()
+                output.Add(new BibChipAssociation
                 {
                     EventId = Convert.ToInt32(reader["event_id"]),
                     Bib = reader["bib"].ToString()!,
@@ -72,8 +72,8 @@ namespace Chronokeep.Database.SQLite
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "DELETE FROM bib_chip_assoc WHERE event_id=@event AND chip=@chip;";
             command.Parameters.AddRange([
-                new("@event", eventId),
-                new("@chip", chip) ]);
+                new SQLiteParameter("@event", eventId),
+                new SQLiteParameter("@chip", chip) ]);
             command.ExecuteNonQuery();
         }
     }

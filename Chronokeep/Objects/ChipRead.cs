@@ -79,14 +79,14 @@ namespace Chronokeep.Objects
             )
         {
             ReadBib = Constants.Timing.CHIPREAD_DUMMYBIB;
-            TimeSeconds = Constants.Timing.RFIDDateToEpoch(time);
+            TimeSeconds = Constants.Timing.RfidDateToEpoch(time);
             TimeMilliseconds = time.Millisecond;
             Type = Constants.Timing.CHIPREAD_TYPE_CHIP;
             EventId = eventId;
             Status = Constants.Timing.CHIPREAD_STATUS_NONE;
             LocationId = locationId;
             ChipNumber = chipNumber.Trim();
-            Seconds = Constants.Timing.RFIDDateToEpoch(time);
+            Seconds = Constants.Timing.RfidDateToEpoch(time);
             Milliseconds = time.Millisecond;
             Antenna = antenna;
             Rssi = "";
@@ -179,7 +179,7 @@ namespace Chronokeep.Objects
             ReaderTime = readertime;
             StartTime = starttime;
             LogId = logid;
-            TimeSeconds = Constants.Timing.RFIDDateToEpoch(time);
+            TimeSeconds = Constants.Timing.RfidDateToEpoch(time);
             TimeMilliseconds = time.Millisecond;
             ReadBib = readbib.ToString();
             Type = type;
@@ -248,14 +248,14 @@ namespace Chronokeep.Objects
             )
         {
             ReadBib = bib;
-            TimeSeconds = Constants.Timing.RFIDDateToEpoch(time);
+            TimeSeconds = Constants.Timing.RfidDateToEpoch(time);
             TimeMilliseconds = time.Millisecond;
             Type = Constants.Timing.CHIPREAD_TYPE_MANUAL;
             EventId = eventId;
             Status = status;
             LocationId = locationId;
             ChipNumber = Constants.Timing.CHIPREAD_DUMMYCHIP;
-            Seconds = Constants.Timing.RFIDDateToEpoch(time);
+            Seconds = Constants.Timing.RfidDateToEpoch(time);
             Milliseconds = time.Millisecond;
             Antenna = 0;
             Rssi = "";
@@ -276,14 +276,14 @@ namespace Chronokeep.Objects
             )
         {
             ReadBib = Constants.Timing.CHIPREAD_DUMMYBIB;
-            TimeSeconds = Constants.Timing.RFIDDateToEpoch(time);
+            TimeSeconds = Constants.Timing.RfidDateToEpoch(time);
             TimeMilliseconds = time.Millisecond;
             Type = Constants.Timing.CHIPREAD_TYPE_CHIP;
             EventId = eventId;
             Status = Constants.Timing.CHIPREAD_STATUS_NONE;
             LocationId = locationId;
             ChipNumber = chip.Trim();
-            Seconds = Constants.Timing.RFIDDateToEpoch(time);
+            Seconds = Constants.Timing.RfidDateToEpoch(time);
             Milliseconds = time.Millisecond;
             Antenna = 0;
             Rssi = "";
@@ -355,9 +355,9 @@ namespace Chronokeep.Objects
             Status = Constants.Timing.CHIPREAD_STATUS_NONE;
             ChipNumber = chip;
             ReadBib = bib;
-            TimeSeconds = Constants.Timing.UTCSecondsToRFIDSeconds(seconds);
+            TimeSeconds = Constants.Timing.UtcSecondsToRfidSeconds(seconds);
             TimeMilliseconds = milliseconds;
-            Seconds = Constants.Timing.UTCSecondsToRFIDSeconds(seconds);
+            Seconds = Constants.Timing.UtcSecondsToRfidSeconds(seconds);
             Milliseconds = milliseconds;
             Antenna = antenna;
             Reader = reader;
@@ -381,7 +381,7 @@ namespace Chronokeep.Objects
             }
         }
 
-        public DateTime Time => Constants.Timing.RFIDEpochToDate(TimeSeconds).AddMilliseconds(TimeMilliseconds);
+        public DateTime Time => Constants.Timing.RfidEpochToDate(TimeSeconds).AddMilliseconds(TimeMilliseconds);
 
         public string TypeName => Constants.Timing.CHIPREAD_TYPE_MANUAL == Type ? "Manual" : "Chip";
 

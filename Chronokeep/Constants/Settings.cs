@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Constants
 {
-    partial class Settings
+    internal static partial class Settings
     {
         public const string PROGRAM_DIR           = "Chronokeep";
         public const string HELP_DIR              = "help";
@@ -70,7 +70,7 @@ namespace Chronokeep.Constants
         [GeneratedRegex("[^a-zA-Z0-9]")]
         public static partial Regex AlphaNum();
 
-        public static void SetupSettings(IDBInterface database)
+        public static void SetupSettings(IdbInterface database)
         {
             // Settings 1
             if (database.GetAppSetting(SERVER_NAME) == null)
@@ -145,7 +145,7 @@ namespace Chronokeep.Constants
             }
             if (database.GetAppSetting(MINIMUM_COMPATIBLE_DATABASE) == null)
             {
-                database.SetAppSetting(MINIMUM_COMPATIBLE_DATABASE, SQLiteInterface.minimum_compatible_version.ToString());
+                database.SetAppSetting(MINIMUM_COMPATIBLE_DATABASE, SqLiteInterface.MINIMUM_COMPATIBLE_VERSION.ToString());
             }
             // Settings 5
             if (database.GetAppSetting(PROGRAM_UNIQUE_MODIFIER) == null)

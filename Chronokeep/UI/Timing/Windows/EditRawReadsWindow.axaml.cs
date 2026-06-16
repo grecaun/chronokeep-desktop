@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -15,23 +14,20 @@ namespace Chronokeep.UI.Timing.Windows;
 public partial class EditRawReadsWindow : ChronokeepWindow
 {
     private readonly ITimingPage parent;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event theEvent;
     private readonly List<ChipRead> chipReads;
 
     [GeneratedRegex("[^0-9]")]
     private static partial Regex AllowedChars();
 
-    public EditRawReadsWindow(ITimingPage parent, IDBInterface database, List<ChipRead> chipReads)
+    public EditRawReadsWindow(ITimingPage parent, IdbInterface database, List<ChipRead> chipReads)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.parent = parent;
         this.database = database;
         this.chipReads = chipReads;
-        MinWidth = 280;
-        Width = 280;
-        MinHeight = 230;
-        Height = 230;
         theEvent = database.GetCurrentEvent()!;
         TimeBox.Focus();
     }
@@ -106,10 +102,5 @@ public partial class EditRawReadsWindow : ChronokeepWindow
     {
         Log.D("UI.Timing.EditRawReadsWindow", "Cancel clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

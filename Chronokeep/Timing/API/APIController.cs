@@ -6,13 +6,12 @@ using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Chronokeep.Timing.API
 {
-    internal class ApiController(IMainWindow mainWindow, IDBInterface database)
+    internal class ApiController(IMainWindow mainWindow, IdbInterface database)
     {
         private static readonly Lock ApiLock = new();
         private static readonly Semaphore Waiter = new(0, 1);
@@ -51,7 +50,7 @@ namespace Chronokeep.Timing.API
             List<TimeResult> results,
             ApiObject api,
             string[] eventIds,
-            IDBInterface database,
+            IdbInterface database,
             ApiController? controller,
             IMainWindow? mainWindow,
             Event theEvent
@@ -352,7 +351,7 @@ namespace Chronokeep.Timing.API
                     ApiObject api;
                     try
                     {
-                        api = database.GetAPI(theEvent.ApiId)!;
+                        api = database.GetApi(theEvent.ApiId)!;
                     }
                     catch
                     {

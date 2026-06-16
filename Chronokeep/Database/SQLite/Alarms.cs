@@ -10,46 +10,42 @@ namespace Chronokeep.Database.SQLite
         internal static List<Alarm> SaveAlarms(int eventId, List<Alarm> alarms, SQLiteConnection connection)
         {
             List<Alarm> output = [];
-            using (var transaction = connection.BeginTransaction())
+            using SQLiteTransaction transaction = connection.BeginTransaction();
+            SQLiteCommand command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO alarms (event_id, alarm_bib, alarm_chip, alarm_enabled, alarm_sound) VALUES (@eventId, @bib, @chip, @enabled, @sound);";
+            foreach (Alarm item in alarms)
             {
-                SQLiteCommand command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO alarms (event_id, alarm_bib, alarm_chip, alarm_enabled, alarm_sound) VALUES (@eventId, @bib, @chip, @enabled, @sound);";
-                foreach (Alarm item in alarms)
-                {
-                    command.Parameters.AddRange(
-                    [
-                        new("@eventId", eventId),
-                        new("@bib", item.Bib),
-                        new("@chip", item.Chip),
-                        new("@enabled", item.Enabled ? 1 : 0),
-                        new("@sound", item.AlarmSound),
-                    ]);
-                    command.ExecuteNonQuery();
-                    item.Identifier = (int)connection.LastInsertRowId;
-                    output.Add(item);
-                }
-                transaction.Commit();
+                command.Parameters.AddRange(
+                [
+                    new SQLiteParameter("@eventId", eventId),
+                    new SQLiteParameter("@bib", item.Bib),
+                    new SQLiteParameter("@chip", item.Chip),
+                    new SQLiteParameter("@enabled", item.Enabled ? 1 : 0),
+                    new SQLiteParameter("@sound", item.AlarmSound),
+                ]);
+                command.ExecuteNonQuery();
+                item.Identifier = (int)connection.LastInsertRowId;
+                output.Add(item);
             }
+            transaction.Commit();
             return output;
         }
 
         internal static int SaveAlarm(int eventId, Alarm alarm, SQLiteConnection connection)
         {
-            using (var transaction = connection.BeginTransaction())
-            {
-                SQLiteCommand command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO alarms (event_id, alarm_bib, alarm_chip, alarm_enabled, alarm_sound) VALUES (@eventId, @bib, @chip, @enabled, @sound);";
-                command.Parameters.AddRange(
-                [
-                    new("@eventId", eventId),
-                    new("@bib", alarm.Bib),
-                    new("@chip", alarm.Chip),
-                    new("@enabled", alarm.Enabled ? 1 : 0),
-                    new("@sound", alarm.AlarmSound),
-                ]);
-                command.ExecuteNonQuery();
-                transaction.Commit();
-            }
+            using SQLiteTransaction transaction = connection.BeginTransaction();
+            SQLiteCommand command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO alarms (event_id, alarm_bib, alarm_chip, alarm_enabled, alarm_sound) VALUES (@eventId, @bib, @chip, @enabled, @sound);";
+            command.Parameters.AddRange(
+            [
+                new SQLiteParameter("@eventId", eventId),
+                new SQLiteParameter("@bib", alarm.Bib),
+                new SQLiteParameter("@chip", alarm.Chip),
+                new SQLiteParameter("@enabled", alarm.Enabled ? 1 : 0),
+                new SQLiteParameter("@sound", alarm.AlarmSound),
+            ]);
+            command.ExecuteNonQuery();
+            transaction.Commit();
             long outVal = connection.LastInsertRowId;
             return (int)outVal;
         }
@@ -60,7 +56,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * FROM alarms WHERE event_id=@eventId;";
             command.Parameters.AddRange([
-                new("@eventId", eventId)
+                new SQLiteParameter("@eventId", eventId)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
@@ -79,11 +75,11 @@ namespace Chronokeep.Database.SQLite
 
         internal static void DeleteAlarms(int eventId, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM alarms WHERE event_id=@eventId;";
             command.Parameters.AddRange([
-                new("@eventId", eventId)
+                new SQLiteParameter("@eventId", eventId)
             ]);
             command.ExecuteNonQuery();
             transaction.Commit();
@@ -91,11 +87,11 @@ namespace Chronokeep.Database.SQLite
 
         internal static void DeleteAlarm(Alarm alarm, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM alarms WHERE alarm_id=@alarmId;";
             command.Parameters.AddRange([
-                new("@alarmId", alarm.Identifier)
+                new SQLiteParameter("@alarmId", alarm.Identifier)
             ]);
             command.ExecuteNonQuery();
             transaction.Commit();

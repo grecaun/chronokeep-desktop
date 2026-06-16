@@ -6,20 +6,19 @@ using System.Linq;
 
 namespace Chronokeep.IO
 {
-    class CSVExporter(string format) : IDataExporter
+    internal class CsvExporter(string format) : IDataExporter
     {
-        readonly string format = format;
-        string[] headers = [];
-        List<object[]> data = [];
+        private string[] headers = [];
+        private List<object[]> data = [];
 
-        public void ExportData(string Path)
+        public void ExportData(string path)
         {
-            using var outFile = File.Create(Path);
-            using var outWriter = new StreamWriter(outFile);
-            outWriter.WriteLine(string.Format(format, headers));
+            using FileStream outFile = File.Create(path);
+            using StreamWriter outWriter = new StreamWriter(outFile);
+            outWriter.WriteLine(format, headers);
             foreach (object[] line in data)
             {
-                outWriter.WriteLine(string.Format(format, [.. line.Select(x => x != null ? x.ToString() : "")]));
+                outWriter.WriteLine(format, [.. line.Select(x => x.ToString())]);
             }
         }
 
@@ -28,10 +27,10 @@ namespace Chronokeep.IO
             return Utils.FileType.CSV;
         }
 
-        public void SetData(string[] headers, List<object[]> data)
+        public void SetData(string[] iHeaders, List<object[]> iData)
         {
-            this.headers = headers;
-            this.data = data;
+            headers = iHeaders;
+            data = iData;
         }
     }
 }

@@ -14,20 +14,17 @@ namespace Chronokeep.UI.EventWindows;
 
 public partial class NewEventWindow : ChronokeepWindow
 {
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly IWindowCallback window;
 
     private readonly Dictionary<string, Event> eventDict = [];
 
-    private NewEventWindow(IWindowCallback window, IDBInterface database)
+    private NewEventWindow(IWindowCallback window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
-        MinWidth = 350;
-        MinHeight = 200;
-        Width = 350;
-        Height = 310;
         List<Event> events = database.GetEvents();
         events.Sort();
         List<string> eventNames = [];
@@ -40,7 +37,7 @@ public partial class NewEventWindow : ChronokeepWindow
         OldEvent.ItemsSource = eventNames;
     }
 
-    public static NewEventWindow NewWindow(IWindowCallback window, IDBInterface database)
+    public static NewEventWindow NewWindow(IWindowCallback window, IdbInterface database)
     {
         return new NewEventWindow(window, database);
     }
@@ -69,7 +66,7 @@ public partial class NewEventWindow : ChronokeepWindow
             }
             Event newEvent = new(nameString, dateVal, yearString);
             database.AddEvent(newEvent);
-            newEvent.Identifier = database.GetEventID(newEvent);
+            newEvent.Identifier = database.GetEventId(newEvent);
             // Copy all values from old event.
             if (oldEventId > 0)
             {
@@ -167,14 +164,14 @@ public partial class NewEventWindow : ChronokeepWindow
                 database.AddDistance(new Distance("Default Distance", newEvent.Identifier));
             }
             database.SetCurrentEvent(newEvent.Identifier);
-            window.WindowFinalize(this);
+            window.WindowFinalize();
         }
         Close();
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void Keyboard_Up(object? sender, KeyEventArgs e)
@@ -193,10 +190,5 @@ public partial class NewEventWindow : ChronokeepWindow
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

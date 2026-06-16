@@ -8,6 +8,7 @@ using Chronokeep.Objects.Changelog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Chronokeep.UI.Util;
@@ -15,11 +16,12 @@ namespace Chronokeep.UI.Util;
 public partial class ChangeLogWindow : ChronokeepWindow
 {
     private readonly IWindowCallback window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
-    private ChangeLogWindow(IWindowCallback window, IDBInterface database)
+    private ChangeLogWindow(IWindowCallback window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
 
@@ -37,12 +39,7 @@ public partial class ChangeLogWindow : ChronokeepWindow
             return;
         }
         List<Entry> changelogEntries = [];
-        foreach (string file in changelogFiles)
-        {
-            string jsonData = File.ReadAllText(file);
-            Entry entry = JsonSerializer.Deserialize<Entry>(jsonData)!;
-            changelogEntries.Add(entry);
-        }
+        changelogEntries.AddRange(changelogFiles.Select(File.ReadAllText).Select(jsonData => JsonSerializer.Deserialize<Entry>(jsonData)!));
         changelogEntries.Sort();
         changelogEntries[0].IsExpanded = true;
         changelogEntries = changelogEntries[..5];
@@ -51,25 +48,20 @@ public partial class ChangeLogWindow : ChronokeepWindow
         AutoChangelogToggleSwitch.IsChecked = autoChangelog is { Value: Constants.Settings.SETTING_TRUE };
     }
 
-    public static ChangeLogWindow NewWindow(IWindowCallback window, IDBInterface database)
+    public static ChangeLogWindow NewWindow(IWindowCallback window, IdbInterface database)
     {
-        return new(window, database);
+        return new ChangeLogWindow(window, database);
     }
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
         database.SetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG, AutoChangelogToggleSwitch.IsChecked == true ? Constants.Settings.SETTING_TRUE : Constants.Settings.SETTING_FALSE);
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.Notifications.ChangelogWindow", "Done button clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

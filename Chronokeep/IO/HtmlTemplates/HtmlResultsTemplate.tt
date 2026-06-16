@@ -76,12 +76,12 @@
 																		</a>
 																	<# } #>
 																</td>
-																<td class="overflow-hidden-lg text-center"><#= r.Finish && r.PrettyGender.Length > 0  ? r.GenderPlaceStr : "" #></td>
+																<td class="overflow-hidden-lg text-center"><#= r is { Finish: true,PrettyGender.Length: > 0 }  ? r.GenderPlaceStr : "" #></td>
 																<td class="overflow-hidden-lg text-center"><#= r.PrettyGender #></td>
-																<td class="overflow-hidden-lg text-center"><#= r.Finish && r.PrettyGender.Length > 0 ? r.AgePlaceStr : "" #></td>
+																<td class="overflow-hidden-lg text-center"><#= r is { Finish: true,PrettyGender.Length: > 0 } ? r.AgePlaceStr : "" #></td>
 																<td class="overflow-hidden-lg text-center"><#= r.Age(theEvent.Date) #></td>
-																<td class="overflow-hidden-lg text-center"><#= r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length) #></td>
-																<td class="text-center"><#= (r.SegmentName == "Finish")? string.Format("Lap {0}", r.Occurrence) : r.SegmentName #></td>
+																<td class="overflow-hidden-lg text-center"><#= r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)] #></td>
+																<td class="text-center"><#= r.SegmentName == "Finish" ? $"Lap {r.Occurrence}" : r.SegmentName #></td>
 															</tr>
 														<# } #>
 													</tbody>
@@ -118,12 +118,12 @@
 																		</a>
 																	<# } #>
 																</td>
-																<td class="overflow-hidden-lg text-center"><#= r.Finish && r.PrettyGender.Length > 0 ? r.GenderPlaceStr : "" #></td>
+																<td class="overflow-hidden-lg text-center"><#= r is { Finish: true,PrettyGender.Length: > 0 } ? r.GenderPlaceStr : "" #></td>
 																<td class="overflow-hidden-lg text-center"><#= r.PrettyGender #></td>
-																<td class="overflow-hidden-lg text-center"><#= r.Finish && r.PrettyGender.Length > 0 ? r.AgePlaceStr : "" #></td>
+																<td class="overflow-hidden-lg text-center"><#= r is { Finish: true,PrettyGender.Length: > 0 } ? r.AgePlaceStr : "" #></td>
 																<td class="overflow-hidden-lg text-center"><#= r.Age(theEvent.Date) #></td>
 																<td class="overflow-hidden-lg text-center"><#= r.ChipLapTime #></td>
-																<td class="text-center"><#= r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length) #></td>
+																<td class="text-center"><#= r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)] #></td>
 															</tr>
 														<# } #>
 													</tbody>

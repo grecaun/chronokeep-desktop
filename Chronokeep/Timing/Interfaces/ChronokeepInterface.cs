@@ -18,7 +18,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace Chronokeep.Timing.Interfaces
 {
-    public partial class ChronokeepInterface(IDBInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
+    public partial class ChronokeepInterface(IdbInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
     {
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly StringBuilder buffer = new();
@@ -476,13 +476,13 @@ namespace Chronokeep.Timing.Interfaces
                                                 locationId,
                                                 pRead.IdentType == PortalRead.READ_IDENT_TYPE_CHIP,
                                                 pRead.Identifier,
-                                                Constants.Timing.UTCSecondsToRFIDSeconds(pRead.Seconds),
+                                                Constants.Timing.UtcSecondsToRfidSeconds(pRead.Seconds),
                                                 pRead.Milliseconds,
                                                 pRead.Antenna,
                                                 pRead.Rssi,
                                                 pRead.Reader,
                                                 pRead.Type == PortalRead.READ_KIND_CHIP ? Constants.Timing.CHIPREAD_TYPE_CHIP : Constants.Timing.CHIPREAD_TYPE_MANUAL,
-                                                Constants.Timing.UTCToLocalDate(pRead.ReaderSeconds, pRead.ReaderMilliseconds).ToString("yyyy/MM/dd HH:mm:ss.fff"),
+                                                Constants.Timing.UtcToLocalDate(pRead.ReaderSeconds, pRead.ReaderMilliseconds).ToString("yyyy/MM/dd HH:mm:ss.fff"),
                                                 readerName
                                                 );
                                             if (window != null && window.InDidNotStartMode())
@@ -949,7 +949,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SettingsWindowFinalize()
         {
-            window.WindowFinalize(settingsWindow);
+            window.WindowFinalize();
             settingsWindow = null;
         }
 

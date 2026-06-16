@@ -20,7 +20,7 @@ namespace Chronokeep.Objects.Notifications
             return FromName.Length > 0 ? $"{FromName} <{FromEmail}>" : FromEmail;
         }
 
-        public static MailgunCredentials GetCredentials(IDBInterface database)
+        public static MailgunCredentials GetCredentials(IdbInterface database)
         {
             AppSetting apiKey = database.GetAppSetting(Constants.Settings.MAILGUN_API_KEY)!;
             AppSetting domain = database.GetAppSetting(Constants.Settings.MAILGUN_API_URL)!;

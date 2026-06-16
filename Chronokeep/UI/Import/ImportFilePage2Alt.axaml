@@ -4,11 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Chronokeep.UI.Import.ImportFilePage2Alt">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="35"/>
-            <RowDefinition Height="1*"/>
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="35,1*">
         <TextBlock Grid.Row="0"
                    Text="Select distances to link to those found in file."
                    FontSize="16"
@@ -17,7 +13,7 @@
                    HorizontalAlignment="Center"
                    TextAlignment="Center"/>
         <ListBox Grid.Row="1"
-                 Name="distanceListBox"
+                 Name="DistanceListBox"
                  KeyboardNavigation.TabNavigation="Continue"
                  IsTabStop="False"/>
     </Grid>

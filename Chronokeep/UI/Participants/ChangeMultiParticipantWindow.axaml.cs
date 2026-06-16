@@ -9,14 +9,14 @@ using System.Collections.Generic;
 
 namespace Chronokeep.UI.Participants;
 
-public partial class ChangeMultiParticipantWindow : Window
+public partial class ChangeMultiParticipantWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly List<Participant> toChange;
     private readonly Event? theEvent;
 
-    public ChangeMultiParticipantWindow(IMainWindow window, IDBInterface database, List<Participant> toChange)
+    public ChangeMultiParticipantWindow(IMainWindow window, IdbInterface database, List<Participant> toChange)
     {
         InitializeComponent();
         this.window = window;
@@ -38,7 +38,7 @@ public partial class ChangeMultiParticipantWindow : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void Change_Click(object? sender, RoutedEventArgs e)
@@ -58,11 +58,6 @@ public partial class ChangeMultiParticipantWindow : Window
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Participants.ChangeMultiParticipantWindow", "Cancel clicked.");
-        Close();
-    }
-
-    private void OnClose(object sender, RoutedEventArgs e)
-    {
         Close();
     }
 }

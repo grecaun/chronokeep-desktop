@@ -21,7 +21,7 @@ namespace Chronokeep.UI.Export;
 public partial class ExportDistanceResults : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private readonly OutputType type;
@@ -30,9 +30,10 @@ public partial class ExportDistanceResults : ChronokeepWindow
 
     private readonly Dictionary<string, Distance>? distanceDictionary;
 
-    public ExportDistanceResults(IMainWindow window, IDBInterface database, OutputType type = OutputType.Boston)
+    public ExportDistanceResults(IMainWindow window, IdbInterface database, OutputType type = OutputType.Boston)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();
@@ -198,7 +199,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.CSVType],
+                FileTypeChoices = [Utils.CsvType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Ultrasignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
@@ -238,7 +239,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.CSVType],
+                FileTypeChoices = [Utils.CsvType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Runsignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
@@ -454,7 +455,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             format.Remove(format.Length - 1, 1);
             Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-            exporter = new CSVExporter(format.ToString());
+            exporter = new CsvExporter(format.ToString());
         }
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
@@ -611,7 +612,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             format.Remove(format.Length - 1, 1);
             Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-            exporter = new CSVExporter(format.ToString());
+            exporter = new CsvExporter(format.ToString());
         }
         exporter.SetData([.. headers], data);
         exporter.ExportData(fileName);
@@ -634,7 +635,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.CSVType],
+                FileTypeChoices = [Utils.CsvType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Ultrasignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
@@ -676,7 +677,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.CSVType],
+                FileTypeChoices = [Utils.CsvType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Runsignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
@@ -806,7 +807,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         format.Remove(format.Length - 1, 1);
         Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-        CSVExporter exporter = new(format.ToString());
+        CsvExporter exporter = new(format.ToString());
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
     }
@@ -861,14 +862,14 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         format.Remove(format.Length - 1, 1);
         Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-        CSVExporter exporter = new(format.ToString());
+        CsvExporter exporter = new(format.ToString());
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
     }
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void Done_Click(object? sender, RoutedEventArgs e)
@@ -929,11 +930,6 @@ public partial class ExportDistanceResults : ChronokeepWindow
     {
         Log.D("UI.Export.ExportDistanceResults", "Cancel clicked.");
         this.Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }
 public enum OutputType

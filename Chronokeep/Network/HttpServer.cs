@@ -18,7 +18,7 @@ namespace Chronokeep.Network
         private Thread? serverThread;
         private HttpListener? listener;
         private int port;
-        private IDBInterface? database;
+        private IdbInterface? database;
         private Event? theEvent;
         private readonly List<TimeResult> finishResults = [];
         private readonly Dictionary<string, TimeResult> finishDictionary = [];
@@ -36,7 +36,7 @@ namespace Chronokeep.Network
 
         private bool keepAlive = true;
 
-        public HttpServer(IDBInterface database, int port)
+        public HttpServer(IdbInterface database, int port)
         {
             Initialize(database, port);
         }
@@ -86,7 +86,7 @@ namespace Chronokeep.Network
                     participantDictionary[p.Identifier.ToString()] = p;
                 }
                 apiDictionary.Clear();
-                foreach (ApiObject api in database.GetAllAPI())
+                foreach (ApiObject api in database.GetAllApi())
                 {
                     apiDictionary[api.Identifier] = api;
                 }
@@ -290,7 +290,7 @@ namespace Chronokeep.Network
             }
         }
 
-        private void Initialize(IDBInterface iDatabase, int iPort)
+        private void Initialize(IdbInterface iDatabase, int iPort)
         {
             database = iDatabase;
             port = iPort;

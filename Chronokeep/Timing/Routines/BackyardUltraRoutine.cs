@@ -14,7 +14,7 @@ namespace Chronokeep.Timing.Routines
         private const int DEFAULT_MAX_INTERVALS = -1;
 
         // Process chip reads
-        public static List<TimeResult> ProcessRace(Event theEvent, IDBInterface database, TimingDictionary dictionary, IMainWindow window)
+        public static List<TimeResult> ProcessRace(Event theEvent, IdbInterface database, TimingDictionary dictionary, IMainWindow window)
         {
             Log.D("Timing.Routines.BackyardUltraRoutine", "Processing chip reads for a backyard ultra.");
             int interval = DEFAULT_INTERVAL;
@@ -1176,7 +1176,7 @@ namespace Chronokeep.Timing.Routines
         }
 
 
-        public static List<TimeResult> ProcessPlacements(Event theEvent, IDBInterface database, TimingDictionary dictionary)
+        public static List<TimeResult> ProcessPlacements(Event theEvent, IdbInterface database, TimingDictionary dictionary)
         {
             // Get results to process.
             List<TimeResult> output = database.GetTimingResults(theEvent.Identifier);

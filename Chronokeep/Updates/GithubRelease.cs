@@ -8,17 +8,17 @@ namespace Chronokeep.Updates
         [JsonPropertyName("url")]
         public string Url { get; set; } = "";
         [JsonPropertyName("assets_url")]
-        public string AssetsURL { get; set; } = "";
+        public string AssetsUrl { get; set; } = "";
         [JsonPropertyName("upload_url")]
-        public string UploadURL { get; set; } = "";
+        public string UploadUrl { get; set; } = "";
         [JsonPropertyName("html_url")]
-        public string HTML_URL { get; set; } = "";
+        public string HtmlUrl { get; set; } = "";
         [JsonPropertyName("id")]
-        public int ID { get; set; }
+        public int Id { get; set; }
         [JsonPropertyName("author")]
         public Author Author { get; set; } = new();
         [JsonPropertyName("node_id")]
-        public string NodeID { get; set; } = "";
+        public string NodeId { get; set; } = "";
         [JsonPropertyName("tag_name")]
         public string TagName { get; set; } = "";
         [JsonPropertyName("target_commitish")]
@@ -36,9 +36,9 @@ namespace Chronokeep.Updates
         [JsonPropertyName("assets")]
         public Assets[] Assets { get; set; } = [];
         [JsonPropertyName("tarball_url")]
-        public string TarballURL { get; set; } = "";
+        public string TarballUrl { get; set; } = "";
         [JsonPropertyName("zipball_url")]
-        public string ZipballURL { get; set; } = "";
+        public string ZipballUrl { get; set; } = "";
         [JsonPropertyName("body")]
         public string Body { get; set; } = "";
     }
@@ -48,35 +48,35 @@ namespace Chronokeep.Updates
         [JsonPropertyName("login")]
         public string Login { get; set; } = "";
         [JsonPropertyName("id")]
-        public int ID { get; set; }
+        public int Id { get; set; }
         [JsonPropertyName("node_id")]
-        public string NodeID { get; set; } = "";
+        public string NodeId { get; set; } = "";
         [JsonPropertyName("avatar_url")]
-        public string AvatarURL { get; set; } = "";
+        public string AvatarUrl { get; set; } = "";
         [JsonPropertyName("gravatar_url")]
-        public string GravatarURL { get; set; } = "";
+        public string GravatarUrl { get; set; } = "";
         [JsonPropertyName("url")]
-        public string URL { get; set; } = "";
+        public string Url { get; set; } = "";
         [JsonPropertyName("html_url")]
-        public string HTMLURL { get; set; } = "";
+        public string HtmlUrl { get; set; } = "";
         [JsonPropertyName("followers_url")]
-        public string FollowersURL { get; set; } = "";
+        public string FollowersUrl { get; set; } = "";
         [JsonPropertyName("following_url")]
-        public string FollowingURL { get; set; } = "";
+        public string FollowingUrl { get; set; } = "";
         [JsonPropertyName("gists_url")]
-        public string GistsURL { get; set; } = "";
+        public string GistsUrl { get; set; } = "";
         [JsonPropertyName("starred_url")]
-        public string StarredURL { get; set; } = "";
+        public string StarredUrl { get; set; } = "";
         [JsonPropertyName("subscriptions_url")]
-        public string SubscriptionsURL { get; set; } = "";
+        public string SubscriptionsUrl { get; set; } = "";
         [JsonPropertyName("organizations_url")]
-        public string OrganizationsURL { get; set; } = "";
+        public string OrganizationsUrl { get; set; } = "";
         [JsonPropertyName("repos_url")]
-        public string ReposURL { get; set; } = "";
+        public string ReposUrl { get; set; } = "";
         [JsonPropertyName("events_url")]
-        public string EventsURL { get; set; } = "";
+        public string EventsUrl { get; set; } = "";
         [JsonPropertyName("received_events_url")]
-        public string ReceivedEventsURL { get; set; } = "";
+        public string ReceivedEventsUrl { get; set; } = "";
         [JsonPropertyName("type")]
         public string Type { get; set; } = "";
         [JsonPropertyName("site_admin")]
@@ -86,11 +86,11 @@ namespace Chronokeep.Updates
     public class Assets
     {
         [JsonPropertyName("url")]
-        public string URL { get; set; } = "";
+        public string Url { get; set; } = "";
         [JsonPropertyName("id")]
-        public int ID { get; set; }
+        public int Id { get; set; }
         [JsonPropertyName("node_id")]
-        public string NodeID { get; set; } = "";
+        public string NodeId { get; set; } = "";
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
         [JsonPropertyName("label")]
@@ -110,6 +110,6 @@ namespace Chronokeep.Updates
         [JsonPropertyName("updated_at")]
         public DateTime UpdatedAt { get; set; }
         [JsonPropertyName("browser_download_url")]
-        public string BrowserDownloadURL { get; set; } = "";
+        public string BrowserDownloadUrl { get; set; } = "";
     }
 }

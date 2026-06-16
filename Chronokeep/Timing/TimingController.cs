@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace Chronokeep.Timing
 {
-    internal class TimingController(IMainWindow mainWindow, IDBInterface database)
+    internal class TimingController(IMainWindow mainWindow, IdbInterface database)
     {
         private readonly List<Socket> timingSystemSockets = [], readList = [];
         private readonly Dictionary<Socket, TimingSystem> timingSystemDict = [];

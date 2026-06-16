@@ -15,13 +15,14 @@ namespace Chronokeep.UI.Announcer;
 public partial class AnnouncerWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
     private readonly Event? theEvent;
 
-    public AnnouncerWindow(IMainWindow window, IDBInterface database)
+    public AnnouncerWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
         theEvent = database.GetCurrentEvent();

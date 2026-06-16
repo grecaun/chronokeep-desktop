@@ -20,7 +20,7 @@ namespace Chronokeep.Objects
         public int AlarmSound { get; set; } = sound;
         private static Lock ListMtx { get; } = new();
 
-        public static void SaveAlarms(int eventId, IDBInterface database)
+        public static void SaveAlarms(int eventId, IdbInterface database)
         {
             Log.D("Objects.Alarm", "Saving multiple alarms.");
             if (ListMtx.TryEnter(3000))
@@ -38,7 +38,7 @@ namespace Chronokeep.Objects
             AddAlarms(database.GetAlarms(eventId));
         }
 
-        public static void SaveAlarm(int eventId, IDBInterface database, Alarm alarm)
+        public static void SaveAlarm(int eventId, IdbInterface database, Alarm alarm)
         {
             Log.D("Objects.Alarm", "Saving single alarm.");
             if (ListMtx.TryEnter(3000))

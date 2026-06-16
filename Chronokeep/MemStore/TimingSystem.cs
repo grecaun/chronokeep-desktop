@@ -1,12 +1,12 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * TimingSystem Functions
@@ -18,23 +18,21 @@ namespace Chronokeep.MemStore
             int output = database.AddTimingSystem(system);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        system.SystemIdentifier = output;
-                        timingSystems[system.IpAddress.Trim()] = system;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    system.SystemIdentifier = output;
+                    timingSystems[system.IpAddress.Trim()] = system;
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -45,22 +43,20 @@ namespace Chronokeep.MemStore
             List<TimingSystem> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(timingSystems.Values);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(timingSystems.Values);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -71,22 +67,20 @@ namespace Chronokeep.MemStore
             database.RemoveTimingSystem(system);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        timingSystems.Remove(system.IpAddress.Trim());
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    timingSystems.Remove(system.IpAddress.Trim());
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -96,34 +90,29 @@ namespace Chronokeep.MemStore
             database.RemoveTimingSystem(systemId);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    string ip = "";
+                    foreach (TimingSystem system in timingSystems.Values.Where(system => system.SystemIdentifier == systemId))
                     {
-                        string ip = "";
-                        foreach (TimingSystem system in timingSystems.Values)
-                        {
-                            if (system.SystemIdentifier == systemId)
-                            {
-                                ip = system.IpAddress.Trim();
-                                break;
-                            }
-                        }
-                        if (ip.Length > 0)
-                        {
-                            timingSystems.Remove(ip);
-                        }
+                        ip = system.IpAddress.Trim();
+                        break;
                     }
-                    finally
+                    if (ip.Length > 0)
                     {
-                        memStoreLock.Exit();
+                        timingSystems.Remove(ip);
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -133,26 +122,24 @@ namespace Chronokeep.MemStore
             database.SetTimingSystems(systems);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    timingSystems.Clear();
+                    foreach (TimingSystem system in systems)
                     {
-                        timingSystems.Clear();
-                        foreach (TimingSystem system in systems)
-                        {
-                            timingSystems[system.IpAddress.Trim()] = system;
-                        }
+                        timingSystems[system.IpAddress.Trim()] = system;
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -162,25 +149,23 @@ namespace Chronokeep.MemStore
             database.UpdateTimingSystem(system);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (timingSystems.TryGetValue(system.IpAddress.Trim(), out TimingSystem? oldSystem))
                     {
-                        if (timingSystems.TryGetValue(system.IpAddress.Trim(), out TimingSystem? oldSystem))
-                        {
-                            oldSystem.CopyFrom(system);
-                        }
+                        oldSystem.CopyFrom(system);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

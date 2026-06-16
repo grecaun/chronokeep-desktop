@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -16,17 +15,16 @@ public partial class ClockControl : ChronokeepWindow
     private static ClockControl? theOne;
 
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
     private readonly Dictionary<int, Chronoclock> clockDict = [];
 
-    private ClockControl(IMainWindow window, IDBInterface database)
+    private ClockControl(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
-        MinWidth = 10;
-        MinHeight = 10;
         List<Chronoclock> clocks = database.GetClocks();
         foreach (Chronoclock clock in clocks)
         {
@@ -34,7 +32,7 @@ public partial class ClockControl : ChronokeepWindow
         }
         UpdateView();
     }
-    public static ClockControl CreateWindow(IMainWindow window, IDBInterface database)
+    public static ClockControl CreateWindow(IMainWindow window, IdbInterface database)
     {
         theOne ??= new ClockControl(window, database);
         return theOne;
@@ -82,7 +80,7 @@ public partial class ClockControl : ChronokeepWindow
             Chronoclock clock = clItem!.GetUpdatedClock();
             database.UpdateClock(clock);
         }
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void Close_Click(object? sender, RoutedEventArgs e)
@@ -105,10 +103,5 @@ public partial class ClockControl : ChronokeepWindow
             clockDict[newClock.Identifier] = newClock;
         }
         UpdateView();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

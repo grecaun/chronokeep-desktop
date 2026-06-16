@@ -17,11 +17,11 @@ namespace Chronokeep.UI.MainPages;
 public partial class SettingsPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
     private readonly int themeOffset = -1;
 
-    public SettingsPage(IMainWindow mainWindow, IDBInterface database)
+    public SettingsPage(IMainWindow mainWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mainWindow;
@@ -168,14 +168,14 @@ public partial class SettingsPage : UserControl, IMainPage
 
     public static void UpdateDatabase() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         Save_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateView();
     }

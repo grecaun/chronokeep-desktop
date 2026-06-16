@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Timing.Interfaces
 {
-    internal partial class IpicoInterface(IDBInterface database, int locationId, string type, IMainWindow window) : ITimingSystemInterface
+    internal partial class IpicoInterface(IdbInterface database, int locationId, string type, IMainWindow window) : ITimingSystemInterface
     {
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly Dictionary<Socket, StringBuilder> bufferDict = [];

@@ -12,6 +12,7 @@ public partial class DialogBox : ChronokeepWindow
     public DialogBox(string message, string leftButtonContent, string rightButtonContent, bool showLeftButton, LeftClickDelegate leftClick)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         MessageBox.Text = message;
         LeftButton.Content = leftButtonContent;
         RightButton.Content = rightButtonContent;
@@ -25,9 +26,6 @@ public partial class DialogBox : ChronokeepWindow
         {
             Close();
         };
-        MinWidth = 400.0;
-        Width = 400.0;
-        MinHeight = 200.0;
         Topmost = true;
     }
 
@@ -100,14 +98,5 @@ public partial class DialogBox : ChronokeepWindow
     private void CopyBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         CopyBox.Text = copyText;
-    }
-
-    protected override void SetMaximizeIcon()
-    {     
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

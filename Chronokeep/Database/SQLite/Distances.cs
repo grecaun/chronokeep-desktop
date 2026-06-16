@@ -6,7 +6,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    class Distances
+    internal class Distances
     {
 
         internal static int AddDistance(Distance d, SQLiteConnection connection)
@@ -19,24 +19,24 @@ namespace Chronokeep.Database.SQLite
                 "distance_linked_id, distance_type, distance_ranking_order, distance_sms_enabled, distance_upload_results, distance_certification) " +
                 "values (@name,@event_id,@distance,@unit,@startloc,@startwithin,@finishloc,@finishocc,@wave,@soffsec,@soffmill,@endSec,@linked,@type,@rank,@sms,@upload,@cert)";
             command.Parameters.AddRange([
-                new("@name", d.Name),
-                new("@event_id", d.EventIdentifier),
-                new("@distance", d.DistanceValue),
-                new("@unit", d.DistanceUnit),
-                new("@startloc", d.StartLocation),
-                new("@startwithin", d.StartWithin),
-                new("@finishloc", d.FinishLocation),
-                new("@finishocc", d.FinishOccurrence),
-                new("@wave", d.Wave),
-                new("@soffsec", d.StartOffsetSeconds),
-                new("@soffmill", d.StartOffsetMilliseconds),
-                new("@endSec", d.EndSeconds),
-                new("@linked", d.LinkedDistance),
-                new("@type", d.Type),
-                new("@rank", d.Ranking),
-                new("@sms", d.SmsEnabled ? 1 : 0),
-                new("@upload", d.Upload ? 1 : 0),
-                new("@cert", d.Certification),
+                new SQLiteParameter("@name", d.Name),
+                new SQLiteParameter("@event_id", d.EventIdentifier),
+                new SQLiteParameter("@distance", d.DistanceValue),
+                new SQLiteParameter("@unit", d.DistanceUnit),
+                new SQLiteParameter("@startloc", d.StartLocation),
+                new SQLiteParameter("@startwithin", d.StartWithin),
+                new SQLiteParameter("@finishloc", d.FinishLocation),
+                new SQLiteParameter("@finishocc", d.FinishOccurrence),
+                new SQLiteParameter("@wave", d.Wave),
+                new SQLiteParameter("@soffsec", d.StartOffsetSeconds),
+                new SQLiteParameter("@soffmill", d.StartOffsetMilliseconds),
+                new SQLiteParameter("@endSec", d.EndSeconds),
+                new SQLiteParameter("@linked", d.LinkedDistance),
+                new SQLiteParameter("@type", d.Type),
+                new SQLiteParameter("@rank", d.Ranking),
+                new SQLiteParameter("@sms", d.SmsEnabled ? 1 : 0),
+                new SQLiteParameter("@upload", d.Upload ? 1 : 0),
+                new SQLiteParameter("@cert", d.Certification),
             ]);
             Log.D("Database.SQLite.Distances", "SQL query: '" + command.CommandText + "'");
             command.ExecuteNonQuery();
@@ -45,8 +45,8 @@ namespace Chronokeep.Database.SQLite
                 "AND distance_name=@name;";
             command.Parameters.AddRange(
             [
-                new("@event_id", d.EventIdentifier),
-                new("@name", d.Name)
+                new SQLiteParameter("@event_id", d.EventIdentifier),
+                new SQLiteParameter("@name", d.Name)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             int outVal = -1;
@@ -64,7 +64,7 @@ namespace Chronokeep.Database.SQLite
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "DELETE FROM segments WHERE distance_id=@id; DELETE FROM eventspecific WHERE distance_id=@id; DELETE FROM age_groups WHERE distance_id=@id; DELETE FROM distances WHERE distance_id=@id";
             command.Parameters.AddRange([
-                new("@id", identifier) ]);
+                new SQLiteParameter("@id", identifier) ]);
             command.ExecuteNonQuery();
         }
 
@@ -80,25 +80,25 @@ namespace Chronokeep.Database.SQLite
                 "distance_upload_results=@upload, distance_certification=@cert " +
                 "WHERE distance_id=@id";
             command.Parameters.AddRange([
-                new("@name", d.Name),
-                new("@event", d.EventIdentifier),
-                new("@distance", d.DistanceValue),
-                new("@unit", d.DistanceUnit),
-                new("@startloc", d.StartLocation),
-                new("@within", d.StartWithin),
-                new("@finishloc", d.FinishLocation),
-                new("@occurance", d.FinishOccurrence),
-                new("@wave", d.Wave),
-                new("@soffsec", d.StartOffsetSeconds),
-                new("@soffmill", d.StartOffsetMilliseconds),
-                new("@id", d.Identifier),
-                new("@endSec", d.EndSeconds),
-                new("@linked", d.LinkedDistance),
-                new("@type", d.Type),
-                new("@rank", d.Ranking),
-                new("@sms", d.SmsEnabled ? 1 : 0),
-                new("@upload", d.Upload ? 1 : 0),
-                new("@cert", d.Certification),
+                new SQLiteParameter("@name", d.Name),
+                new SQLiteParameter("@event", d.EventIdentifier),
+                new SQLiteParameter("@distance", d.DistanceValue),
+                new SQLiteParameter("@unit", d.DistanceUnit),
+                new SQLiteParameter("@startloc", d.StartLocation),
+                new SQLiteParameter("@within", d.StartWithin),
+                new SQLiteParameter("@finishloc", d.FinishLocation),
+                new SQLiteParameter("@occurance", d.FinishOccurrence),
+                new SQLiteParameter("@wave", d.Wave),
+                new SQLiteParameter("@soffsec", d.StartOffsetSeconds),
+                new SQLiteParameter("@soffmill", d.StartOffsetMilliseconds),
+                new SQLiteParameter("@id", d.Identifier),
+                new SQLiteParameter("@endSec", d.EndSeconds),
+                new SQLiteParameter("@linked", d.LinkedDistance),
+                new SQLiteParameter("@type", d.Type),
+                new SQLiteParameter("@rank", d.Ranking),
+                new SQLiteParameter("@sms", d.SmsEnabled ? 1 : 0),
+                new SQLiteParameter("@upload", d.Upload ? 1 : 0),
+                new SQLiteParameter("@cert", d.Certification),
             ]);
             command.ExecuteNonQuery();
         }
@@ -111,7 +111,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new(Convert.ToInt32(reader["distance_id"]),
+                output.Add(new Distance(Convert.ToInt32(reader["distance_id"]),
                     reader["distance_name"].ToString()!,
                     Convert.ToInt32(reader["event_id"]),
                     Convert.ToDouble(reader["distance_distance"]),
@@ -148,7 +148,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new(Convert.ToInt32(reader["distance_id"]),
+                output.Add(new Distance(Convert.ToInt32(reader["distance_id"]),
                     reader["distance_name"].ToString()!,
                     Convert.ToInt32(reader["event_id"]),
                     Convert.ToDouble(reader["distance_distance"]),
@@ -173,14 +173,14 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        internal static int GetDistanceID(Distance d, SQLiteConnection connection)
+        internal static int GetDistanceId(Distance d, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT distance_id FROM distances WHERE distance_name=@name AND event_id=@eventid";
             command.Parameters.AddRange(
             [
-                new("@name", d.Name),
-                new("@eventid", d.EventIdentifier)
+                new SQLiteParameter("@name", d.Name),
+                new SQLiteParameter("@eventid", d.EventIdentifier)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             int output = -1;
@@ -198,13 +198,13 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "SELECT * FROM distances WHERE distance_id=@div";
             command.Parameters.AddRange(
             [
-                new("@div", distanceId)
+                new SQLiteParameter("@div", distanceId)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             Distance? output = null;
             if (reader.Read())
             {
-                output = new(Convert.ToInt32(reader["distance_id"]),
+                output = new Distance(Convert.ToInt32(reader["distance_id"]),
                     reader["distance_name"].ToString()!,
                     Convert.ToInt32(reader["event_id"]),
                     Convert.ToDouble(reader["distance_distance"]),
@@ -231,16 +231,16 @@ namespace Chronokeep.Database.SQLite
 
         internal static void SetWaveTimes(int eventId, int wave, long seconds, int milliseconds, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "UPDATE distances SET distance_start_offset_seconds=@seconds," +
                 " distance_start_offset_milliseconds=@milli WHERE event_id=@event AND distance_wave=@wave;";
             command.Parameters.AddRange(
             [
-                new("@event", eventId),
-                    new("@wave", wave),
-                    new("@seconds", seconds),
-                    new("@milli", milliseconds)
+                new SQLiteParameter("@event", eventId),
+                    new SQLiteParameter("@wave", wave),
+                    new SQLiteParameter("@seconds", seconds),
+                    new SQLiteParameter("@milli", milliseconds)
             ]);
             command.ExecuteNonQuery();
             transaction.Commit();

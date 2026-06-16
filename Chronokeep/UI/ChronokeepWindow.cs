@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Chronokeep.UI.Announcer;
 
 namespace Chronokeep.UI;
 
@@ -9,7 +10,20 @@ public class ChronokeepWindow : Window
 {
     protected virtual void Maximize() {}
     protected virtual void SetMaximizeIcon() {}
+    protected virtual void SetPlatform() {}
 
+    internal void ChronokeepInitialize()
+    {
+        if (!App.IsWindows)
+        {
+            Title = "";
+        }
+        if (this is not (not MainWindow or MinWindow or AnnouncerWindow)) return;
+        CanResize = false;
+        Topmost = true;
+        ShowInTaskbar = true;
+    }
+    
     internal void OnMinimize(object? sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;

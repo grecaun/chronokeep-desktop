@@ -15,7 +15,7 @@ namespace Chronokeep.Database.SQLite
             List<Chronoclock> output = [];
             while (reader.Read())
             {
-                output.Add(new()
+                output.Add(new Chronoclock
                 {
                     Identifier = Convert.ToInt32(reader["clock_id"]),
                     Name = reader["name"].ToString()!,
@@ -32,9 +32,9 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "INSERT INTO chronoclocks (name, url, enabled) VALUES (@name, @url, @enabled);";
             command.Parameters.AddRange([
-                new("@name", clock.Name),
-                new("@url", clock.Url),
-                new("@enabled", clock.Enabled ? 1 : 0)
+                new SQLiteParameter("@name", clock.Name),
+                new SQLiteParameter("@url", clock.Url),
+                new SQLiteParameter("@enabled", clock.Enabled ? 1 : 0)
                 ]);
             command.ExecuteNonQuery();
             return (int)connection.LastInsertRowId;
@@ -45,22 +45,22 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "UPDATE chronoclocks SET name=@name, url=@url, enabled=@enabled WHERE clock_id=@clockID;";
             command.Parameters.AddRange([
-                new("@name", clock.Name),
-                new("@url", clock.Url),
-                new("@enabled", clock.Enabled ? 1 : 0),
-                new("@clockID", clock.Identifier)
+                new SQLiteParameter("@name", clock.Name),
+                new SQLiteParameter("@url", clock.Url),
+                new SQLiteParameter("@enabled", clock.Enabled ? 1 : 0),
+                new SQLiteParameter("@clockID", clock.Identifier)
                 ]);
             command.ExecuteNonQuery();
         }
 
         public static void RemoveClocks(List<Chronoclock> clocks, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM chronoclocks WHERE clock_id=@clockID;";
             foreach (Chronoclock clock in clocks)
             {
-                command.Parameters.Add(new("@clockID", clock.Identifier));
+                command.Parameters.Add(new SQLiteParameter("@clockID", clock.Identifier));
                 command.ExecuteNonQuery();
             }
             transaction.Commit();

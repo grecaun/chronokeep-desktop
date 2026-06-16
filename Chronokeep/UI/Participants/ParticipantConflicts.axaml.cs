@@ -1,12 +1,11 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System.Collections.Generic;
 
 namespace Chronokeep.UI.Participants;
 
-public partial class ParticipantConflicts : Window
+public partial class ParticipantConflicts : ChronokeepWindow
 {
     private readonly IMainWindow window;
 
@@ -25,11 +24,6 @@ public partial class ParticipantConflicts : Window
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
-    }
-
-    private void OnClose(object sender, RoutedEventArgs e)
-    {
-        Close();
+        window.WindowFinalize();
     }
 }

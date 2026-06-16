@@ -7,7 +7,7 @@ namespace Chronokeep.Interfaces.Timing
     public interface ITimingSystemInterface
     {
         Dictionary<MessageType, List<string>> ParseMessages(string message, Socket sock);
-        List<Socket>? Connect(string IpAddress, int Port);
+        List<Socket>? Connect(string ipAddress, int port);
         void Disconnect();
         void StartReading();
         void StopReading();

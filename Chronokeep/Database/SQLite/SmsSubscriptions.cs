@@ -16,7 +16,7 @@ namespace Chronokeep.Database.SQLite
             List<ApiSmsSubscription> output = [];
             while (reader.Read())
             {
-                output.Add(new()
+                output.Add(new ApiSmsSubscription
                 {
                     Bib = reader["bib"].ToString()!,
                     First = reader["first"].ToString()!,
@@ -35,11 +35,11 @@ namespace Chronokeep.Database.SQLite
             command.CommandText = "INSERT INTO sms_subscriptions(event_id, bib, first, last, phone) VALUES (@event, @bib, @first, @last, @phone);";
             command.Parameters.AddRange(
             [
-                new("@event", eventId),
-                new("@bib", subscription.Bib),
-                new("@first", subscription.First),
-                new("@last", subscription.Last),
-                new("@phone", subscription.Phone),
+                new SQLiteParameter("@event", eventId),
+                new SQLiteParameter("@bib", subscription.Bib),
+                new SQLiteParameter("@first", subscription.First),
+                new SQLiteParameter("@last", subscription.Last),
+                new SQLiteParameter("@phone", subscription.Phone),
             ]);
             command.ExecuteNonQuery();
         }
@@ -49,7 +49,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "DELETE FROM sms_subscriptions WHERE event_id=@event;";
-            command.Parameters.Add(new("@event", eventId));
+            command.Parameters.Add(new SQLiteParameter("@event", eventId));
             command.ExecuteNonQuery();
         }
     }

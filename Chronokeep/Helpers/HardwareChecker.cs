@@ -8,10 +8,8 @@ using System.Text;
 
 namespace Chronokeep.Helpers
 {
-    class HardwareChecker(IDBInterface database)
+    internal class HardwareChecker(IdbInterface database)
     {
-        private readonly IDBInterface database = database;
-
         public void Run()
         {
             try
@@ -22,23 +20,21 @@ namespace Chronokeep.Helpers
                 hardwareInfo.RefreshCPUList(false, 10);
                 hardwareInfo.RefreshMemoryList();
                 hardwareInfo.RefreshVideoControllerList();
-                StringBuilder hardwareIDBuilder = new();
-                hardwareIDBuilder.AppendFormat("{0}-", hardwareInfo.OperatingSystem.Name);
-                uint cpuCount = 0;
+                StringBuilder hardwareIdBuilder = new();
+                hardwareIdBuilder.Append($"{hardwareInfo.OperatingSystem.Name}-");
                 uint coreCount = 0;
                 uint processorCount = 0;
-                foreach (var cpu in hardwareInfo.CpuList)
+                foreach (CPU cpu in hardwareInfo.CpuList)
                 {
-                    cpuCount++;
                     coreCount += cpu.NumberOfCores;
                     processorCount += cpu.NumberOfLogicalProcessors;
-                    hardwareIDBuilder.AppendFormat("{0}+", cpu.Name.Trim());
+                    hardwareIdBuilder.Append($"{cpu.Name.Trim()}+");
                 }
-                hardwareIDBuilder.Remove(hardwareIDBuilder.Length - 1, 1);
-                hardwareIDBuilder.AppendFormat("{0}C-{1}P-", coreCount, processorCount);
+                hardwareIdBuilder.Remove(hardwareIdBuilder.Length - 1, 1);
+                hardwareIdBuilder.Append($"{coreCount}C-{processorCount}P-");
                 uint memoryCount = 0;
                 ulong totalCapacity = 0;
-                foreach (var memory in hardwareInfo.MemoryList)
+                foreach (Memory memory in hardwareInfo.MemoryList)
                 {
                     memoryCount++;
                     totalCapacity += memory.Capacity;
@@ -58,39 +54,34 @@ namespace Chronokeep.Helpers
                     4 => "TB",
                     _ => "??",
                 };
-                hardwareIDBuilder.AppendFormat("{0}@{1}{2}-", memoryCount, totalCapacity, byteType);
-                int videoCount = 0;
-                foreach (var video in hardwareInfo.VideoControllerList)
+                hardwareIdBuilder.Append($"{memoryCount}@{totalCapacity}{byteType}-");
+                foreach (VideoController video in hardwareInfo.VideoControllerList)
                 {
-                    videoCount++;
-                    hardwareIDBuilder.AppendFormat("{0}+", video.Name);
+                    hardwareIdBuilder.Append($"{video.Name}+");
                 }
-                hardwareIDBuilder.Remove(hardwareIDBuilder.Length - 1, 1);
-                hardwareIDBuilder.Replace(' ', '_');
-                string hwID = hardwareIDBuilder.ToString();
-                Log.D("Helpers.HardwareChecker", $"Unique Identifier: '{hwID}'");
+                hardwareIdBuilder.Remove(hardwareIdBuilder.Length - 1, 1);
+                hardwareIdBuilder.Replace(' ', '_');
+                string hwId = hardwareIdBuilder.ToString();
+                Log.D("Helpers.HardwareChecker", $"Unique Identifier: '{hwId}'");
                 AppSetting hardwareSetting = database.GetAppSetting(Constants.Settings.HARDWARE_IDENTIFIER)!;
-                if (hardwareSetting != null)
+                if (!hardwareSetting.Value.Equals(hwId, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!hardwareSetting.Value.Equals(hwID, StringComparison.OrdinalIgnoreCase))
+                    Log.D("Helpers.HardwareChecker", "Hardware identifier appears to have changed.");
+                    Application.Current!.Dispatcher.Invoke(delegate
                     {
-                        Log.D("Helpers.HardwareChecker", "Hardware identifier appears to have changed.");
-                        Application.Current!.Dispatcher.Invoke(new Action(delegate ()
-                        {
-                            DialogBox.Show(
-                                "We've detected that our database file may have been transferred from a different computer. Would you like to change the program's unique identifier to ensure there are no conflicts between devices?",
-                                "Yes",
-                                "No",
-                                () =>
-                                {
-                                    string randomMod = Constants.Settings.AlphaNum().Replace(Guid.NewGuid().ToString("N"), "").ToUpper()[0..3];
-                                    database.SetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER, randomMod);
-                                }
-                                );
-                        }));
-                    }
+                        DialogBox.Show(
+                            "We've detected that our database file may have been transferred from a different computer. Would you like to change the program's unique identifier to ensure there are no conflicts between devices?",
+                            "Yes",
+                            "No",
+                            () =>
+                            {
+                                string randomMod = Constants.Settings.AlphaNum().Replace(Guid.NewGuid().ToString("N"), "").ToUpper()[0..3];
+                                database.SetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER, randomMod);
+                            }
+                        );
+                    });
                 }
-                database.SetAppSetting(Constants.Settings.HARDWARE_IDENTIFIER, hwID);
+                database.SetAppSetting(Constants.Settings.HARDWARE_IDENTIFIER, hwId);
             }
             catch (Exception ex)
             {

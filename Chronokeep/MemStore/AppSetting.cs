@@ -1,11 +1,10 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * AppSetting Functions
@@ -17,23 +16,21 @@ namespace Chronokeep.MemStore
             AppSetting? output = null;
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        settings.TryGetValue(name, out output);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    settings.TryGetValue(name, out output);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -43,22 +40,20 @@ namespace Chronokeep.MemStore
             database.SetAppSetting(name, value);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        settings[name] = new() { Name = name, Value = value };
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    settings[name] = new AppSetting { Name = name, Value = value };
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -68,22 +63,20 @@ namespace Chronokeep.MemStore
             database.SetAppSetting(setting);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        settings[setting.Name] = setting;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    settings[setting.Name] = setting;
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

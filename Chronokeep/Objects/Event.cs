@@ -104,8 +104,8 @@ namespace Chronokeep.Objects
         public int StartMaxOccurrences { get; set; } = 1;
         public int StartMilliseconds { get; set; }
         public int EventType { get; set; } = Constants.Timing.EVENT_TYPE_DISTANCE;
-        public int ApiId { get; set; } = APIConstants.NULL_ID;
-        public string ApiEventId { get; set; } = APIConstants.NULL_EVENT_ID;
+        public int ApiId { get; set; } = ApiConstants.NULL_ID;
+        public string ApiEventId { get; set; } = ApiConstants.NULL_EVENT_ID;
         public bool DisplayPlacements { get => displayPlacements != 0; set => displayPlacements = value ? 1 : 0; }
         public bool DivisionsEnabled { get => divisionsEnabled != 0;
             private set => divisionsEnabled = value ? 1 : 0; }

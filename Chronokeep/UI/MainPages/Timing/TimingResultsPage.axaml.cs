@@ -14,12 +14,12 @@ namespace Chronokeep.UI.MainPages.Timing;
 public partial class TimingResultsPage : UserControl, ISubPage
 {
     private readonly TimingPage parent;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private readonly List<TimeResult> results = [];
 
-    public TimingResultsPage(TimingPage parent, IDBInterface database)
+    public TimingResultsPage(TimingPage parent, IdbInterface database)
     {
         InitializeComponent();
         this.parent = parent;
@@ -30,7 +30,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
         {
             UpdateListView.Columns[4].Header = "Lap Time";
         }
-        if (database is SQLiteInterface)
+        if (database is SqLiteInterface)
         {
             Database.SQLite.Results.GetStaticVariables(database);
         }
@@ -42,11 +42,11 @@ public partial class TimingResultsPage : UserControl, ISubPage
 
     public void EditSelected() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     private void Customize(
         SortType sortType,
@@ -267,7 +267,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
         UpdateView();
     }
 
-    public void Search(CancellationToken token, string searchText)
+    public void Search(CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         UpdateView();
@@ -300,5 +300,5 @@ public partial class TimingResultsPage : UserControl, ISubPage
         }
     }
 
-    public void Reader(string reader) { }
+    public void Reader() { }
 }

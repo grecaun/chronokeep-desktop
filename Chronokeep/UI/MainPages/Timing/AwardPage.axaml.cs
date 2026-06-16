@@ -21,7 +21,7 @@ namespace Chronokeep.UI.MainPages.Timing;
 
 public partial class AwardPage : UserControl, ISubPage
 {
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly TimingPage parent;
     private readonly Event? theEvent;
 
@@ -30,7 +30,7 @@ public partial class AwardPage : UserControl, ISubPage
     [GeneratedRegex("[^0-9]")]
     private static partial Regex AllowedChars();
 
-    public AwardPage(TimingPage parent, IDBInterface database)
+    public AwardPage(TimingPage parent, IdbInterface database)
     {
         InitializeComponent();
         this.parent = parent;
@@ -325,7 +325,7 @@ public partial class AwardPage : UserControl, ISubPage
 
     public void CancelableUpdateView(CancellationToken token) { }
 
-    public void Search(CancellationToken token, string searchText) { }
+    public void Search(CancellationToken token) { }
 
     public void Show(PeopleType type) { }
 
@@ -346,13 +346,13 @@ public partial class AwardPage : UserControl, ISubPage
 
     public void Closing() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
-    public void Reader(string reader) { }
+    public void Reader() { }
 
     private void AddCustom_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -422,7 +422,7 @@ public partial class AwardPage : UserControl, ISubPage
                 }
                 var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    FileTypeChoices = [Utils.PDFType],
+                    FileTypeChoices = [Utils.PdfType],
                     SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Awards.pdf".Replace(' ', '-'),
                     SuggestedStartLocation = startingFolder,
                 });

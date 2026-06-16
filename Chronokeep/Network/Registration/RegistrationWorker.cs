@@ -16,7 +16,7 @@ using Participant = Chronokeep.Objects.Registration.Participant;
 
 namespace Chronokeep.Network.Registration
 {
-    public partial class RegistrationWorker(IDBInterface database, IMainWindow mWindow)
+    public partial class RegistrationWorker(IdbInterface database, IMainWindow mWindow)
     {
         private bool running;
         private bool keepalive;
@@ -503,7 +503,7 @@ namespace Chronokeep.Network.Registration
                 Birthdate = participant.Birthdate,
                 Distance = participant.Distance,
                 Mobile = participant.Mobile,
-                SmsEnabled = participant.EventSpecific.SMSEnabled,
+                SmsEnabled = participant.EventSpecific.SmsEnabled,
                 Apparel = participant.EventSpecific.Apparel
             }));
             return output;

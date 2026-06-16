@@ -11,11 +11,11 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
         [JsonPropertyName("distance_value")]
-        public double DistanceValue { get; set; }
+        public double DistanceValue { get; init; }
         [JsonPropertyName("distance_unit")]
         public string DistanceUnit { get; set; } = "";
         [JsonPropertyName("gps")]
-        public string GPS { get; set; } = "";
+        public string Gps { get; set; } = "";
         [JsonPropertyName("map_link")]
         public string MapLink { get; set; } = "";
     }

@@ -7,7 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Rewind"
         Width="400"
@@ -15,10 +15,14 @@
         Topmost="True"
         Closing="Window_Closing"
         >
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
@@ -35,29 +39,19 @@
             </DockPanel>
         </Border>
         <StackPanel VerticalAlignment="Top" Margin="10,10,10,10" Grid.Row="1">
-            <ProgressBar Name="busyIndicator" IsIndeterminate="True" IsVisible="False" Margin="25"/>
+            <ProgressBar Name="BusyIndicator" IsIndeterminate="True" IsVisible="False" Margin="25"/>
             <TextBlock Text="Rewind"
                         FontSize="18"
                         TextAlignment="Center"
                         VerticalAlignment="Center"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*,*">
                 <TextBlock Grid.Column="0"
-                            Grid.Row="0"
-                            Text="From"
-                            FontSize="14"
-                            Margin="10,5,5,5"
-                            VerticalAlignment="Center"
-                            TextAlignment="Center"/>
+                           Grid.Row="0"
+                           Text="From"
+                           FontSize="14"
+                           Margin="10,5,5,5"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"/>
                 <TextBlock Grid.Column="1"
                             Grid.Row="0"
                             Text="To"
@@ -113,12 +107,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalContentAlignment="Center"/>
             </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Grid ColumnDefinitions="*,*,*">
                 <Button Grid.Column="0"
                         Name="SetYesterday"
                         Content="Yesterday"

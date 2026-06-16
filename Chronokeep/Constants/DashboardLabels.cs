@@ -1,9 +1,9 @@
 ﻿namespace Chronokeep.Constants
 {
-    public class DashboardLabels
+    public static class DashboardLabels
     {
-        public static readonly string EDIT = "Edit";
-        public static readonly string SAVE = "Save";
-        public static readonly string WORKING = "Working...";
+        public const string EDIT    = "Edit";
+        public const string SAVE    = "Save";
+        public const string WORKING = "Working...";
     }
 }

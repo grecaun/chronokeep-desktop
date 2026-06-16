@@ -13,7 +13,7 @@ public partial class ApiExpanderPart : UserControl
         ApiObject api,
         List<RemoteReader> readers,
         Dictionary<(int, string), RemoteReader> savedReaders,
-        IDBInterface database,
+        IdbInterface database,
         IMainWindow mainWindow)
     {
         InitializeComponent();

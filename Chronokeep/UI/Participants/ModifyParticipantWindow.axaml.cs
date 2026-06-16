@@ -12,17 +12,17 @@ using System.Collections.Generic;
 
 namespace Chronokeep.UI.Participants;
 
-public partial class ModifyParticipantWindow : Window
+public partial class ModifyParticipantWindow : ChronokeepWindow
 {
     private readonly IMainWindow? window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly TimingPage? tPage;
     private readonly Event? theEvent;
     private readonly Participant? person;
 
     private bool participantChanged;
 
-    public ModifyParticipantWindow(IMainWindow window, IDBInterface database, Participant? person)
+    public ModifyParticipantWindow(IMainWindow window, IdbInterface database, Participant? person)
     {
         InitializeComponent();
         this.window = window;
@@ -48,7 +48,7 @@ public partial class ModifyParticipantWindow : Window
         BibBox.Focus();
     }
 
-    public ModifyParticipantWindow(TimingPage tPage, IDBInterface database, int eventSpecificId, string bib)
+    public ModifyParticipantWindow(TimingPage tPage, IdbInterface database, int eventSpecificId, string bib)
     {
         InitializeComponent();
         window = null;
@@ -75,7 +75,7 @@ public partial class ModifyParticipantWindow : Window
         BibBox.IsEnabled = false;
     }
 
-    public static ModifyParticipantWindow NewWindow(IMainWindow window, IDBInterface database, Participant? person = null)
+    public static ModifyParticipantWindow NewWindow(IMainWindow window, IdbInterface database, Participant? person = null)
     {
         return new ModifyParticipantWindow(window, database, person);
     }
@@ -364,7 +364,7 @@ public partial class ModifyParticipantWindow : Window
                 tPage.NotifyTimingWorker();
             }
         }
-        window?.WindowFinalize(this);
+        window?.WindowFinalize();
     }
 
     private void Box_KeyDown(object? sender, KeyEventArgs e)
@@ -513,10 +513,5 @@ public partial class ModifyParticipantWindow : Window
             Clear();
             BibBox.Focus();
         }
-    }
-
-    private void OnClose(object sender, RoutedEventArgs e)
-    {
-        Close();
     }
 }

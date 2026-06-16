@@ -10,7 +10,7 @@ namespace Chronokeep.Timing.Routines
 {
     internal static class DistanceRoutine
     {
-        public static List<TimeResult> ProcessRace(Event theEvent, IDBInterface database, TimingDictionary dictionary, IMainWindow window)
+        public static List<TimeResult> ProcessRace(Event theEvent, IdbInterface database, TimingDictionary dictionary, IMainWindow window)
         {
             Log.D("Timing.Routines.DistanceRoutine", "Processing chip reads for a distance based event.");
             // Check if there's anything to process.
@@ -475,7 +475,7 @@ namespace Chronokeep.Timing.Routines
                                     millisecDiff -= 1000;
                                 }
                                 bool startResExists = startTimes.TryGetValue(identifier, out TimeResult? startRes);
-                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RFIDDateToEpoch(startRes!.SystemTime) : startSeconds);
+                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(startRes!.SystemTime) : startSeconds);
                                 int chipMillisecDiff = read.TimeMilliseconds - (startResExists ? startRes!.SystemTime.Millisecond : startMilliseconds);
                                 while (chipMillisecDiff < 0)
                                 {
@@ -716,7 +716,7 @@ namespace Chronokeep.Timing.Routines
                                     millisecDiff -= 1000;
                                 }
                                 bool startResExists = startTimes.TryGetValue(identifier, out TimeResult? oStartRes);
-                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RFIDDateToEpoch(oStartRes!.SystemTime) : startSeconds);
+                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(oStartRes!.SystemTime) : startSeconds);
                                 int chipMillisecDiff = read.TimeMilliseconds - (startResExists ? oStartRes!.SystemTime.Millisecond : startMilliseconds);
                                 while (chipMillisecDiff < 0)
                                 {
@@ -930,7 +930,7 @@ namespace Chronokeep.Timing.Routines
         }
 
         // Process timing placements for a distance based event.
-        public static List<TimeResult> ProcessPlacements(Event theEvent, IDBInterface database, TimingDictionary dictionary)
+        public static List<TimeResult> ProcessPlacements(Event theEvent, IdbInterface database, TimingDictionary dictionary)
         {
             List<TimeResult> output = [];
             // Create a dictionary so we can check if placements have changed. (place, location, occurrence, distance)

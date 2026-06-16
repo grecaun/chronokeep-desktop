@@ -5,26 +5,26 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.IO
 {
-    public partial class CSVImporter : IDataImporter
+    public partial class CsvImporter : IDataImporter
     {
         [GeneratedRegex("\"[^\"]*\",|[^,]*,|[^,]*$")]
         private static partial Regex DataRegex();
 
         public ImportData? Data { get; private set; }
-        protected readonly string FilePath;
-        protected StreamReader file;
+        private readonly string filePath;
+        protected readonly StreamReader File;
 
-        public CSVImporter(string filePath)
+        public CsvImporter(string filePath)
         {
             Log.D("IO.CSVImporter", "Opening file.");
-            file = new(filePath);
-            FilePath = filePath;
+            File = new StreamReader(filePath);
+            this.filePath = filePath;
         }
 
         public void FetchHeaders()
         {
             Log.D("IO.CSVImporter", "Getting headers from file.");
-            ProcessFirstLine(file!.ReadLine()!);
+            ProcessFirstLine(File.ReadLine()!);
         }
 
         protected void ProcessFirstLine(string line)
@@ -36,22 +36,20 @@ namespace Chronokeep.IO
             {
                 headers[counter++] = m.Value.Replace('"', ' ').TrimEnd(',').Trim();
             }
-            Data = new(headers, FilePath, ImportData.FileType.CSV);
+            Data = new ImportData(headers, filePath, ImportData.FileType.CSV);
         }
 
         public void FetchData()
         {
             Log.D("IO.CSVImporter", "Getting data from file.");
-            string line;
-            while ((line = file!.ReadLine()!) != null)
+            while (File.ReadLine()! is { } line)
             {
                 MatchCollection matches = DataRegex().Matches(line);
                 string[] dataLine = new string[matches.Count];
                 int counter = 0;
-                string match;
                 foreach (Match m in matches)
                 {
-                    match = m.Value.Replace('"', ' ').Trim().TrimEnd(',');
+                    string match = m.Value.Replace('"', ' ').Trim().TrimEnd(',');
                     dataLine[counter++] = match;
                 }
                 Data!.AddData(dataLine);
@@ -61,18 +59,14 @@ namespace Chronokeep.IO
 
         public void Finish()
         {
-            if (file != null)
+            try
             {
-                try
-                {
-                    Log.D("IO.CSVImporter", "Closing file.");
-                    file.Close();
-                    file = null;
-                }
-                catch
-                {
-                    Log.D("IO.CSVImporter", "Already closed.");
-                }
+                Log.D("IO.CSVImporter", "Closing file.");
+                File.Close();
+            }
+            catch
+            {
+                Log.D("IO.CSVImporter", "Already closed.");
             }
         }
     }

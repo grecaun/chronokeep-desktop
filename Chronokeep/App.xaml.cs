@@ -15,7 +15,7 @@ namespace Chronokeep
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public class App : Application
     {
         internal static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         
@@ -32,13 +32,13 @@ namespace Chronokeep
 #else
                 options.Environment = "release";
 #endif
-                string gitVersion = "";
+                string gitVersion;
                 using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
                 {
                     using StreamReader reader = new(stream);
                     gitVersion = reader.ReadToEnd();
                 }
-                options.Release = string.Format("chronokeep-windows@{0}", gitVersion);
+                options.Release = $"chronokeep-windows@{gitVersion}";
             });
             Log.D("UI.MainWindow", "Looking for log directory.");
             string logDirPath = IsWindows ?
@@ -49,7 +49,7 @@ namespace Chronokeep
                 Log.D("UI.MainWindow", "Creating log directory.");
                 Directory.CreateDirectory(logDirPath);
             }
-            Globals.ErrorLogPath = Path.Combine(logDirPath, string.Format("{0}_error_log.txt", DateTime.Now.ToString("yyyyMMdd")));
+            Globals.ErrorLogPath = Path.Combine(logDirPath, $"{DateTime.Now:yyyyMMdd}_error_log.txt");
             AvaloniaXamlLoader.Load(this);
         }
 
@@ -91,7 +91,7 @@ namespace Chronokeep
                 })
                 .LogToTrace();
 
-        static void CaptureException(Exception ex)
+        private static void CaptureException(Exception ex)
         {
             string logDirPath = IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
@@ -102,22 +102,19 @@ namespace Chronokeep
                 Directory.CreateDirectory(logDirPath);
             }
             string date = DateTime.Now.ToString("yyyyMMdd");
-            string logPath = Path.Combine(logDirPath, string.Format("{0}_crash_0.txt", date));
+            string logPath = Path.Combine(logDirPath, $"{date}_crash_0.txt");
             int ix = 0;
             while (File.Exists(logPath))
             {
                 ix++;
-                logPath = Path.Combine(logDirPath, string.Format("{0}_crash_{1}.txt", date, ix));
+                logPath = Path.Combine(logDirPath, $"{date}_crash_{ix}.txt");
             }
             File.WriteAllText(logPath, ex.StackTrace);
             SentrySdk.CaptureException(ex);
         }
     }
 
-    public sealed class ChronokeepFontCollection : EmbeddedFontCollection
-    {
-        public ChronokeepFontCollection() : base(
-            new Uri("fonts:ChronokeepFonts", UriKind.Absolute),
-            new Uri("avares://Chronokeep/fonts", UriKind.Absolute)) { }
-    }
+    public sealed class ChronokeepFontCollection() : EmbeddedFontCollection(
+        new Uri("fonts:ChronokeepFonts", UriKind.Absolute),
+        new Uri("avares://Chronokeep/fonts", UriKind.Absolute));
 }

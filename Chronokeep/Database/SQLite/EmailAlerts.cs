@@ -9,13 +9,12 @@ namespace Chronokeep.Database.SQLite
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * FROM email_alert WHERE event_id=@event;";
-            command.Parameters.Add(new("@event", eventId));
+            command.Parameters.Add(new SQLiteParameter("@event", eventId));
             SQLiteDataReader reader = command.ExecuteReader();
             List<int> output = [];
-            int id;
             while (reader.Read())
             {
-                if (int.TryParse(reader["eventspecific_id"].ToString(), out id))
+                if (int.TryParse(reader["eventspecific_id"].ToString(), out int id))
                 {
                     output.Add(id);
                 }
@@ -24,21 +23,28 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
-        public static void AddEmailAlert(int eventId, int eventspecific_id, SQLiteConnection connection)
+        public static void AddEmailAlert(int eventId, int eventspecificId, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "INSERT INTO email_alert (event_id, eventspecific_id) VALUES (@event, @eventspec);";
             command.Parameters.AddRange(
             [
-                new("@event", eventId),
-                new("@eventspec", eventspecific_id)
+                new SQLiteParameter("@event", eventId),
+                new SQLiteParameter("@eventspec", eventspecificId)
             ]);
             command.ExecuteNonQuery();
         }
 
-        public static void RemoveEmailAlert(int eventId, int eventspecific_id, SQLiteConnection connection)
+        public static void RemoveEmailAlert(int eventId, int eventspecificId, SQLiteConnection connection)
         {
-            // TODO
+            SQLiteCommand command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM email_alert WHERE event_id=@event AND eventspecific_id=@eventspec;";
+            command.Parameters.AddRange(
+            [
+                new SQLiteParameter("@event", eventId),
+                new SQLiteParameter("@eventspec", eventspecificId)
+            ]);
+            command.ExecuteNonQuery();
         }
     }
 }

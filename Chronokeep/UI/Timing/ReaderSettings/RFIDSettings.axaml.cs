@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Helpers;
 using Chronokeep.Objects.RFID;
@@ -18,8 +17,7 @@ public partial class RfidSettings : ChronokeepWindow
     public RfidSettings(RfidUltraInterface reader)
     {
         InitializeComponent();
-        MinWidth = 100;
-        MinHeight = 100;
+        ChronokeepInitialize();
         this.reader = reader;
         reader.GetStatus();
         reader.QuerySettings();
@@ -264,10 +262,5 @@ public partial class RfidSettings : ChronokeepWindow
     {
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Close button clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

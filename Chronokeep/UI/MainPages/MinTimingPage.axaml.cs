@@ -17,7 +17,7 @@ namespace Chronokeep.UI.MainPages;
 public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private TimingRawReadsPage? subPage;
 
     private Event? theEvent;
@@ -31,7 +31,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
     private const string Ipformat = "{0:D}.{1:D}.{2:D}.{3:D}";
     private readonly int[] baseIp = [0, 0, 0, 0];
 
-    public MinTimingPage(IMainWindow window, IDBInterface database)
+    public MinTimingPage(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
         this.database = database;
@@ -126,11 +126,11 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         TimingFrame.Content = subPage;
     }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public static void UpdateDatabase() { }
 

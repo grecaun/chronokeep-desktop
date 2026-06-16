@@ -7,7 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Modify Participants"
         Width="300"
@@ -16,7 +16,7 @@
         SizeToContent="Height"
         Closing="Window_Closing"
         >
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <StackPanel VerticalAlignment="Center" Grid.Row="0" Grid.RowSpan="2" Margin="0,25,0,15">
             <TextBlock Text="Switch Participants to"
                        FontSize="14"
@@ -45,7 +45,11 @@
         </StackPanel>
         <Border Grid.Row="0"
                 Background="Transparent"
-                WindowDecorationProperties.ElementRole="TitleBar">
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}">
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"

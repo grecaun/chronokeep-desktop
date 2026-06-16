@@ -1,12 +1,11 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * DistanceStat Functions
@@ -18,84 +17,82 @@ namespace Chronokeep.MemStore
             List<DistanceStat> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
+                    if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (theEvent != null && theEvent.Identifier == eventId)
+                        Dictionary<int, DistanceStat> distStatDict = new();
+                        DistanceStat allStats = new()
                         {
-                            Dictionary<int, DistanceStat> distStatDict = new();
-                            DistanceStat allstats = new()
+                            DistanceName = "All",
+                            DistanceId = -1,
+                            Active = 0,
+                            Dnf = 0,
+                            Dns = 0,
+                            Finished = 0
+                        };
+                        foreach (Participant p in participants.Values)
+                        {
+                            int distIdent = p.EventSpecific.DistanceIdentifier;
+                            string distName = distances.TryGetValue(distIdent, out Distance? dist) ? dist.Name : "";
+                            if (condense && dist != null && dist.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER && distances.TryGetValue(dist.LinkedDistance, out Distance? linkDist))
                             {
-                                DistanceName = "All",
-                                DistanceId = -1,
-                                Active = 0,
-                                Dnf = 0,
-                                Dns = 0,
-                                Finished = 0
-                            };
-                            foreach (Participant p in participants.Values)
-                            {
-                                int distIdent = p.EventSpecific.DistanceIdentifier;
-                                string distName = distances.TryGetValue(distIdent, out Distance? dist) ? dist.Name : "";
-                                if (condense && dist != null && dist.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER && distances.TryGetValue(dist.LinkedDistance, out Distance? linkDist))
-                                {
-                                    distName = linkDist.Name;
-                                    distIdent = linkDist.Identifier;
-                                }
-                                if (!distStatDict.TryGetValue(distIdent, out DistanceStat? distStats))
-                                {
-                                    distStats = new()
-                                    {
-                                        DistanceName = distName,
-                                        DistanceId = distIdent,
-                                        Active = 0,
-                                        Dnf = 0,
-                                        Dns = 0,
-                                        Finished = 0
-                                    };
-                                    distStatDict[distIdent] = distStats;
-                                }
-                                if (Constants.Timing.EVENTSPECIFIC_DNF == p.Status)
-                                {
-                                    distStats.Dnf += 1;
-                                    allstats.Dnf += 1;
-                                }
-                                else if (Constants.Timing.EVENTSPECIFIC_FINISHED == p.Status)
-                                {
-                                    distStats.Finished += 1;
-                                    allstats.Finished += 1;
-                                }
-                                else if (Constants.Timing.EVENTSPECIFIC_STARTED == p.Status)
-                                {
-                                    distStats.Active += 1;
-                                    allstats.Active += 1;
-                                }
-                                else if (Constants.Timing.EVENTSPECIFIC_DNS == p.Status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == p.Status)
-                                {
-                                    distStats.Dns += 1;
-                                    allstats.Dns += 1;
-                                }
+                                distName = linkDist.Name;
+                                distIdent = linkDist.Identifier;
                             }
-                            output.AddRange(distStatDict.Values);
-                            output.Sort((x1, x2) => x1.Active != x2.Active ? x2.Active.CompareTo(x1.Active) : x1.DistanceName.CompareTo(x2.DistanceName));
-                            if (output.Count > 1)
+                            if (!distStatDict.TryGetValue(distIdent, out DistanceStat? distStats))
                             {
-                                output.Insert(0, allstats);
+                                distStats = new()
+                                {
+                                    DistanceName = distName,
+                                    DistanceId = distIdent,
+                                    Active = 0,
+                                    Dnf = 0,
+                                    Dns = 0,
+                                    Finished = 0
+                                };
+                                distStatDict[distIdent] = distStats;
+                            }
+                            if (Constants.Timing.EVENTSPECIFIC_DNF == p.Status)
+                            {
+                                distStats.Dnf += 1;
+                                allStats.Dnf += 1;
+                            }
+                            else if (Constants.Timing.EVENTSPECIFIC_FINISHED == p.Status)
+                            {
+                                distStats.Finished += 1;
+                                allStats.Finished += 1;
+                            }
+                            else if (Constants.Timing.EVENTSPECIFIC_STARTED == p.Status)
+                            {
+                                distStats.Active += 1;
+                                allStats.Active += 1;
+                            }
+                            else if (Constants.Timing.EVENTSPECIFIC_DNS == p.Status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == p.Status)
+                            {
+                                distStats.Dns += 1;
+                                allStats.Dns += 1;
                             }
                         }
+                        output.AddRange(distStatDict.Values);
+                        output.Sort((x1, x2) => x1.Active != x2.Active ? x2.Active.CompareTo(x1.Active) : string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal));
+                        if (output.Count > 1)
+                        {
+                            output.Insert(0, allStats);
+                        }
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
                 return output;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring distanceLock. " + e.Message);
-                throw new ChronoLockException("distanceLock");
+                throw new ChronokeepLockException("distanceLock");
             }
         }
 

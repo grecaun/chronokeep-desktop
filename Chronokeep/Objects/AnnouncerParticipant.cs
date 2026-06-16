@@ -7,7 +7,7 @@ namespace Chronokeep.Objects
         private readonly long seconds = seconds;
 
         public static Event? TheEvent { get; set; }
-        public DateTime When => Constants.Timing.RFIDEpochToDate(seconds);
+        public DateTime When => Constants.Timing.RfidEpochToDate(seconds);
         public string AnnouncerWhen => When.ToString("HH:mm:ss");
         public string Distance => person.Distance;
         public string Bib => person.Bib;

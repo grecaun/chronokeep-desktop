@@ -14,19 +14,17 @@ namespace Chronokeep.UI.Timing.Windows;
 public partial class ManualEntryWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private readonly HashSet<string> bibsAdded = [];
 
     private readonly bool dnf;
 
-    private ManualEntryWindow(IMainWindow window, IDBInterface database, List<TimingLocation> locations)
+    private ManualEntryWindow(IMainWindow window, IdbInterface database, List<TimingLocation> locations)
     {
         InitializeComponent();
-        MinHeight = 275;
-        MinWidth = 300;
-        Width = 300;
+        ChronokeepInitialize();
         Topmost = true;
         this.window = window;
         this.database = database;
@@ -40,12 +38,9 @@ public partial class ManualEntryWindow : ChronokeepWindow
     }
 
     // For Add DNF Entry use
-    private ManualEntryWindow(IMainWindow window, IDBInterface database)
+    private ManualEntryWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
-        MinHeight = 275;
-        MinWidth = 300;
-        Width = 300;
         Topmost = true;
         this.window = window;
         this.database = database;
@@ -104,7 +99,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         }
     }
 
-    public static ManualEntryWindow NewWindow(IMainWindow window, IDBInterface database, List<TimingLocation>? locations = null)
+    public static ManualEntryWindow NewWindow(IMainWindow window, IdbInterface database, List<TimingLocation>? locations = null)
     {
         return locations == null ? new ManualEntryWindow(window, database) : new ManualEntryWindow(window, database, locations);
     }
@@ -259,7 +254,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
+        window.WindowFinalize();
         if (bibsAdded.Count <= 0) return;
         database.ResetTimingResultsEvent(theEvent!.Identifier);
         window.NotifyTimingWorker();
@@ -293,10 +288,5 @@ public partial class ManualEntryWindow : ChronokeepWindow
     private void Done_Click(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

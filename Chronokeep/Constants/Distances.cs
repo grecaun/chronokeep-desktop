@@ -1,6 +1,6 @@
 ﻿namespace Chronokeep.Constants
 {
-    public class Distances
+    public static class Distances
     {
         public const int UNKNOWN = 0;
         public const int MILES = 1;

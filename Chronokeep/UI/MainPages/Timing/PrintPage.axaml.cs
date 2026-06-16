@@ -20,10 +20,10 @@ namespace Chronokeep.UI.MainPages.Timing;
 public partial class PrintPage : UserControl, ISubPage
 {
     private readonly TimingPage parent;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
-    public PrintPage(TimingPage parent, IDBInterface database)
+    public PrintPage(TimingPage parent, IdbInterface database)
     {
         InitializeComponent();
         this.parent = parent;
@@ -51,7 +51,7 @@ public partial class PrintPage : UserControl, ISubPage
 
     public void CancelableUpdateView(CancellationToken token) { }
 
-    public void Search(CancellationToken token, string searchText) { }
+    public void Search(CancellationToken token) { }
 
     private string GetOverallPrintableDocument(List<string> distances)
     {
@@ -306,13 +306,13 @@ public partial class PrintPage : UserControl, ISubPage
 
     public void Closing() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
-    public void Reader(string reader) { }
+    public void Reader() { }
 
     private async void Save_Click(object? sender, RoutedEventArgs e)
     {
@@ -332,7 +332,7 @@ public partial class PrintPage : UserControl, ISubPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.PDFType],
+                FileTypeChoices = [Utils.PdfType],
                 SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Results.pdf".Replace(' ', '-'),
                 SuggestedStartLocation = startingFolder,
             });

@@ -14,12 +14,12 @@ namespace Chronokeep.UI.MainPages;
 public partial class LocationsPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
     private int locationCount = 1;
     private bool updateTimingWorker;
 
-    public LocationsPage(IMainWindow mWindow, IDBInterface database)
+    public LocationsPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -95,24 +95,24 @@ public partial class LocationsPage : UserControl, IMainPage
 
             updateTimingWorker = true;
         }
-        if (database is SQLiteInterface)
+        if (database is SqLiteInterface)
         {
             Results.GetStaticVariables(database);
         }
     }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         Add_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         UpdateDatabase();
         UpdateView();
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateView();
     }

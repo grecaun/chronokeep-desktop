@@ -45,6 +45,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     public MinWindow()
     {
         InitializeComponent();
+        ChronokeepInitialize();
         // Check that no other instance of this program are running.
         if (!OneWindow.WaitOne(TimeSpan.Zero, true))
         {
@@ -69,7 +70,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             Log.D("UI.MinWindow", "Creating database file.");
             SQLiteConnection.CreateFile(path);
         }
-        database = MemStore.MemStore.GetMemStore(new SQLiteInterface(path));
+        database = MemStore.MemStore.GetMemStore(new SqLiteInterface(path));
         try
         {
             database.Initialize();
@@ -238,7 +239,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         return true;
     }
 
-    public void WindowFinalize(Window? w)
+    public void WindowFinalize()
     {
         page?.UpdateView();
     }
@@ -449,13 +450,13 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
 
     public void StopAnnouncer() { }
 
-    public void StartAPIController() { }
+    public void StartApiController() { }
 
-    public bool StopAPIController() { return false; }
+    public bool StopApiController() { return false; }
 
-    public bool IsAPIControllerRunning() { return false; }
+    public bool IsApiControllerRunning() { return false; }
 
-    public int APIErrors() { return 0; }
+    public int ApiErrors() { return 0; }
 
     public void StartRemote() { }
 

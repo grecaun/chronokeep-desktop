@@ -10,7 +10,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
         public ApiPerson(Participant person, string uniqueId)
         {
             Identifier = $"{uniqueId}{person.EventSpecific.Identifier}";
-            Bib = person.Bib.ToString();
+            Bib = person.Bib;
             First = person.Anonymous ? "" : person.FirstName;
             Last = person.Anonymous ? "" : person.LastName;
             Birthdate = person.Birthdate.Length < 1 ? "1901/01/01" : person.Birthdate;
@@ -18,7 +18,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
             AgeGroup = person.EventSpecific.AgeGroupName;
             Distance = person.EventSpecific.DistanceName;
             Anonymous = person.Anonymous;
-            SmsEnabled = person.EventSpecific.SMSEnabled;
+            SmsEnabled = person.EventSpecific.SmsEnabled;
             Mobile = person.Mobile;
             Apparel = person.EventSpecific.Apparel;
         }

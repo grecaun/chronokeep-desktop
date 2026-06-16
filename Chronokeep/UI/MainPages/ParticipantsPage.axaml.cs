@@ -25,14 +25,14 @@ namespace Chronokeep.UI.MainPages;
 public partial class ParticipantsPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
     private List<Participant> allParticipants = [];
     private readonly List<Participant> conflicts = [];
 
     private readonly bool loaded;
 
-    public ParticipantsPage(IMainWindow mainWindow, IDBInterface database)
+    public ParticipantsPage(IMainWindow mainWindow, IdbInterface database)
     {
         InitializeComponent();
         mWindow = mainWindow;
@@ -147,14 +147,14 @@ public partial class ParticipantsPage : UserControl, IMainPage
 
     private static void UpdateDatabase() { }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         Add_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void Closing()
     {
@@ -174,7 +174,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Download.Content = "Download";
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {
@@ -452,7 +452,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Upload.Content = "Upload";
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {
@@ -597,7 +597,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     }
                     else
                     {
-                        importer = new CSVImporter(files[0].TryGetLocalPath()!);
+                        importer = new CsvImporter(files[0].TryGetLocalPath()!);
                     }
                     importer.FetchHeaders();
                     ImportFileWindow importWindow = ImportFileWindow.NewWindow(mWindow, importer, database);
@@ -700,7 +700,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                         }
                         format.Remove(format.Length - 1, 1);
                         Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
-                        exporter = new CSVExporter(format.ToString());
+                        exporter = new CsvExporter(format.ToString());
                     }
                     exporter.SetData(headers, data);
                     exporter.ExportData(file.TryGetLocalPath()!);
@@ -752,7 +752,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 ApiObject? api = null;
                 try
                 {
-                    api = database.GetAPI(theEvent!.ApiId);
+                    api = database.GetApi(theEvent!.ApiId);
                     Log.D("UI.MainPages.ParticipantsPage", "API found.");
                 }
                 catch

@@ -12,24 +12,22 @@ namespace Chronokeep.UI.API.Windows;
 public partial class ApiWindow : ChronokeepWindow
 {
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     // Variables relating to information we're collecting.
     private ApiObject? api;
     private string slug = "", year = "";
 
-    private ApiWindow(IMainWindow window, IDBInterface database)
+    private ApiWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
-        MinHeight = 100;
-        MinWidth = 300;
-        Width = 330;
         theEvent = database.GetCurrentEvent();
-        List<ApiObject> apis = database.GetAllAPI();
-        apis.RemoveAll(x => !APIConstants.API_RESULTS[x.Type]);
+        List<ApiObject> apis = database.GetAllApi();
+        apis.RemoveAll(x => !ApiConstants.API_RESULTS[x.Type]);
         if (theEvent == null || theEvent.Identifier < 1 || apis.Count < 1)
         {
             Log.E("UI.API.APIWindow", "event not found or no apis set up");
@@ -41,7 +39,7 @@ public partial class ApiWindow : ChronokeepWindow
         }
     }
 
-    public static ApiWindow NewWindow(IMainWindow window, IDBInterface database)
+    public static ApiWindow NewWindow(IMainWindow window, IdbInterface database)
     {
         return new ApiWindow(window, database);
     }
@@ -49,7 +47,7 @@ public partial class ApiWindow : ChronokeepWindow
     public void GotoPage2(ApiObject iApi)
     {
         api = iApi;
-        database.SetAppSetting(Constants.Settings.LAST_USED_API_ID, iApi.Identifier.ToString());
+        database.SetAppSetting(Settings.LAST_USED_API_ID, iApi.Identifier.ToString());
         ApiFrame.Content = new Pages.ApiPage2(this, database, iApi, theEvent!);
     }
 
@@ -80,11 +78,6 @@ public partial class ApiWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window.WindowFinalize();
     }
 }

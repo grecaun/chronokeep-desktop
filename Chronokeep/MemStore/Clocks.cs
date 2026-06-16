@@ -1,12 +1,11 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * Banned Email/Phone Functions
@@ -18,22 +17,20 @@ namespace Chronokeep.MemStore
             List<Chronoclock> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(clocks.Values);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(clocks.Values);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return output;
         }
@@ -44,22 +41,20 @@ namespace Chronokeep.MemStore
             clock.Identifier = database.AddClock(clock);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return clock.Identifier;
+                try
                 {
-                    try
-                    {
-                        clocks[clock.Identifier] = clock;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    clocks[clock.Identifier] = clock;
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
             return clock.Identifier;
         }
@@ -70,22 +65,20 @@ namespace Chronokeep.MemStore
             database.UpdateClock(clock);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        clocks[clock.Identifier] = clock;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    clocks[clock.Identifier] = clock;
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
 
@@ -95,25 +88,23 @@ namespace Chronokeep.MemStore
             database.RemoveClocks(iClocks);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    foreach (Chronoclock clock in iClocks)
                     {
-                        foreach (Chronoclock clock in iClocks)
-                        {
-                            clocks.Remove(clock.Identifier);
-                        }
+                        clocks.Remove(clock.Identifier);
                     }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring memStoreLock. " + e.Message);
-                throw new ChronoLockException($"memStoreLock {e.Message}");
+                throw new ChronokeepLockException($"memStoreLock {e.Message}");
             }
         }
     }

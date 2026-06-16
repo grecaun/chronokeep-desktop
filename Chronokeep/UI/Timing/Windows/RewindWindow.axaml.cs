@@ -18,10 +18,8 @@ public partial class RewindWindow : ChronokeepWindow
     public RewindWindow(TimingSystem system, ITimingPage parent)
     {
         InitializeComponent();
-        MinWidth = 0;
-        MinHeight = 0;
+        ChronokeepInitialize();
         SizeToContent = SizeToContent.Height;
-        Width = 400;
         this.system = system;
         this.parent = parent;
         string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
@@ -97,9 +95,9 @@ public partial class RewindWindow : ChronokeepWindow
                     };
                     worker.RunWorkerCompleted += (_, _) =>
                     {
-                        busyIndicator.IsVisible = false;
+                        BusyIndicator.IsVisible = false;
                     };
-                    busyIndicator.IsVisible = true;
+                    BusyIndicator.IsVisible = true;
                     worker.RunWorkerAsync();
                 });
         }
@@ -113,10 +111,5 @@ public partial class RewindWindow : ChronokeepWindow
     private void Done_Click(object sender, RoutedEventArgs e)
     {
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

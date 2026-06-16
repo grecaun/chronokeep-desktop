@@ -8,7 +8,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Chip Reader"
         Width="770"
@@ -34,6 +34,8 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"

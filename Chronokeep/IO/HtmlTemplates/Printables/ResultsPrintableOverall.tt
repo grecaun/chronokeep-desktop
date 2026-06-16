@@ -93,7 +93,7 @@
 					{ #>
 					<tr>
 						<td><#= r.PrettyPlaceStr #></td>
-						<td><#= r.Bib.ToString() #></td>
+						<td><#= r.Bib #></td>
 						<td><#= r.PrettyParticipantName #></td>
 						<td><#= r.Gender != "Not Specified" ? r.GenderPlaceStr : "" #></td>
 						<td><#= r.Gender != "Not Specified" ? r.PrettyGender : "" #></td>
@@ -103,14 +103,14 @@
 							<#= 
 								theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
 								? r.Occurrence
-								: r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
+								: r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
 							#>
 						</td>
 						<td>
 							<#= 
 								theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
-								? r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
-								: r.ChipTime.Substring(0, r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)
+								? r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
+								: r.ChipTime[..(r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)]
 							#>
 						</td>
 					</tr>
@@ -120,7 +120,7 @@
 					{ #>
 					<tr>
 						<td></td>
-						<td><#= r.Bib.ToString() #></td>
+						<td><#= r.Bib #></td>
 						<td><#= r.PrettyParticipantName #></td>
 						<td></td>
 						<td><#= r.Gender != "Not Specified" ? r.PrettyGender : "" #></td>

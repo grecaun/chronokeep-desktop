@@ -54,9 +54,9 @@ public partial class EditEventPage : UserControl
             {
                 if (item is not ComboBoxItem cbi) continue;
                 if (cbi.Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase)
-                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase)
-                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_TIME, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase)
-                    && apiEvent.Event.Type.Equals(APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA, StringComparison.OrdinalIgnoreCase))
+                    && apiEvent.Event.Type.Equals(ApiConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase)
+                    && apiEvent.Event.Type.Equals(ApiConstants.CHRONOKEEP_EVENT_TYPE_TIME, StringComparison.OrdinalIgnoreCase) || cbi.Content.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase)
+                    && apiEvent.Event.Type.Equals(ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA, StringComparison.OrdinalIgnoreCase))
                 {
                     type = cbi;
                 }
@@ -83,18 +83,18 @@ public partial class EditEventPage : UserControl
     {
         try
         {
-            string type = APIConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
+            string type = ApiConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
             if (((ComboBoxItem)TypeBox.SelectedItem!).Content!.ToString()!.Equals("Distance", StringComparison.OrdinalIgnoreCase))
             {
-                type = APIConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
+                type = ApiConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
             }
             else if (((ComboBoxItem)TypeBox.SelectedItem).Content!.ToString()!.Equals("Time", StringComparison.OrdinalIgnoreCase))
             {
-                type = APIConstants.CHRONOKEEP_EVENT_TYPE_TIME;
+                type = ApiConstants.CHRONOKEEP_EVENT_TYPE_TIME;
             }
             else if (((ComboBoxItem)TypeBox.SelectedItem).Content!.ToString()!.Equals("Backyard Ultra", StringComparison.OrdinalIgnoreCase))
             {
-                type = APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
+                type = ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
             }
             await ApiHandlers.UpdateEvent(api, new ApiEvent
             {

@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -21,24 +19,23 @@ public partial class RemoteReadersWindow : ChronokeepWindow
     private static RemoteReadersWindow? theOne;
 
     private readonly IMainWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private readonly List<ApiObject> remoteApIs = [];
 
-    public static RemoteReadersWindow CreateWindow(IMainWindow window, IDBInterface database)
+    public static RemoteReadersWindow CreateWindow(IMainWindow window, IdbInterface database)
     {
         theOne ??= new RemoteReadersWindow(window, database);
         return theOne;
     }
 
-    private RemoteReadersWindow(IMainWindow window, IDBInterface database)
+    private RemoteReadersWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
-        MinWidth = 10;
-        MinHeight = 10;
         theEvent = database.GetCurrentEvent();
         if (theEvent == null || theEvent.Identifier < 0)
         {
@@ -46,8 +43,8 @@ public partial class RemoteReadersWindow : ChronokeepWindow
             Close();
             return;
         }
-        remoteApIs = database.GetAllAPI();
-        remoteApIs.RemoveAll(x => x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE && x.Type != Constants.APIConstants.CHRONOKEEP_REMOTE_SELF);
+        remoteApIs = database.GetAllApi();
+        remoteApIs.RemoveAll(x => x.Type != Constants.ApiConstants.CHRONOKEEP_REMOTE && x.Type != Constants.ApiConstants.CHRONOKEEP_REMOTE_SELF);
         GetReaders();
     }
 
@@ -88,7 +85,7 @@ public partial class RemoteReadersWindow : ChronokeepWindow
     {
         Log.D("UI.API.RemoteReaders", "Window is closed.");
         theOne = null;
-        window.WindowFinalize(this);
+        window.WindowFinalize();
     }
 
     private void Close_Click(object? sender, RoutedEventArgs e)
@@ -125,10 +122,5 @@ public partial class RemoteReadersWindow : ChronokeepWindow
         // notify mainwindow to update/start remote reader thread
         RemoteReadersNotifier.GetRemoteReadersNotifier().Notify();
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

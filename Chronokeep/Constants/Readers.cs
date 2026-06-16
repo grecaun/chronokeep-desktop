@@ -2,7 +2,7 @@
 
 namespace Chronokeep.Constants
 {
-    class Readers
+    internal static class Readers
     {
         public const string SYSTEM_RFID = "RFID";
         public const string SYSTEM_IPICO = "IPICO";

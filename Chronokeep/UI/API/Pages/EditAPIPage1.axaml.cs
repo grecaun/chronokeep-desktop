@@ -9,9 +9,9 @@ namespace Chronokeep.UI.API.Pages;
 public partial class EditApiPage1 : UserControl
 {
     private readonly EditApiWindow window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
 
-    public EditApiPage1(EditApiWindow window, IDBInterface database)
+    public EditApiPage1(EditApiWindow window, IdbInterface database)
     {
         InitializeComponent();
         this.window = window;
@@ -22,10 +22,10 @@ public partial class EditApiPage1 : UserControl
     {
         Event theEvent = database.GetCurrentEvent()!;
         // Check if we've actually got a linked event, then unlink it.
-        if (theEvent.ApiId != Constants.APIConstants.NULL_ID && theEvent.ApiEventId != Constants.APIConstants.NULL_EVENT_ID)
+        if (theEvent.ApiId != Constants.ApiConstants.NULL_ID && theEvent.ApiEventId != Constants.ApiConstants.NULL_EVENT_ID)
         {
-            theEvent.ApiId = Constants.APIConstants.NULL_ID;
-            theEvent.ApiEventId = Constants.APIConstants.NULL_EVENT_ID;
+            theEvent.ApiId = Constants.ApiConstants.NULL_ID;
+            theEvent.ApiEventId = Constants.ApiConstants.NULL_EVENT_ID;
             database.UpdateEvent(theEvent);
             window.NetworkUpdateResults();
         }

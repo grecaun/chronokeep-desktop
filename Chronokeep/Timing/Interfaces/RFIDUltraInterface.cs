@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Timing.Interfaces
 {
-    public partial class RfidUltraInterface(IDBInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
+    public partial class RfidUltraInterface(IdbInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
     {
         private readonly Event theEvent = database.GetCurrentEvent()!;
         private readonly StringBuilder buffer = new();
@@ -373,7 +373,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(DateTime start, DateTime end, int reader = 1)
         {
-            SendMessage("800" + Constants.Timing.RFIDDateToEpoch(start).ToString() + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RFIDDateToEpoch(end).ToString());
+            SendMessage("800" + Constants.Timing.RfidDateToEpoch(start).ToString() + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RfidDateToEpoch(end).ToString());
         }
 
         public void Rewind(int reader = 1)
@@ -422,7 +422,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void StartSending(DateTime date)
         {
-            SendMessage("700" + Constants.Timing.RFIDDateToEpoch(date));
+            SendMessage("700" + Constants.Timing.RfidDateToEpoch(date));
         }
 
         public void StopSending()
@@ -855,7 +855,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SettingsWindowFinalize()
         {
-            window.WindowFinalize(settingsWindow);
+            window.WindowFinalize();
             settingsWindow = null;
         }
 
@@ -875,7 +875,7 @@ namespace Chronokeep.Timing.Interfaces
         }
     }
 
-    public abstract class RfidUltraCodes
+    public class RfidUltraCodes
     {
         public const char SETTINGS_TERM = (char)0xFF;
         public const char GPRS = (char)0x01;

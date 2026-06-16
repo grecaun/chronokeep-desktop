@@ -26,8 +26,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     internal ChronokeepSettings(ChronokeepInterface reader)
     {
         InitializeComponent();
-        MinWidth = 100;
-        MinHeight = 100;
+        ChronokeepInitialize();
         this.reader = reader;
         reader.SendGetSettings();
     }
@@ -67,7 +66,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 NtfyTopicBox.Text = allSettings.NtfyTopic;
                 NtfyUserBox.Text = allSettings.NtfyUser;
                 NtfyPassBox.Text = allSettings.NtfyPass;
-                EnableNTFYSwitch.IsChecked = allSettings.EnableNtfy;
+                EnableNtfySwitch.IsChecked = allSettings.EnableNtfy;
                 switch (allSettings.ScreenType)
                 {
                     case Constants.Readers.CHRONOKEEP_SCREEN_ADAFRUIT:
@@ -205,7 +204,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void APIExpander_Changed(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "API expander expanding/contracting.");
-        AddAPIButton.IsVisible = ApiExpander.IsExpanded;
+        AddApiButton.IsVisible = ApiExpander.IsExpanded;
     }
 
     private void AddAPIButton_Click(object? sender, RoutedEventArgs e)
@@ -340,7 +339,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 NtfyTopic = NtfyTopicBox.Text!.Trim(),
                 NtfyUser = NtfyUserBox.Text!.Trim(),
                 NtfyPass = NtfyPassBox.Text!.Trim(),
-                EnableNtfy = EnableNTFYSwitch.IsChecked == true,
+                EnableNtfy = EnableNtfySwitch.IsChecked == true,
                 ScreenType = ScreenBox.SelectedItem != null ? (string)((ComboBoxItem)ScreenBox.SelectedItem).Tag! : ""
             };
             reader.SendSetSettings(sett);
@@ -368,10 +367,5 @@ public partial class ChronokeepSettings : ChronokeepWindow
         reader.SendAutoUploadResults(AutoResultsSwitch.IsChecked == false
             ? AutoUploadQuery.STOP
             : AutoUploadQuery.START);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

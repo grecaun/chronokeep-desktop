@@ -173,7 +173,7 @@ namespace Chronokeep.Objects
             Bib = bib;
             UnknownId = unknownId;
             ReadId = readId;
-            systemTime = Constants.Timing.RFIDEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
+            systemTime = Constants.Timing.RfidEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
             this.ChipTime = chipTime;
             Place = place;
             AgePlace = agePlace;
@@ -396,7 +396,7 @@ namespace Chronokeep.Objects
         {
             Chip = chip;
             Bib = bib;
-            systemTime = Constants.Timing.RFIDEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
+            systemTime = Constants.Timing.RfidEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
         }
 
         public void SetFinalValues(
@@ -685,7 +685,7 @@ namespace Chronokeep.Objects
             {
                 return false;
             }
-            if (!dictionary.ParticipantBibDictionary.TryGetValue(Bib, out Participant? part) || !part.EventSpecific.SMSEnabled)
+            if (!dictionary.ParticipantBibDictionary.TryGetValue(Bib, out Participant? part) || !part.EventSpecific.SmsEnabled)
             {
                 return false;
             }

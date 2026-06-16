@@ -9,14 +9,14 @@ using System.Threading;
 
 namespace Chronokeep.Helpers
 {
-    internal class Globals
+    internal static class Globals
     {
         public static int UploadInterval = -1;
         public static int DownloadInterval = -1;
         public static int AnnouncerWindow = 45;
         public static string ErrorLogPath = "";
 
-        public static void SetupValues(IDBInterface db)
+        public static void SetupValues(IdbInterface db)
         {
             if (!int.TryParse(db.GetAppSetting(Constants.Settings.UPLOAD_INTERVAL)!.Value, out UploadInterval))
             {
@@ -38,34 +38,30 @@ namespace Chronokeep.Helpers
         public static List<BibChipAssociation> GetIgnoredChips()
         {
             List<BibChipAssociation> output = [];
-            if (ignoredChipsLock.TryEnter(1000))
+            if (!ignoredChipsLock.TryEnter(1000)) return output;
+            try
             {
-                try
-                {
-                    output.AddRange(ignoredChips);
-                }
-                finally
-                {
-                    ignoredChipsLock.Exit();
-                }
+                output.AddRange(ignoredChips);
+            }
+            finally
+            {
+                ignoredChipsLock.Exit();
             }
             return output;
         }
 
-        public static void UpdateIgnoredChips(IDBInterface database)
+        public static void UpdateIgnoredChips(IdbInterface database)
         {
-            if (ignoredChipsLock.TryEnter(1000))
+            if (!ignoredChipsLock.TryEnter(1000)) return;
+            try
             {
-                try
-                {
-                    ignoredChips.Clear();
-                    List<BibChipAssociation> tmp = database.GetBibChips(-1);
-                    ignoredChips.AddRange(database.GetBibChips(-1));
-                }
-                finally
-                {
-                    ignoredChipsLock.Exit();
-                }
+                ignoredChips.Clear();
+                database.GetBibChips(-1);
+                ignoredChips.AddRange(database.GetBibChips(-1));
+            }
+            finally
+            {
+                ignoredChipsLock.Exit();
             }
         }
 
@@ -75,96 +71,85 @@ namespace Chronokeep.Helpers
         public static List<ReaderMessage> GetReaderMessages()
         {
             List<ReaderMessage> output = [];
-            if (readerMessageLock.TryEnter(1000))
+            if (!readerMessageLock.TryEnter(1000)) return output;
+            try
             {
-                try
-                {
-                    output.AddRange(readerMessages.Values);
-                }
-                finally
-                {
-                    readerMessageLock.Exit();
-                }
+                output.AddRange(readerMessages.Values);
+            }
+            finally
+            {
+                readerMessageLock.Exit();
             }
             return output;
         }
 
         public static void UpdateReaderMessages(List<ReaderMessage> msgs)
         {
-            if (readerMessageLock.TryEnter(1000))
+            if (!readerMessageLock.TryEnter(1000)) return;
+            try
             {
-                try
+                foreach (ReaderMessage m in msgs)
                 {
-                    foreach (ReaderMessage m in msgs)
+                    if (readerMessages.TryGetValue((m.SystemName, m.Message), out ReaderMessage? found))
                     {
-                        if (readerMessages.TryGetValue((m.SystemName, m.Message), out ReaderMessage? found))
-                        {
-                            found.Notified = m.Notified;
-                        }
+                        found.Notified = m.Notified;
                     }
                 }
-                finally
-                {
-                    readerMessageLock.Exit();
-                }
+            }
+            finally
+            {
+                readerMessageLock.Exit();
             }
         }
 
         public static void UpdateReaderMessage(ReaderMessage msg)
         {
-            if (readerMessageLock.TryEnter(1000))
+            if (!readerMessageLock.TryEnter(1000)) return;
+            try
             {
-                try
+                if (readerMessages.TryGetValue((msg.SystemName, msg.Message), out ReaderMessage? found))
                 {
-                    if (readerMessages.TryGetValue((msg.SystemName, msg.Message), out ReaderMessage? found))
-                    {
-                        found.Notified = msg.Notified;
-                    }
+                    found.Notified = msg.Notified;
                 }
-                finally
-                {
-                    readerMessageLock.Exit();
-                }
+            }
+            finally
+            {
+                readerMessageLock.Exit();
             }
         }
 
         public static void ClearReaderMessages()
         {
-            if (readerMessageLock.TryEnter(1000))
+            if (!readerMessageLock.TryEnter(1000)) return;
+            try
             {
-                try
-                {
-                    readerMessages.Clear();
-                }
-                finally
-                {
-                    readerMessageLock.Exit();
-                }
+                readerMessages.Clear();
+            }
+            finally
+            {
+                readerMessageLock.Exit();
             }
         }
 
         public static bool AddReaderMessage(ReaderMessage msg)
         {
-            if (readerMessageLock.TryEnter(1000))
+            if (!readerMessageLock.TryEnter(1000)) return false;
+            try
             {
-                try
-                {
-                    readerMessages.Add((msg.SystemName, msg.Message), msg);
-                }
-                finally
-                {
-                    readerMessageLock.Exit();
-                }
-                return true;
+                readerMessages.Add((msg.SystemName, msg.Message), msg);
             }
-            return false;
+            finally
+            {
+                readerMessageLock.Exit();
+            }
+            return true;
         }
     }
     public class ReaderMessage : IComparable
     {
         public SeverityLevel Severity;
         public RemoteNotification Message = new();
-        public bool Notified = false;
+        public bool Notified;
         public string SystemName = "";
         public string Address = "";
 
@@ -175,23 +160,33 @@ namespace Chronokeep.Helpers
             Low
         }
 
-        public string Who { get => SystemName; }
-        public string Where { get => Address; }
-        public string When { get => Message.When; }
-        public string Information { get => PortalNotification.GetRemoteNotificationMessage(Message.Type); }
-        public string DialogBoxString { get => PortalNotification.GetRemoteNotificationMessage(SystemName, Address, Message); }
-        public string SeverityString { get => Severity == SeverityLevel.High ? "High" : Severity == SeverityLevel.Moderate ? "Moderate" : "Low"; }
-        public string Background { get => Severity == SeverityLevel.High ? "#3FFF0000" : Severity == SeverityLevel.Moderate ? "#4FF75605" : "#3FF7CF05"; }
+        public string Who => SystemName;
+        public string Where => Address;
+        public string When => Message.When;
+        public string Information => PortalNotification.GetRemoteNotificationMessage(Message.Type);
+        public string DialogBoxString => PortalNotification.GetRemoteNotificationMessage(SystemName, Address, Message);
+        public string SeverityString => Severity switch
+        {
+            SeverityLevel.High => "High",
+            SeverityLevel.Moderate => "Moderate",
+            _ => "Low"
+        };
+        public string Background => Severity switch
+        {
+            SeverityLevel.High => "#3FFF0000",
+            SeverityLevel.Moderate => "#4FF75605",
+            _ => "#3FF7CF05"
+        };
 
         public int CompareTo(object? other)
         {
-            if (other is not ReaderMessage) return -1;
+            if (other is not ReaderMessage message) return -1;
             if (DateTime.TryParse(Message.When, out DateTime thisWhen)
-                && DateTime.TryParse(((ReaderMessage)other).Message.When, out DateTime otherWhen))
+                && DateTime.TryParse(message.Message.When, out DateTime otherWhen))
             {
                 return thisWhen.CompareTo(otherWhen);
             }
-            return Message.Type.CompareTo(((ReaderMessage)other).Message.Type);
+            return string.Compare(Message.Type, message.Message.Type, StringComparison.Ordinal);
         }
 
         public bool Equals(ReaderMessage other)

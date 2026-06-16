@@ -5,12 +5,12 @@ using System.Collections.Generic;
 
 namespace Chronokeep.IO
 {
-    class ExcelExporter : IDataExporter
+    internal class ExcelExporter : IDataExporter
     {
-        string[] headers = [];
-        List<object[]> data = [];
+        private string[] headers = [];
+        private List<object[]> data = [];
 
-        public void ExportData(string Path)
+        public void ExportData(string path)
         {
             using XLWorkbook workbook = new();
             IXLWorksheet worksheet = workbook.Worksheets.Add();
@@ -23,10 +23,10 @@ namespace Chronokeep.IO
                 for (int j = 0; j < localData[0].Length; j++)
                 {
                     worksheet.Cell(i + 1, j + 1).Style.NumberFormat.Format = "@";
-                    worksheet.Cell(i + 1, j + 1).Value = localData[i][j] != null ? localData[i][j].ToString() : "";
+                    worksheet.Cell(i + 1, j + 1).Value = localData[i][j].ToString();
                 }
             }
-            workbook.SaveAs(Path);
+            workbook.SaveAs(path);
         }
 
         public Utils.FileType FileType()
@@ -34,11 +34,11 @@ namespace Chronokeep.IO
             return Utils.FileType.EXCEL;
         }
 
-        public void SetData(string[] headers, List<object[]> data)
+        public void SetData(string[] iHeaders, List<object[]> iData)
         {
-            this.headers = headers;
-            this.data = data;
-            Log.D("IO.ExcelExporter", $"Headers {this.headers} Data {this.data}");
+            headers = iHeaders;
+            data = iData;
+            Log.D("IO.ExcelExporter", $"Headers {headers} Data {data}");
         }
     }
 }

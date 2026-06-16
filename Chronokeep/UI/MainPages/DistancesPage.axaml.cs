@@ -18,7 +18,7 @@ namespace Chronokeep.UI.MainPages;
 public partial class DistancesPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
     private readonly Dictionary<int, Distance> distanceDictionary = [];
     private readonly Dictionary<int, List<Distance>> subDistanceDictionary = [];
@@ -27,7 +27,7 @@ public partial class DistancesPage : UserControl, IMainPage
     private bool updateTimingWorker;
     private int distanceCount = 1;
 
-    public DistancesPage(IMainWindow mWindow, IDBInterface database)
+    public DistancesPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -186,26 +186,26 @@ public partial class DistancesPage : UserControl, IMainPage
             }
             database.UpdateDistance(listDiv.GetDistance());
         }
-        if (database is SQLiteInterface)
+        if (database is SqLiteInterface)
         {
             Results.GetStaticVariables(database);
         }
     }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         Log.D("UI.MainPages.DistancesPage", "Ctrl + A Passed to this page.");
         Add_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         Log.D("UI.MainPages.DistancesPage", "Ctrl + S Passed to this page.");
         UpdateDatabase();
         UpdateView();
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateView();
     }
@@ -276,7 +276,7 @@ public partial class DistancesPage : UserControl, IMainPage
                     DeleteButton.Content = "Error";
                     return;
                 }
-                ApiObject api = database.GetAPI(theEvent.ApiId)!;
+                ApiObject api = database.GetApi(theEvent.ApiId)!;
                 string[] eventIds = theEvent.ApiEventId.Split(',');
                 if (eventIds.Length != 2)
                 {
@@ -315,7 +315,7 @@ public partial class DistancesPage : UserControl, IMainPage
                 UploadButton.Content = "Error";
                 return;
             }
-            ApiObject api = database.GetAPI(theEvent.ApiId)!;
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {

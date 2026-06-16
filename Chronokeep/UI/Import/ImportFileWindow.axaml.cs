@@ -20,7 +20,7 @@ public partial class ImportFileWindow : ChronokeepWindow
 {
     private readonly IDataImporter importer;
     private readonly IMainWindow? window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly bool init = true;
     internal static readonly string[] HUMAN_FIELDS = [
         "",
@@ -94,9 +94,10 @@ public partial class ImportFileWindow : ChronokeepWindow
     private readonly List<Participant> updatedParticipants = [];
     private readonly List<Participant> existingToRemoveParticipants = [];
 
-    private ImportFileWindow(IMainWindow? window, IDataImporter importer, IDBInterface database)
+    private ImportFileWindow(IMainWindow? window, IDataImporter importer, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.importer = importer;
         this.window = window;
         this.database = database;
@@ -113,7 +114,7 @@ public partial class ImportFileWindow : ChronokeepWindow
         Frame.Content = page;
     }
 
-    public static ImportFileWindow NewWindow(IMainWindow window, IDataImporter importer, IDBInterface database)
+    public static ImportFileWindow NewWindow(IMainWindow window, IDataImporter importer, IdbInterface database)
     {
         return new ImportFileWindow(window, importer, database);
     }
@@ -205,7 +206,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                             if (divHashName.TryGetValue(nameFromFile, out Distance? dist)) continue;
                             dist = new Distance(id.NameFromFile, theEvent.Identifier);
                             database.AddDistance(dist);
-                            dist.Identifier = database.GetDistanceID(dist);
+                            dist.Identifier = database.GetDistanceId(dist);
                             divHashName[nameFromFile] = dist;
                             newDistances = true;
                         }
@@ -236,7 +237,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                     {
                         backyardDistance = new Distance("Backyard", theEvent.Identifier);
                         database.AddDistance(backyardDistance);
-                        backyardDistance.Identifier = database.GetDistanceID(backyardDistance);
+                        backyardDistance.Identifier = database.GetDistanceId(backyardDistance);
                         window?.UpdateRegistrationDistances();
                     }
                 }
@@ -674,7 +675,7 @@ public partial class ImportFileWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window?.WindowFinalize(this);
+        window?.WindowFinalize();
         importer.Finish();
     }
 
@@ -759,10 +760,5 @@ public partial class ImportFileWindow : ChronokeepWindow
     {
         Log.D("ImportFileWindow", "Import - Cancel button clicked.");
         Close();
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

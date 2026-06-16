@@ -19,10 +19,10 @@ namespace Chronokeep.UI.MainPages;
 public partial class DashboardPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private Event? theEvent;
 
-    public DashboardPage(IMainWindow mainWindow, IDBInterface db)
+    public DashboardPage(IMainWindow mainWindow, IdbInterface db)
     {
         InitializeComponent();
         mWindow = mainWindow;
@@ -165,13 +165,13 @@ public partial class DashboardPage : UserControl, IMainPage
                                 }
                                 var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                                 {
-                                    FileTypeFilter = [Utils.SQLiteType, FilePickerFileTypes.All],
+                                    FileTypeFilter = [Utils.SqLiteType, FilePickerFileTypes.All],
                                     AllowMultiple = false,
                                     SuggestedStartLocation = startingFolder,
                                 });
                                 if (files.Count > 0)
                                 {
-                                    SQLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
+                                    SqLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
                                     savedDatabase.Initialize();
                                     List<Event> events = savedDatabase.GetEvents();
                                     int lastId = -1;
@@ -202,7 +202,7 @@ public partial class DashboardPage : UserControl, IMainPage
                                     {
                                         database.RemoveEvent(theEvent!.Identifier);
                                         database.SetCurrentEvent(-1);
-                                        mWindow.WindowFinalize(null);
+                                        mWindow.WindowFinalize();
                                     }
                                 );
                             }
@@ -233,16 +233,16 @@ public partial class DashboardPage : UserControl, IMainPage
         DeleteEvent,
     }
 
-    private static int Save_Event(Event oldEvent, IDBInterface loadFrom, IDBInterface saveTo)
+    private static int Save_Event(Event oldEvent, IdbInterface loadFrom, IdbInterface saveTo)
     {
         // Make some modifications, note that we cannot guarantee API compatibility between events.
         Event newEvent = new();
         newEvent.CopyAll(oldEvent);
-        newEvent.ApiEventId = Constants.APIConstants.NULL_EVENT_ID;
-        newEvent.ApiId = Constants.APIConstants.NULL_ID;
+        newEvent.ApiEventId = Constants.ApiConstants.NULL_EVENT_ID;
+        newEvent.ApiId = Constants.ApiConstants.NULL_ID;
         newEvent.Identifier = -1;
         saveTo.AddEvent(newEvent);
-        newEvent.Identifier = saveTo.GetEventID(newEvent);
+        newEvent.Identifier = saveTo.GetEventId(newEvent);
         // Only proceed if we managed to add the event or we can find it.
         if (newEvent.Identifier <= 0) return newEvent.Identifier;
         // Get all of the parts that don't depend on other parts, then parts that do.
@@ -464,11 +464,11 @@ public partial class DashboardPage : UserControl, IMainPage
 
     public static void UpdateDatabase() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void Closing()
     {
@@ -520,7 +520,7 @@ public partial class DashboardPage : UserControl, IMainPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.SQLiteType],
+                FileTypeChoices = [Utils.SqLiteType],
                 SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name}.sqlite",
                 SuggestedStartLocation = startingFolder,
             });
@@ -540,7 +540,7 @@ public partial class DashboardPage : UserControl, IMainPage
             {
                 return;
             }
-            SQLiteInterface savedDatabase = new(filePath);
+            SqLiteInterface savedDatabase = new(filePath);
             savedDatabase.Initialize();
             Event currentEvent = database.GetCurrentEvent()!;
             Save_Event(currentEvent, database, savedDatabase);
@@ -576,12 +576,12 @@ public partial class DashboardPage : UserControl, IMainPage
                 }
                 IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    FileTypeFilter = [Utils.SQLiteType, FilePickerFileTypes.All],
+                    FileTypeFilter = [Utils.SqLiteType, FilePickerFileTypes.All],
                     AllowMultiple = false,
                     SuggestedStartLocation = startingFolder,
                 });
                 if (files.Count <= 0) return;
-                SQLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
+                SqLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
                 savedDatabase.Initialize();
                 List<Event> events = savedDatabase.GetEvents();
                 int lastId = -1;
@@ -618,7 +618,7 @@ public partial class DashboardPage : UserControl, IMainPage
                 {
                     database.RemoveEvent(theEvent!.Identifier);
                     database.SetCurrentEvent(-1);
-                    mWindow.WindowFinalize(null);
+                    mWindow.WindowFinalize();
                 }
                 );
         }

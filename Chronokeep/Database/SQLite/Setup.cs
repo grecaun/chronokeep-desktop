@@ -8,12 +8,12 @@ using System.Reflection;
 
 namespace Chronokeep.Database.SQLite
 {
-    class Setup
+    internal class Setup
     {
         internal static void Initialize(int version, string connectionInfo)
         {
             ArrayList queries = [];
-            SQLiteConnection connection = new(string.Format("Data Source={0};Version=3", connectionInfo));
+            SQLiteConnection connection = new($"Data Source={connectionInfo};Version=3");
             connection.Open();
             SQLiteCommand command = new("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'", connection);
             SQLiteDataReader reader = command.ExecuteReader();
@@ -24,7 +24,7 @@ namespace Chronokeep.Database.SQLite
                 try
                 {
                     // As of version 43 we've changed how we store settings values to something more sensible.
-                    command = new("SELECT value FROM settings WHERE setting='" + Constants.Settings.DATABASE_VERSION + "';", connection);
+                    command = new SQLiteCommand($"SELECT value FROM settings WHERE setting='{Constants.Settings.DATABASE_VERSION}';", connection);
                     // If we've got an upgraded version then command.ExecuteReader will throw an exception.
                     using SQLiteDataReader versionChecker = command.ExecuteReader();
                     if (versionChecker.Read())
@@ -41,7 +41,7 @@ namespace Chronokeep.Database.SQLite
                 {
                     // Check for an older version
                     Log.D("SQLite.Setup", "We may have a database older than version 43.");
-                    command = new("SELECT version FROM settings;", connection);
+                    command = new SQLiteCommand("SELECT version FROM settings;", connection);
                     using SQLiteDataReader v2Checker = command.ExecuteReader();
                     if (v2Checker.Read())
                     {
@@ -53,12 +53,12 @@ namespace Chronokeep.Database.SQLite
                     }
                     v2Checker.Close();
                 }
-                Log.D("SQLite.Setup", "Old Version: " + oldVersion.ToString());
+                Log.D("SQLite.Setup", "Old Version: " + oldVersion);
             }
             else
             {
                 Log.D("SQLite.Setup", "Tables haven't been created. Doing so now.");
-                command = new("PRAGMA foreign_keys = ON;", connection); // Ensure Foreign key constraints work.
+                command = new SQLiteCommand("PRAGMA foreign_keys = ON;", connection); // Ensure Foreign key constraints work.
                 command.ExecuteNonQuery();
                 queries.Add("CREATE TABLE IF NOT EXISTS bib_chip_assoc (" +
                     "event_id INTEGER NOT NULL REFERENCES events(event_id)," +
@@ -89,8 +89,8 @@ namespace Chronokeep.Database.SQLite
                     "event_finish_ignore_within INTEGER NOT NULL DEFAULT 0," +
                     "event_start_window INTEGER NOT NULL DEFAULT -1," +
                     "event_start_max_occurrences INTEGER NOT NULL DEFAULT 1," +
-                    "event_age_groups_as_divisions INTEGER NOT NULL DEFAULT " + Constants.Timing.AGEGROUPS_LASTGROUP_FALSE + "," +
-                    "event_type INTEGER NOT NULL DEFAULT " + Constants.Timing.EVENT_TYPE_DISTANCE + "," +
+                    $"event_age_groups_as_divisions INTEGER NOT NULL DEFAULT {Constants.Timing.AGEGROUPS_LASTGROUP_FALSE}," +
+                    $"event_type INTEGER NOT NULL DEFAULT {Constants.Timing.EVENT_TYPE_DISTANCE}," +
                     "event_days_allowed INTEGER NOT NULL DEFAULT 1," +
                     "event_upload_specific_distance_results INTEGER NOT NULL DEFAULT 0," +
                     "api_id INTEGER REFERENCES results_api(api_id) NOT NULL DEFAULT -1," +
@@ -159,15 +159,15 @@ namespace Chronokeep.Database.SQLite
                     "eventspecific_owes VARCHAR(50)," +
                     "eventspecific_other VARCHAR," +
                     "eventspecific_registration_date VARCHAR NOT NULL DEFAULT ''," +
-                    "eventspecific_status INT NOT NULL DEFAULT " + Constants.Timing.EVENTSPECIFIC_UNKNOWN + "," +
-                    "eventspecific_age_group_id INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_DUMMYAGEGROUP + "," +
+                    $"eventspecific_status INT NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_UNKNOWN}," +
+                    $"eventspecific_age_group_id INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYAGEGROUP}," +
                     "eventspecific_age_group_name VARCHAR NOT NULL DEFAULT ''," +
                     "eventspecific_anonymous SMALLINT NOT NULL DEFAULT 0," +
                     "eventspecific_sms_enabled SMALLINT NOT NULL DEFAULT 0, " +
                     "eventspecific_apparel VARCHAR NOT NULL DEFAULT '', " +
                     "eventspecific_division VARCHAR NOT NULL DEFAULT '', " +
-                    "eventspecific_version INTEGER NOT NULL DEFAULT " + Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION + ", " +
-                    "eventspecific_uploaded_version INTEGER NOT NULL DEFAULT " + Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION + ", " +
+                    $"eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
+                    $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION}, " +
                     "UNIQUE (participant_id, event_id, distance_id) ON CONFLICT REPLACE" +
                     ");");
                 queries.Add("CREATE TABLE IF NOT EXISTS segments (" +
@@ -204,8 +204,8 @@ namespace Chronokeep.Database.SQLite
                     "read_time_milliseconds INTEGER NOT NULL," +
                     "read_split_seconds INTEGER NOT NULL DEFAULT 0," +
                     "read_split_milliseconds INTEGER NOT NULL DEFAULT 0," +
-                    "read_bib VARCHAR NOT NULL DEFAULT " + Constants.Timing.CHIPREAD_DUMMYBIB + "," +
-                    "read_type INTEGER NOT NULL DEFAULT " + Constants.Timing.CHIPREAD_TYPE_CHIP + "," +
+                    $"read_bib VARCHAR NOT NULL DEFAULT {Constants.Timing.CHIPREAD_DUMMYBIB}," +
+                    $"read_type INTEGER NOT NULL DEFAULT {Constants.Timing.CHIPREAD_TYPE_CHIP}," +
                     "UNIQUE (event_id, read_chipnumber, read_bib, read_seconds, read_milliseconds) ON CONFLICT IGNORE" +
                     ");");
                 queries.Add("CREATE TABLE IF NOT EXISTS time_results (" +
@@ -213,18 +213,18 @@ namespace Chronokeep.Database.SQLite
                     "eventspecific_id INTEGER NOT NULL REFERENCES eventspecific(eventspecific_id)," +
                     "read_id INTEGER," +
                     "location_id INTEGER NOT NULL," +
-                    "segment_id INTEGER NOT NULL DEFAULT " + Constants.Timing.SEGMENT_NONE + "," +
+                    $"segment_id INTEGER NOT NULL DEFAULT {Constants.Timing.SEGMENT_NONE}," +
                     "timeresult_occurance INTEGER NOT NULL," +
                     "timeresult_time TEXT NOT NULL," +
                     "timeresult_splittime TEXT NOT NULL DEFAULT ''," +
                     "timeresult_chiptime TEXT NOT NULL," +
                     "timeresult_unknown_id TEXT NOT NULL DEFAULT ''," +
-                    "timeresult_place INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_DUMMYPLACE + "," +
-                    "timeresult_age_place INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_DUMMYPLACE + "," +
-                    "timeresult_gender_place INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_DUMMYPLACE + "," +
-                    "timeresult_division_place INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_DUMMYPLACE + "," +
-                    "timeresult_status INT NOT NULL DEFAULT " + Constants.Timing.CHIPREAD_STATUS_NONE + "," +
-                    "timeresult_uploaded INT NOT NULL DEFAULT " + Constants.Timing.TIMERESULT_UPLOADED_FALSE + "," +
+                    $"timeresult_place INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYPLACE}," +
+                    $"timeresult_age_place INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYPLACE}," +
+                    $"timeresult_gender_place INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYPLACE}," +
+                    $"timeresult_division_place INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYPLACE}," +
+                    $"timeresult_status INT NOT NULL DEFAULT {Constants.Timing.CHIPREAD_STATUS_NONE}," +
+                    $"timeresult_uploaded INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_UPLOADED_FALSE}," +
                     "UNIQUE (event_id, eventspecific_id, location_id, timeresult_occurance, timeresult_unknown_id) ON CONFLICT REPLACE" +
                     ");");
                 queries.Add("INSERT INTO participants (participant_id, participant_first, participant_last," +
@@ -235,7 +235,7 @@ namespace Chronokeep.Database.SQLite
                     "UNIQUE (setting) ON CONFLICT REPLACE" +
                     ");" +
                     "INSERT INTO settings (setting, value) VALUES " +
-                    "('" + Constants.Settings.DATABASE_VERSION + "','" + version + "');");
+                    $"('{Constants.Settings.DATABASE_VERSION}','{version}');");
                 queries.Add("CREATE TABLE IF NOT EXISTS age_groups (" +
                     "group_id INTEGER PRIMARY KEY," +
                     "event_id INTEGER NOT NULL REFERENCES events(event_id)," +
@@ -243,7 +243,7 @@ namespace Chronokeep.Database.SQLite
                     "start_age INTEGER NOT NULL," +
                     "end_age INTEGER NOT NULL," +
                     "custom_name VARCHAR NOT NULL DEFAULT ''," +
-                    "last_group INTEGER DEFAULT " + Constants.Timing.AGEGROUPS_LASTGROUP_FALSE + " NOT NULL);");
+                    $"last_group INTEGER DEFAULT {Constants.Timing.AGEGROUPS_LASTGROUP_FALSE} NOT NULL);");
                 queries.Add("CREATE TABLE IF NOT EXISTS timing_systems (" +
                     "ts_identifier INTEGER PRIMARY KEY," +
                     "ts_ip TEXT NOT NULL," +
@@ -270,7 +270,7 @@ namespace Chronokeep.Database.SQLite
                 queries.Add("CREATE TABLE IF NOT EXISTS sms_alert(" +
                     "event_id INTEGER NOT NULL REFERENCES events(event_id), " +
                     "eventspecific_id INTEGER NOT NULL REFERENCES eventspecific(eventspecific_id)," +
-                    "segment_id INTEGER NOT NULL DEFAULT '" + Constants.Timing.SEGMENT_FINISH + "'," +
+                    $"segment_id INTEGER NOT NULL DEFAULT '{Constants.Timing.SEGMENT_FINISH}'," +
                     "UNIQUE(event_id, eventspecific_id, segment_id)" +
                     ");");
                 queries.Add("CREATE TABLE IF NOT EXISTS sms_ban_list(" +
@@ -308,7 +308,7 @@ namespace Chronokeep.Database.SQLite
                 queries.Add("CREATE INDEX idx_participant_id ON participants(participant_id);");
                 queries.Add("CREATE INDEX idx_distance_id ON distances(distance_id);");
 
-                string gitVersion = "";
+                string gitVersion;
                 using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
                 {
                     using StreamReader fileReader = new(stream);
@@ -319,21 +319,22 @@ namespace Chronokeep.Database.SQLite
                     gitVersion = gitVersion.Split('-')[0];
                 }
                 queries.Add("INSERT INTO settings (setting, value) VALUES " +
-                    "('" + Constants.Settings.PROGRAM_VERSION + "','" + gitVersion + "');");
+                    $"('{Constants.Settings.PROGRAM_VERSION}','{gitVersion}');");
 
-                using (var transaction = connection.BeginTransaction())
+                using (SQLiteTransaction? transaction = connection.BeginTransaction())
                 {
                     int counter = 1;
                     foreach (string q in queries)
                     {
-                        Log.D("SQLite.Setup", "Table query number " + counter++ + " Query string is: " + q);
-                        command = new(q, connection);
+                        Log.D("SQLite.Setup", $"Table query number {counter} Query string is: " + q);
+                        counter++;
+                        command = new SQLiteCommand(q, connection);
                         command.ExecuteNonQuery();
                     }
                     transaction.Commit();
                 }
 
-                command = new("SELECT value FROM settings WHERE setting='" + Constants.Settings.DATABASE_VERSION + "';", connection);
+                command = new SQLiteCommand($"SELECT value FROM settings WHERE setting='{Constants.Settings.DATABASE_VERSION}';", connection);
                 using SQLiteDataReader versionChecker = command.ExecuteReader();
                 if (versionChecker.Read())
                 {
@@ -347,7 +348,7 @@ namespace Chronokeep.Database.SQLite
             }
             reader.Close();
             AppSetting dbSetting = Settings.GetAppSetting(Constants.Settings.MINIMUM_COMPATIBLE_DATABASE, connection)!;
-            int maxVers = dbSetting == null ? SQLiteInterface.minimum_compatible_version : Convert.ToInt32(dbSetting.Value);
+            int maxVers = Convert.ToInt32(dbSetting.Value);
             connection.Close();
             if (oldVersion == -1) Log.D("SQLite.Setup", "Unable to get a version number. Something is terribly wrong.");
             else if (oldVersion < version) Update.UpdateDatabase(oldVersion, connectionInfo);

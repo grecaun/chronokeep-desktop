@@ -48,7 +48,7 @@ public partial class EditYearPage : UserControl
             }
             YearBox.Text = response.EventYear.Year;
             DateBox.Text = DateTime.Parse(response.EventYear.DateTime).ToString("MM/dd/yyyy");
-            if (response.Event.Type == Constants.APIConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA)
+            if (response.Event.Type == Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA)
             {
                 RankBox.Items.Add(new ComboBoxItem
                 {

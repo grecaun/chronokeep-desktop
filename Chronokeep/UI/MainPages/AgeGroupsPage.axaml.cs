@@ -14,12 +14,12 @@ namespace Chronokeep.UI.MainPages;
 public partial class AgeGroupsPage : UserControl, IMainPage
 {
     private readonly IMainWindow mWindow;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly Event? theEvent;
 
     private bool touched;
 
-    public AgeGroupsPage(IMainWindow mWindow, IDBInterface database)
+    public AgeGroupsPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
         this.mWindow = mWindow;
@@ -100,18 +100,18 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         Update_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_A()
+    public void KeyboardCtrlA()
     {
         Add_Click(null, null);
     }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         UpdateDatabase();
         UpdateAgeGroupsList();
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         UpdateAgeGroupsList();
     }

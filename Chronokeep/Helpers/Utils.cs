@@ -4,7 +4,7 @@ using System;
 
 namespace Chronokeep.Helpers
 {
-    public class Utils
+    public static class Utils
     {
         private const string REGISTRY_KEY_NAME = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
         private const string APPS_USE_LIGHT_THEME = "AppsUseLightTheme";
@@ -22,13 +22,11 @@ namespace Chronokeep.Helpers
 
         public static int GetSystemTheme()
         {
-            if (OperatingSystem.IsWindows())
+            if (!OperatingSystem.IsWindows()) return -1;
+            object? registryValue = Registry.GetValue(REGISTRY_KEY_NAME, APPS_USE_LIGHT_THEME, -1);
+            if (registryValue != null)
             {
-                var registryValue = Registry.GetValue(REGISTRY_KEY_NAME, APPS_USE_LIGHT_THEME, -1);
-                if (registryValue != null)
-                {
-                    return int.Parse(registryValue.ToString()!);
-                }
+                return int.Parse(registryValue.ToString()!);
             }
             return -1;
         }
@@ -45,22 +43,22 @@ namespace Chronokeep.Helpers
             Patterns = ["*.csv", "*.txt", "*.log"],
         };
 
-        public static FilePickerFileType CSVType { get; } = new("CSV Files")
+        public static FilePickerFileType CsvType { get; } = new("CSV Files")
         {
             Patterns = ["*.csv"],
         };
 
-        public static FilePickerFileType HTMLType { get; } = new("HTML Files")
+        public static FilePickerFileType HtmlType { get; } = new("HTML Files")
         {
             Patterns = ["*.htm", "*.html"],
         };
 
-        public static FilePickerFileType PDFType { get; } = new("PDF Files")
+        public static FilePickerFileType PdfType { get; } = new("PDF Files")
         {
             Patterns = ["*.pdf"],
         };
 
-        public static FilePickerFileType SQLiteType { get; } = new("SQLite Database Files")
+        public static FilePickerFileType SqLiteType { get; } = new("SQLite Database Files")
         {
             Patterns = ["*.sqlite"],
         };

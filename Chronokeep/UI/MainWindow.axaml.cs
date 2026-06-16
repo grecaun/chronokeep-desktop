@@ -86,6 +86,7 @@ namespace Chronokeep.UI
         public MainWindow()
         {
             InitializeComponent();
+            ChronokeepInitialize();
             MWindow = this;
 
             // Check that no other instance of this program are running.
@@ -115,7 +116,7 @@ namespace Chronokeep.UI
                 Log.D("UI.MainWindow", "Creating database file.");
                 SQLiteConnection.CreateFile(path);
             }
-            database = MemStore.MemStore.GetMemStore(new SQLiteInterface(path));
+            database = MemStore.MemStore.GetMemStore(new SqLiteInterface(path));
             try
             {
                 database.Initialize();
@@ -226,7 +227,7 @@ namespace Chronokeep.UI
             }
             try
             {
-                StopAPIController();
+                StopApiController();
             }
             catch
             {
@@ -618,7 +619,7 @@ namespace Chronokeep.UI
             }
         }
 
-        public bool StopAPIController()
+        public bool StopApiController()
         {
             try
             {
@@ -637,7 +638,7 @@ namespace Chronokeep.UI
             return true;
         }
 
-        public async void StartAPIController()
+        public async void StartApiController()
         {
             try
             {
@@ -655,12 +656,12 @@ namespace Chronokeep.UI
             }
         }
 
-        public bool IsAPIControllerRunning()
+        public bool IsApiControllerRunning()
         {
             return apiController != null && ApiController.IsRunning();
         }
 
-        public int APIErrors()
+        public int ApiErrors()
         {
             return apiController?.Errors ?? 0;
         }
@@ -855,13 +856,11 @@ namespace Chronokeep.UI
 
         private void UpdateTimingBadge()
         {
-            if (currentPage is not TimingPage)
-            {
-                List<ReaderMessage> messages = GetReaderMessages();
-                messages.RemoveAll(x => x.Notified);
-                if (messages.Count > 0)
-                { }
-            }
+            if (currentPage is TimingPage) return;
+            List<ReaderMessage> messages = GetReaderMessages();
+            messages.RemoveAll(x => x.Notified);
+            if (messages.Count > 0)
+            { }
         }
 
         public async void ConnectTimingSystem(TimingSystem system)
@@ -1056,7 +1055,7 @@ namespace Chronokeep.UI
 
         public bool BackgroundProcessesRunning()
         {
-            return TimingController.IsRunning() || AnnouncerOpen() || IsRegistrationRunning() || IsAPIControllerRunning() || IsRemoteRunning() == RemoteReadsController.RemoteStatus.RUNNING;
+            return TimingController.IsRunning() || AnnouncerOpen() || IsRegistrationRunning() || IsApiControllerRunning() || IsRemoteRunning() == RemoteReadsController.RemoteStatus.RUNNING;
         }
 
         public void StopBackgroundProcesses()
@@ -1087,7 +1086,7 @@ namespace Chronokeep.UI
             }
             try
             {
-                StopAPIController();
+                StopApiController();
             }
             catch
             {
@@ -1219,7 +1218,7 @@ namespace Chronokeep.UI
             Close();
         }
 
-        public void WindowFinalize(Window? w)
+        public void WindowFinalize()
         {
             currentPage?.UpdateView();
             UpdateStatus();

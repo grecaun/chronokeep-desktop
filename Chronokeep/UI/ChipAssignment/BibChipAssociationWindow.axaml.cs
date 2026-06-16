@@ -20,22 +20,19 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
 {
     private readonly IDataImporter importer;
     private readonly IWindowCallback window;
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly bool init = true;
     private int[]? keys;
 
     public bool ImportComplete;
 
-    private BibChipAssociationWindow(IWindowCallback window, IDataImporter importer, IDBInterface database)
+    private BibChipAssociationWindow(IWindowCallback window, IDataImporter importer, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.importer = importer;
         this.window = window;
         this.database = database;
-        MinHeight = 300;
-        MinWidth = 300;
-        Height = 300;
-        Width = 300;
         Topmost = true;
         if (importer.Data!.Type == ImportData.FileType.EXCEL)
         {
@@ -54,7 +51,7 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
         }
     }
 
-    public static BibChipAssociationWindow NewWindow(IWindowCallback window, IDataImporter importer, IDBInterface database)
+    public static BibChipAssociationWindow NewWindow(IWindowCallback window, IDataImporter importer, IdbInterface database)
     {
         return new BibChipAssociationWindow(window, importer, database);
     }
@@ -207,11 +204,6 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
 
     private void Window_Closing(object? sender, WindowClosingEventArgs e)
     {
-        window.WindowFinalize(this);
-    }
-
-    protected override void Maximize()
-    {
-        WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        window.WindowFinalize();
     }
 }

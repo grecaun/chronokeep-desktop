@@ -85,7 +85,7 @@
 				<# foreach (string gender in distanceResults[d].Keys.OrderBy(i => i))
 				{ #>
 					<table>
-						<tr><td colspan='9' class='table-header text-important'><#= (gender.Equals("Man", System.StringComparison.OrdinalIgnoreCase) ? "Men" : gender.Equals("Woman", System.StringComparison.OrdinalIgnoreCase) ? "Women" : gender) #></td></tr>
+						<tr><td colspan='9' class='table-header text-important'><#= gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "Men" : gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "Women" : gender #></td></tr>
 						<tr>
 							<td class="text-important table-label">Pl</td>
 							<td class="text-important table-label">Bib</td>
@@ -99,7 +99,7 @@
 						{ #>
 						<tr>
 							<td><#= r.GenderPlaceStr #></td>
-							<td><#= r.Bib.ToString() #></td>
+							<td><#= r.Bib #></td>
 							<td><#= r.PrettyParticipantName #></td>
 							<td><#= r.AgeGroupName #></td>
 							<td><#= r.PrettyPlaceStr #></td>
@@ -107,14 +107,14 @@
 								<#= 
 									theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
 									? r.Occurrence
-									: r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
+									: r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
 								#>
 							</td>
 							<td>
 								<#= 
 									theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME
-									? r.Time.Substring(0, r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)
-									: r.ChipTime.Substring(0, r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)
+									? r.Time[..(r.Time.Length > 3 ? r.Time.Length -2 : r.Time.Length)]
+									: r.ChipTime[..(r.ChipTime.Length > 3 ? r.ChipTime.Length -2 : r.ChipTime.Length)]
 								#>
 							</td>
 						</tr>
@@ -125,7 +125,7 @@
 							{ #>
 							<tr>
 								<td></td>
-								<td><#= r.Bib.ToString() #></td>
+								<td><#= r.Bib #></td>
 								<td><#= r.PrettyParticipantName #></td>
 								<td><#= r.AgeGroupName #></td>
 								<td></td>

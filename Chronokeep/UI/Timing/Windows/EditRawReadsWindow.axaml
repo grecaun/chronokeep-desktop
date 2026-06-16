@@ -7,7 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Width="250"
         CanResize="False"
@@ -15,12 +15,14 @@
         Topmost="True"
         Closed="Window_Closed"
         >
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
@@ -79,15 +81,7 @@
                            Mask="00:00:00.000"
                            VerticalContentAlignment="Center"
                            HorizontalContentAlignment="Center"/>
-            <Grid Grid.Row="3" Grid.ColumnSpan="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <Grid Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" ColumnDefinitions="*,*" RowDefinitions="*,*">
                 <RadioButton Grid.Column="0"
                              Grid.Row="0"
                              Name="AddRadio"

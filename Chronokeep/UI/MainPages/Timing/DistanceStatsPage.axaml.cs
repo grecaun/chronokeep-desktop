@@ -15,7 +15,7 @@ namespace Chronokeep.UI.MainPages.Timing;
 
 public partial class DistanceStatsPage : UserControl, ISubPage
 {
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly IMainWindow window;
     private readonly TimingPage parent;
     private readonly Event? theEvent;
@@ -28,7 +28,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
     private readonly ObservableCollection<Participant> dnfParticipants = [];
     private readonly ObservableCollection<Participant> finishedParticipants = [];
 
-    public DistanceStatsPage(TimingPage parent, IMainWindow window, IDBInterface database, int distanceId, string distanceName, bool condensed = false)
+    public DistanceStatsPage(TimingPage parent, IMainWindow window, IdbInterface database, int distanceId, string distanceName, bool condensed = false)
     {
         InitializeComponent();
         this.parent = parent;
@@ -55,17 +55,17 @@ public partial class DistanceStatsPage : UserControl, ISubPage
 
     public void CancelableUpdateView(CancellationToken token) { }
 
-    public void Search(CancellationToken token, string searchText) { }
+    public void Search(CancellationToken token) { }
 
     public void Closing() { }
 
     public void EditSelected() { }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S() { }
+    public void KeyboardCtrlS() { }
 
-    public void Keyboard_Ctrl_Z() { }
+    public void KeyboardCtrlZ() { }
 
     public void Show(PeopleType type) { }
 
@@ -171,7 +171,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
 
     public void Location(string location) { }
 
-    public void Reader(string reader) { }
+    public void Reader() { }
 
     private void ListView_MouseDoubleClick(object? sender, TappedEventArgs e)
     {

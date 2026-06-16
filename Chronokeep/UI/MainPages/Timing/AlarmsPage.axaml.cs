@@ -13,11 +13,11 @@ namespace Chronokeep.UI.MainPages.Timing;
 
 public partial class AlarmsPage : UserControl, ISubPage
 {
-    private readonly IDBInterface database;
+    private readonly IdbInterface database;
     private readonly TimingPage parent;
     private readonly Event? theEvent;
 
-    public AlarmsPage(TimingPage parent, IDBInterface database)
+    public AlarmsPage(TimingPage parent, IdbInterface database)
     {
         InitializeComponent();
         this.parent = parent;
@@ -34,7 +34,7 @@ public partial class AlarmsPage : UserControl, ISubPage
 
     public void CancelableUpdateView(CancellationToken token) { }
 
-    public void Search(CancellationToken token, string searchText) { }
+    public void Search(CancellationToken token) { }
 
     public void Show(PeopleType type) { }
 
@@ -74,9 +74,9 @@ public partial class AlarmsPage : UserControl, ISubPage
         SaveAlarms();
     }
 
-    public void Keyboard_Ctrl_A() { }
+    public void KeyboardCtrlA() { }
 
-    public void Keyboard_Ctrl_S()
+    public void KeyboardCtrlS()
     {
         Log.D("UI.Timing.AlarmsPage", "Ctrl+S pressed.");
         if (AlarmErrors())
@@ -98,7 +98,7 @@ public partial class AlarmsPage : UserControl, ISubPage
         AlarmsBox.Items.Remove(alarm);
     }
 
-    public void Keyboard_Ctrl_Z()
+    public void KeyboardCtrlZ()
     {
         Log.D("UI.Timing.AlarmsPage", "Ctrl+Z pressed.");
         UpdateAlarms();
@@ -156,7 +156,7 @@ public partial class AlarmsPage : UserControl, ISubPage
         return false;
     }
 
-    public void Reader(string reader) { }
+    public void Reader() { }
 
     private void DoneButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {

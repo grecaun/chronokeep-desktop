@@ -91,7 +91,7 @@ public partial class ClockPart : UserControl
         UpdateLockStatus(info.LockCountUpDown);
         if (info.CountUpDownTimestamp > 0)
         {
-            DateTime countupdown = Constants.Timing.UTCToLocalDate(info.CountUpDownTimestamp, 0);
+            DateTime countupdown = Constants.Timing.UtcToLocalDate(info.CountUpDownTimestamp, 0);
             CountDatePicker.Text = countupdown.ToString("MM/dd/yyyy");
             ChangeCountTimeBox(countupdown.ToString("HH:mm:ss"));
         }

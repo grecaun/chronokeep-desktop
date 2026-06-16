@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace Chronokeep.Timing.Remote
 {
-    public class RemoteReadsController(IMainWindow mainWindow, IDBInterface database) : IRemoteReadersChangeSubscriber
+    public class RemoteReadsController(IMainWindow mainWindow, IdbInterface database) : IRemoteReadersChangeSubscriber
     {
         private static readonly Lock RemRLock = new();
         private static readonly Semaphore Waiter = new(0, 1);
@@ -105,7 +105,7 @@ namespace Chronokeep.Timing.Remote
                                 Event theEvent = database.GetCurrentEvent()!;
                                 readers = database.GetRemoteReaders(theEvent.Identifier);
                                 apiDictionary.Clear();
-                                foreach (ApiObject api in database.GetAllAPI().Where(api => api.Type == Constants.APIConstants.CHRONOKEEP_REMOTE || api.Type == Constants.APIConstants.CHRONOKEEP_REMOTE_SELF))
+                                foreach (ApiObject api in database.GetAllApi().Where(api => api.Type == Constants.ApiConstants.CHRONOKEEP_REMOTE || api.Type == Constants.ApiConstants.CHRONOKEEP_REMOTE_SELF))
                                 {
                                     apiDictionary[api.Identifier] = api;
                                 }

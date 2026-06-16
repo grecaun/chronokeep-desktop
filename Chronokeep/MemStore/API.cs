@@ -1,156 +1,142 @@
-﻿using Chronokeep.Database;
-using Chronokeep.Helpers;
+﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.MemStore
 {
-    internal partial class MemStore : IDBInterface
+    internal partial class MemStore
     {
         /**
          * API functions
          */
 
-        public int AddAPI(ApiObject anAPI)
+        public int AddApi(ApiObject anApi)
         {
             Log.D("MemStore", "UpdateAgeGroup");
-            anAPI.Identifier = database.AddAPI(anAPI);
+            anApi.Identifier = database.AddApi(anApi);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return anApi.Identifier;
+                try
                 {
-                    try
-                    {
-                        apis[anAPI.Identifier] = anAPI;
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    apis[anApi.Identifier] = anApi;
                 }
-                return anAPI.Identifier;
+                finally
+                {
+                    memStoreLock.Exit();
+                }
+                return anApi.Identifier;
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring apiLock. " + e.Message);
-                throw new ChronoLockException("apiLock");
+                throw new ChronokeepLockException("apiLock");
             }
         }
 
-        public List<ApiObject> GetAllAPI()
+        public List<ApiObject> GetAllApi()
         {
             Log.D("MemStore", "GetAllAPI");
             List<ApiObject> output = [];
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        output.AddRange(apis.Values);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output.AddRange(apis.Values);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring apiLock. " + e.Message);
-                throw new ChronoLockException("apiLock");
+                throw new ChronokeepLockException("apiLock");
             }
             return output;
         }
 
-        public ApiObject? GetAPI(int identifier)
+        public ApiObject? GetApi(int identifier)
         {
             Log.D("MemStore", "GetAPI");
             ApiObject? output = null;
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                try
                 {
-                    try
-                    {
-                        if (!apis.TryGetValue(identifier, out output))
-                        {
-                            output = null;
-                        }
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    output = apis.GetValueOrDefault(identifier);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring apiLock. " + e.Message);
-                throw new ChronoLockException("apiLock");
+                throw new ChronokeepLockException("apiLock");
             }
             return output;
         }
 
-        public void RemoveAPI(int identifier)
+        public void RemoveApi(int identifier)
         {
             Log.D("MemStore", "RemoveAPI");
-            database.RemoveAPI(identifier);
+            database.RemoveApi(identifier);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        apis.Remove(identifier);
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    apis.Remove(identifier);
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring apiLock. " + e.Message);
-                throw new ChronoLockException("apiLock");
+                throw new ChronokeepLockException("apiLock");
             }
         }
 
-        public void UpdateAPI(ApiObject anAPI)
+        public void UpdateApi(ApiObject anApi)
         {
             Log.D("MemStore", "UpdateAPI");
-            database.UpdateAPI(anAPI);
+            database.UpdateApi(anApi);
             try
             {
-                if (memStoreLock.TryEnter(lockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
+                    if (apis.TryGetValue(anApi.Identifier, out ApiObject? api))
                     {
-                        if (apis.TryGetValue(anAPI.Identifier, out ApiObject? api))
-                        {
-                            api.Type = anAPI.Type;
-                            api.Url = anAPI.Url;
-                            api.AuthToken = anAPI.AuthToken;
-                            api.Nickname = anAPI.Nickname;
-                            api.WebUrl = anAPI.WebUrl;
-                        }
-                        else
-                        {
-                            apis[anAPI.Identifier] = anAPI;
-                        }
+                        api.Type = anApi.Type;
+                        api.Url = anApi.Url;
+                        api.AuthToken = anApi.AuthToken;
+                        api.Nickname = anApi.Nickname;
+                        api.WebUrl = anApi.WebUrl;
                     }
-                    finally
+                    else
                     {
-                        memStoreLock.Exit();
+                        apis[anApi.Identifier] = anApi;
                     }
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
             {
                 Log.D("MemStore", "Exception acquiring apiLock. " + e.Message);
-                throw new ChronoLockException("apiLock");
+                throw new ChronokeepLockException("apiLock");
             }
         }
     }

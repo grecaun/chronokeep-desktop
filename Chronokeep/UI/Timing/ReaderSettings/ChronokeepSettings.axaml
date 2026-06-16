@@ -7,7 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         SizeToContent="WidthAndHeight"
@@ -23,12 +23,14 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style> 
     </Window.Styles>
-    <Grid RowDefinitions="32,*">
+    <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
-                DoubleTapped="OnTitleBarDoubleTapped">
+                DoubleTapped="OnTitleBarDoubleTapped"
+                IsVisible="{OnPlatform Default='False', Windows='True'}"
+                Height="{OnPlatform Default='0', Windows='32'}">
             <DockPanel Margin="0">
                 <TextBlock Name="VersionBlock" Height="20" FontSize="16" VerticalAlignment="Center"/>
                <StackPanel DockPanel.Dock="Right"
@@ -185,7 +187,7 @@
                                        Margin="5,0,0,0"
                                        VerticalAlignment="Center"/>
                             <Button DockPanel.Dock="Right"
-                                    Name="AddAPIButton"
+                                    Name="AddApiButton"
                                     Click="AddAPIButton_Click"
                                     Margin="0,0,-10,0"
                                     IsVisible="False"
@@ -300,7 +302,7 @@
                                   OffContent=""
                                   Margin="5,-7,-7,0"/>
                     <Label Content="Auto Upload Results" VerticalAlignment="Center" Margin="0,-7,0,0"/>
-                    <ToggleSwitch Name="EnableNTFYSwitch"
+                    <ToggleSwitch Name="EnableNtfySwitch"
                                   Height="35"
                                   OnContent=""
                                   OffContent=""

@@ -13,14 +13,14 @@ public partial class ApiPage1 : UserControl
     private readonly ApiWindow window;
     private readonly Dictionary<string, ApiObject> apiDict;
 
-    public ApiPage1(ApiWindow window, IDBInterface database)
+    public ApiPage1(ApiWindow window, IdbInterface database)
     {
         InitializeComponent();
         this.window = window;
 
         AppSetting lastApi = database.GetAppSetting(Constants.Settings.LAST_USED_API_ID)!;
-        List<ApiObject> apis = database.GetAllAPI();
-        apis.RemoveAll(x => !Constants.APIConstants.API_RESULTS[x.Type]);
+        List<ApiObject> apis = database.GetAllApi();
+        apis.RemoveAll(x => !Constants.ApiConstants.API_RESULTS[x.Type]);
         apiDict = [];
         int apiId;
         try

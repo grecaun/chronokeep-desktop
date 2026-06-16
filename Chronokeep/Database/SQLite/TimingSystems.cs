@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    class TimingSystems
+    internal class TimingSystems
     {
         internal static int AddTimingSystem(TimingSystem system, SQLiteConnection connection)
         {
@@ -14,10 +14,10 @@ namespace Chronokeep.Database.SQLite
                 " VALUES (@ip, @port, @location, @type);";
             command.Parameters.AddRange(
             [
-                new("@ip", system.IpAddress),
-                new("@port", system.Port),
-                new("@location", system.LocationId),
-                new("@type", system.Type)
+                new SQLiteParameter("@ip", system.IpAddress),
+                new SQLiteParameter("@port", system.Port),
+                new SQLiteParameter("@location", system.LocationId),
+                new SQLiteParameter("@type", system.Type)
             ]);
             command.ExecuteNonQuery();
             long outVal = connection.LastInsertRowId;
@@ -26,16 +26,16 @@ namespace Chronokeep.Database.SQLite
 
         internal static void UpdateTimingSystem(TimingSystem system, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction? transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "UPDATE timing_systems SET ts_ip=@ip, ts_port=@port, ts_location=@location, ts_type=@type WHERE ts_identifier=@id;";
             command.Parameters.AddRange(
             [
-                new("@ip", system.IpAddress),
-                    new("@port", system.Port),
-                    new("@location", system.LocationId),
-                    new("@type", system.Type),
-                    new("@id", system.SystemIdentifier)
+                new SQLiteParameter("@ip", system.IpAddress),
+                    new SQLiteParameter("@port", system.Port),
+                    new SQLiteParameter("@location", system.LocationId),
+                    new SQLiteParameter("@type", system.Type),
+                    new SQLiteParameter("@id", system.SystemIdentifier)
             ]);
             command.ExecuteNonQuery();
             transaction.Commit();
@@ -43,7 +43,7 @@ namespace Chronokeep.Database.SQLite
 
         internal static void SetTimingSystems(List<TimingSystem> systems, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction? transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM timing_systems;";
             command.ExecuteNonQuery();
@@ -56,10 +56,10 @@ namespace Chronokeep.Database.SQLite
 
         internal static void RemoveTimingSystem(int systemId, SQLiteConnection connection)
         {
-            using var transaction = connection.BeginTransaction();
+            using SQLiteTransaction? transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "DELETE FROM timing_systems WHERE ts_identifier=@id;";
-            command.Parameters.Add(new("@id", systemId));
+            command.Parameters.Add(new SQLiteParameter("@id", systemId));
             command.ExecuteNonQuery();
             transaction.Commit();
         }
@@ -72,7 +72,7 @@ namespace Chronokeep.Database.SQLite
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new(
+                output.Add(new TimingSystem(
                     Convert.ToInt32(reader["ts_identifier"]),
                     reader["ts_ip"].ToString()!,
                     Convert.ToInt32(reader["ts_port"]),
