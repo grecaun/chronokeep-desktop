@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Api
+    internal static class Api
     {
         internal static int AddApi(ApiObject anApi, SQLiteConnection connection)
         {

@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class RemoteReaders
+    internal static class RemoteReaders
     {
         public static void AddRemoteReaders(int eventId, List<RemoteReader> remoteReaders, SQLiteConnection connection)
         {

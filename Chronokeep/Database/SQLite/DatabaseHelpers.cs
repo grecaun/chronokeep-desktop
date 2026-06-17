@@ -2,7 +2,7 @@
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class DatabaseHelpers
+    internal static class DatabaseHelpers
     {
         internal static void HardResetDatabase(SQLiteConnection connection)
         {

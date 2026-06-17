@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Alarms
+    internal static class Alarms
     {
         internal static List<Alarm> SaveAlarms(int eventId, List<Alarm> alarms, SQLiteConnection connection)
         {

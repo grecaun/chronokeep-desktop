@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Clock
+    internal static class Clock
     {
         public static List<Chronoclock> GetClocks(SQLiteConnection connection)
         {

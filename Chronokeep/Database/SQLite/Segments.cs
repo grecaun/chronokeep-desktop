@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Segments
+    internal static class Segments
     {
         internal static int AddSegment(Segment seg, SQLiteConnection connection)
         {

@@ -1,11 +1,12 @@
 ﻿using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Results
+    internal static class Results
     {
         private static readonly Dictionary<int, TimingLocation> locations = [];
         private static readonly Dictionary<string, Distance> distances = [];
@@ -48,7 +49,7 @@ namespace Chronokeep.Database.SQLite
         internal static void AddTimingResult(TimeResult tr, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandType = System.Data.CommandType.Text;
+            command.CommandType = CommandType.Text;
             command.CommandText = "INSERT INTO time_results (event_id, eventspecific_id, location_id, segment_id, " +
                 "timeresult_occurance, timeresult_time, timeresult_unknown_id, read_id, timeresult_chiptime," +
                 "timeresult_place, timeresult_age_place, timeresult_gender_place," +
@@ -79,7 +80,7 @@ namespace Chronokeep.Database.SQLite
         internal static void RemoveTimingResult(TimeResult tr, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandType = System.Data.CommandType.Text;
+            command.CommandType = CommandType.Text;
             command.CommandText = "DELETE FROM time_results WHERE eventspecific_id=@event AND location_id=@location AND " +
                 "segment_id=@segment AND timeresult_occurance=@occurance";
             command.Parameters.AddRange([
@@ -264,7 +265,7 @@ namespace Chronokeep.Database.SQLite
         internal static void UpdateTimingResult(TimeResult oldResult, string newTime, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandType = System.Data.CommandType.Text;
+            command.CommandType = CommandType.Text;
             command.CommandText = "UPDATE time_results SET timeresult_time=@time WHERE event_id=@event AND eventspecific_id=@eventspecific AND location_id=@location AND timeresult_occurance=@occurance";
             command.Parameters.AddRange([
                 new SQLiteParameter("@time", newTime),
@@ -281,7 +282,7 @@ namespace Chronokeep.Database.SQLite
             foreach (TimeResult result in results)
             {
                 SQLiteCommand command = connection.CreateCommand();
-                command.CommandType = System.Data.CommandType.Text;
+                command.CommandType = CommandType.Text;
                 command.CommandText = "UPDATE time_results SET timeresult_uploaded=@uploaded WHERE event_id=@event AND eventspecific_id=@eventspecific AND location_id=@location AND timeresult_occurance=@occurance";
                 command.Parameters.AddRange([
                     new SQLiteParameter("@uploaded", result.Uploaded),
@@ -320,7 +321,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@eventid", eventId),
-                new SQLiteParameter("@uploaded", Constants.Timing.TIMERESULT_UPLOADED_FALSE)
+                new SQLiteParameter("@uploaded") { Value = Constants.Timing.TIMERESULT_UPLOADED_FALSE }
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             List<TimeResult> output = GetResultsInternal(reader, chipReadDict, partDict, distanceDict);
@@ -337,7 +338,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@status", Constants.Timing.TIMERESULT_STATUS_NONE),
+                new SQLiteParameter("@status") { Value = Constants.Timing.TIMERESULT_STATUS_NONE },
                 new SQLiteParameter("@start", Constants.Timing.SEGMENT_START),
                 new SQLiteParameter("@dummy", Constants.Timing.TIMERESULT_DUMMYPERSON),
                 new SQLiteParameter("@none", Constants.Timing.SEGMENT_NONE)
@@ -363,13 +364,13 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@status", Constants.Timing.CHIPREAD_STATUS_NONE),
+                new SQLiteParameter("@status") { Value = Constants.Timing.CHIPREAD_STATUS_NONE },
                 new SQLiteParameter("@ignore", Constants.Timing.CHIPREAD_STATUS_IGNORE),
                 new SQLiteParameter("@dnf", Constants.Timing.CHIPREAD_STATUS_DNF),
                 new SQLiteParameter("@dnf_ignore", Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE),
                 new SQLiteParameter("@dns", Constants.Timing.CHIPREAD_STATUS_DNS),
                 new SQLiteParameter("@dns_ignore", Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE),
-                new SQLiteParameter("@estatus", Constants.Timing.EVENTSPECIFIC_UNKNOWN)
+                new SQLiteParameter("@estatus") { Value = Constants.Timing.EVENTSPECIFIC_UNKNOWN }
             ]);
             command.ExecuteNonQuery();
         }
@@ -381,7 +382,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@status", Constants.Timing.CHIPREAD_STATUS_NONE)
+                new SQLiteParameter("@status") { Value = Constants.Timing.CHIPREAD_STATUS_NONE }
             ]);
             command.ExecuteNonQuery();
         }

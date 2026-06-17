@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Chronokeep.Constants;
 using static Chronokeep.Helpers.Globals;
 
 namespace Chronokeep.UI;
@@ -50,13 +51,13 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         if (!OneWindow.WaitOne(TimeSpan.Zero, true))
         {
             DialogBox.Show("Chronokeep is already running.");
-            this.Close();
+            Close();
             return;
         }
         OneWindow.ReleaseMutex();
 
         string dirPath = App.IsWindows ?
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Settings.PROGRAM_DIR)
             : Path.Combine(Directory.GetCurrentDirectory(), "data");
         string path = Path.Combine(dirPath, MainWindow.DatabaseFileName);
         Log.D("UI.MinWindow", "Looking for database file.");
@@ -79,18 +80,23 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         {
             DialogBox.Show(
                 $"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
-            this.Close();
+            Close();
             return;
         }
-        Constants.Settings.SetupSettings(database);
+        Settings.SetupSettings(database);
 
         timingController = new TimingController(this, database);
-
+        
+        Event? theEvent = database.GetCurrentEvent();
+        if (theEvent != null)
+        {
+            EventName.Text = theEvent.Name;
+            EventDate.Text = theEvent.Date;
+        }
         page = new MinTimingPage(this, database);
         TheFrame.Content = page;
     }
-
-
+    
     private void NewEvent_Click(object sender, RoutedEventArgs e)
     {
         Log.D("UI.DashboardPage", "New event clicked.");
@@ -160,8 +166,8 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     {
         Application.Current?.RequestedThemeVariant = theme switch
             {
-                Constants.Settings.THEME_SYSTEM => Utils.GetSystemTheme() == 1 ? ThemeVariant.Dark : ThemeVariant.Light,
-                Constants.Settings.THEME_DARK => ThemeVariant.Dark,
+                Settings.THEME_SYSTEM => Utils.GetSystemTheme() == 1 ? ThemeVariant.Dark : ThemeVariant.Light,
+                Settings.THEME_DARK => ThemeVariant.Dark,
                 _ => ThemeVariant.Light,
             };
     }
@@ -172,7 +178,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         {
             return;
         }
-        if (database.GetAppSetting(Constants.Settings.EXIT_NO_PROMPT)!.Value == Constants.Settings.SETTING_FALSE &&
+        if (database.GetAppSetting(Settings.EXIT_NO_PROMPT)!.Value == Settings.SETTING_FALSE &&
             (BackgroundProcessesRunning()))
         {
             bool allowClose = false;
@@ -246,6 +252,12 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
 
     public void WindowFinalize()
     {
+        Event? theEvent = database?.GetCurrentEvent();
+        if (theEvent != null)
+        {
+            EventName.Text = theEvent.Name;
+            EventDate.Text = theEvent.Date;
+        }
         page?.UpdateView();
     }
 
@@ -325,7 +337,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Check for current theme color and apply it.
-        AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);
+        AppSetting? themeColor = database!.GetAppSetting(Settings.CURRENT_THEME);
         if (themeColor != null)
         {
             UpdateTheme(themeColor.Value);

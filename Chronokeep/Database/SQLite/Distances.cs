@@ -6,7 +6,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Distances
+    internal static class Distances
     {
 
         internal static int AddDistance(Distance d, SQLiteConnection connection)

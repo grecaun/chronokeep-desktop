@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Setup
+    internal static class Setup
     {
         internal static void Initialize(int version, string connectionInfo)
         {
@@ -347,8 +347,8 @@ namespace Chronokeep.Database.SQLite
                 versionChecker.Close();
             }
             reader.Close();
-            AppSetting dbSetting = Settings.GetAppSetting(Constants.Settings.MINIMUM_COMPATIBLE_DATABASE, connection)!;
-            int maxVers = Convert.ToInt32(dbSetting.Value);
+            AppSetting? dbSetting = Settings.GetAppSetting(Constants.Settings.MINIMUM_COMPATIBLE_DATABASE, connection);
+            int maxVers = dbSetting != null ? Convert.ToInt32(dbSetting.Value) : -1;
             connection.Close();
             if (oldVersion == -1) Log.D("SQLite.Setup", "Unable to get a version number. Something is terribly wrong.");
             else if (oldVersion < version) Update.UpdateDatabase(oldVersion, connectionInfo);

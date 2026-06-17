@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class ChipReads
+    internal static class ChipReads
     {
         internal static int AddChipRead(ChipRead read, SQLiteConnection connection)
         {
@@ -172,7 +172,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@status", Constants.Timing.CHIPREAD_STATUS_NONE),
+                new SQLiteParameter("@status") { Value = Constants.Timing.CHIPREAD_STATUS_NONE },
                 new SQLiteParameter("@used", Constants.Timing.CHIPREAD_STATUS_USED),
                 new SQLiteParameter("@start", Constants.Timing.CHIPREAD_STATUS_STARTTIME),
                 new SQLiteParameter("@dnf", Constants.Timing.CHIPREAD_STATUS_DNF),
@@ -194,7 +194,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@none", Constants.Timing.CHIPREAD_STATUS_NONE),
+                new SQLiteParameter("@none") { Value = Constants.Timing.CHIPREAD_STATUS_NONE },
                 new SQLiteParameter("@announcer", Constants.Timing.LOCATION_ANNOUNCER)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
@@ -328,7 +328,7 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event", eventId),
-                new SQLiteParameter("@status", Constants.Timing.CHIPREAD_STATUS_NONE)
+                new SQLiteParameter("@status") { Value = Constants.Timing.CHIPREAD_STATUS_NONE }
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             reader.Read();

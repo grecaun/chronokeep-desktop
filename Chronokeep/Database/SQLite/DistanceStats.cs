@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class DistanceStats
+    internal static class DistanceStats
     {
         internal static List<DistanceStat> GetDistanceStats(int eventId, bool condense, SQLiteConnection connection)
         {
@@ -44,25 +44,25 @@ namespace Chronokeep.Database.SQLite
                     DistanceId = distanceId
                 });
                 if (!int.TryParse(reader["status"].ToString(), out int status)) continue;
-                if (Constants.Timing.EVENTSPECIFIC_DNS == status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == status)
+                switch (status)
                 {
-                    statsDictionary[distanceId].Dns = Convert.ToInt32(reader["count"]);
-                    allstats.Dns += statsDictionary[distanceId].Dns;
-                }
-                else if (Constants.Timing.EVENTSPECIFIC_FINISHED == status)
-                {
-                    statsDictionary[distanceId].Finished = Convert.ToInt32(reader["count"]);
-                    allstats.Finished += statsDictionary[distanceId].Finished;
-                }
-                else if (Constants.Timing.EVENTSPECIFIC_STARTED == status)
-                {
-                    statsDictionary[distanceId].Active = Convert.ToInt32(reader["count"]);
-                    allstats.Active += statsDictionary[distanceId].Active;
-                }
-                else if (Constants.Timing.EVENTSPECIFIC_DNF == status)
-                {
-                    statsDictionary[distanceId].Dnf = Convert.ToInt32(reader["count"]);
-                    allstats.Dnf += statsDictionary[distanceId].Dnf;
+                    case Constants.Timing.EVENTSPECIFIC_DNS:
+                    case Constants.Timing.EVENTSPECIFIC_UNKNOWN:
+                        statsDictionary[distanceId].Dns = Convert.ToInt32(reader["count"]);
+                        allstats.Dns += statsDictionary[distanceId].Dns;
+                        break;
+                    case Constants.Timing.EVENTSPECIFIC_FINISHED:
+                        statsDictionary[distanceId].Finished = Convert.ToInt32(reader["count"]);
+                        allstats.Finished += statsDictionary[distanceId].Finished;
+                        break;
+                    case Constants.Timing.EVENTSPECIFIC_STARTED:
+                        statsDictionary[distanceId].Active = Convert.ToInt32(reader["count"]);
+                        allstats.Active += statsDictionary[distanceId].Active;
+                        break;
+                    case Constants.Timing.EVENTSPECIFIC_DNF:
+                        statsDictionary[distanceId].Dnf = Convert.ToInt32(reader["count"]);
+                        allstats.Dnf += statsDictionary[distanceId].Dnf;
+                        break;
                 }
             }
             reader.Close();

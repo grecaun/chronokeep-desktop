@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Events
+    internal static class Events
     {
         internal static int AddEvent(Event anEvent, SQLiteConnection connection)
         {

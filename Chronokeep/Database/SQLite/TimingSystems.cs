@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class TimingSystems
+    internal static class TimingSystems
     {
         internal static int AddTimingSystem(TimingSystem system, SQLiteConnection connection)
         {
@@ -32,10 +32,10 @@ namespace Chronokeep.Database.SQLite
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@ip", system.IpAddress),
-                    new SQLiteParameter("@port", system.Port),
-                    new SQLiteParameter("@location", system.LocationId),
-                    new SQLiteParameter("@type", system.Type),
-                    new SQLiteParameter("@id", system.SystemIdentifier)
+                new SQLiteParameter("@port", system.Port),
+                new SQLiteParameter("@location", system.LocationId),
+                new SQLiteParameter("@type", system.Type),
+                new SQLiteParameter("@id", system.SystemIdentifier)
             ]);
             command.ExecuteNonQuery();
             transaction.Commit();

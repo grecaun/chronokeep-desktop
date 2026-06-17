@@ -3,7 +3,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Banned
+    internal static class Banned
     {
         public static List<string> GetBannedPhones(SQLiteConnection connection)
         {

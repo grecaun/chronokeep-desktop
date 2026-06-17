@@ -3,7 +3,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class EmailAlerts
+    internal static class EmailAlerts
     {
         public static List<int> GetEmailAlerts(int eventId, SQLiteConnection connection)
         {

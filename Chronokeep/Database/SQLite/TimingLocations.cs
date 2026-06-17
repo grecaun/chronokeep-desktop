@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class TimingLocations
+    internal static class TimingLocations
     {
         internal static int AddTimingLocation(TimingLocation tl, SQLiteConnection connection)
         {

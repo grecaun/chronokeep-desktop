@@ -62,7 +62,9 @@
             </DockPanel>
         </Border>
         <Grid RowDefinitions="auto,*" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
-		    <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*">
+		    <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*" Margin="{OnPlatform Default='0,10,0,0', Windows='0'}">
+                <TextBlock Name="EventName" Grid.Column="0" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <TextBlock Name="EventDate" Grid.Column="3" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 <Button Grid.Column="1"
                         Name="NewEvent"
                         Content="New Event"

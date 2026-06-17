@@ -72,7 +72,7 @@ namespace Chronokeep.UI
         private bool didNotStartMode;
         private readonly Lock dnsLock = new();
 
-        // Setup a timer for updating the view
+        // Set up a timer for updating the view
         private readonly DispatcherTimer timingUpdater = new();
 
         // Set up a mutex that will be unique for this program to ensure we only ever have a single instance of it running.
@@ -123,8 +123,7 @@ namespace Chronokeep.UI
             }
             catch (InvalidDatabaseVersion db)
             {
-                DialogBox.Show(
-                    $"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
+                DialogBox.Show($"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
                 Close();
                 return;
             }
@@ -372,130 +371,93 @@ namespace Chronokeep.UI
         private void DashboardButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Dashboard button clicked.");
-            if (currentPage is DashboardPage)
-            {
-                Log.D("UI.MainWindow", "Dashboard page already displayed.");
-                return;
-            }
             UncheckAll();
             DashboardButton.IsChecked = true;
+            if (currentPage is DashboardPage) return;
             SwitchPage(new DashboardPage(this, database!));
         }
 
         private void TimingButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Timing button clicked.");
+            UncheckAll();
+            TimingButton.IsChecked = true;
             if (currentPage is TimingPage page)
             {
-                Log.D("UI.MainWindow", "Timing page already displayed.");
                 page.LoadMainDisplay();
                 return;
             }
-            UncheckAll();
-            TimingButton.IsChecked = true;
             SwitchPage(new TimingPage(this, database!));
         }
 
         private void ParticipantsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Participants button clicked.");
-            if (currentPage is ParticipantsPage)
-            {
-                Log.D("UI.MainWindow", "Participants page already displayed.");
-                return;
-            }
             UncheckAll();
             ParticipantsButton.IsChecked = true;
+            if (currentPage is ParticipantsPage) return;
             SwitchPage(new ParticipantsPage(this, database!));
         }
 
         private void ChipsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Chips button clicked.");
-            if (currentPage is ChipAssignmentPage)
-            {
-                Log.D("UI.MainWindow", "Chips page already displayed.");
-                return;
-            }
             UncheckAll();
             ChipsButton.IsChecked = true;
+            if (currentPage is ChipAssignmentPage) return;
             SwitchPage(new ChipAssignmentPage(this, database!));
         }
 
         private void LocationsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Locations button clicked.");
-            if (currentPage is LocationsPage)
-            {
-                Log.D("UI.MainWindow", "Locations page already displayed.");
-                return;
-            }
             UncheckAll();
             LocationsButton.IsChecked = true;
+            if (currentPage is LocationsPage) return;
             SwitchPage(new LocationsPage(this, database!));
         }
         private void DistancesButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Distances button clicked.");
-            if (currentPage is DistancesPage)
-            {
-                Log.D("UI.MainWindow", "Distances page already displayed.");
-                return;
-            }
             UncheckAll();
             DistancesButton.IsChecked = true;
+            if (currentPage is DistancesPage) return;
             SwitchPage(new DistancesPage(this, database!));
         }
 
         private void SegmentsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Segments button clicked.");
-            if (currentPage is SegmentsPage)
-            {
-                Log.D("UI.MainWindow", "Segments page already displayed.");
-                return;
-            }
             UncheckAll();
             SegmentsButton.IsChecked = true;
+            if (currentPage is SegmentsPage) return;
             SwitchPage(new SegmentsPage(this, database!));
         }
 
         private void AgeGroupsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Age Groups button clicked.");
-            if (currentPage is AgeGroupsPage)
-            {
-                Log.D("UI.MainWindow", "Age groups page already displayed.");
-                return;
-            }
             UncheckAll();
             AgeGroupsButton.IsChecked = true;
+            if (currentPage is AgeGroupsPage) return;
             SwitchPage(new AgeGroupsPage(this, database!));
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Settings button clicked.");
-            if (currentPage is SettingsPage)
-            {
-                Log.D("UI.MainWindow", "Settings page already displayed.");
-                return;
-            }
             UncheckAll();
             SettingsButton.IsChecked = true;
+            if (currentPage is SettingsPage) return;
             SwitchPage(new SettingsPage(this, database!));
         }
 
         private void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "About button clicked.");
-            if (currentPage is AboutPage)
-            {
-                Log.D("UI.MainWindow", "About page already displayed.");
-                return;
-            }
             UncheckAll();
             AboutButton.IsChecked = true;
+            if (currentPage is AboutPage) return;
             SwitchPage(new AboutPage(this, database!));
         }
 
@@ -1186,7 +1148,7 @@ namespace Chronokeep.UI
                 Address = address,
                 Severity = notification.Type switch
                 {
-                    // All of the portal errors should display a dialogbox
+                    // All the portal errors should display a dialogbox
                     // with information about what happened
                     PortalError.TOO_MANY_REMOTE_API or
                     PortalError.TOO_MANY_CONNECTIONS or

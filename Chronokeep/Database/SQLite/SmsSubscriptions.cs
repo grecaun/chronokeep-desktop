@@ -4,7 +4,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class SmsSubscriptions
+    internal static class SmsSubscriptions
     {
         public static List<ApiSmsSubscription> GetSmsSubscriptions(int eventId, SQLiteConnection connection)
         {

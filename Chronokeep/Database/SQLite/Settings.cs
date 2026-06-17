@@ -4,7 +4,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Settings
+    internal static class Settings
     {
         internal static AppSetting? GetAppSetting(string name, SQLiteConnection connection)
         {

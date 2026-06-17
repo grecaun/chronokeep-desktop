@@ -5,7 +5,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class AgeGroups
+    internal static class AgeGroups
     {
         internal static int AddAgeGroup(AgeGroup group, SQLiteConnection connection)
         {

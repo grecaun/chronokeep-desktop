@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal partial class Update
+    internal static partial class Update
     {
         [GeneratedRegex("[/+=]")]
         private static partial Regex Guid();

@@ -6,7 +6,7 @@ using System.Data.SQLite;
 
 namespace Chronokeep.Database.SQLite
 {
-    internal class Participants
+    internal static class Participants
     {
         internal static Participant AddParticipant(Participant person, SQLiteConnection connection)
         {
