@@ -26,7 +26,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static Chronokeep.Helpers.Globals;
 
 namespace Chronokeep.UI
 {
@@ -51,9 +50,7 @@ namespace Chronokeep.UI
 
         // Timing objects.
         private Thread? timingControllerThread;
-        private TimingController? timingController;
-        private Thread? timingWorkerThread;
-        private TimingWorker? timingWorker;
+        private readonly TimingController? timingController;
 
         // API objects.
         private Thread? apiControllerThread;
@@ -130,7 +127,7 @@ namespace Chronokeep.UI
             Constants.Settings.SetupSettings(database);
 
             // Ensure Global values are set up.
-            SetupValues(database);
+            Globals.SetupValues(database);
 
             // Setup AgeGroup static variables
             Event? theEvent = database.GetCurrentEvent();
@@ -173,6 +170,11 @@ namespace Chronokeep.UI
 
             // Setup global twilio account credentials.
             Constants.GlobalVars.SetTwilioCredentials(database);
+            
+            timingController = new TimingController(this, database);
+            TimingWorker timingWorker1 = TimingWorker.NewWorker(this, database);
+            Thread timingWorkerThread1 = new(timingWorker1.Run);
+            timingWorkerThread1.Start();
         }
 
         public void UpdateTheme(string theme)
@@ -287,10 +289,6 @@ namespace Chronokeep.UI
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            timingController = new TimingController(this, database!);
-            timingWorker = TimingWorker.NewWorker(this, database!);
-            timingWorkerThread = new Thread(timingWorker.Run);
-            timingWorkerThread.Start();
             TimingWorker.Notify();
             // Check for current theme color and apply it.
             AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);
@@ -716,12 +714,12 @@ namespace Chronokeep.UI
         {
             Log.D("UI.MainWindow", "UpdateTimingNonBlocking called.");
             List<ReaderMessage> toShow = [];
-            List<ReaderMessage> readerMsgs = GetReaderMessages();
+            List<ReaderMessage> readerMsgs = Globals.GetReaderMessages();
             foreach (ReaderMessage message in readerMsgs.Where(message => message is { Severity: ReaderMessage.SeverityLevel.High, Notified: false }))
             {
                 toShow.Add(message);
                 message.Notified = true;
-                UpdateReaderMessage(message);
+                Globals.UpdateReaderMessage(message);
             }
             Thread newThread = new(() =>
             {
@@ -824,7 +822,7 @@ namespace Chronokeep.UI
         private void UpdateTimingBadge()
         {
             if (currentPage is TimingPage) return;
-            List<ReaderMessage> messages = GetReaderMessages();
+            List<ReaderMessage> messages = Globals.GetReaderMessages();
             messages.RemoveAll(x => x.Notified);
             if (messages.Count > 0)
             { }
@@ -1176,7 +1174,7 @@ namespace Chronokeep.UI
                     _ => ReaderMessage.SeverityLevel.Low,
                 }
             };
-            AddReaderMessage(msg);
+            Globals.AddReaderMessage(msg);
             UpdateTimingNonBlocking();
         }
 

@@ -25,16 +25,14 @@ public partial class TimingResultsPage : UserControl, ISubPage
         this.parent = parent;
         this.database = database;
         theEvent = database.GetCurrentEvent();
-        UpdateListView.ItemsSource = results;
-        if (Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType)
-        {
-            UpdateListView.Columns[4].Header = "Lap Time";
-        }
         if (database is SqLiteInterface)
         {
             Database.SQLite.Results.GetStaticVariables(database);
         }
-        parent.SetReaders([], false);
+        if (theEvent is { EventType: Constants.Timing.EVENT_TYPE_TIME })
+        {
+            UpdateListView.Columns[4].Header = "Lap Time";
+        }
         UpdateView();
     }
 
@@ -55,25 +53,18 @@ public partial class TimingResultsPage : UserControl, ISubPage
         string search,
         string location)
     {
-        if (peopleType == PeopleType.DEFAULT)
+        switch (peopleType)
         {
-            newResults.RemoveAll(TimeResult.StartTimes);
-        }
-        else if (peopleType == PeopleType.KNOWN)
-        {
-            newResults.RemoveAll(TimeResult.IsNotKnown);
-        }
-        else if (peopleType == PeopleType.UNKNOWN)
-
-        {
-
-            newResults.RemoveAll(TimeResult.IsKnown);
-
-        }
-        else if (peopleType == PeopleType.UNKNOWN_FINISHES)
-
-        {
-            if (Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType)
+            case PeopleType.DEFAULT:
+                newResults.RemoveAll(TimeResult.StartTimes);
+                break;
+            case PeopleType.KNOWN:
+                newResults.RemoveAll(TimeResult.IsNotKnown);
+                break;
+            case PeopleType.UNKNOWN:
+                newResults.RemoveAll(TimeResult.IsKnown);
+                break;
+            case PeopleType.UNKNOWN_FINISHES when Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType:
             {
                 Log.D("UI.Timing.TimingResultsPage", "Time based event.");
                 Dictionary<int, TimeResult> validResults = [];
@@ -82,22 +73,15 @@ public partial class TimingResultsPage : UserControl, ISubPage
                     validResults[result.EventSpecificId] = result;
                 }
                 newResults.RemoveAll(x => !validResults.ContainsValue(x) && TimeResult.IsKnown(x));
+                break;
             }
-            else
-            {
+            case PeopleType.UNKNOWN_FINISHES:
                 newResults.RemoveAll(TimeResult.IsNotFinishOrKnown);
-            }
-
-        }
-        else if (peopleType == PeopleType.UNKNOWN_STARTS)
-
-        {
-            newResults.RemoveAll(TimeResult.IsNotStartOrKnown);
-
-        }
-        else if (peopleType == PeopleType.FINISHES)
-        {
-            if (Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType)
+                break;
+            case PeopleType.UNKNOWN_STARTS:
+                newResults.RemoveAll(TimeResult.IsNotStartOrKnown);
+                break;
+            case PeopleType.FINISHES when Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType:
             {
                 Log.D("UI.Timing.TimingResultsPage", "Time based event.");
                 Dictionary<int, TimeResult> validResults = [];
@@ -106,15 +90,17 @@ public partial class TimingResultsPage : UserControl, ISubPage
                     validResults[result.EventSpecificId] = result;
                 }
                 newResults.RemoveAll(x => !validResults.ContainsValue(x));
+                break;
             }
-            else
-            {
+            case PeopleType.FINISHES:
                 newResults.RemoveAll(TimeResult.IsNotFinish);
-            }
-        }
-        else if (peopleType == PeopleType.STARTS)
-        {
-            newResults.RemoveAll(TimeResult.IsNotStart);
+                break;
+            case PeopleType.STARTS:
+                newResults.RemoveAll(TimeResult.IsNotStart);
+                break;
+            case PeopleType.ALL:
+            default:
+                break;
         }
         newResults.RemoveAll(result => result.IsNotMatch(search));
         Log.D("UI.Timing.TimingResultsPage", "Removing all location based items. " + location);

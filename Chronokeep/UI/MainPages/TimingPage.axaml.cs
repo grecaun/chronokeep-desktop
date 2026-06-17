@@ -681,7 +681,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     public string GetSearchValue()
     {
-        return SearchBox.Text == null ? "" : SearchBox.Text.Trim();
+        return SearchBox?.Text == null ? "" : SearchBox.Text.Trim();
     }
 
     public string GetLocation()
@@ -1148,7 +1148,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             // Get the event id values. Exit if not valid.
             string[] eventIds = theEvent!.ApiEventId.Split(',');
-            Log.D("UI.MainPages.TimingPage", "Event Id's found: " + eventIds.Length + " API is null? " + (api == null).ToString());
+            Log.D("UI.MainPages.TimingPage", "Event Id's found: " + eventIds.Length + " API is null? " + (api == null));
             if (eventIds.Length == 2 && api != null)
             {
                 try

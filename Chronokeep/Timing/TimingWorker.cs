@@ -225,11 +225,11 @@ namespace Chronokeep.Timing
             Dictionary.MainDistances.Clear();
             foreach (Distance d in distances)
             {
-                // Check if its a linked distance
+                // Check if it's a linked distance
                 if (d.LinkedDistance > 0)
                 {
                     Log.D("Timing.TimingWorker", "Linked distance found. " + d.LinkedDistance);
-                    // Verify we know the distance its linked to.
+                    // Verify we know the distance it's linked to.
                     if (!Dictionary.DistanceDictionary.TryGetValue(d.LinkedDistance, out Distance? distVal))
                     {
                         Log.E("Timing.TimingWorker", "Unable to find linked distance.");
@@ -366,23 +366,23 @@ namespace Chronokeep.Timing
 #if DEBUG
                         DateTime start = DateTime.Now;
 #endif
-                        // If RACETYPE is DISTANCE
-                        if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
+                        switch (theEvent.EventType)
                         {
-                            _ = DistanceRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                            touched = true;
-                        }
-                        // Else RACETYPE is TIME
-                        else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
-                        {
-                            _ = TimeRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                            touched = true;
-                        }
-                        // Else if RACETYPE if BACKYARD_ULTRA
-                        else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
-                        {
-                            _ = BackyardUltraRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                            touched = true;
+                            // If RACETYPE is DISTANCE
+                            case Constants.Timing.EVENT_TYPE_DISTANCE:
+                                _ = DistanceRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                touched = true;
+                                break;
+                            // Else RACETYPE is TIME
+                            case Constants.Timing.EVENT_TYPE_TIME:
+                                _ = TimeRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                touched = true;
+                                break;
+                            // Else if RACETYPE is BACKYARD_ULTRA
+                            case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
+                                _ = BackyardUltraRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                touched = true;
+                                break;
                         }
 #if DEBUG
                         DateTime end = DateTime.Now;
@@ -397,24 +397,24 @@ namespace Chronokeep.Timing
 #if DEBUG
                         DateTime start = DateTime.Now;
 #endif
-                        // If RACETYPE if DISTANCE
-                        if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
+                        switch (theEvent.EventType)
                         {
-                            _ = DistanceRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                            touched = true;
-                        }
-                        // Else if RACETYPE is TIME
-                        else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
-                        {
-                            TimeRoutine.ProcessLapTimes(theEvent, database);
-                            _ = TimeRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                            touched = true;
-                        }
-                        // Else if RACETYPE is BACKYARD_ULTRA
-                        else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
-                        {
-                            _ = BackyardUltraRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                            touched = true;
+                            // If RACETYPE is DISTANCE
+                            case Constants.Timing.EVENT_TYPE_DISTANCE:
+                                _ = DistanceRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                touched = true;
+                                break;
+                            // Else if RACETYPE is TIME
+                            case Constants.Timing.EVENT_TYPE_TIME:
+                                TimeRoutine.ProcessLapTimes(theEvent, database);
+                                _ = TimeRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                touched = true;
+                                break;
+                            // Else if RACETYPE is BACKYARD_ULTRA
+                            case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
+                                _ = BackyardUltraRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                touched = true;
+                                break;
                         }
 #if DEBUG
                         DateTime end = DateTime.Now;
@@ -423,7 +423,7 @@ namespace Chronokeep.Timing
 #endif
                         window.NetworkUpdateResults();
                     }
-                    if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType) // && SMS set up && SMS enabled on event)
+                    if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType) // && SMS set up && SMS enabled on event
                     {
                         // Build list of potential SMS Alerts to send out.
                         // First check for any alerts already sent out.
@@ -460,7 +460,7 @@ namespace Chronokeep.Timing
                             List<TimeResult> smsResults = [];
                             foreach (TimeResult result in database.GetTimingResults(theEvent.Identifier))
                             {
-                                // verify the distance is set to allow sms alerts and the runner hasn't been notified already
+                                // verify the distance is set to allow sms alerts and the runner hasn't been notified already,
                                 // and we're within 15 minutes of it happening
                                 if (!Dictionary.DistanceNameDictionary.TryGetValue(result.RealDistanceName,
                                         out Distance? dist) || !dist.SmsEnabled
@@ -553,8 +553,8 @@ namespace Chronokeep.Timing
                                     {
                                         // Only send alert if participant wants it sent
                                         // Do not add to the AlertsSent database because they
-                                        // may change their mind later and
-                                        // we still want to be able to send a SMS to them
+                                        // may change their mind later, and
+                                        // we still want to be able to send an SMS to them.
                                         // Only add to the database/dictionary if successful.
                                         string sms;
                                         if (Constants.Timing.SEGMENT_FINISH == result.SegmentId)
@@ -597,7 +597,7 @@ namespace Chronokeep.Timing
                                                 }
                                             }
                                         }
-                                        // update status if there's no network error or we send a message out
+                                        // update status if there's no network error, or we send a message out
                                         if (sent || !networkError)
                                         {
                                             database.AddSmsAlert(theEvent.Identifier, result.EventSpecificId, result.SegmentId);
