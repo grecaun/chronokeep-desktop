@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -103,5 +104,10 @@ public partial class ClockControl : ChronokeepWindow
             clockDict[newClock.Identifier] = newClock;
         }
         UpdateView();
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }

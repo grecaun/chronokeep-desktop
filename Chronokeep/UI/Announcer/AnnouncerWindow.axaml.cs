@@ -119,4 +119,9 @@ public partial class AnnouncerWindow : ChronokeepWindow
     {
         WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

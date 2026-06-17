@@ -289,4 +289,9 @@ public partial class ManualEntryWindow : ChronokeepWindow
     {
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

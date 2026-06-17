@@ -101,4 +101,9 @@ public partial class ChangeEventWindow : ChronokeepWindow
     {
         window.WindowFinalize();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

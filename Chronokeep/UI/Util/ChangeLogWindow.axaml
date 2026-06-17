@@ -6,9 +6,6 @@
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
         x:Class="Chronokeep.UI.Util.ChangeLogWindow"
         Background="{DynamicResource PrimaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Change Event"
         Width="600"
@@ -44,8 +41,7 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}"
+                Name="ChronokeepToolBar"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"

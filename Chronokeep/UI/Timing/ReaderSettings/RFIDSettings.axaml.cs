@@ -7,6 +7,7 @@ using Chronokeep.UI.Util;
 using System;
 using System.Globalization;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls;
 
 namespace Chronokeep.UI.Timing.ReaderSettings;
 
@@ -262,5 +263,10 @@ public partial class RfidSettings : ChronokeepWindow
     {
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Close button clicked.");
         Close();
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }

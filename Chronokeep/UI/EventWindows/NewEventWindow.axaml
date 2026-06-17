@@ -5,9 +5,6 @@
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="400"
         x:Class="Chronokeep.UI.EventWindows.NewEventWindow"
         Background="{DynamicResource PrimaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing"
         SizeToContent="Height"
@@ -25,8 +22,8 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}">
+                Name="ChronokeepToolBar"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"

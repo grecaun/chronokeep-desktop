@@ -81,4 +81,9 @@ public partial class SmsWaveEnabledWindow : ChronokeepWindow
     {
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

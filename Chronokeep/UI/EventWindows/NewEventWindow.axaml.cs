@@ -191,4 +191,9 @@ public partial class NewEventWindow : ChronokeepWindow
     {
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

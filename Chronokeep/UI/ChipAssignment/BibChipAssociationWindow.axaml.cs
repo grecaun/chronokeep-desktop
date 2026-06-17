@@ -206,4 +206,9 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
     {
         window.WindowFinalize();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

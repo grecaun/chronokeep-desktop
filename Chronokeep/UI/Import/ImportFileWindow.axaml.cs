@@ -761,4 +761,9 @@ public partial class ImportFileWindow : ChronokeepWindow
         Log.D("ImportFileWindow", "Import - Cancel button clicked.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -112,4 +112,9 @@ public partial class RewindWindow : ChronokeepWindow
     {
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }
