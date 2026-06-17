@@ -52,15 +52,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 return;
             }
-            int distanceId;
-            try
-            {
-                distanceId = Convert.ToInt32((string)((ComboBoxItem)DistanceBox.SelectedItem!).Tag!);
-            }
-            catch
-            {
-                distanceId = -1;
-            }
+            int distanceId = DistanceBox.SelectedItem != null ? Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem).Tag) : -1;
             Log.D("PartPage", $"Distance ID is {distanceId}");
             List<Participant> newList = [];
             await Task.Run(() =>
@@ -234,7 +226,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _)) continue;
                     if (partEsDictionary.TryGetValue(person.Identifier, out Participant? old) && old.IsSimilar(person))
                     {
-                        // Only update if a bib exists and it has not been updated in the software since it was uploaded
+                        // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
                         // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
                         if (person.Bib.Length <= 0 || old.EventSpecific.UploadedVersion < old.EventSpecific.Version)
                             continue;
@@ -287,57 +279,56 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     }
                     else if (partDictionary.TryGetValue((person.First, person.Last, person.Birthdate, person.Distance.ToLower()), out Participant? oldTwo))
                     {
-                        // Only update if a bib exists and it has not been updated in the software since it was uploaded
+                        // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
                         // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length > 0 && oldTwo.EventSpecific.UploadedVersion >= oldTwo.EventSpecific.Version)
+                        if (person.Bib.Length <= 0 ||
+                            oldTwo.EventSpecific.UploadedVersion < oldTwo.EventSpecific.Version) continue;
+                        Participant newPart = new(
+                            oldTwo.Identifier,
+                            person.First.Length > 0 ? person.First : oldTwo.FirstName,
+                            person.Last.Length > 0 ? person.Last : oldTwo.LastName,
+                            oldTwo.Street,
+                            oldTwo.City,
+                            oldTwo.State,
+                            oldTwo.Zip,
+                            person.Birthdate,
+                            new EventSpecific(
+                                oldTwo.EventSpecific.Identifier,
+                                theEvent.Identifier,
+                                distDictionary[person.Distance.ToLower()].Identifier,
+                                distDictionary[person.Distance.ToLower()].Name,
+                                person.Bib,
+                                oldTwo.EventSpecific.CheckedIn,
+                                oldTwo.EventSpecific.Comments,
+                                oldTwo.EventSpecific.Owes,
+                                oldTwo.EventSpecific.Other,
+                                oldTwo.EventSpecific.Status,
+                                oldTwo.EventSpecific.AgeGroupName,
+                                oldTwo.EventSpecific.AgeGroupId,
+                                person.Anonymous,
+                                person.SmsEnabled,
+                                person.Apparel,
+                                oldTwo.EventSpecific.Division,
+                                oldTwo.EventSpecific.Version,
+                                oldTwo.EventSpecific.UploadedVersion
+                            ),
+                            oldTwo.Email,
+                            oldTwo.Phone,
+                            person.Mobile.Length > 0 ? person.Mobile : oldTwo.Mobile,
+                            oldTwo.Parent,
+                            oldTwo.Country,
+                            oldTwo.Street2,
+                            person.Gender,
+                            oldTwo.EcName,
+                            oldTwo.EcPhone
+                        );
+                        // Check if we've updated the Bib.
+                        if (old!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
-                            Participant newPart = new(
-                                oldTwo.Identifier,
-                                person.First.Length > 0 ? person.First : oldTwo.FirstName,
-                                person.Last.Length > 0 ? person.Last : oldTwo.LastName,
-                                oldTwo.Street,
-                                oldTwo.City,
-                                oldTwo.State,
-                                oldTwo.Zip,
-                                person.Birthdate,
-                                new(
-                                    oldTwo.EventSpecific.Identifier,
-                                    theEvent.Identifier,
-                                    distDictionary[person.Distance.ToLower()].Identifier,
-                                    distDictionary[person.Distance.ToLower()].Name,
-                                    person.Bib,
-                                    oldTwo.EventSpecific.CheckedIn,
-                                    oldTwo.EventSpecific.Comments,
-                                    oldTwo.EventSpecific.Owes,
-                                    oldTwo.EventSpecific.Other,
-                                    oldTwo.EventSpecific.Status,
-                                    oldTwo.EventSpecific.AgeGroupName,
-                                    oldTwo.EventSpecific.AgeGroupId,
-                                    person.Anonymous,
-                                    person.SmsEnabled,
-                                    person.Apparel,
-                                    oldTwo.EventSpecific.Division,
-                                    oldTwo.EventSpecific.Version,
-                                    oldTwo.EventSpecific.UploadedVersion
-                                ),
-                                oldTwo.Email,
-                                oldTwo.Phone,
-                                person.Mobile.Length > 0 ? person.Mobile : oldTwo.Mobile,
-                                oldTwo.Parent,
-                                oldTwo.Country,
-                                oldTwo.Street2,
-                                person.Gender,
-                                oldTwo.EcName,
-                                oldTwo.EcPhone
-                            );
-                            // Check if we've updated the Bib.
-                            if (old!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
-                            {
-                                conflicts.Add(oldTwo);
-                                conflicts.Add(newPart);
-                            }
-                            partsToUpdate.Add(newPart);
+                            conflicts.Add(oldTwo);
+                            conflicts.Add(newPart);
                         }
+                        partsToUpdate.Add(newPart);
                     }
                     else if (person.First.Length > 0 || person.Last.Length > 0)
                     {
@@ -567,48 +558,46 @@ public partial class ParticipantsPage : UserControl, IMainPage
         try
         {
             Log.D("UI.MainPages.ParticipantsPage", "Import Excel clicked.");
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+            IStorageFolder? startingFolder;
+            try
             {
-                IStorageFolder? startingFolder;
-                try
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+            }
+            catch
+            {
+                startingFolder = null;
+            }
+            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                FileTypeFilter = [Utils.ExcelType, FilePickerFileTypes.All],
+                AllowMultiple = false,
+                SuggestedStartLocation = startingFolder,
+            });
+            if (files.Count <= 0) return;
+            string ext = Path.GetExtension(files[0].Name);
+            Log.D("UI.MainPages.ParticipantsPage", $"Extension found: {ext}");
+            try
+            {
+                IDataImporter importer;
+                if (ext is ".xlsx" or ".xls")
                 {
-                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+                    importer = new ExcelImporter(files[0].TryGetLocalPath()!);
                 }
-                catch
+                else
                 {
-                    startingFolder = null;
+                    importer = new CsvImporter(files[0].TryGetLocalPath()!);
                 }
-                IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    FileTypeFilter = [Utils.ExcelType, FilePickerFileTypes.All],
-                    AllowMultiple = false,
-                    SuggestedStartLocation = startingFolder,
-                });
-                if (files.Count <= 0) return;
-                string ext = Path.GetExtension(files[0].Name);
-                Log.D("UI.MainPages.ParticipantsPage", $"Extension found: {ext}");
-                try
-                {
-                    IDataImporter importer;
-                    if (ext is ".xlsx" or ".xls")
-                    {
-                        importer = new ExcelImporter(files[0].TryGetLocalPath()!);
-                    }
-                    else
-                    {
-                        importer = new CsvImporter(files[0].TryGetLocalPath()!);
-                    }
-                    importer.FetchHeaders();
-                    ImportFileWindow importWindow = ImportFileWindow.NewWindow(mWindow, importer, database);
-                    mWindow.AddWindow(importWindow);
-                    _ = importWindow.ShowDialog((Window)mWindow);
-                }
-                catch (Exception ex)
-                {
-                    DialogBox.Show("There was a problem importing the file.");
-                    Log.E("UI.MainPages.ParticipantsPage", $"Something went wrong when trying to read the Excel file. {ex.StackTrace}");
-                }
+                importer.FetchHeaders();
+                ImportFileWindow importWindow = ImportFileWindow.NewWindow(mWindow, importer, database);
+                mWindow.AddWindow(importWindow);
+                _ = importWindow.ShowDialog((Window)mWindow);
+            }
+            catch (Exception ex)
+            {
+                DialogBox.Show("There was a problem importing the file.");
+                Log.E("UI.MainPages.ParticipantsPage", $"Something went wrong when trying to read the Excel file. {ex.StackTrace}");
             }
         }
         catch (Exception)
@@ -622,91 +611,89 @@ public partial class ParticipantsPage : UserControl, IMainPage
         try
         {
             Log.D("UI.MainPages.ParticipantsPage", "Export clicked.");
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+            IStorageFolder? startingFolder;
+            try
             {
-                IStorageFolder? startingFolder;
-                try
-                {
-                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-                }
-                catch
-                {
-                    startingFolder = null;
-                }
-                IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-                {
-                    FileTypeChoices = [Utils.ExcelType],
-                    SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Entrants.xlsx",
-                    SuggestedStartLocation = startingFolder,
-                });
-                if (file is null) return;
-                if (theEvent == null) return;
-                await Task.Run(() =>
-                {
-                    Log.D("UI.MainPages.ParticipantsPage", "Event has name " + theEvent.Name + " and date of " + theEvent.Date + " and finally has ID " + theEvent.Identifier);
-                    List<Participant> parts = database.GetParticipants(theEvent.Identifier);
-                    string[] headers = [
-                        "Bib",
-                        "Distance",
-                        "Status",
-                        "First",
-                        "Last",
-                        "Birthday",
-                        "Age",
-                        "Age Group",
-                        "Division",
-                        "Street",
-                        "Apartment",
-                        "City",
-                        "State",
-                        "Zip",
-                        "Country",
-                        "Phone",
-                        "Mobile",
-                        "Email",
-                        "Parent",
-                        "Gender",
-                        "Comments",
-                        "Other",
-                        "Owes",
-                        "Emergency Contact Name",
-                        "Emergency Contact Phone",
-                        "Anonymous",
-                        "Apparel" // new
-                    ];
-                    List<object[]> data = [];
-                    data.AddRange(parts.Select(p => (object[])
-                    [
-                        p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
-                        // Get rid of all the quote and newline characters.
-                        p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
-                    ]));
-                    IDataExporter? exporter;
-                    string extension = Path.GetExtension(file.Name);
-                    Log.D("UI.MainPages.ParticipantsPage", $"Extension is '{extension}'");
-                    if (extension.Contains("xls", StringComparison.CurrentCulture))
-                    {
-                        exporter = new ExcelExporter();
-                    }
-                    else
-                    {
-                        StringBuilder format = new();
-                        for (int i = 0; i < headers.Length; i++)
-                        {
-                            format.Append("\"{");
-                            format.Append(i);
-                            format.Append("}\",");
-                        }
-                        format.Remove(format.Length - 1, 1);
-                        Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
-                        exporter = new CsvExporter(format.ToString());
-                    }
-                    exporter.SetData(headers, data);
-                    exporter.ExportData(file.TryGetLocalPath()!);
-                });
-                DialogBox.Show("File saved.");
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
+            catch
+            {
+                startingFolder = null;
+            }
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                FileTypeChoices = [Utils.ExcelType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Entrants.xlsx",
+                SuggestedStartLocation = startingFolder,
+            });
+            if (file is null) return;
+            if (theEvent == null) return;
+            await Task.Run(() =>
+            {
+                Log.D("UI.MainPages.ParticipantsPage", "Event has name " + theEvent.Name + " and date of " + theEvent.Date + " and finally has ID " + theEvent.Identifier);
+                List<Participant> parts = database.GetParticipants(theEvent.Identifier);
+                string[] headers = [
+                    "Bib",
+                    "Distance",
+                    "Status",
+                    "First",
+                    "Last",
+                    "Birthday",
+                    "Age",
+                    "Age Group",
+                    "Division",
+                    "Street",
+                    "Apartment",
+                    "City",
+                    "State",
+                    "Zip",
+                    "Country",
+                    "Phone",
+                    "Mobile",
+                    "Email",
+                    "Parent",
+                    "Gender",
+                    "Comments",
+                    "Other",
+                    "Owes",
+                    "Emergency Contact Name",
+                    "Emergency Contact Phone",
+                    "Anonymous",
+                    "Apparel" // new
+                ];
+                List<object[]> data = [];
+                data.AddRange(parts.Select(p => (object[])
+                [
+                    p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
+                    // Get rid of all the quote and newline characters.
+                    p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
+                ]));
+                IDataExporter? exporter;
+                string extension = Path.GetExtension(file.Name);
+                Log.D("UI.MainPages.ParticipantsPage", $"Extension is '{extension}'");
+                if (extension.Contains("xls", StringComparison.CurrentCulture))
+                {
+                    exporter = new ExcelExporter();
+                }
+                else
+                {
+                    StringBuilder format = new();
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        format.Append("\"{");
+                        format.Append(i);
+                        format.Append("}\",");
+                    }
+                    format.Remove(format.Length - 1, 1);
+                    Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
+                    exporter = new CsvExporter(format.ToString());
+                }
+                exporter.SetData(headers, data);
+                exporter.ExportData(file.TryGetLocalPath()!);
+            });
+            DialogBox.Show("File saved.");
         }
         catch (Exception)
         {
@@ -826,10 +813,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.ParticipantsPage", "Modify clicked.");
         List<Participant> selected = [];
-        foreach (Participant p in ParticipantsList.SelectedItems)
-        {
-            selected.Add(p);
-        }
+        selected.AddRange(ParticipantsList.SelectedItems.Cast<Participant>());
         Log.D("UI.MainPages.ParticipantsPage", selected.Count + " participants selected.");
         if (selected.Count > 1)
         {
@@ -884,10 +868,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
         Log.D("UI.MainPages.ParticipantsPage", "Remove clicked.");
         IList selected = ParticipantsList.SelectedItems;
         List<Participant> parts = [];
-        foreach (Participant p in selected)
-        {
-            parts.Add(p);
-        }
+        parts.AddRange(selected.Cast<Participant>());
         database.RemoveParticipantEntries(parts);
         UpdateView();
     }

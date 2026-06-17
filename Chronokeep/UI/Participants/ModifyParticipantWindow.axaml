@@ -93,12 +93,11 @@
                             FontSize="16"
                             Margin="15,0,5,0"
                             VerticalAlignment="Center"/>
-                <MaskedTextBox Name="BirthdayBox"
-                                Mask="90/90/0000"
-                                KeyDown="Box_KeyDown"
-                                Width="300"
-                                FontSize="16"
-                                Margin="0,5,5,5"/>
+                <CalendarDatePicker Name="BirthdayBox"
+                                    KeyDown="Box_KeyDown"
+                                    Width="300"
+                                    FontSize="16"
+                                    Margin="0,5,5,5"/>
                 <TextBlock Text="Age"
                             Width="30"
                             FontSize="16"

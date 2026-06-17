@@ -72,11 +72,10 @@
                            Width="80"
                            TextAlignment="Right"
                            VerticalAlignment="Center"/>
-                <MaskedTextBox Name="DatePicker"
-                               Mask="90/90/0000"
-                               KeyUp="Keyboard_Up"
-                               Margin="5,10,10,10"
-                               FontSize="16"/>
+                <CalendarDatePicker Name="DatePicker"
+                                    KeyUp="Keyboard_Up"
+                                    Margin="5,10,10,10"
+                                    FontSize="16"/>
             </DockPanel>
             <AutoCompleteBox Name="OldEvent"
                              FontSize="16"

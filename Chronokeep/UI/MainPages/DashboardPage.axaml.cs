@@ -49,16 +49,9 @@ public partial class DashboardPage : UserControl, IMainPage
         RightPanel.IsVisible = true;
         EventNameTextBox.Text = theEvent.Name;
         EventYearCodeTextBox.Text = theEvent.YearCode;
-        EventDatePicker.Text = DateTime.Parse(theEvent.Date).ToString("MM/dd/yyyy");
+        EventDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
         RankByGunCheckBox.IsChecked = theEvent.RankByGun;
-        if (theEvent != null && Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
-        {
-            RankByGunLabel.Content = "Rank by Elapsed Time";
-        }
-        else
-        {
-            RankByGunLabel.Content = "Rank by Clock Time";
-        }
+        RankByGunLabel.Content = theEvent is { EventType: Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA } ? "Rank by Elapsed Time" : "Rank by Clock Time";
         CommonAgeCheckBox.IsChecked = theEvent!.CommonAgeGroups;
         CommonStartCheckBox.IsChecked = theEvent!.CommonStartFinish;
         SegmentCheckBox.IsChecked = theEvent!.DistanceSpecificSegments;
@@ -243,9 +236,9 @@ public partial class DashboardPage : UserControl, IMainPage
         newEvent.Identifier = -1;
         saveTo.AddEvent(newEvent);
         newEvent.Identifier = saveTo.GetEventId(newEvent);
-        // Only proceed if we managed to add the event or we can find it.
+        // Only proceed if we managed to add the event, or we can find it.
         if (newEvent.Identifier <= 0) return newEvent.Identifier;
-        // Get all of the parts that don't depend on other parts, then parts that do.
+        // Get all the parts that don't depend on other parts, then parts that do.
         // Order of operation matters here.
         // Bib chip associations do not have any linked ID's.
         Log.D("UI.DashboardPage", "Adding bib chip associations.");
@@ -261,7 +254,7 @@ public partial class DashboardPage : UserControl, IMainPage
         {
             // Set event identifier to new event id.
             item.EventIdentifier = newEvent.Identifier;
-            // Check if its a linked distance and place it in the correct list.
+            // Check if it's a linked distance and place it in the correct list.
             if (item.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
             {
                 normalDistances.Add(item);
@@ -275,7 +268,7 @@ public partial class DashboardPage : UserControl, IMainPage
         }
         // Insert the old distances
         saveTo.AddDistances(normalDistances);
-        // Loop through all of the distances we just added and update our dictionary with their new ids.
+        // Loop through all the distances we just added and update our dictionary with their new ids.
         foreach (Distance item in saveTo.GetDistances(newEvent.Identifier))
         {
             if (oldDistanceIdDictionary.TryGetValue(item.Name, out int oldDistId))
@@ -286,7 +279,7 @@ public partial class DashboardPage : UserControl, IMainPage
         // Update linked distances to their new division ID or set it to no linked if we can't find it.
         foreach (Distance item in linkedDistances)
         {
-            item.LinkedDistance = distanceIdTranslation.TryGetValue(item.LinkedDistance, out int linkedDistId) ? linkedDistId : Constants.Timing.DISTANCE_NO_LINKED_ID;
+            item.LinkedDistance = distanceIdTranslation.GetValueOrDefault(item.LinkedDistance, Constants.Timing.DISTANCE_NO_LINKED_ID);
         }
         saveTo.AddDistances(linkedDistances);
         // Age groups rely only on the event, and the distance.
@@ -390,12 +383,10 @@ public partial class DashboardPage : UserControl, IMainPage
             item.EventSpecific.EventIdentifier = newEvent.Identifier;
             oldEventSpecificDictionary[item.EventSpecific.Bib] = item.EventSpecific.Identifier;
             // Only add the participant if we can translate their distance identifier.
-            if (distanceIdTranslation.TryGetValue(item.EventSpecific.DistanceIdentifier, out int oDistId))
-            {
-                item.EventSpecific.DistanceIdentifier = oDistId;
-                item.EventSpecific.AgeGroupId = ageGroupIdTranslation.TryGetValue(item.EventSpecific.AgeGroupId, out int oAgId) ? oAgId : Constants.Timing.TIMERESULT_DUMMYAGEGROUP;
-                participants.Add(item);
-            }
+            if (!distanceIdTranslation.TryGetValue(item.EventSpecific.DistanceIdentifier, out int oDistId)) continue;
+            item.EventSpecific.DistanceIdentifier = oDistId;
+            item.EventSpecific.AgeGroupId = ageGroupIdTranslation.GetValueOrDefault(item.EventSpecific.AgeGroupId, Constants.Timing.TIMERESULT_DUMMYAGEGROUP);
+            participants.Add(item);
         }
         saveTo.AddParticipants(participants);
         // Translate old ID's to new ID's
@@ -693,7 +684,7 @@ public partial class DashboardPage : UserControl, IMainPage
             }
             theEvent.Name = EventNameTextBox.Text!;
             theEvent.YearCode = EventYearCodeTextBox.Text!;
-            theEvent.Date = DateTime.Parse(EventDatePicker.Text!.Replace('_', '0')).ToString("MM/dd/yyyy");
+            theEvent.Date = EventDatePicker.SelectedDate?.ToString("M/d/yyyy") ?? DateTime.Now.ToString("M/d/yyyy");
             theEvent.RankByGun = RankByGunCheckBox.IsChecked ?? false;
             theEvent.CommonAgeGroups = CommonAgeCheckBox.IsChecked ?? false;
             theEvent.CommonStartFinish = CommonStartCheckBox.IsChecked ?? false;

@@ -26,6 +26,15 @@
         <Style Selector="TextBox">
             <Setter Property="MinWidth" Value="10"/>
         </Style>
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="Padding" Value="10,0, 0,0"/>
+        </Style>
+        <Style Selector="Button:disabled">
+            <Setter Property="Opacity" Value="0.2"/>
+        </Style>
         <Style Selector="TextBox:disabled">
             <Setter Property="Opacity" Value="0.2"/>
         </Style>
@@ -35,8 +44,11 @@
         <Style Selector="ToggleSwitch:disabled">
             <Setter Property="Opacity" Value="0.2"/>
         </Style>
-        <Style Selector="Button:disabled">
+        <Style Selector="CalendarDatePicker:disabled">
             <Setter Property="Opacity" Value="0.2"/>
+        </Style>
+        <Style Selector="CalendarDatePicker:disabled TextBox">
+            <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
@@ -113,7 +125,6 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
     </Application.Styles>
-
     <Application.Resources>
         <ResourceDictionary>
             <x:Double x:Key="DataGridSortIconMinWidth">0</x:Double>

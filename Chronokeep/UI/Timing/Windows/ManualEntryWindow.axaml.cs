@@ -160,7 +160,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
             }
             else
             {
-                time = DateTime.Parse(DateBox.SelectedDate + " 00:00:00.000");
+                time = DateTime.Parse($"{DateBox.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} 00:00:00.000");
                 if (hours > 23)
                 {
                     hours = 23;
@@ -236,7 +236,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         }
         else
         {
-            time = DateTime.Parse(DateBox.SelectedDate + " 00:00:00.000");
+            time = DateTime.Parse($"{DateBox.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} 00:00:00.000");
             if (hours > 23)
             {
                 hours = 23;

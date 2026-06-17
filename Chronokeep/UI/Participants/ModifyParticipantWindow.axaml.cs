@@ -25,6 +25,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
     public ModifyParticipantWindow(IMainWindow window, IdbInterface database, Participant? person)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         tPage = null;
         this.database = database;
@@ -51,6 +52,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
     public ModifyParticipantWindow(TimingPage tPage, IdbInterface database, int eventSpecificId, string bib)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         window = null;
         this.tPage = tPage;
         this.database = database;
@@ -129,7 +131,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         BibBox.Text = person.Bib;
         FirstBox.Text = person.FirstName;
         LastBox.Text = person.LastName;
-        BirthdayBox.Text = DateTime.Parse(person.Birthdate).ToString("MM/dd/yyyy");
+        BirthdayBox.SelectedDate = DateTime.Parse(person.Birthdate);
         AgeBox.Text = person.Age(theEvent.Date);
         bool genderFound = false;
         ComboBoxItem? otherBoxItem = null, notSpecifiedBoxItem = null;
@@ -256,12 +258,11 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 gender = "Not Specified";
             }
         }
-        int checkedin = 0;
         if (!int.TryParse(AgeBox.Text, out int age))
         {
             age = 0;
         }
-        string birthdate = BirthdayBox.Text!.Replace('_', '0');
+        string birthdate = BirthdayBox.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d");
         if (age != 0 && birthdate.Length < 1)
         {
             if (!int.TryParse(theEvent.Date.Split('/')[2], out int year))
@@ -287,7 +288,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem!).Tag),
                 "",
                 BibBox.Text!,
-                checkedin,
+                0,
                 CommentsBox.Text!,
                 "",
                 "",

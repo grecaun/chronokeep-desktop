@@ -22,9 +22,9 @@ public partial class RewindWindow : ChronokeepWindow
         SizeToContent = SizeToContent.Height;
         this.system = system;
         this.parent = parent;
-        string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
-        FromDate.Text = dateStr;
-        ToDate.Text = dateStr;
+        DateTime date = DateTime.Now;
+        FromDate.SelectedDate = date;
+        ToDate.SelectedDate = date;
         FromTime.Text = "00:00:00";
         ToTime.Text = "23:59:59";
         if (system.Type != Readers.SYSTEM_IPICO && system.Type != Readers.SYSTEM_IPICO_LITE) return;
@@ -44,38 +44,38 @@ public partial class RewindWindow : ChronokeepWindow
 
     private void SetYesterday_Click(object sender, RoutedEventArgs e)
     {
-        string dateStr = DateTime.Now.AddDays(-1).ToString("MM/dd/yyyy");
-        FromDate.Text = dateStr;
-        ToDate.Text = dateStr;
+        DateTime date = DateTime.Now.AddDays(-1);
+        FromDate.SelectedDate = date;
+        ToDate.SelectedDate = date;
         FromTime.Text = "00:00:00";
         ToTime.Text = "23:59:59";
     }
 
     private void SetToday_Click(object sender, RoutedEventArgs e)
     {
-        string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
-        FromDate.Text = dateStr;
-        ToDate.Text = dateStr;
+        DateTime date = DateTime.Now;
+        FromDate.SelectedDate = date;
+        ToDate.SelectedDate = date;
         FromTime.Text = "00:00:00";
         ToTime.Text = "23:59:59";
     }
 
     private void SetTomorrow_Click(object sender, RoutedEventArgs e)
     {
-        string dateStr = DateTime.Now.AddDays(1).ToString("MM/dd/yyyy");
-        FromDate.Text = dateStr;
-        ToDate.Text = dateStr;
+        DateTime date = DateTime.Now.AddDays(1);
+        FromDate.SelectedDate = date;
+        ToDate.SelectedDate = date;
         FromTime.Text = "00:00:00";
         ToTime.Text = "23:59:59";
     }
 
     private void Rewind_Click(object sender, RoutedEventArgs e)
     {
-        if (!DateTime.TryParse($"{FromDate.Text!} {FromTime.Text!.Replace('_', '0')}", out DateTime from))
+        if (!DateTime.TryParse($"{FromDate.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {FromTime.Text!.Replace('_', '0')}", out DateTime from))
         {
             from = DateTime.Now;
         }
-        if (!DateTime.TryParse($"{ToDate.Text!} {ToTime.Text!.Replace('_', '0')}", out DateTime to))
+        if (!DateTime.TryParse($"{ToDate.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {ToTime.Text!.Replace('_', '0')}", out DateTime to))
         {
             to = DateTime.Now;
         }

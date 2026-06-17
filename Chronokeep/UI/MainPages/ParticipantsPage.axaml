@@ -31,17 +31,12 @@
             <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
         </Style>
     </UserControl.Styles>
-
-     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="250"/>
-        </Grid.ColumnDefinitions>
-        <ScrollViewer
-            Grid.Column="1"
-            HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto"
-            >
+     <Grid ColumnDefinitions="*,250">
+         <ScrollViewer
+             Grid.Column="1"
+             HorizontalScrollBarVisibility="Disabled"
+             VerticalScrollBarVisibility="Auto"
+         >
             <StackPanel>
                 <Button
                     Name="ImportExcel"

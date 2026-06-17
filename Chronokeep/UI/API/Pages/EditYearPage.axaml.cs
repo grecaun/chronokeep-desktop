@@ -47,7 +47,7 @@ public partial class EditYearPage : UserControl
                 return;
             }
             YearBox.Text = response.EventYear.Year;
-            DateBox.Text = DateTime.Parse(response.EventYear.DateTime).ToString("MM/dd/yyyy");
+            DateBox.SelectedDate = DateTime.Parse(response.EventYear.DateTime);
             if (response.Event.Type == Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA)
             {
                 RankBox.Items.Add(new ComboBoxItem
@@ -103,7 +103,7 @@ public partial class EditYearPage : UserControl
             await ApiHandlers.UpdateEventYear(api, slug, new ApiEventYear
             {
                 Year = YearBox.Text!,
-                DateTime = Convert.ToDateTime((string?)DateBox.Text!.Replace('_', '0')).ToString("yyyy/MM/dd HH:mm:ss zzz"),
+                DateTime = DateBox.SelectedDate?.ToString("yyyy/MM/dd HH:mm:ss zzz") ?? DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss zzz"),
                 Live = LiveBox.IsChecked == true,
                 DaysAllowed = Convert.ToInt32(DaysAllowedSlider.Value),
                 RankingType = ((string)((ComboBoxItem)RankBox.SelectedItem!).Tag!).Equals("Chip", StringComparison.OrdinalIgnoreCase) ? "chip" : "gun",

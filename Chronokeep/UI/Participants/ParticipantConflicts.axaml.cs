@@ -12,6 +12,7 @@ public partial class ParticipantConflicts : ChronokeepWindow
     private ParticipantConflicts(IMainWindow window, List<Participant> participants)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
 
         ParticipantsList.ItemsSource = participants;

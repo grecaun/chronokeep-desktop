@@ -32,22 +32,22 @@ public partial class ReaderListItem : UserControl
         this.mWindow = mWindow;
         this.api = api;
         this.reader = reader;
-        var theEvent = database.GetCurrentEvent();
+        Event? theEvent = database.GetCurrentEvent();
         if (theEvent == null || theEvent.Identifier < 1)
         {
             return;
         }
         this.reader.EventId = theEvent.Identifier;
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
-        locations.Insert(0, new(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
+        locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_ANNOUNCER, theEvent.Identifier, "Announcer", 0, 0));
         if (!theEvent.CommonStartFinish)
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
-            locations.Insert(0, new(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow));
         }
         else
         {
-            locations.Insert(0, new(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
+            locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
         }
         AutoFetch.IsChecked = savedReaders.ContainsKey((reader.ApiiDentifier, reader.Name));
         NameBlock.Text = reader.Name;
@@ -64,9 +64,9 @@ public partial class ReaderListItem : UserControl
         {
             LocationBox.SelectedIndex = 0;
         }
-        string dateStr = DateTime.Now.ToString("MM/dd/yyyy");
-        StartDatePicker.Text = dateStr;
-        EndDatePicker.Text = dateStr;
+        DateTime date = DateTime.Now;
+        StartDatePicker.SelectedDate = date;
+        EndDatePicker.SelectedDate = date;
     }
 
     public RemoteReader GetUpdatedReader()
@@ -98,11 +98,11 @@ public partial class ReaderListItem : UserControl
         try
         {
             Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Rewind clicked.");
-            if (!DateTime.TryParse($"{StartDatePicker.Text} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
+            if (!DateTime.TryParse($"{StartDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
             {
                 startDate = DateTime.Now;
             }
-            if (!DateTime.TryParse($"{EndDatePicker.Text} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
+            if (!DateTime.TryParse($"{EndDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
             {
                 endDate = DateTime.Now;
             }
@@ -143,11 +143,11 @@ public partial class ReaderListItem : UserControl
                 try
                 {
                     Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "User requests deletion.");
-                    if (!DateTime.TryParse($"{StartDatePicker.Text} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
+                    if (!DateTime.TryParse($"{StartDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
                     {
                         startDate = DateTime.Now;
                     }
-                    if (!DateTime.TryParse($"{EndDatePicker.Text} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
+                    if (!DateTime.TryParse($"{EndDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
                     {
                         endDate = DateTime.Now;
                     }

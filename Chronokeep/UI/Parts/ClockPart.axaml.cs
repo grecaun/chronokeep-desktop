@@ -92,12 +92,12 @@ public partial class ClockPart : UserControl
         if (info.CountUpDownTimestamp > 0)
         {
             DateTime countupdown = Constants.Timing.UtcToLocalDate(info.CountUpDownTimestamp, 0);
-            CountDatePicker.Text = countupdown.ToString("MM/dd/yyyy");
+            CountDatePicker.SelectedDate = countupdown;
             ChangeCountTimeBox(countupdown.ToString("HH:mm:ss"));
         }
         else if (theEvent.StartSeconds > 0 || theEvent.StartMilliseconds > 0)
         {
-            CountDatePicker.Text = DateTime.Parse(theEvent.Date).ToString("MM/dd/yyyy");
+            CountDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
             ChangeCountTimeBox(Constants.Timing.SecondsToTime(theEvent.StartMilliseconds >= 500 ? theEvent.StartSeconds + 1 : theEvent.StartSeconds));
             Log.D("UI.Timing.ClockControl.ClockListItem",
                 $"Time should be set to: {Constants.Timing.SecondsToTime(theEvent.StartSeconds)}");
@@ -205,7 +205,7 @@ public partial class ClockPart : UserControl
             Log.D("UI.Timing.ClockControl.ClockListItem", "Start clicked.");
             clock = GetUpdatedClock();
             DateTime countDate;
-            if (CountDatePicker.Text == null || CountTimeBox.Text == null)
+            if (CountDatePicker.SelectedDate == null || CountTimeBox.Text == null)
             {
                 try
                 {
@@ -220,8 +220,7 @@ public partial class ClockPart : UserControl
             }
             else
             {
-                if (!DateTime.TryParse(
-                        $"{CountDatePicker.Text!.Replace('_', '0')} {CountTimeBox.Text!.Replace('_', '0')}", out countDate))
+                if (!DateTime.TryParse($"{CountDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {CountTimeBox.Text!.Replace('_', '0')}", out countDate))
                 {
                     countDate = DateTime.Now;
                 }

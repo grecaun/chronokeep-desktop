@@ -64,10 +64,9 @@
             </ComboBox>
         </StackPanel>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <MaskedTextBox Name="CountDatePicker"
-                           Mask="90/90/0000"
-                           Margin="2"
-                           IsEnabled="False"/>
+            <CalendarDatePicker Name="CountDatePicker"
+                                Margin="2"
+                                IsEnabled="False"/>
             <MaskedTextBox Name="CountTimeBox"
                            Mask="00:00:00"
                            Margin="2"

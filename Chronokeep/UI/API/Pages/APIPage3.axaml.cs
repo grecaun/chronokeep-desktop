@@ -68,7 +68,7 @@ public partial class ApiPage3 : UserControl
             YearCopyBox.SelectedIndex = ix;
             NewPanel.IsVisible = ix == 0;
             YearBox.Text = theEvent.YearCode;
-            DateBox.Text = DateTime.Parse(theEvent.Date).ToString("MM/dd/yyyy");
+            DateBox.SelectedDate = DateTime.Parse(theEvent.Date);
             if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
             {
                 RankBox.Items.Add(new ComboBoxItem
@@ -122,7 +122,7 @@ public partial class ApiPage3 : UserControl
     {
         try
         {
-            Log.D("UI.API.APIPage3", "DateTime: " + Convert.ToDateTime(DateBox.Text).ToString("yyyy/MM/dd HH:mm:ss"));
+            Log.D("UI.API.APIPage3", $"DateTime: {DateBox.SelectedDate}");
             string year = (string)((ComboBoxItem)YearCopyBox.SelectedItem!).Tag!;
             if (year == "NEW")
             {
@@ -131,7 +131,7 @@ public partial class ApiPage3 : UserControl
                     EventYearResponse addResponse = await ApiHandlers.AddEventYear(api, slug, new ApiEventYear
                     {
                         Year = YearBox.Text!,
-                        DateTime = Convert.ToDateTime(DateBox.Text).ToString("yyyy/MM/dd HH:mm:ss zzz"),
+                        DateTime = DateBox.SelectedDate?.ToString("yyyy/MM/dd HH:mm:ss zzz") ?? DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss zzz"),
                         Live = LiveBox.IsChecked == true,
                         DaysAllowed = Convert.ToInt32(DaysAllowedSlider.Value),
                         RankingType = ((string)((ComboBoxItem)RankBox.SelectedItem!).Tag!).Equals("Chip", StringComparison.OrdinalIgnoreCase) ? "chip" : "gun",

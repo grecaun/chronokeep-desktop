@@ -81,15 +81,7 @@
                 <DataGridTextColumn Header="Read Number" Binding="{Binding ReadNumber}" x:DataType="local:RfidInfo"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Grid HorizontalAlignment="Center" Height="55" Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" />
-                <ColumnDefinition Width="80" />
-                <ColumnDefinition Width="85" />
-                <ColumnDefinition Width="84" />
-                <ColumnDefinition Width="96" />
-                <ColumnDefinition Width="148" />
-            </Grid.ColumnDefinitions>
+        <Grid HorizontalAlignment="Center" Height="55" Grid.Row="2" ColumnDefinitions="250,80,85,84,96,148">
             <DockPanel Grid.Column="0"
                        Name="EventNameHolder"
                        Margin="5,0,15,0"

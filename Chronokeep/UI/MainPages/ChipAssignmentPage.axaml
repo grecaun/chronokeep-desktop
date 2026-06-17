@@ -187,12 +187,7 @@
                         Margin="10,5,10,5"
                         HorizontalAlignment="Center"
                         />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="65"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="65,1*,1*">
                         <TextBlock
                             Grid.Column="0"
                             Text="Bib" 
@@ -200,7 +195,7 @@
                             Margin="10,0,5,0"
                             VerticalAlignment="Center"
                             TextAlignment="Right"
-                            />
+                        />
                         <TextBox
                             Grid.Column="1"
                             Name="RangeStartBibBox"
@@ -220,12 +215,7 @@
                             Margin="5,5,5,5"
                             />
                     </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="65"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="65,1*,1*">
                         <TextBlock 
                             Grid.Column="0"
                             Text="Chip"
@@ -233,7 +223,7 @@
                             Margin="10,0,5,0"
                             VerticalAlignment="Center"
                             TextAlignment="Right"
-                            />
+                        />
                         <TextBox
                             Grid.Column="1"
                             Name="RangeStartChipBox" 

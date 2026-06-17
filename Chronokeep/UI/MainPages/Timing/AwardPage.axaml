@@ -60,11 +60,7 @@
             <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}"/>
         </Style>
     </UserControl.Styles>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="55" />
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="*,55">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.Row="0">
             <StackPanel HorizontalAlignment="Center">
                 <TextBlock Text="Distances" FontSize="16"/>

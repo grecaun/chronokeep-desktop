@@ -19,6 +19,7 @@ public partial class ChangeMultiParticipantWindow : ChronokeepWindow
     public ChangeMultiParticipantWindow(IMainWindow window, IdbInterface database, List<Participant> toChange)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         this.window = window;
         this.database = database;
         this.toChange = toChange;
