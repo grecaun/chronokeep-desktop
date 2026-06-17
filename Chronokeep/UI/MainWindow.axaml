@@ -5,9 +5,6 @@
         mc:Ignorable="d" d:DesignWidth="1320" d:DesignHeight="700"
         x:Class="Chronokeep.UI.MainWindow"
         Background="{DynamicResource SecondaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Chronokeep"
         Height="700"
@@ -88,8 +85,7 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}"
+                Name="ChronokeepToolBar"
                 >
             <DockPanel Margin="0">
 			    <Button Name="NavigationButton" Click="NavigationButton_Click" Width="48" Height="32" Classes="nav" WindowDecorationProperties.ElementRole="User">

@@ -198,4 +198,9 @@ public partial class ImportLogWindow : ChronokeepWindow
         importer.Finish();
         window.WindowFinalize();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

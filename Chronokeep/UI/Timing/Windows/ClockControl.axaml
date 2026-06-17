@@ -5,9 +5,6 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Chronokeep.UI.Timing.Windows.ClockControl"
         Background="{DynamicResource PrimaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Remote Readers"
         MinHeight="200"
@@ -23,8 +20,7 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}"
+                Name="ChronokeepToolBar"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"

@@ -90,4 +90,9 @@ public partial class ChipPersonWindow : ChronokeepWindow
     {
         readerWindow.PersonWindowClosing();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

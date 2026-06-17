@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
@@ -102,5 +103,10 @@ public partial class EditRawReadsWindow : ChronokeepWindow
     {
         Log.D("UI.Timing.EditRawReadsWindow", "Cancel clicked.");
         Close();
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }

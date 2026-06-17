@@ -66,4 +66,9 @@ public partial class SetTimeWindow : ChronokeepWindow
     {
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

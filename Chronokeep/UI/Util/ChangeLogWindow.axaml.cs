@@ -64,4 +64,9 @@ public partial class ChangeLogWindow : ChronokeepWindow
         Log.D("UI.Timing.Notifications.ChangelogWindow", "Done button clicked.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -26,4 +26,9 @@ public partial class ParticipantConflicts : ChronokeepWindow
     {
         window.WindowFinalize();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -5,14 +5,12 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Chronokeep.UI.Timing.Import.ImportLogWindow"
         Background="{DynamicResource PrimaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Load Log"
         SizeToContent="Height"
         Topmost="True"
         Closing="Window_Closing"
+        Width="300"
         >
     <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
@@ -20,8 +18,7 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}"
+                Name="ChronokeepToolBar"
                 >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"

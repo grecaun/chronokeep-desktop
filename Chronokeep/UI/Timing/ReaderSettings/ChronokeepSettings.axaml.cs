@@ -368,4 +368,9 @@ public partial class ChronokeepSettings : ChronokeepWindow
             ? AutoUploadQuery.STOP
             : AutoUploadQuery.START);
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

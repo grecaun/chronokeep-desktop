@@ -515,6 +515,11 @@ namespace Chronokeep.UI
             WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
         }
 
+        protected override Border? TitleBar()
+        {
+            return ChronokeepToolBar;
+        }
+
         private void UncheckAll()
         {
             DashboardButton.IsChecked = false;

@@ -99,4 +99,9 @@ public partial class DialogBox : ChronokeepWindow
     {
         CopyBox.Text = copyText;
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

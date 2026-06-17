@@ -62,4 +62,9 @@ public partial class EditApiWindow : ChronokeepWindow
     {
         window?.WindowFinalize();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

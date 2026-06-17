@@ -2,9 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Chronokeep.UI.Export.ExportResults"
         Background="{DynamicResource PrimaryBackground}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1"
-        WindowDecorations="{OnPlatform Default='Full', Windows='BorderOnly'}"
         WindowStartupLocation="CenterScreen"
         Title="Export Results"
         Height="450"
@@ -26,8 +23,8 @@
                 WindowDecorationProperties.ElementRole="TitleBar"
                 PointerPressed="OnTitleBarPointerPressed"
                 DoubleTapped="OnTitleBarDoubleTapped"
-                IsVisible="{OnPlatform Default='False', Windows='True'}"
-                Height="{OnPlatform Default='0', Windows='32'}">
+                Name="ChronokeepToolBar"
+                >
             <DockPanel Margin="0">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"

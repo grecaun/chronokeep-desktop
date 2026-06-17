@@ -514,4 +514,9 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
             BibBox.Focus();
         }
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

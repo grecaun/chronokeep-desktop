@@ -46,4 +46,9 @@ public partial class ReaderNotificationWindow : ChronokeepWindow
         Log.D("UI.Timing.Notifications.ReaderNotificationWindow", "Done button clicked.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -119,4 +119,9 @@ public partial class WaveWindow : ChronokeepWindow
         Log.D("UI.Timing.WaveWindow", "We don't really want to set the wave times.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -6,14 +6,8 @@
              x:Class="Chronokeep.UI.MainPages.MinTimingPage"
              Padding="16"
              Background="{DynamicResource PrimaryBackground}"
-             CornerRadius="8,0,0,0"
              >
-    <UserControl.Styles>
-        <Style Selector="Button.up">
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-        </Style>
-    </UserControl.Styles>
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch">
         <Expander 
             Grid.Row="0"
             Name="ReaderExpander"
@@ -43,6 +37,7 @@
             Grid.Row="1"
             Name="TimingFrame"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"/>
+            VerticalAlignment="Stretch"
+            Margin="0,0,0,-10"/>
     </Grid>
 </UserControl>

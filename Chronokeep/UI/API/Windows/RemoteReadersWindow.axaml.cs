@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -122,5 +123,10 @@ public partial class RemoteReadersWindow : ChronokeepWindow
         // notify mainwindow to update/start remote reader thread
         RemoteReadersNotifier.GetRemoteReadersNotifier().Notify();
         Close();
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }

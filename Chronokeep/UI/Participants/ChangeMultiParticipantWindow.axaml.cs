@@ -60,4 +60,9 @@ public partial class ChangeMultiParticipantWindow : ChronokeepWindow
         Log.D("UI.Participants.ChangeMultiParticipantWindow", "Cancel clicked.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Chronokeep.UI.Announcer;
+using Chronokeep.UI.UhfRfidReader;
 
 namespace Chronokeep.UI;
 
@@ -11,14 +12,26 @@ public class ChronokeepWindow : Window
     protected virtual void Maximize() {}
     protected virtual void SetMaximizeIcon() {}
     protected virtual void SetPlatform() {}
+    protected virtual Border? TitleBar() { return null; }
 
     internal void ChronokeepInitialize()
     {
         if (!App.IsWindows)
         {
             Title = "";
+            WindowDecorations = WindowDecorations.Full;
+            ExtendClientAreaToDecorationsHint = false;
+            TitleBar()?.Height = 0;
+            TitleBar()?.IsVisible = false;
         }
-        if (this is not (not MainWindow or MinWindow or AnnouncerWindow)) return;
+        else
+        {
+            WindowDecorations = WindowDecorations.BorderOnly;
+            ExtendClientAreaToDecorationsHint = true;
+            TitleBar()?.Height = 32;
+            TitleBar()?.IsVisible = true;
+        }
+        if (this is MainWindow or MinWindow or AnnouncerWindow or ChipReaderWindow) return;
         CanResize = false;
         Topmost = true;
     }

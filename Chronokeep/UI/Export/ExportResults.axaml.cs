@@ -569,4 +569,9 @@ public partial class ExportResults : ChronokeepWindow
         Log.D("UI.Export.ExportResults", "Cancel clicked.");
         Close();
     }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
+    }
 }

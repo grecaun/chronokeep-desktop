@@ -195,5 +195,10 @@ namespace Chronokeep.UI.Util
                 BackupBlock.Text = $"{BackupBlock.Text}\nError backing up database.";
             }
         }
+
+        protected override Border? TitleBar()
+        {
+            return ChronokeepToolBar;
+        }
     }
 }

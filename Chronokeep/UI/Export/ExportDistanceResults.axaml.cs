@@ -929,7 +929,12 @@ public partial class ExportDistanceResults : ChronokeepWindow
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Export.ExportDistanceResults", "Cancel clicked.");
-        this.Close();
+        Close();
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }
 public enum OutputType
