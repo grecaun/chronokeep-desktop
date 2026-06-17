@@ -21,7 +21,6 @@ public class ChronokeepWindow : Window
         if (this is not (not MainWindow or MinWindow or AnnouncerWindow)) return;
         CanResize = false;
         Topmost = true;
-        ShowInTaskbar = true;
     }
     
     internal void OnMinimize(object? sender, RoutedEventArgs e)

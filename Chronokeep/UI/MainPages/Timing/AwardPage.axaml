@@ -111,7 +111,7 @@
                              Text="3"
                              Width="40"/>
                 </DockPanel>
-                <DataGrid Name="CustomGroupsListView" SelectionMode="Extended" Margin="0,0,0,5" FontSize="12" CanUserResizeColumns="False">
+                <DataGrid Name="CustomGroupsListView" SelectionMode="Extended" Margin="0,0,0,5" CanUserResizeColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Start Age" Binding="{Binding StartAge}" Width="110" x:DataType="objects:AgeGroup"/>
                         <DataGridTextColumn Header="End Age" Binding="{Binding EndAge}" Width="110" x:DataType="objects:AgeGroup"/>

@@ -12,19 +12,15 @@
             <Setter Property="Height" Value="35"/>
             <Setter Property="Width" Value="120"/>
         </Style>
-        <Style Selector="DataGridCell">
-           <Setter Property="FontSize" Value="12"/> 
-        </Style>
     </UserControl.Styles>
     <Grid RowDefinitions="*,55">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Name="MainScroll">
             <StackPanel>
                 <TextBlock Name="DistanceName" Text="Distance Name" HorizontalAlignment="Center" FontSize="18" Margin="0,10,0,10"/>
-                <Expander Name="ActivePanel" Header="Active" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="ActivePanel" Header="Active" Margin="0,0,0,5" IsExpanded="True" HorizontalAlignment="Stretch">
                     <DataGrid
                         Name="ActiveListView"
                         SelectionMode="Single"
-                        FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
                         x:DataType="objects:StatsParticipant">
                         <DataGrid.Columns>
@@ -40,11 +36,10 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="DnfPanel" Header="Did Not Finish" Margin="0,0,0,5" IsExpanded="True" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="DnfPanel" Header="Did Not Finish" Margin="0,0,0,5" IsExpanded="True" HorizontalAlignment="Stretch">
                     <DataGrid
                         Name="DnfListView"
                         SelectionMode="Single"
-                        FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
                         x:DataType="objects:Participant">
                         <DataGrid.Columns>
@@ -58,11 +53,10 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="DnsPanel" Header="Did Not Start" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="DnsPanel" Header="Did Not Start" Margin="0,0,0,5" IsExpanded="False" HorizontalAlignment="Stretch">
                     <DataGrid
                         Name="DnsListView"
                         SelectionMode="Single"
-                        FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
                         x:DataType="objects:Participant">
                         <DataGrid.Columns>
@@ -76,11 +70,10 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="UnknownPanel" Header="Unknown" Margin="0,0,0,5" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="UnknownPanel" Header="Unknown" Margin="0,0,0,5" IsExpanded="False" HorizontalAlignment="Stretch">
                     <DataGrid
                         Name="UnknownListView"
                         SelectionMode="Single"
-                        FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
                         x:DataType="objects:Participant">
                         <DataGrid.Columns>
@@ -94,11 +87,10 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
-                <Expander Name="FinishedPanel" Header="Finished" Margin="0,0,0,0" IsExpanded="False" FontSize="12" HorizontalAlignment="Stretch">
+                <Expander Name="FinishedPanel" Header="Finished" Margin="0,0,0,0" IsExpanded="False" HorizontalAlignment="Stretch">
                     <DataGrid
                         Name="FinishedListView"
                         SelectionMode="Single"
-                        FontSize="12"
                         DoubleTapped="ListView_MouseDoubleClick"
                         x:DataType="objects:Participant">
                         <DataGrid.Columns>

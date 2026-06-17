@@ -72,7 +72,7 @@
                         Width="250"
                         Height="35"
                         HorizontalAlignment="Stretch"
-                        SelectionChanged="EllapsedRelativeToBox_SelectionChanged"
+                        SelectionChanged="ElapsedRelativeToBox_SelectionChanged"
                         IsVisible="False"
                     >
                     <ComboBox.ItemTemplate>

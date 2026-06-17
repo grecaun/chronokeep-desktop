@@ -53,10 +53,10 @@
                 <TextBlock Text="Type" FontSize="16" Grid.Column="1" TextAlignment="Center"/>
             </Grid>
             <Grid Margin="5,5,5,5" ColumnDefinitions="200,130">
-                <ListBox Grid.Column="0" Name="DistancesBox" Height="140" FontSize="12" SelectionMode="Multiple" Margin="0,0,3,0">
+                <ListBox Grid.Column="0" Name="DistancesBox" Height="140" SelectionMode="Multiple" Margin="0,0,3,0">
                     <ListBoxItem Content="All" IsSelected="True"/>
                 </ListBox>
-                <ListBox Grid.Column="1" Name="PlacementType" Height="140" FontSize="12" SelectionMode="Single">
+                <ListBox Grid.Column="1" Name="PlacementType" Height="140" SelectionMode="Single">
                     <ListBoxItem Content="Overall" IsSelected="True"/>
                     <ListBoxItem Content="Gender"/>
                     <ListBoxItem Content="Age Group"/>

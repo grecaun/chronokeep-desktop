@@ -37,14 +37,14 @@
         <DataGrid Grid.Row="0" Name="UpdateListView" x:DataType="objects:ChipRead">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Box" Binding="{Binding Box}" Width="80"/>
-                <DataGridTextColumn Header="Location" Binding="{Binding LocationName}" Width="80"/>
+                <DataGridTextColumn Header="Location" Binding="{Binding LocationName}" Width="100"/>
                 <DataGridTextColumn Header="Chip" Binding="{Binding ChipNumber}" Width="120"/>
-                <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" Width="70"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="140"/>
+                <DataGridTextColumn Header="Bib" Binding="{Binding Bib}" Width="50"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
                 <DataGridTextColumn Header="Clock" Binding="{Binding TimeString}" Width="170"/>
-                <DataGridTextColumn Header="Net Time" Binding="{Binding NetTime}" Width="100"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding StatusName}" Width="100"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="100"/>
+                <DataGridTextColumn Header="Net Time" Binding="{Binding NetTime}" Width="100" CellStyleClasses="right"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding StatusName}" Width="70"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding TypeName}" Width="70"/>
             </DataGrid.Columns>
         </DataGrid>
         <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">

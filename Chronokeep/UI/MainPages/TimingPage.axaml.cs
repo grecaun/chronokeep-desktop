@@ -63,7 +63,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     private int total, known;
 
-    private const string Ipformat = "{0:D}.{1:D}.{2:D}.{3:D}";
+    private const string IpFormat = "{0:D}.{1:D}.{2:D}.{3:D}";
     private readonly int[] baseIp = [0, 0, 0, 0];
 
     private readonly bool remoteApi;
@@ -93,7 +93,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             return;
         }
 
-        // Setup the running clock.
+        // Set up the running clock.
         timer.Tick += Timer_Tick;
         timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
 
@@ -135,7 +135,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
         }
 
-        // Check for multiple wave times, show an ellapsed relative to box if so
+        // Check for multiple wave times, show an elapsed relative to box if so
         waves.Clear();
         waveTimes.Clear();
         relativeToWaveList.Add(new TimeRelativeWave
@@ -218,16 +218,16 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             Log.D("UI.MainPages.TimingPage", systems.Count + " systems found.");
             for (int i = 0; i < 3 - numSystems; i++)
             {
-                systems.Add(new TimingSystem(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
+                systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
             }
         }
         systems.Sort((x, y) => x.Status == y.Status ? string.Compare(x.IpAddress, y.IpAddress, StringComparison.Ordinal) : x.Status.CompareTo(y.Status));
-        systems.Add(new TimingSystem(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
+        systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
         known = 0;
         foreach (TimingSystem sys in systems)
         {
             ReadersBox.Items.Add(new ReaderPart(this, sys, locations));
-            if (sys.IpAddress != string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
+            if (sys.IpAddress != string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
             {
                 known++;
             }
@@ -291,20 +291,19 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 RemoteControllerSwitch.IsEnabled = true;
                 RemoteErrorsBlock.Text = "";
                 break;
+            case RemoteReadsController.RemoteStatus.UNKNOWN:
+            default:
+                break;
         }
 
         UpdateDnsButton();
 
         // check if we have a remote api set up
-        foreach (ApiObject api in database.GetAllApi())
+        if (database.GetAllApi().Any(api => api.Type is ApiConstants.CHRONOKEEP_REMOTE_SELF or ApiConstants.CHRONOKEEP_REMOTE))
         {
-            if (api.Type == ApiConstants.CHRONOKEEP_REMOTE_SELF || api.Type == ApiConstants.CHRONOKEEP_REMOTE)
-            {
-                RemoteControllerSwitch?.IsVisible = true;
-                RemoteReadersButton?.IsVisible = ReaderExpander.IsExpanded;
-                remoteApi = true;
-                break;
-            }
+            RemoteControllerSwitch?.IsVisible = true;
+            RemoteReadersButton?.IsVisible = ReaderExpander.IsExpanded;
+            remoteApi = true;
         }
 
         List<ReaderMessage> readerMsgs = GetReaderMessages();
@@ -346,7 +345,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             box!.UpdateReader();
             if (box.Reader.IpAddress != "0.0.0.0" && box.Reader.IpAddress.Length > 7 &&
-                box.Reader.IpAddress != string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
+                box.Reader.IpAddress != string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
             {
                 ourSystems.Add(box.Reader);
             }
@@ -402,7 +401,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     rewindWindow = null;
                 }
             }
-            if (read.Reader.IpAddress != string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
+            if (read.Reader.IpAddress != string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
             {
                 known++;
             }
@@ -424,13 +423,13 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 ReadersBox.Items.Add(new ReaderPart(
                     this,
-                    new TimingSystem(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
+                    new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
                         system),
                         locations!));
             }
             ReadersBox.Items.Add(new ReaderPart(
                 this,
-                new TimingSystem(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
+                new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
                     system),
                     locations!));
         }
@@ -579,7 +578,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     public void OpenTimeWindow(TimingSystem system)
     {
         Log.D("UI.MainPages.TimingPage", "Opening Set Time Window.");
-        timeWindow = new(this, system);
+        timeWindow = new SetTimeWindow(this, system);
         timeWindow.ShowDialog((Window)mWindow);
     }
 
@@ -591,7 +590,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     public void OpenRewindWindow(TimingSystem system)
     {
         Log.D("UI.MainPages.TimingPage", "Opening Rewind Window.");
-        rewindWindow = new(system, this);
+        rewindWindow = new RewindWindow(system, this);
         rewindWindow.ShowDialog((Window)mWindow);
     }
 
@@ -620,15 +619,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     public void RemoveSystem(TimingSystem sys)
     {
         database.RemoveTimingSystem(sys.SystemIdentifier);
-        ReaderPart? removed = null;
-        foreach (ReaderPart? box in ReadersBox.Items.Cast<ReaderPart?>())
-        {
-            if (box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved())
-            {
-                removed = box;
-                break;
-            }
-        }
+        ReaderPart? removed = ReadersBox.Items.Cast<ReaderPart?>().FirstOrDefault(box => box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved());
         ReadersBox.Items.Remove(removed);
         UpdateView();
     }
@@ -660,42 +651,32 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     public PeopleType GetPeopleType()
     {
-        switch (((ComboBoxItem)ViewOnlyBox.SelectedItem!).Content)
+        if (ViewOnlyBox.SelectedItem == null) return PeopleType.KNOWN;
+        return ((ComboBoxItem)ViewOnlyBox.SelectedItem!).Content switch
         {
-            case "Show All":
-                return PeopleType.ALL;
-            case "Show Only Starts":
-                return PeopleType.STARTS;
-            case "Show Only Finishes":
-                return PeopleType.FINISHES;
-            case "Show Only Unknown":
-                return PeopleType.UNKNOWN;
-            case "Show Only Unknown Finishes":
-                return PeopleType.UNKNOWN_FINISHES;
-            case "Show Only Unknown Starts":
-                return PeopleType.UNKNOWN_STARTS;
-        }
-        return PeopleType.KNOWN;
+            "Show All" => PeopleType.ALL,
+            "Show Only Starts" => PeopleType.STARTS,
+            "Show Only Finishes" => PeopleType.FINISHES,
+            "Show Only Unknown" => PeopleType.UNKNOWN,
+            "Show Only Unknown Finishes" => PeopleType.UNKNOWN_FINISHES,
+            "Show Only Unknown Starts" => PeopleType.UNKNOWN_STARTS,
+            _ => PeopleType.KNOWN
+        };
     }
 
     public SortType GetSortType()
     {
-        switch (((ComboBoxItem)SortBy.SelectedItem!).Content)
+        if (SortBy.SelectedItem == null) return SortType.SYSTIME;
+        return ((ComboBoxItem)SortBy.SelectedItem).Content switch
         {
-            case "Clock Time":
-                return SortType.GUNTIME;
-            case "Bib":
-                return SortType.BIB;
-            case "Distance":
-                return SortType.DISTANCE;
-            case "Age Group":
-                return SortType.AGEGROUP;
-            case "Gender":
-                return SortType.GENDER;
-            case "Place":
-                return SortType.PLACE;
-        }
-        return SortType.SYSTIME;
+            "Clock Time" => SortType.GUNTIME,
+            "Bib" => SortType.BIB,
+            "Distance" => SortType.DISTANCE,
+            "Age Group" => SortType.AGEGROUP,
+            "Gender" => SortType.GENDER,
+            "Place" => SortType.PLACE,
+            _ => SortType.SYSTIME
+        };
     }
 
     public string GetSearchValue()
@@ -705,7 +686,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     public string GetLocation()
     {
-        ComboBoxItem locItem = (ComboBoxItem)LocationBox.SelectedItem!;
+        if (LocationBox.SelectedItem == null) return "";
+        ComboBoxItem locItem = (ComboBoxItem)LocationBox.SelectedItem;
         return locItem.Content!.ToString()!;
     }
 
@@ -778,9 +760,9 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         return ReaderSelectionBox.SelectedItem != null ? ReaderSelectionBox.SelectedItem.ToString()! : "";
     }
 
-    private void EllapsedRelativeToBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void ElapsedRelativeToBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        Log.E("UI.MainPages.TimingPage", "EllapsedRelativeToBox selection changed.");
+        Log.E("UI.MainPages.TimingPage", "ElapsedRelativeToBox selection changed.");
         selectedWave = -1;
         if (EllapsedRelativeToBox.SelectedIndex >= 0 && EllapsedRelativeToBox.SelectedItem is TimeRelativeWave wave)
         {
@@ -830,7 +812,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 Log.D("UI.MainPages.TimingPage", "Error starting countup.");
             } // Exception may get thrown due to not waiting on the async method
-            // The clocks need to start as fast as possible and it does not matter if the
+            // The clocks need to start as fast as possible, and it does not matter if the
             // call fails (the clock is probably not connected to the same network)
         }
         StartTimeChanged();
@@ -1192,7 +1174,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             // We do this because we want to ensure we've reset all the results before we allow
             // the auto uploader to start uploading any more results so we don't upload
-            // old results over our brand new results.
+            // old results over our brand-new results.
             database.ResetTimingResultsEvent(theEvent.Identifier);
             await Task.Run(() =>
             {
@@ -1274,18 +1256,12 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 List<TimeResult> finishTimes = database.GetFinishTimes(theEvent.Identifier);
                 ApiObject api = database.GetApi(theEvent.ApiId)!;
                 Dictionary<string, Participant> participantDictionary = [];
-                int distances = 0;
                 foreach (Participant p in database.GetParticipants(theEvent.Identifier))
                 {
                     participantDictionary[p.Identifier.ToString()] = p;
                 }
-                foreach (Distance d in database.GetDistances(theEvent.Identifier))
-                {
-                    if (Constants.Timing.DISTANCE_NO_LINKED_ID == d.LinkedDistance)
-                    {
-                        distances++;
-                    }
-                }
+
+                int distances = database.GetDistances(theEvent.Identifier).Count(d => Constants.Timing.DISTANCE_NO_LINKED_ID == d.LinkedDistance);
                 GlobalVars.UpdateBannedEmails();
                 HttpClient client = new();
                 MailgunCredentials credentials = MailgunCredentials.GetCredentials(database);
