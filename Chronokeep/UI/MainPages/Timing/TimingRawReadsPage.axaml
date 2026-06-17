@@ -32,7 +32,6 @@
             <Setter Property="CanUserSortColumns" Value="False"/>
         </Style>
     </UserControl.Styles>
-
     <Grid RowDefinitions="*,50">
         <DataGrid Grid.Row="0" Name="UpdateListView" x:DataType="objects:ChipRead">
             <DataGrid.Columns>

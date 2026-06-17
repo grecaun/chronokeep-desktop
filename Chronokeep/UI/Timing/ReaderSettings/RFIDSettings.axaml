@@ -8,7 +8,6 @@
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         SizeToContent="WidthAndHeight"
-        Title=""
         Topmost="True"
         Closed="Window_Closed"
         >

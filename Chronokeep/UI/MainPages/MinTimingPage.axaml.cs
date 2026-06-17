@@ -46,13 +46,13 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
                     NetworkInterfaceType: NetworkInterfaceType.Ethernet, OperationalStatus: OperationalStatus.Up
                 }) continue;
             if (adapter.GetIPProperties().GatewayAddresses.FirstOrDefault() == null) continue;
-            foreach (UnicastIPAddressInformation ipinfo in adapter.GetIPProperties().UnicastAddresses)
+            foreach (UnicastIPAddressInformation ipInfo in adapter.GetIPProperties().UnicastAddresses)
             {
-                if (ipinfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
-                Log.D("UI.MainPages.TimingPage", "IP Address :" + ipinfo.Address);
-                Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipinfo.IPv4Mask);
-                string[] ipParts = ipinfo.Address.ToString().Split('.');
-                string[] maskParts = ipinfo.IPv4Mask.ToString().Split('.');
+                if (ipInfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
+                Log.D("UI.MainPages.TimingPage", "IP Address :" + ipInfo.Address);
+                Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipInfo.IPv4Mask);
+                string[] ipParts = ipInfo.Address.ToString().Split('.');
+                string[] maskParts = ipInfo.IPv4Mask.ToString().Split('.');
                 if (ipParts.Length != 4 || maskParts.Length != 4) continue;
                 for (int i = 0; i < 4; i++)
                 {

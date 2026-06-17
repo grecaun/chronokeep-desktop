@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Chronokeep.UI.MinWindow"
-        Background="{DynamicResource SecondaryBackground}"
+        Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
         Title="Chronokeep"
         Height="700"
@@ -61,15 +61,15 @@
                </StackPanel>
             </DockPanel>
         </Border>
-        <StackPanel Margin="0" Grid.Row="1">
-		    <Grid ColumnDefinitions="*,*,*,*">
+        <Grid RowDefinitions="auto,*" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
+		    <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*">
                 <Button Grid.Column="1"
                         Name="NewEvent"
                         Content="New Event"
                         Click="NewEvent_Click"
                         Height="40"
                         FontSize="16"
-                        Margin="15,10,15,10"
+                        Margin="15,0"
                         HorizontalAlignment="Stretch"
                         VerticalContentAlignment="Center"/>
                 <Button Grid.Column="2"
@@ -78,11 +78,11 @@
                         Click="ChangeEvent_Click"
                         Height="40"
                         FontSize="16"
-                        Margin="15,10,15,10"
+                        Margin="15,0"
                         HorizontalAlignment="Stretch"
                         VerticalContentAlignment="Center"/>
             </Grid>
-            <UserControl Name="TheFrame" Margin="6" CornerRadius="8"/>
-        </StackPanel>
+            <UserControl Grid.Row="1" Name="TheFrame" Margin="6,0" VerticalAlignment="Stretch"/>
+        </Grid>
     </Grid>
 </Window>

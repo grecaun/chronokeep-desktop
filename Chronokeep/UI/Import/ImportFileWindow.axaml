@@ -10,7 +10,6 @@
         Title="Import File"
         Height="600"
         Width="500"
-        MinWidth="450"
         Closing="Window_Closing"
         >
     <Window.Styles>

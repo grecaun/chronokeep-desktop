@@ -10,6 +10,7 @@
         Title="Edit Linked Event"
         Topmost="True"
         Closing="Window_Closing"
+        Width="330"
         >
     <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"

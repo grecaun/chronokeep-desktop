@@ -42,6 +42,11 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         }
         Log.D("UI.Timing.TimingRawReadsPage", "View updated.");
         this.mWindow = mWindow;
+        if (parent is MinTimingPage)
+        {
+            DoneButton.IsEnabled = false;
+            DoneButton.IsVisible = false;
+        }
     }
 
     public void UpdateView()

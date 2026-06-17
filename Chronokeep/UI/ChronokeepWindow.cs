@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Chronokeep.UI.Announcer;
+using Chronokeep.UI.UhfRfidReader;
 
 namespace Chronokeep.UI;
 
@@ -30,7 +31,7 @@ public class ChronokeepWindow : Window
             TitleBar()?.Height = 32;
             TitleBar()?.IsVisible = true;
         }
-        if (this is MainWindow or MinWindow or AnnouncerWindow) return;
+        if (this is MainWindow or MinWindow or AnnouncerWindow or ChipReaderWindow) return;
         CanResize = false;
         Topmost = true;
         ShowInTaskbar = true;

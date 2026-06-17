@@ -9,7 +9,6 @@
         WindowStartupLocation="CenterScreen"
         Title="Change Event"
         Width="700"
-        MinWidth="700"
         MaxHeight="800"
         Topmost="True"
         SizeToContent="Height"

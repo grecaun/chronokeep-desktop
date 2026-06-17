@@ -9,6 +9,7 @@
         SizeToContent="Height"
         Topmost="True"
         Closing="Window_Closing"
+        Width="600"
         >
     <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
