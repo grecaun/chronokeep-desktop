@@ -55,16 +55,16 @@ namespace Chronokeep.Objects
         public int EventIdentifier { get; set; }
         public double DistanceValue { get; set; }
         public int DistanceUnit { get; set; } = Distances.MILES;
-        public int FinishLocation { get; private set; } = Constants.Timing.LOCATION_FINISH;
+        public int FinishLocation { get; set; } = Constants.Timing.LOCATION_FINISH;
         public int FinishOccurrence { get; set; } = 1;
-        public int StartLocation { get; private set; } = Constants.Timing.LOCATION_START;
-        public int StartWithin { get; private set; }
+        public int StartLocation { get; set; } = Constants.Timing.LOCATION_START;
+        public int StartWithin { get; set; }
         public int Wave { get; set; } = 1;
         public int StartOffsetSeconds { get; set; }
         public int StartOffsetMilliseconds { get; set; }
         public int EndSeconds { get; set; }
         public int LinkedDistance { get; set; } = Constants.Timing.DISTANCE_NO_LINKED_ID;
-        public int Type { get; private set; }
+        public int Type { get; set; }
         public int Ranking { get; set; }
         public bool SmsEnabled { get; set; }
         public bool Upload { get; set; }

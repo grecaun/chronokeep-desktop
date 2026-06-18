@@ -270,6 +270,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         [
             new()
                 {
+                    EventId = theEvent!.Identifier,
                     Bib = SingleBibBox.Text!,
                     Chip = Constants.Settings.CHIP_TYPE_DEC == chipType.Value ? chip.ToString() : chip.ToString("X")
                 }
@@ -474,6 +475,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         {
             bibChips.Add(new BibChipAssociation
             {
+                EventId = theEvent!.Identifier,
                 Bib = bib.ToString(),
                 Chip = Constants.Settings.CHIP_TYPE_HEX == chipType.Value ? tag.ToString("X") : tag.ToString()
             });
@@ -533,6 +535,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         [
             new()
                 {
+                    EventId = -1,
                     Bib = IgnoredChipBox.Text!,
                     Chip = Constants.Settings.CHIP_TYPE_DEC == chipType.Value ? chip.ToString() : chip.ToString("X")
                 }

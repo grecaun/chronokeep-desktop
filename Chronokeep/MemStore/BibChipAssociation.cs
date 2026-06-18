@@ -252,7 +252,7 @@ namespace Chronokeep.MemStore
                             ignoredChips.Remove(assoc.Chip);
                         }
                     }
-                    Dictionary<string, Participant> bibPartDict = new();
+                    Dictionary<string, Participant> bibPartDict = [];
                     foreach (Participant part in participants.Values)
                     {
                         bibPartDict[part.Bib] = part;

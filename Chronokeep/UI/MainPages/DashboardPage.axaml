@@ -140,9 +140,6 @@
                               Margin="10,0,0,0"
                               HorizontalAlignment="Stretch"
                               HorizontalContentAlignment="Stretch">
-                        <ComboBoxItem HorizontalAlignment="Stretch">Distance Based</ComboBoxItem>
-                        <ComboBoxItem HorizontalAlignment="Stretch">Time Based</ComboBoxItem>
-                        <ComboBoxItem HorizontalAlignment="Stretch">Backyard Ultra</ComboBoxItem>
                     </ComboBox>
                 </DockPanel>
                 <StackPanel

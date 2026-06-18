@@ -39,6 +39,7 @@ public partial class DistancePart : UserControl
         theDistance = distance;
         InitializeComponent();
         DistanceName.Text = theDistance.Name;
+        CopyFromBox.Items.Clear();
         CopyFromBox.Items.Add(new ComboBoxItem()
         {
             Content = "",
@@ -46,14 +47,18 @@ public partial class DistancePart : UserControl
         });
         foreach (Distance div in otherDistances)
         {
-            CopyFromBox.Items.Add(new ComboBoxItem()
+            if (div.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
             {
-                Content = div.Name,
-                Tag = div.Identifier.ToString()
-            });
+                CopyFromBox.Items.Add(new ComboBoxItem()
+                {
+                    Content = div.Name,
+                    Tag = div.Identifier.ToString()
+                });
+            }
         }
         CopyFromBox.SelectedIndex = 0;
         DistanceBox.Text = theDistance.DistanceValue.ToString(CultureInfo.InvariantCulture);
+        DistanceUnit.Items.Clear();
         DistanceUnit.Items.Add(new ComboBoxItem()
         {
             Content = "",
@@ -171,6 +176,7 @@ public partial class DistancePart : UserControl
             UploadPanel.IsVisible = true;
             Upload.IsChecked = theDistance.Upload;
         }
+        TypeBox.Items.Clear();
         TypeBox.Items.Add(
             new ComboBoxItem
             {
@@ -327,6 +333,7 @@ public partial class DistancePart : UserControl
         {
             theDistance.Ranking = rankVal;
         }
+        theDistance.Type = TypeBox.SelectedItem != null ? (int)((ComboBoxItem)TypeBox.SelectedItem).Tag! : Constants.Timing.DISTANCE_TYPE_NORMAL;
     }
 
     private void SelectAll(object? sender, FocusChangedEventArgs e)
@@ -382,7 +389,7 @@ public partial class DistancePart : UserControl
     private void CopyFromBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.MainPages.DistancesPage", "Attempting to copy from a different distance! Here we go!");
-        // Ensure we've got something selected, it has a parseable UID,
+        // Ensure we've got something selected, it has a parse-able UID,
         // and there's a distance related to it
         if (CopyFromBox.SelectedItem == null
             || !int.TryParse((string)((ComboBoxItem)CopyFromBox.SelectedItem).Tag!, out int newDivId)

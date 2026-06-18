@@ -185,12 +185,6 @@
                           HorizontalAlignment="Stretch"
                           IsVisible="True"
                           VerticalContentAlignment="Center">
-			        <ComboBoxItem Content="Normal"/>
-			        <ComboBoxItem Content="Early Start"/>
-			        <ComboBoxItem Content="Late Start"/>
-			        <ComboBoxItem Content="Drop"/>
-			        <ComboBoxItem Content="Unranked"/>
-			        <ComboBoxItem Content="Virtual"/>
                 </ComboBox>
             </DockPanel>
             <DockPanel Name="CertPanel" IsVisible="True">

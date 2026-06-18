@@ -52,17 +52,38 @@ public partial class DashboardPage : UserControl, IMainPage
         EventDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
         RankByGunCheckBox.IsChecked = theEvent.RankByGun;
         RankByGunLabel.Content = theEvent is { EventType: Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA } ? "Rank by Elapsed Time" : "Rank by Clock Time";
-        CommonAgeCheckBox.IsChecked = theEvent!.CommonAgeGroups;
-        CommonStartCheckBox.IsChecked = theEvent!.CommonStartFinish;
-        SegmentCheckBox.IsChecked = theEvent!.DistanceSpecificSegments;
-        PlacementsCheckBox.IsChecked = theEvent!.DisplayPlacements;
-        UploadSpecificDistanceResults.IsChecked = theEvent!.UploadSpecific;
-        ComboBoxItem? eventType = null;
-        foreach (ComboBoxItem? item in TypeBox.Items.Cast<ComboBoxItem?>())
+        CommonAgeCheckBox.IsChecked = theEvent.CommonAgeGroups;
+        CommonStartCheckBox.IsChecked = theEvent.CommonStartFinish;
+        SegmentCheckBox.IsChecked = theEvent.DistanceSpecificSegments;
+        PlacementsCheckBox.IsChecked = theEvent.DisplayPlacements;
+        UploadSpecificDistanceResults.IsChecked = theEvent.UploadSpecific;
+        if (TypeBox.Items.Count < 1)
         {
-            if ((string)item!.Tag! == theEvent!.EventType.ToString())
+            TypeBox.Items.Add(new ComboBoxItem
             {
-                eventType = item;
+                Content = "Distance",
+                Tag = Constants.Timing.EVENT_TYPE_DISTANCE
+            });
+            TypeBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Time",
+                Tag = Constants.Timing.EVENT_TYPE_TIME
+            });
+            TypeBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Backyard Ultra",
+                Tag = Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA
+            });
+        }
+        ComboBoxItem? eventType = null;
+        foreach (object? item in TypeBox.Items)
+        {
+            if (item is ComboBoxItem combo)
+            {
+                if (combo.Tag != null && (int)combo.Tag == theEvent.EventType)
+                {
+                    eventType = combo;
+                }
             }
         }
         if (eventType != null)
@@ -106,7 +127,7 @@ public partial class DashboardPage : UserControl, IMainPage
         EventYearCodeTextBox.IsEnabled = true;
         EventDatePicker.IsEnabled = true;
         RankByGunCheckBox.IsEnabled = true;
-        if ((string)((ComboBoxItem)TypeBox.SelectedItem!).Tag! == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA.ToString())
+        if (TypeBox.SelectedItem != null && (int)((ComboBoxItem)TypeBox.SelectedItem).Tag! == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
         {
             CommonAgeCheckBox.IsEnabled = false;
             SegmentCheckBox.IsEnabled = false;
@@ -320,7 +341,7 @@ public partial class DashboardPage : UserControl, IMainPage
             oldLocationDictionary[item.Name] = item.Identifier;
         }
         saveTo.AddTimingLocations(locations);
-        // Update the location translation dictionary with oldID key and newid value.
+        // Update the location translation dictionary with oldID key and new id value.
         foreach (TimingLocation item in saveTo.GetTimingLocations(newEvent.Identifier))
         {
             if (oldLocationDictionary.TryGetValue(item.Name, out int oLocId))
@@ -685,7 +706,7 @@ public partial class DashboardPage : UserControl, IMainPage
             theEvent.UploadSpecific = UploadSpecificDistanceResults.IsChecked ?? false;
             try
             {
-                theEvent.EventType = int.Parse((string)((ComboBoxItem)TypeBox.SelectedItem!).Tag!);
+                theEvent.EventType = (int)((ComboBoxItem)TypeBox.SelectedItem!).Tag!;
             }
             catch
             {

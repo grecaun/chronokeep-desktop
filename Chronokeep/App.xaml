@@ -28,8 +28,7 @@
         </Style>
         <Style Selector="CalendarDatePicker">
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
-        </Style>
-        <Style Selector="CalendarDatePicker">
+            <Setter Property="PlaceholderText" Value="m/d/yyyy"/>
             <Setter Property="Padding" Value="10,0, 0,0"/>
         </Style>
         <Style Selector="Button:disabled">
