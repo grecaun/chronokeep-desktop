@@ -104,11 +104,10 @@
                     <TextBlock Text="Year Code" Classes="Label"/>
                     <TextBox Name="EventYearCodeTextBox" IsEnabled="False" />
                 </DockPanel>
-                <DockPanel LastChildFill="True">
+                <DockPanel LastChildFill="True" Margin="0,0,0,7">
                     <TextBlock Text="Date" Classes="Label"/>
                     <CalendarDatePicker Name="EventDatePicker" IsEnabled="False" />
                 </DockPanel>
-                <Separator Margin="5,5,5,5" />
                 <StackPanel Orientation="Horizontal" Classes="toggle">
                     <ToggleSwitch Name="RankByGunCheckBox" IsEnabled="False"/>
                     <Label Name="RankByGunLabel">Rank by Clock Time</Label>
@@ -133,7 +132,7 @@
                     <ToggleSwitch Name="UploadSpecificDistanceResults" IsEnabled="False"/>
                     <Label>Upload Results for Select Distances?</Label>
                 </StackPanel>
-                <DockPanel Margin="10,5,10,5">
+                <DockPanel Margin="10,10,10,5">
                     <TextBlock Text="Event Type" Classes="Label"/>
                     <ComboBox Name="TypeBox"
                               SelectionChanged="TypeBox_SelectionChanged"
@@ -146,7 +145,6 @@
                         <ComboBoxItem HorizontalAlignment="Stretch">Backyard Ultra</ComboBoxItem>
                     </ComboBox>
                 </DockPanel>
-                <Separator Margin="5,5,5,5" />
                 <StackPanel
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
