@@ -126,7 +126,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             foreach (Event e in events)
             {
                 if (e.Equals(theEvent)) continue;
-                string name = e.YearCode + " " + e.Name;
+                string name = $"{e.YearCode} {e.Name}";
                 name = name.Trim();
                 boxItem = new ComboBoxItem
                 {
@@ -260,7 +260,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                 long.TryParse(SingleChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
                 break;
         }
-        Log.D("UI.MainPages.ChipAssignmentPage", "Bib " + bib + " Chip " + chip);
+        Log.D("UI.MainPages.ChipAssignmentPage", $"Bib {bib} Chip {chip}");
         if (chip == -1)
         {
             DialogBox.Show("The chip is not valid.");
@@ -382,7 +382,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             associations.Sort();
             foreach (BibChipAssociation association in associations)
             {
-                Log.D("UI.MainPages.ChipAssignmentPage", "Checking associations ... Bib " + association.Bib + " Chip " + association.Chip);
+                Log.D("UI.MainPages.ChipAssignmentPage", $"Checking associations ... Bib {association.Bib} Chip {association.Chip}");
             }
             string[] headers = ["Bib", "Chip"];
             data.AddRange(associations.Select(bca => (object[])[bca.Bib, bca.Chip]));
@@ -463,7 +463,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                 DialogBox.Show("Invalid chip values.");
                 return;
         }
-        Log.D("UI.MainPages.ChipAssignmentPage", "StartBib " + startBib + " EndBib " + endBib + " StartChip " + startChip + " EndChip " + endChip);
+        Log.D("UI.MainPages.ChipAssignmentPage", $"StartBib {startBib} EndBib {endBib} StartChip {startChip} EndChip {endChip}");
         if (startChip == -1 || endChip == -1 || startBib == -1 || endBib == -1)
         {
             DialogBox.Show("One or more values is not valid.");
@@ -490,7 +490,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Copy clicked.");
         int oldEventId = Convert.ToInt32((string)((ComboBoxItem)PreviousEvents.SelectedItem!).Tag!);
-        Log.D("UI.MainPages.ChipAssignmentPage", "Old event Id is " + oldEventId);
+        Log.D("UI.MainPages.ChipAssignmentPage", $"Old event Id is {oldEventId}");
         if (oldEventId > 0)
         {
             List<BibChipAssociation> assocs = database.GetBibChips(oldEventId);

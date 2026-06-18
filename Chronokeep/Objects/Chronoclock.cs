@@ -50,7 +50,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown starting countup: " + ex.Message);
+                throw new ApiException($"Exception thrown starting countup: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -87,7 +87,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown stopping countup: " + ex.Message);
+                throw new ApiException($"Exception thrown stopping countup: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -133,7 +133,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown adjusting time: " + ex.Message);
+                throw new ApiException($"Exception thrown adjusting time: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -170,7 +170,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown getting time: " + ex.Message);
+                throw new ApiException($"Exception thrown getting time: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -207,7 +207,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown getting config: " + ex.Message);
+                throw new ApiException($"Exception thrown getting config: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -247,7 +247,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting time: " + ex.Message);
+                throw new ApiException($"Exception thrown setting time: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -287,7 +287,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting time: " + ex.Message);
+                throw new ApiException($"Exception thrown setting time: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -327,7 +327,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting flipDisplay: " + ex.Message);
+                throw new ApiException($"Exception thrown setting flipDisplay: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -367,7 +367,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting twelveHour: " + ex.Message);
+                throw new ApiException($"Exception thrown setting twelveHour: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -407,7 +407,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting lockCountUpDown: " + ex.Message);
+                throw new ApiException($"Exception thrown setting lockCountUpDown: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -447,7 +447,7 @@ namespace Chronokeep.Objects
             catch (Exception ex)
             {
                 Log.D("Chronokeep.Objects.Chronoclock", "Exception thrown.");
-                throw new ApiException("Exception thrown setting brightness: " + ex.Message);
+                throw new ApiException($"Exception thrown setting brightness: {ex.Message}");
             }
             throw new ApiException(content);
         }

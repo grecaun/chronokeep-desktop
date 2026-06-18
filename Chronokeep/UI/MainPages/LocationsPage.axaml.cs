@@ -142,7 +142,7 @@ public partial class LocationsPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddTimingLocation(new TimingLocation(theEvent!.Identifier, "Location " + locationCount));
+        database.AddTimingLocation(new TimingLocation(theEvent!.Identifier, $"Location {locationCount}"));
         updateTimingWorker = true;
         UpdateView();
     }

@@ -306,7 +306,7 @@ namespace Chronokeep.UI
             // Check last known program version
             Log.D("UI.MainWindow", "Starting changelog version checker.");
             string gitVersion;
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.version.txt")!)
             {
                 using StreamReader reader = new(stream);
                 gitVersion = reader.ReadToEnd();

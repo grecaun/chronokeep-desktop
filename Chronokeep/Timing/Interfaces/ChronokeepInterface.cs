@@ -54,13 +54,7 @@ namespace Chronokeep.Timing.Interfaces
                 Match match = ZeroConf().Match(response);
                 if (match.Success)
                 {
-                    Log.D("Timing.Interfaces.ChronokeepInterface", "Successfully received message from reader. Name is "
-                        + match.Groups["PORTAL_NAME"].Value
-                        + ". Id is "
-                        + match.Groups["PORTAL_ID"].Value
-                        + ". Port is "
-                        + match.Groups["PORTAL_PORT"].Value
-                        );
+                    Log.D("Timing.Interfaces.ChronokeepInterface", $"Successfully received message from reader. Name is {match.Groups["PORTAL_NAME"].Value}. Id is {match.Groups["PORTAL_ID"].Value}. Port is {match.Groups["PORTAL_PORT"].Value}");
                     readerName = match.Groups["PORTAL_NAME"].Value;
                     if (!int.TryParse(match.Groups["PORTAL_PORT"].Value, out int port))
                     {
@@ -76,7 +70,7 @@ namespace Chronokeep.Timing.Interfaces
                 }
                 else
                 {
-                    Log.E("Timing.Interfaces.ChronokeepInterface", "Unable to parse message from server. Unknown value. '" + response + "'");
+                    Log.E("Timing.Interfaces.ChronokeepInterface", $"Unable to parse message from server. Unknown value. '{response}'");
                     return null;
                 }
             }
@@ -159,7 +153,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing readers. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing readers. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -186,7 +180,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing reader antennas. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing reader antennas. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -206,7 +200,7 @@ namespace Chronokeep.Timing.Interfaces
                                     errorList = [];
                                     output[MessageType.ERROR] = errorList;
                                 }
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error sent to us is of type '" + err.Value.Type + "' and has message '" + err.Value.Message + "'.");
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error sent to us is of type '{err.Value.Type}' and has message '{err.Value.Message}'.");
                                 window?.ShowNotificationDialog(readerName, readerIp, new RemoteNotification
                                 {
                                     Type = err.Value.Type,
@@ -217,7 +211,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Unable to process chip read. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Unable to process chip read. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -444,7 +438,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing all settings. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing all settings. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -490,7 +484,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Unable to process chip read. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Unable to process chip read. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -520,7 +514,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Unable to process time message. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Unable to process time message. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -541,7 +535,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error auto upload message. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error auto upload message. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -882,7 +876,7 @@ namespace Chronokeep.Timing.Interfaces
         private void SendMessage(string msg)
         {
             Log.D("Timing.Interfaces.ChronokeepInterface", $"Sending message '{msg}'");
-            sock!.Send(Encoding.Default.GetBytes(msg + "\n"));
+            sock!.Send(Encoding.Default.GetBytes($"{msg}\n"));
         }
 
         public bool SettingsEditable()

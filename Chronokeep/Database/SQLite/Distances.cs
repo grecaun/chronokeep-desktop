@@ -38,7 +38,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@upload", d.Upload ? 1 : 0),
                 new SQLiteParameter("@cert", d.Certification),
             ]);
-            Log.D("Database.SQLite.Distances", "SQL query: '" + command.CommandText + "'");
+            Log.D("Database.SQLite.Distances", $"SQL query: '{command.CommandText}'");
             command.ExecuteNonQuery();
             command.CommandText = "SELECT distance_id FROM distances " +
                 "WHERE event_id=@event_id " +
@@ -144,7 +144,7 @@ namespace Chronokeep.Database.SQLite
                 return output;
             }
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM distances WHERE event_id = " + eventId;
+            command.CommandText = $"SELECT * FROM distances WHERE event_id = {eventId}";
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {

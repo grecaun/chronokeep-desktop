@@ -214,7 +214,7 @@ namespace Chronokeep.Database.SQLite
                                 "participant_country, participant_street2, participant_gender, emergencycontact_name, emergencycontact_phone FROM old_participants," +
                                 "emergencycontacts WHERE old_participants.emergencycontact_id=emergencycontacts.emergencycontact_id;" +
                             "INSERT INTO eventspecific SELECT * FROM older_eventspecific;" +
-                            "UPDATE settings SET version=13, identifier='" + Guid().Replace(Convert.ToBase64String(System.Guid.NewGuid().ToByteArray()), "") + "' WHERE version=12;";
+                            $"UPDATE settings SET version=13, identifier='{Guid().Replace(Convert.ToBase64String(System.Guid.NewGuid().ToByteArray()), "")}' WHERE version=12;";
                         command.ExecuteNonQuery();
                         goto case 13;
                     case 13:
@@ -1151,7 +1151,7 @@ namespace Chronokeep.Database.SQLite
                         foreach (Participant p in people)
                         {
                             if (!distDict.TryGetValue(
-                                    (p.EventSpecific.DistanceName + " Early Created",
+                                    ($"{p.EventSpecific.DistanceName} Early Created",
                                         p.EventSpecific.DistanceIdentifier), out Distance? di)) continue;
                             p.EventSpecific.DistanceIdentifier = di.Identifier;
                             Participants.V44UpdateParticipant(p, connection);
@@ -1537,7 +1537,7 @@ namespace Chronokeep.Database.SQLite
                         Log.D("Database.SQLite.Update", "Upgrading from version 63.");
                         command = connection.CreateCommand();
                         command.CommandText = "ALTER TABLE events ADD COLUMN event_age_groups_as_divisions " +
-                            "INTEGER NOT NULL DEFAULT " + Constants.Timing.AGEGROUPS_LASTGROUP_FALSE + ";" +
+                            $"INTEGER NOT NULL DEFAULT {Constants.Timing.AGEGROUPS_LASTGROUP_FALSE};" +
                             $"UPDATE settings SET value='64' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         goto case 64;

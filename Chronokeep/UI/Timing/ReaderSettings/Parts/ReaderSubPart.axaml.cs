@@ -87,7 +87,7 @@ public partial class ReaderSubPart : UserControl
 
     public void UpdateReader(PortalReader iReader)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Updating reader " + iReader.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Updating reader {iReader.Id}");
         reader = iReader;
         NameBox.Text = iReader.Name;
         KindBox.SelectedIndex = iReader.Kind switch
@@ -125,7 +125,7 @@ public partial class ReaderSubPart : UserControl
 
     private void KindBox_ValueChanged(object? sender, SelectionChangedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Changing port for reader " + reader.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Changing port for reader {reader.Id}");
         switch (KindBox.SelectedIndex)
         {
             case 0:
@@ -155,13 +155,13 @@ public partial class ReaderSubPart : UserControl
 
     private void DeleteReader(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Deleting reader " + reader.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Deleting reader {reader.Id}");
         readerInterface.SendRemoveReader(reader);
     }
 
     private void SaveReader(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Saving reader " + reader.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Saving reader {reader.Id}");
         reader.Name = NameBox.Text!.Trim();
         switch (KindBox.SelectedIndex)
         {

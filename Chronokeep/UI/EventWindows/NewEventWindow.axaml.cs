@@ -51,7 +51,7 @@ public partial class NewEventWindow : ChronokeepWindow
         {
             dateVal = DateTime.Parse(DatePicker.Text.Replace('_', '0')).Ticks;
         }
-        Log.D("NewEventWindow", "Name given for event: '" + nameString + "' Date Given: " + dateVal + " Date Value: " + dateVal);
+        Log.D("NewEventWindow", $"Name given for event: '{nameString}' Date Given: {dateVal} Date Value: {dateVal}");
         if (nameString == "")
         {
             DialogBox.Show("Please input a value in the name box.");

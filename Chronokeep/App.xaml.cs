@@ -33,7 +33,7 @@ namespace Chronokeep
                 options.Environment = "release";
 #endif
                 string gitVersion;
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.version.txt")!)
                 {
                     using StreamReader reader = new(stream);
                     gitVersion = reader.ReadToEnd();
@@ -60,7 +60,7 @@ namespace Chronokeep
                 bool safeMode = false;
                 foreach (string arg in desktop.Args!)
                 {
-                    Log.D("AppStartup", "Startup arg: " + arg);
+                    Log.D("AppStartup", $"Startup arg: {arg}");
                     if (arg.Contains("safe", StringComparison.OrdinalIgnoreCase))
                     {
                         safeMode = true;

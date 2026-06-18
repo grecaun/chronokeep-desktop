@@ -362,7 +362,7 @@ public partial class DistancePart : UserControl
 
     private void SwapWaveType_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.DistancesPage", "Plus/Minus sign clicked. PlusWave is: " + plusWave);
+        Log.D("UI.MainPages.DistancesPage", $"Plus/Minus sign clicked. PlusWave is: {plusWave}');
         plusWave = !plusWave;
         PlusIcon.IsVisible = plusWave;
         MinusIcon.IsVisible = !plusWave;

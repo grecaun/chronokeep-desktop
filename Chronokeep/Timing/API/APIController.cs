@@ -125,14 +125,14 @@ namespace Chronokeep.Timing.API
                 catch
                 {
                     // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
-                    Log.D("API.APIController", "Unable to handle API response. Loop " + i);
+                    Log.D("API.APIController", $"Unable to handle API response. Loop {i}");
                     loopError = true;
                     controller?.Errors += 1;
                     mainWindow?.UpdateTiming();
                     break;
                 }
                 total += response.Count;
-                Log.D("API.APIController", "Total: " + total + " Count: " + response.Count);
+                Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
                 if (response.Count != Constants.Timing.API_LOOP_COUNT) continue;
                 // Updating uploaded value for uploaded results.
                 foreach (TimeResult res in uploaded)
@@ -181,7 +181,7 @@ namespace Chronokeep.Timing.API
                 if (response != null)
                 {
                     total += response.Count;
-                    Log.D("API.APIController", "Total: " + total + " Count: " + response.Count);
+                    Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
                     if (response.Count == leftovers)
                     {
                         // Updating uploaded value for uploaded results;
@@ -192,7 +192,7 @@ namespace Chronokeep.Timing.API
                         database.SetUploadedTimingResults(uploaded);
                     }
                 }
-                Log.D("API.APIController", "Upload finished. Count total: " + total);
+                Log.D("API.APIController", $"Upload finished. Count total: {total}");
             }
             if (!loopError && controller != null)
             {
@@ -388,7 +388,7 @@ namespace Chronokeep.Timing.API
                             ApiLock.Exit();
                         }
                     }
-                    //Log.D("Timing.API.APIController", "We are " + (!upload ? "not " : "") + "able to upload right now.");
+                    //Log.D("Timing.API.APIController", $"We are {(!upload ? "not " : "")}able to upload right now.");
                     if (results.Count > 0 && upload)
                     {
                         await UploadResults(results, api, eventIds, database, this, mainWindow, theEvent);

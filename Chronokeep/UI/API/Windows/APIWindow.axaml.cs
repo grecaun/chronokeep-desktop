@@ -63,7 +63,7 @@ public partial class ApiWindow : ChronokeepWindow
         if (api!.Identifier > 0 && slug != "" && year != "")
         {
             theEvent!.ApiId = api.Identifier;
-            theEvent.ApiEventId = slug + "," + year;
+            theEvent.ApiEventId = $"{slug},{year}";
             database.UpdateEvent(theEvent);
             window.NetworkUpdateResults();
         }

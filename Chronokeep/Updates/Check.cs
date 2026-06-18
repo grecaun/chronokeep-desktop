@@ -53,7 +53,7 @@ namespace Chronokeep.Updates
             try
             {
                 string curVersion;
-                await using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
+                await using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.version.txt")!)
                 {
                     using StreamReader reader = new(stream);
                     curVersion = await reader.ReadToEndAsync();
@@ -136,7 +136,7 @@ namespace Chronokeep.Updates
             }
             catch (Exception ex)
             {
-                throw new Exception("Exception thrown getting releases: " + ex.Message + " - " + ex.InnerException);
+                throw new Exception($"Exception thrown getting releases: {ex.Message} - {ex.InnerException}");
             }
             throw new Exception($"Unable to get releases. {content}");
         }

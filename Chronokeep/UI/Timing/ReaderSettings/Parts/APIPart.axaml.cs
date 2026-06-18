@@ -65,13 +65,13 @@ public partial class ApiPart : UserControl
     }
     private void DeleteApi(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Deleting api " + api.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Deleting api {api.Id}");
         reader.SendDeleteApi(api);
     }
 
     private void SaveApi(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Saving api " + api.Id);
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Saving api {api.Id}");
         api.Nickname = NameBox.Text!.Trim();
         api.Token = TokenBox.Text!.Trim();
         api.Uri = UriBox.Text!.Trim();

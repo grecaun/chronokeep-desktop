@@ -44,7 +44,7 @@ namespace Chronokeep.Timing.Interfaces
         {
             List<Socket> output = [];
             sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Log.D("Timing.Interfaces.RFIDUltraInterface", "Attempting to connect to " + ipAddress + ":" + port);
+            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Attempting to connect to {ipAddress}:{port}");
             try
             {
                 IAsyncResult result = sock.BeginConnect(ipAddress, port, null, null);
@@ -151,7 +151,7 @@ namespace Chronokeep.Timing.Interfaces
                 // If "U[...]" Setting information
                 else if (SettingInfo().IsMatch(message))
                 {
-                    Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a setting information message. " + message);
+                    Log.D("Timing.Interfaces.RFIDUltraInterface", $"It's a setting information message. {message}");
                     settingsHolder ??= new RfidSettingsHolder();
                     char settingId = message[1];
                     string subMsg = message[2..^1];
@@ -159,14 +159,14 @@ namespace Chronokeep.Timing.Interfaces
                     switch (settingId)
                     {
                         case RfidUltraCodes.ULTRA_ID:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Ultra ID: " + subMsg);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Ultra ID: {subMsg}");
                             if (int.TryParse(subMsg, out tmp))
                             {
                                 settingsHolder.UltraId = tmp;
                             }
                             break;
                         case RfidUltraCodes.CHIP_OUT_TYPE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Chip out type: " + message[2]);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Chip out type: {message[2]}");
                             settingsHolder.ChipType = message[2] switch
                             {
                                 '0' => RfidSettingsHolder.ChipTypeEnum.DEC,
@@ -175,7 +175,7 @@ namespace Chronokeep.Timing.Interfaces
                             };
                             break;
                         case RfidUltraCodes.GATING_MODE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Mode: " + message[2]);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Gating Mode: {message[2]}");
                             settingsHolder.GatingMode = message[2] switch
                             {
                                 '0' => RfidSettingsHolder.GatingModeEnum.PER_READER,
@@ -185,14 +185,14 @@ namespace Chronokeep.Timing.Interfaces
                             };
                             break;
                         case RfidUltraCodes.GATING_INTERVAL:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Interval: " + subMsg);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Gating Interval: {subMsg}");
                             if (int.TryParse(subMsg, out tmp))
                             {
                                 settingsHolder.GatingInterval = tmp;
                             }
                             break;
                         case RfidUltraCodes.WHEN_BEEP:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "When beep: " + message[2]);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"When beep: {message[2]}");
                             settingsHolder.Beep = message[2] switch
                             {
                                 '0' => RfidSettingsHolder.BeepEnum.ALWAYS,
@@ -201,7 +201,7 @@ namespace Chronokeep.Timing.Interfaces
                             };
                             break;
                         case RfidUltraCodes.BEEPER_VOLUME:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Beeper volume: " + message[2]);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Beeper volume: {message[2]}");
                             settingsHolder.BeepVolume = message[2] switch
                             {
                                 '0' => RfidSettingsHolder.BeepVolumeEnum.OFF,
@@ -211,7 +211,7 @@ namespace Chronokeep.Timing.Interfaces
                             };
                             break;
                         case RfidUltraCodes.AUTO_SET_GPS:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Auto set gps: " + message[2]);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Auto set gps: {message[2]}");
                             settingsHolder.SetFromGps = message[2] switch
                             {
                                 '0' => RfidSettingsHolder.GpsEnum.DONT_SET,
@@ -220,7 +220,7 @@ namespace Chronokeep.Timing.Interfaces
                             };
                             break;
                         case RfidUltraCodes.TIME_ZONE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Timezone: " + subMsg);
+                            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Timezone: {subMsg}");
                             if (int.TryParse(subMsg, out tmp))
                             {
                                 settingsHolder.TimeZone = tmp;
@@ -232,7 +232,7 @@ namespace Chronokeep.Timing.Interfaces
                 // If "u[...]" setting changed
                 else if (SettingConfirmation().IsMatch(message))
                 {
-                    Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a settings confirmation message. " + message + BitConverter.ToString([.. message.Select(c => (byte)c)]));
+                    Log.D("Timing.Interfaces.RFIDUltraInterface", $"It's a settings confirmation message. {message}{BitConverter.ToString([.. message.Select(c => (byte)c)])}");
                     settingsHolder ??= new RfidSettingsHolder();
                     char settingId = message[1];
                     switch (settingId)
@@ -373,12 +373,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(DateTime start, DateTime end, int reader = 1)
         {
-            SendMessage("800" + Constants.Timing.RfidDateToEpoch(start) + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RfidDateToEpoch(end));
+            SendMessage($"800{Constants.Timing.RfidDateToEpoch(start)}{RfidUltraCodes.REWIND_DELIMITER}{Constants.Timing.RfidDateToEpoch(end)}");
         }
 
         public void Rewind(int reader = 1)
         {
-            SendMessage("8000" + RfidUltraCodes.REWIND_DELIMITER + "0");
+            SendMessage($"8000{RfidUltraCodes.REWIND_DELIMITER}0");
         }
 
         public void Rewind(int start, int end, int reader = 1)
@@ -387,7 +387,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 start = 1;
             }
-            SendMessage("600" + start + RfidUltraCodes.REWIND_DELIMITER + end);
+            SendMessage($"600{start}{RfidUltraCodes.REWIND_DELIMITER}{end}");
         }
 
         public void StopRewind()
@@ -397,12 +397,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SetTime(DateTime date)
         {
-            SendMessage("t" + RfidUltraCodes.SET_TIME + date.ToString("HH:mm:ss dd-MM-yyyy"));
+            SendMessage($"t{RfidUltraCodes.SET_TIME}{date:HH:mm:ss dd-MM-yyyy}");
         }
 
         public void SetTime()
         {
-            SendMessage("t" + RfidUltraCodes.SET_TIME + DateTime.Now.ToString("HH:mm:ss dd-MM-yyyy"));
+            SendMessage($"t{RfidUltraCodes.SET_TIME}{DateTime.Now:HH:mm:ss dd-MM-yyyy}");
         }
 
         public void GetTime()
@@ -422,7 +422,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void StartSending(DateTime date)
         {
-            SendMessage("700" + Constants.Timing.RfidDateToEpoch(date));
+            SendMessage($"700{Constants.Timing.RfidDateToEpoch(date)}");
         }
 
         public void StopSending()
@@ -437,7 +437,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetGprs(bool turnOn)
         {
-            SendMessage("u" + RfidUltraCodes.GPRS + (turnOn ? "1" : "0") + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GPRS}{(turnOn ? "1" : "0")}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetGprsIp(string address)
@@ -452,27 +452,27 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)Convert.ToByte(nums[i]);
             }
-            SendMessage("u" + RfidUltraCodes.GPRS_IP + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GPRS_IP}{vals[0]}{vals[1]}{vals[2]}{vals[3]}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetGprsPort(int port)
         {
-            SendMessage("u" + RfidUltraCodes.GPRS_PORT + port + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GPRS_PORT}{port}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetApnName(string name)
         {
-            SendMessage("u" + RfidUltraCodes.APN_NAME + name + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.APN_NAME}{name}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetApnUserName(string name)
         {
-            SendMessage("u" + RfidUltraCodes.APN_USER + name + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.APN_USER}{name}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetApnPassword(string name)
         {
-            SendMessage("u" + RfidUltraCodes.APN_PASS + name + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.APN_PASS}{name}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -490,7 +490,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetRegion(char regionCode)
         {
-            SendMessage("u" + RfidUltraCodes.REGION + regionCode + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.REGION}{regionCode}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -499,7 +499,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetComProtocol(char protocol)
         {
-            SendMessage("u" + RfidUltraCodes.COM_PROTO + protocol + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.COM_PROTO}{protocol}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -508,7 +508,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetChipOutputType(char type)
         {
-            SendMessage("u" + RfidUltraCodes.CHIP_OUT_TYPE + type + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.CHIP_OUT_TYPE}{type}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -563,7 +563,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage("u" + code + status + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{status}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -587,7 +587,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage("u" + code + mode + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{mode}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -610,7 +610,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage("u" + code + session + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{session}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -634,7 +634,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 power = 30;
             }
-            SendMessage("u" + code + power.ToString() + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{power}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetReaderIp(int readerNo, string address)
@@ -661,7 +661,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage("u" + code + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{vals[0]}{vals[1]}{vals[2]}{vals[3]}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -671,7 +671,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetGatingMode(char mode)
         {
-            SendMessage("u" + RfidUltraCodes.GATING_MODE + mode + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GATING_MODE}{mode}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -679,7 +679,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetGatingInterval(int seconds)
         {
-            SendMessage("u" + RfidUltraCodes.GATING_INTERVAL + seconds.ToString() + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GATING_INTERVAL}{seconds}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -689,7 +689,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetChannelNumber(char number)
         {
-            SendMessage("u" + RfidUltraCodes.GATING_INTERVAL + number + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GATING_INTERVAL}{number}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -699,7 +699,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetBeeperVolume(char vol)
         {
-            SendMessage("u" + RfidUltraCodes.BEEPER_VOLUME + vol + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.BEEPER_VOLUME}{vol}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -709,7 +709,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetAutoGpsTime(char gps)
         {
-            SendMessage("u" + RfidUltraCodes.AUTO_SET_GPS + gps + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.AUTO_SET_GPS}{gps}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -721,7 +721,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 return;
             }
-            SendMessage("u" + RfidUltraCodes.TIME_ZONE + zone + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.TIME_ZONE}{zone}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -730,7 +730,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetDataSending(char value)
         {
-            SendMessage("u" + RfidUltraCodes.DATA_SENDING + value + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.DATA_SENDING}{value}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -742,7 +742,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 return;
             }
-            SendMessage("u" + RfidUltraCodes.ULTRA_ID + id + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.ULTRA_ID}{id}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -763,7 +763,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage("u" + code + (value ? 0x01 : 0x00) + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{code}{(value ? 0x01 : 0x00)}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -772,12 +772,12 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetWhenToBeep(char value)
         {
-            SendMessage("u" + RfidUltraCodes.WHEN_BEEP + value + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.WHEN_BEEP}{value}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetUploadUrl(string url)
         {
-            SendMessage("u" + RfidUltraCodes.UPLOAD_URL + url + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.UPLOAD_URL}{url}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetGateway(string gateway)
@@ -792,7 +792,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)int.Parse(nums[i]);
             }
-            SendMessage("u" + RfidUltraCodes.GATEWAY + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.GATEWAY}{vals[0]}{vals[1]}{vals[2]}{vals[3]}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SetDnsServer(string server)
@@ -807,12 +807,12 @@ namespace Chronokeep.Timing.Interfaces
             {
                 vals[i] = (char)int.Parse(nums[i]);
             }
-            SendMessage("u" + RfidUltraCodes.DNS_SERVER + vals[0] + vals[1] + vals[2] + vals[3] + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.DNS_SERVER}{vals[0]}{vals[1]}{vals[2]}{vals[3]}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void SaveSettings()
         {
-            SendMessage("u" + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage($"u{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         public void QuerySettings()
@@ -822,8 +822,8 @@ namespace Chronokeep.Timing.Interfaces
 
         private void SendMessage(string msg)
         {
-            Log.D("Timing.Interfaces.RFIDUltraInterface", "Sending message '" + msg + "'");
-            sock!.Send(Encoding.ASCII.GetBytes(msg + "\n"));
+            Log.D("Timing.Interfaces.RFIDUltraInterface", $"Sending message '{msg}'");
+            sock!.Send(Encoding.ASCII.GetBytes($"{msg}\n"));
         }
 
         public void SetMainSocket(Socket iSock)

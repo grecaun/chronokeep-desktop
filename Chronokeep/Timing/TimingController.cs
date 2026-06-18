@@ -81,7 +81,7 @@ namespace Chronokeep.Timing
                     timingSystemDict[sock] = system;
                     if (sock.Connected)
                     {
-                        Log.D("Timing.TimingController", "Connected to " + system.IpAddress);
+                        Log.D("Timing.TimingController", $"Connected to {system.IpAddress}");
                         timingSystemSockets.Add(sock);
                         timingSystemDict[sock].SetLastCommunicationTime();
                         timingSystemDict[sock].Status = SYSTEM_STATUS.CONNECTED;
@@ -174,7 +174,7 @@ namespace Chronokeep.Timing
                         else
                         {
                             string msg = Encoding.UTF8.GetString(received, 0, numReceived);
-                            Log.D("Timing.TimingController", "Timing System - Message is :" + msg.Trim());
+                            Log.D("Timing.TimingController", $"Timing System - Message is :{msg.Trim()}");
                             Dictionary<MessageType, List<string>> messageTypes = timingSystemDict[sock].SystemInterface!.ParseMessages(msg, sock);
                             foreach (MessageType type in messageTypes.Keys)
                             {
@@ -246,7 +246,7 @@ namespace Chronokeep.Timing
                     }
                     catch (Exception e)
                     {
-                        Log.E("Timing.TimingController", "Error trying to parse messages. " + e.Message);
+                        Log.E("Timing.TimingController", $"Error trying to parse messages. {e.Message}");
                         if (timingSystemDict.TryGetValue(sock, out TimingSystem? system))
                         {
                             Log.D("Timing.TimingController", "Socket errored on us.");
@@ -256,7 +256,7 @@ namespace Chronokeep.Timing
                             }
                             catch (Exception ex)
                             {
-                                Log.E("Timing.TimingController", "Error attempting to close settings. " + ex.Message);
+                                Log.E("Timing.TimingController", $"Error attempting to close settings. {ex.Message}");
                             }
                             timingSystemSockets.Remove(sock);
                             timingSystemDict.Remove(sock);
@@ -284,7 +284,7 @@ namespace Chronokeep.Timing
                 }
                 catch (Exception e)
                 {
-                    Log.E("Timing.TimingController", "Something went wrong trying to remove a socket. " + e.Message);
+                    Log.E("Timing.TimingController", $"Something went wrong trying to remove a socket. {e.Message}");
                 }
                 timingSystemSockets.RemoveAll(toRemove.Contains);
                 Log.D("Timing.TimingController", "Loop end.");

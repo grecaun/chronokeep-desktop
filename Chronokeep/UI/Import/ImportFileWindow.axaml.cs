@@ -130,7 +130,7 @@ public partial class ImportFileWindow : ChronokeepWindow
         }
         foreach (HeaderPart item in headerListBoxItems)
         {
-            Log.D("ImportFileWindow", "Header is " + item.HeaderLabel.Text);
+            Log.D("ImportFileWindow", $"Header is {item.HeaderLabel.Text}");
             if (item.HeaderBox.SelectedIndex != 0)
             {
                 keys[item.HeaderBox.SelectedIndex] = item.Index;
@@ -527,7 +527,7 @@ public partial class ImportFileWindow : ChronokeepWindow
 
     internal static int GetHeaderBoxIndex(string s)
     {
-        Log.D("ImportFileWindow", "Looking for a value for: " + s);
+        Log.D("ImportFileWindow", $"Looking for a value for: {s}");
         if (s.Contains("First", StringComparison.OrdinalIgnoreCase))
         {
             return FIRST;
@@ -700,7 +700,7 @@ public partial class ImportFileWindow : ChronokeepWindow
     {
         if (init) { return; }
         int selection = ((ComboBox)sender!).SelectedIndex;
-        Log.D("ImportFileWindow", "You've selected number " + selection);
+        Log.D("ImportFileWindow", $"You've selected number {selection}");
         if (page is ImportFilePage1 page1)
         {
             page1.UpdateSheetNo(selection + 1);

@@ -135,7 +135,7 @@ namespace Chronokeep.Timing.Announcer
             Dictionary<string, Participant> participantBibDictionary = [];
             foreach (Participant part in database.GetParticipants(theEvent.Identifier).Where(part => !participantBibDictionary.TryAdd(part.Bib, part)))
             {
-                Log.D("Timing.Announcer.AnnouncerWorker", "Multiples of a Bib found in participants set. " + part.Bib);
+                Log.D("Timing.Announcer.AnnouncerWorker", $"Multiples of a Bib found in participants set. {part.Bib}");
             }
             // Process any announcer reads that we've already used so we don't announce them later.
             ProcessReads(database.GetAnnouncerUsedChipReads(theEvent.Identifier), participantBibDictionary);

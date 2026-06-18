@@ -323,11 +323,11 @@ namespace Chronokeep.Network.Registration
                                                     }
                                                     foreach (Participant part in addReq.Participants)
                                                     {
-                                                        Log.D("Network.Registration.RegistrationWorker", "Participant ID: " + part.Id);
+                                                        Log.D("Network.Registration.RegistrationWorker", $"Participant ID: {part.Id}");
                                                         if (!distanceDictionary.TryGetValue(part.Distance, out Distance? distance)) continue;
                                                         if (part.Id.Length < 1)
                                                         {
-                                                            Log.D("Network.Registration.RegistrationWorker", "New Part - Bib: " + part.Bib);
+                                                            Log.D("Network.Registration.RegistrationWorker", $"New Part - Bib: {part.Bib}");
                                                             Objects.Participant newPart = new(
                                                                 part.FirstName,
                                                                 part.LastName,
@@ -368,7 +368,7 @@ namespace Chronokeep.Network.Registration
                                                         {
                                                             if (partEsDict.TryGetValue(part.Id, out Objects.Participant? updatedPart) && updatedPart.IsSimilar(part))
                                                             {
-                                                                Log.D("Network.Registration.RegistrationWorker", "Updated Part - Bib: " + part.Bib);
+                                                                Log.D("Network.Registration.RegistrationWorker", $"Updated Part - Bib: {part.Bib}");
                                                                 updatedPart.Update(
                                                                     part.FirstName,
                                                                     part.LastName,
@@ -383,7 +383,7 @@ namespace Chronokeep.Network.Registration
                                                             }
                                                             else if (partDictionary.TryGetValue((part.FirstName, part.LastName, part.Birthdate, part.Distance), out Objects.Participant? oldTwo))
                                                             {
-                                                                Log.D("Network.Registration.RegistrationWorker", "Updated Part2 - Bib: " + part.Bib);
+                                                                Log.D("Network.Registration.RegistrationWorker", $"Updated Part2 - Bib: {part.Bib}");
                                                                 oldTwo.Update(
                                                                     part.FirstName,
                                                                     part.LastName,
@@ -517,7 +517,7 @@ namespace Chronokeep.Network.Registration
         private static void SendMessage(Socket sock, string msg)
         {
             Log.D("Network.Registration.RegistrationWorker", $"Sending message '{msg}'");
-            sock.Send(Encoding.Default.GetBytes(msg + "\n"));
+            sock.Send(Encoding.Default.GetBytes($"{msg}\n"));
         }
     }
 }

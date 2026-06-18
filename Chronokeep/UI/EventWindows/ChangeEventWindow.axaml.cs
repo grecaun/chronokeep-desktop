@@ -42,7 +42,7 @@ public partial class ChangeEventWindow : ChronokeepWindow
             events.Sort();
             if (SearchBox.Text is { Length: > 0 })
             {
-                Log.D("UI.ChangeEventWindow", "searchBox.Text " + SearchBox.Text);
+                Log.D("UI.ChangeEventWindow", $"searchBox.Text {SearchBox.Text}");
                 events.RemoveAll(x => !x.Name.Contains(SearchBox.Text, StringComparison.OrdinalIgnoreCase));
             }
             EventList.ItemsSource = events;
@@ -66,7 +66,7 @@ public partial class ChangeEventWindow : ChronokeepWindow
     {
         Log.D("UI.ChangeEventWindow", "Change Button Clicked.");
         Event one = (Event)EventList.SelectedItem!;
-        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.SetCurrentEvent(one.Identifier);
         window.WindowFinalize();
         Close();
@@ -76,7 +76,7 @@ public partial class ChangeEventWindow : ChronokeepWindow
     {
         Log.D("UI.ChangeEventWindow", "Delete button clicked.");
         Event one = (Event)EventList.SelectedItem!;
-        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.RemoveEvent(one.Identifier);
         UpdateEventBox();
     }
@@ -91,7 +91,7 @@ public partial class ChangeEventWindow : ChronokeepWindow
     {
         Log.D("UI.ChangeEventWindow", "Double Click detected.");
         Event one = (Event)EventList.SelectedItem!;
-        Log.D("UI.ChangeEventWindow", "Selected event has ID of " + one.Identifier);
+        Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.SetCurrentEvent(one.Identifier);
         window.WindowFinalize();
         Close();

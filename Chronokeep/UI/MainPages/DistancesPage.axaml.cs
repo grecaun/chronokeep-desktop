@@ -239,7 +239,7 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddDistance(new Distance(theDistance.Name + " Linked " + distanceCount, theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
+        database.AddDistance(new Distance($"{theDistance.Name} Linked {distanceCount}", theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
         updateTimingWorker = true;
         UpdateView();
     }
@@ -324,7 +324,7 @@ public partial class DistancesPage : UserControl, IMainPage
             apiDistances.AddRange(from d in database.GetDistances(theEvent.Identifier) where d.Certification.Trim().Length > 0 select new ApiDistance { Name = d.Name.Trim(), Certification = d.Certification.Trim(), });
             if (apiDistances.Count > 0)
             {
-                Log.D("UI.MainPages.DistancesPage", "Attempting to upload " + apiDistances.Count.ToString() + " distances.");
+                Log.D("UI.MainPages.DistancesPage", $"Attempting to upload {apiDistances.Count} distances.");
                 try
                 {
                     GetDistancesResponse response = await ApiHandlers.AddDistances(api, eventIds[0], eventIds[1], apiDistances);
@@ -354,7 +354,7 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddDistance(new Distance("New Distance " + distanceCount, theEvent!.Identifier));
+        database.AddDistance(new Distance($"New Distance {distanceCount}", theEvent!.Identifier));
         updateTimingWorker = true;
         UpdateView();
     }

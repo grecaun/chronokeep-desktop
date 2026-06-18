@@ -166,7 +166,7 @@ namespace Chronokeep.Timing
             {
                 if (!Dictionary.ParticipantBibDictionary.TryAdd(part.Bib, part))
                 {
-                    Log.D("Timing.TimingWorker", "Multiples of a Bib found in participants set. " + part.Bib);
+                    Log.D("Timing.TimingWorker", $"Multiples of a Bib found in participants set. {part.Bib}");
                 }
                 Dictionary.ParticipantEventSpecificDictionary[part.EventSpecific.Identifier] = part;
             }
@@ -188,7 +188,7 @@ namespace Chronokeep.Timing
                     Log.D("Timing.TimingWorker", "Multiples of a Distance found in distances set.");
                 }
                 Dictionary.DistanceNameDictionary[d.Name] = d;
-                Log.D("Timing.TimingWorker", "Distance " + d.Name + " offsets are " + d.StartOffsetSeconds + " " + d.StartOffsetMilliseconds);
+                Log.D("Timing.TimingWorker", $"Distance {d.Name} offsets are {d.StartOffsetSeconds} {d.StartOffsetMilliseconds}");
                 long startSeconds = Dictionary.DistanceStartDict[0].Seconds + d.StartOffsetSeconds;
                 int startMilliseconds = Dictionary.DistanceStartDict[0].Milliseconds + d.StartOffsetMilliseconds;
                 switch (startMilliseconds)
@@ -228,7 +228,7 @@ namespace Chronokeep.Timing
                 // Check if it's a linked distance
                 if (d.LinkedDistance > 0)
                 {
-                    Log.D("Timing.TimingWorker", "Linked distance found. " + d.LinkedDistance);
+                    Log.D("Timing.TimingWorker", $"Linked distance found. {d.LinkedDistance}");
                     // Verify we know the distance it's linked to.
                     if (!Dictionary.DistanceDictionary.TryGetValue(d.LinkedDistance, out Distance? distVal))
                     {
@@ -236,7 +236,7 @@ namespace Chronokeep.Timing
                     }
                     else
                     {
-                        Log.D("Timing.TimingWorker", "Setting linked dictionaries. Ranking: " + d.Ranking);
+                        Log.D("Timing.TimingWorker", $"Setting linked dictionaries. Ranking: {d.Ranking}");
                         // Set linked distance for ranking as the linked distance and set ranking int.
                         Dictionary.LinkedDistanceDictionary[d.Name] = (distVal, d.Ranking);
                         Dictionary.LinkedDistanceIdentifierDictionary[d.Identifier] = distVal.Identifier;

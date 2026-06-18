@@ -175,11 +175,11 @@ public partial class SegmentsPage : UserControl, IMainPage
                 {
                     occurrenceError = true;
                 }
-                Log.D("UI.MainPages.SegmentsPage", "Distance ID " + part.MySegment.DistanceId + " Segment Name " + part.MySegment.Name + " segment ID " + part.MySegment.Identifier);
+                Log.D("UI.MainPages.SegmentsPage", $"Distance ID {part.MySegment.DistanceId} Segment Name {part.MySegment.Name} segment ID {part.MySegment.Identifier}");
             }
             if (occurrenceError)
             {
-                DialogBox.Show("Your finish lines has one or more segments beyond the maximum number it supports (" + (theEvent!.FinishMaxOccurrences - 1) + ").  These will not be added. Update locations and max occurrences to fix this.");
+                DialogBox.Show($"Your finish lines has one or more segments beyond the maximum number it supports ({theEvent!.FinishMaxOccurrences - 1}).  These will not be added. Update locations and max occurrences to fix this.");
             }
         }
         if (!updateTimingWorker) return;
@@ -314,7 +314,7 @@ public partial class SegmentsPage : UserControl, IMainPage
             }
             // Remove all segments without a distance value set.
             segments.RemoveAll(x => x.DistanceValue <= 0);
-            Log.D("UI.MainPages.SegmentsPage", "Attempting to upload " + segments.Count.ToString() + " segments.");
+            Log.D("UI.MainPages.SegmentsPage", $"Attempting to upload {segments.Count} segments.");
             try
             {
                 AddSegmentsResponse response = await ApiHandlers.AddSegments(api, eventIds[0], eventIds[1], segments);
@@ -385,13 +385,13 @@ public partial class SegmentsPage : UserControl, IMainPage
             switch (thisSegment.LocationId)
             {
                 case Constants.Timing.LOCATION_FINISH when thisSegment.Occurrence >= theEvent!.FinishMaxOccurrences:
-                    DialogBox.Show("Your finish line has one or more segments beyond the maximum number it supports (" + (theEvent.FinishMaxOccurrences - 1) + ").  This could cause errors.");
+                    DialogBox.Show($"Your finish line has one or more segments beyond the maximum number it supports ({theEvent.FinishMaxOccurrences - 1}).  This could cause errors.");
                     break;
                 case Constants.Timing.LOCATION_START when thisSegment.Occurrence >= theEvent!.StartMaxOccurrences:
-                    DialogBox.Show("Your start line has one or more segments beyond the maximum number it supports (" + (theEvent.StartMaxOccurrences - 1) + ").  This could cause errors.");
+                    DialogBox.Show($"Your start line has one or more segments beyond the maximum number it supports ({theEvent.StartMaxOccurrences - 1}).  This could cause errors.");
                     break;
             }
-            Log.D("UI.MainPages.SegmentsPage", "Distance ID " + segment.MySegment.DistanceId + " Segment Name " + segment.MySegment.Name + " segment ID " + segment.MySegment.Identifier);
+            Log.D("UI.MainPages.SegmentsPage", $"Distance ID {segment.MySegment.DistanceId} Segment Name {segment.MySegment.Name} segment ID {segment.MySegment.Identifier}");
         }
         UpdateView();
     }

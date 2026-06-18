@@ -77,15 +77,7 @@ namespace Chronokeep.Objects
                     break;
                 default:
                 {
-                    if (segments.TryGetValue(SegmentId, out Segment? seg))
-                    {
-                        SegmentName = seg.Name + " ";
-                    }
-                    else
-                    {
-                        SegmentName = "";
-                    }
-
+                    SegmentName = segments.TryGetValue(SegmentId, out Segment? seg) ? $"{seg.Name} " : "";
                     break;
                 }
             }
@@ -309,7 +301,7 @@ namespace Chronokeep.Objects
                 Constants.Timing.DISTANCE_TYPE_DROP => "D",
                 _ => ""
             };
-            return Anonymous ? "A" + output : output;
+            return Anonymous ? $"A{output}" : output;
         }
 
         public DateTime SystemTime { get => systemTime; set => systemTime = value; }
@@ -347,11 +339,11 @@ namespace Chronokeep.Objects
 
         public static string BibToIdentifier(string iBib)
         {
-            return "Bib:" + iBib;
+            return $"Bib:{iBib}";
         }
         public static string ChipToIdentifier(string iChip)
         {
-            return "Chip:" + iChip;
+            return $"Chip:{iChip}";
         }
 
         public void SetParticipant(Participant p)
@@ -421,15 +413,7 @@ namespace Chronokeep.Objects
                     break;
                 default:
                 {
-                    if (segments.TryGetValue(SegmentId, out Segment? seg))
-                    {
-                        SegmentName = seg.Name + " ";
-                    }
-                    else
-                    {
-                        SegmentName = "";
-                    }
-
+                    SegmentName = segments.TryGetValue(SegmentId, out Segment? seg) ? $"{seg.Name} " : "";
                     break;
                 }
             }
@@ -724,7 +708,7 @@ namespace Chronokeep.Objects
             }
             try
             {
-                Log.D("Objects.TimeResult", "sms: '" + sms + "' phone: " + phone);
+                Log.D("Objects.TimeResult", $"sms: '{sms}' phone: {phone}");
                 CreateMessageOptions messageOptions = new(
                     new PhoneNumber(phone)
                     )

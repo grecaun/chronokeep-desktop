@@ -81,7 +81,7 @@ public partial class WavePart : UserControl
 
     private void SwapWaveType_Click(object sender, RoutedEventArgs e)
     {
-        Log.D("UI.Timing.WaveWindow", "Plus/Minus sign clicked. WaveType is: " + (PlusWave ? "+" : "-"));
+        Log.D("UI.Timing.WaveWindow", $"Plus/Minus sign clicked. WaveType is: {(PlusWave ? "+" : "-")}");
         PlusWave = !PlusWave;
         if (PlusWave)
         {

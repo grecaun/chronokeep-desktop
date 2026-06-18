@@ -49,8 +49,8 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
             foreach (UnicastIPAddressInformation ipInfo in adapter.GetIPProperties().UnicastAddresses)
             {
                 if (ipInfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
-                Log.D("UI.MainPages.TimingPage", "IP Address :" + ipInfo.Address);
-                Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipInfo.IPv4Mask);
+                Log.D("UI.MainPages.TimingPage", $"IP Address :{ipInfo.Address}");
+                Log.D("UI.MainPages.TimingPage", $"IPv4 Mask  :{ipInfo.IPv4Mask}");
                 string[] ipParts = ipInfo.Address.ToString().Split('.');
                 string[] maskParts = ipInfo.IPv4Mask.ToString().Split('.');
                 if (ipParts.Length != 4 || maskParts.Length != 4) continue;
@@ -105,7 +105,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         }
         if (numSystems < 3)
         {
-            Log.D("UI.MainPages.TimingPage", systems.Count + " systems found.");
+            Log.D("UI.MainPages.TimingPage", $"{systems.Count} systems found.");
             for (int i = 0; i < 3 - numSystems; i++)
             {
                 systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
@@ -275,7 +275,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         {
             connected++;
         }
-        Log.D("UI.MainPages.TimingPage", connected + " systems connected or trying to connect.");
+        Log.D("UI.MainPages.TimingPage", $"{connected} systems connected or trying to connect.");
         if (connected < total) return sys.Status != SYSTEM_STATUS.DISCONNECTED;
         string system;
         try
@@ -299,7 +299,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         {
             connected--;
         }
-        Log.D("UI.MainPages.TimingPage", connected + " systems connected or trying to connect/disconnect.");
+        Log.D("UI.MainPages.TimingPage", $"{connected} systems connected or trying to connect/disconnect.");
         return sys.Status == SYSTEM_STATUS.DISCONNECTED;
     }
 

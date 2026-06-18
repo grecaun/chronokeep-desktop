@@ -88,7 +88,7 @@ public partial class SettingsPage : UserControl, IMainPage
         CheckUpdates.IsChecked = database.GetAppSetting(Constants.Settings.CHECK_UPDATES)!.Value == Constants.Settings.SETTING_TRUE;
         AutoChangelog.IsChecked = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG)!.Value == Constants.Settings.SETTING_TRUE;
         AppSetting themeSetting = database.GetAppSetting(Constants.Settings.CURRENT_THEME)!;
-        Log.D("UI.MainPages.SettingsPage", "Current theme set to " + themeSetting.Value + " Theme Offset is " + themeOffset);
+        Log.D("UI.MainPages.SettingsPage", $"Current theme set to {themeSetting.Value} Theme Offset is {themeOffset}");
         switch (themeSetting.Value)
         {
             case Constants.Settings.THEME_SYSTEM:
@@ -96,11 +96,11 @@ public partial class SettingsPage : UserControl, IMainPage
                 ThemeColorBox.SelectedIndex = 0;
                 break;
             case Constants.Settings.THEME_LIGHT:
-                Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Light. " + (themeOffset + 1));
+                Log.D("UI.MainPages.SettingsPage", $"Setting selected theme to Light. {themeOffset + 1}");
                 ThemeColorBox.SelectedIndex = themeOffset + 1;
                 break;
             default:
-                Log.D("UI.MainPages.SettingsPage", "Setting selected theme to Dark. " + (themeOffset + 2));
+                Log.D("UI.MainPages.SettingsPage", $"Setting selected theme to Dark. {themeOffset + 2}");
                 ThemeColorBox.SelectedIndex = themeOffset + 2;
                 break;
         }
@@ -332,7 +332,7 @@ public partial class SettingsPage : UserControl, IMainPage
         catch (ArgumentException) { }
         catch (Exception ex)
         {
-            DialogBox.Show("Error trying to play sound. " + ex.Message + ex.GetType());
+            DialogBox.Show($"Error trying to play sound. {ex.Message}{ex.GetType()}");
         }
     }
 

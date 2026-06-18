@@ -22,12 +22,12 @@ public partial class AboutPage : UserControl, IMainPage
         InitializeComponent();
         this.mWindow = mWindow;
         string gitVersion;
-        using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
+        using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.version.txt")!)
         {
             using StreamReader reader = new(stream);
             gitVersion = reader.ReadToEnd();
         }
-        Log.D("UI.MainPages.AboutPage", "Version: " + gitVersion);
+        Log.D("UI.MainPages.AboutPage", $"Version: {gitVersion}");
         string dirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.Settings.HELP_DIR);
         if (Directory.Exists(dirPath))
         {
@@ -79,13 +79,11 @@ public partial class AboutPage : UserControl, IMainPage
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                using Process dbusShowItemsProcess = new Process();
+                using Process dbusShowItemsProcess = new();
                 dbusShowItemsProcess.StartInfo = new ProcessStartInfo
                 {
                     FileName = "dbus-send",
-                    Arguments =
-                        "--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://" +
-                        dirPath + "\" string:\"\"",
+                    Arguments = $"--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://{dirPath}\" string:\"\"",
                     UseShellExecute = true
                 };
                 dbusShowItemsProcess.Start();

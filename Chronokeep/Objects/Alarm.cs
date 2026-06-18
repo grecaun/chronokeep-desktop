@@ -156,7 +156,7 @@ namespace Chronokeep.Objects
             if (!ListMtx.TryEnter(3000)) return output;
             try
             {
-                Log.D("Objects.Alarm", "Number of alarms: " + newAlarms.Count);
+                Log.D("Objects.Alarm", $"Number of alarms: {newAlarms.Count}");
                 foreach (Alarm alarm in newAlarms)
                 {
                     if (alarm.Bib.Length > 0)

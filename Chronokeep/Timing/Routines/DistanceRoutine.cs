@@ -420,7 +420,7 @@ namespace Chronokeep.Timing.Routines
                                      && (dnfRead.TimeSeconds < read.TimeSeconds ||
                                          (dnfRead.TimeSeconds == read.TimeSeconds && dnfRead.TimeMilliseconds < read.TimeMilliseconds)))
                             {
-                                Log.D("Timing.Routines.DistanceRoutine", "bibDNFDictionary contains DNF for bib " + bib);
+                                Log.D("Timing.Routines.DistanceRoutine", $"bibDNFDictionary contains DNF for bib {bib}");
                                 read.Status = Constants.Timing.CHIPREAD_STATUS_OVERMAX;
                             }
                             // occurrence is in [1, maxOccurrences] but not in the ignore period
@@ -690,7 +690,7 @@ namespace Chronokeep.Timing.Routines
                                      && (dnfRead.TimeSeconds < read.TimeSeconds ||
                                          (dnfRead.TimeSeconds == read.TimeSeconds && dnfRead.TimeMilliseconds < read.TimeMilliseconds)))
                             {
-                                Log.D("Timing.Routines.DistanceRoutine", "chipDNFDictionary contains DNF for chip " + chip);
+                                Log.D("Timing.Routines.DistanceRoutine", $"chipDNFDictionary contains DNF for chip {chip}");
                                 read.Status = Constants.Timing.CHIPREAD_STATUS_OVERMAX;
                             }
                             // occurrence is in [1, maxOccurrences] but not in the ignore period
@@ -960,7 +960,7 @@ namespace Chronokeep.Timing.Routines
             // process results based upon the segment they're in
             foreach (Segment segment in segments)
             {
-                Log.D("Timing.Routines.DistanceRoutine", "Processing segment " + segment.Name);
+                Log.D("Timing.Routines.DistanceRoutine", $"Processing segment {segment.Name}");
                 if (segmentDictionary.TryGetValue(segment.Identifier, out List<TimeResult>? oSegResults))
                 {
                     output.AddRange(ProcessSegmentPlacements(theEvent, oSegResults, dictionary));
@@ -1001,7 +1001,7 @@ namespace Chronokeep.Timing.Routines
                 {
                     Distance? distance1 = null, distance2 = null;
                     int rank1 = 0, rank2 = 0;
-                    Log.D("Timing.Routines.DistanceRoutine", "x1 distance name: " + x1.RealDistanceName + " -- x2 distance name: " + x2.RealDistanceName);
+                    Log.D("Timing.Routines.DistanceRoutine", $"x1 distance name: {x1.RealDistanceName} -- x2 distance name: {x2.RealDistanceName}");
                     // Get *linked* distances. (Could be that specific distance)
                     if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oLinkedDistances))
                     {
@@ -1011,38 +1011,36 @@ namespace Chronokeep.Timing.Routines
                     {
                         (distance2, rank2) = tLinkedDistances;
                     }
-                    Log.D("Timing.Routines.DistanceRoutine", (distance1 == null || distance2 == null) ? "One of the distances not found." : "Rank 1: " + rank1 + " -- Rank 2: " + rank2);
+                    Log.D("Timing.Routines.DistanceRoutine", (distance1 == null || distance2 == null) ? "One of the distances not found." : $"Rank 1: {rank1} -- Rank 2: {rank2}");
                     // Check if they're in the same distance or a linked distance.
-                    if (distance1 != null && distance2 != null && distance1.Identifier == distance2.Identifier)
+                    if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                        return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                    // Sort based on rank.  This is the linked distance new sorting item.
+                    if (rank1 == rank2)
                     {
-                        // Sort based on rank.  This is the linked distance new sorting item.
-                        if (rank1 == rank2)
+                        Log.D("Timing.Routines.DistanceRoutine", "Ranks the same.");
+                        if (theEvent.RankByGun)
                         {
-                            Log.D("Timing.Routines.DistanceRoutine", "Ranks the same.");
-                            if (theEvent.RankByGun)
+                            if (x1.Seconds == x2.Seconds)
                             {
-                                if (x1.Seconds == x2.Seconds)
-                                {
-                                    return x1.Milliseconds.CompareTo(x2.Milliseconds);
-                                }
-                                Log.D("Timing.Routines.DistanceRoutine", "By Clock");
-                                return x1.Seconds.CompareTo(x2.Seconds);
+                                return x1.Milliseconds.CompareTo(x2.Milliseconds);
                             }
-                            else
-                            {
-                                if (x1.ChipSeconds == x2.ChipSeconds)
-                                {
-                                    return x1.ChipMilliseconds.CompareTo(x2.ChipMilliseconds);
-                                }
-                                Log.D("Timing.Routines.DistanceRoutine", "By Chip");
-                                return x1.ChipSeconds.CompareTo(x2.ChipSeconds);
-                            }
+                            Log.D("Timing.Routines.DistanceRoutine", "By Clock");
+                            return x1.Seconds.CompareTo(x2.Seconds);
                         }
-                        Log.D("Timing.Routines.DistanceRoutine", "Ranks not the same.");
-                        // Ranks not the same
-                        return rank1.CompareTo(rank2);
+                        else
+                        {
+                            if (x1.ChipSeconds == x2.ChipSeconds)
+                            {
+                                return x1.ChipMilliseconds.CompareTo(x2.ChipMilliseconds);
+                            }
+                            Log.D("Timing.Routines.DistanceRoutine", "By Chip");
+                            return x1.ChipSeconds.CompareTo(x2.ChipSeconds);
+                        }
                     }
-                    return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                    Log.D("Timing.Routines.DistanceRoutine", "Ranks not the same.");
+                    // Ranks not the same
+                    return rank1.CompareTo(rank2);
                 });
             }
             else

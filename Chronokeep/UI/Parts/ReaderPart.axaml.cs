@@ -266,7 +266,7 @@ public partial class ReaderPart : UserControl
     {
         Log.D("UI.MainPages.TimingPage", "Reader type has changed.");
         string type = (string)((ComboBoxItem)ReaderType.SelectedItem!).Tag!;
-        Log.D("UI.MainPages.TimingPage", "Updating to type: " + Readers.SYSTEM_NAMES[type]);
+        Log.D("UI.MainPages.TimingPage", $"Updating to type: {Readers.SYSTEM_NAMES[type]}");
         Reader.UpdateSystemType(type);
         ReaderPort.Text = Reader.Port.ToString();
         ReaderPort.IsEnabled = Readers.SYSTEM_CHRONOKEEP_PORTAL != type;
@@ -290,13 +290,13 @@ public partial class ReaderPart : UserControl
 
     private void Rewind_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Settings button pressed. IP is " + ReaderIp.Text);
+        Log.D("UI.MainPages.TimingPage", $"Settings button pressed. IP is {ReaderIp.Text}");
         parent.OpenRewindWindow(Reader);
     }
 
     private void Clock_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Clock button pressed. IP is " + ReaderIp.Text);
+        Log.D("UI.MainPages.TimingPage", $"Clock button pressed. IP is {ReaderIp.Text}");
         parent.OpenTimeWindow(Reader);
     }
 
@@ -347,7 +347,7 @@ public partial class ReaderPart : UserControl
             Reader.SystemInterface!.CloseSettings();
             return;
         }
-        Log.D("UI.MainPages.TimingPage", "Connect button pressed. IP is " + ReaderIp.Text);
+        Log.D("UI.MainPages.TimingPage", $"Connect button pressed. IP is {ReaderIp.Text}");
         // Check if IP is a valid IP address
         if (!IpPattern().IsMatch(ReaderIp.Text!.Trim()))
         {

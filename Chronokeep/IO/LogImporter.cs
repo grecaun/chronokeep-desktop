@@ -18,7 +18,7 @@ namespace Chronokeep.IO
         public void FindType()
         {
             string headerLine = File.ReadLine()!;
-            Log.D("IO.LogImporter", "HeaderLine: " + headerLine);
+            Log.D("IO.LogImporter", $"HeaderLine: {headerLine}");
             if (Rfid().IsMatch(headerLine))
             {
                 Log.D("IO.LogImporter", "Found a match! RFID");

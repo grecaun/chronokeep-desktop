@@ -84,7 +84,7 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
     {
         if (init) { return; }
         int selection = ((ComboBox)sender!).SelectedIndex;
-        Log.D("UI.BibChipAssociationWindow", "You've selected number " + selection);
+        Log.D("UI.BibChipAssociationWindow", $"You've selected number {selection}");
         ExcelImporter excelImporter = (ExcelImporter)importer;
         excelImporter.ChangeSheet(selection);
         excelImporter.FetchHeaders();
@@ -180,12 +180,8 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
             }
             else
             {
-                string val = "";
-                foreach (string str in headers)
-                {
-                    val = " " + str;
-                }
-                DialogBox.Show("Multiple values given for: " + val);
+                string val = headers.Aggregate("", (current, str) => $"{current} {str}");
+                DialogBox.Show($"Multiple values given for: {val}");
             }
         }
         catch (Exception)

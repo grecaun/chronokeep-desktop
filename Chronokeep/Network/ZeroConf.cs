@@ -42,7 +42,7 @@ namespace Chronokeep.Network
             int counter = 0;
             while (keepAlive)
             {
-                Log.D("Network.ZeroConf", counter + " clients have contacted me.");
+                Log.D("Network.ZeroConf", $"{counter} clients have contacted me.");
                 counter++;
                 try
                 {

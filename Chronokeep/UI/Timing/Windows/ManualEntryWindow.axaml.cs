@@ -148,13 +148,13 @@ public partial class ManualEntryWindow : ChronokeepWindow
                 {
                     startOffset = oStart;
                 }
-                time = DateTime.Parse(theEvent.Date + " 00:00:00.000");
+                time = DateTime.Parse($"{theEvent.Date} 00:00:00.000");
                 milliseconds += theEvent.StartMilliseconds + startOffset.milliseconds;
                 seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds + startOffset.seconds;
             }
             else if (ClockTimeButton.IsChecked == true)
             {
-                time = DateTime.Parse(theEvent!.Date + " 00:00:00.000");
+                time = DateTime.Parse($"{theEvent!.Date} 00:00:00.000");
                 milliseconds += theEvent.StartMilliseconds;
                 seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds;
             }
@@ -171,7 +171,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
             time = time.AddMilliseconds(milliseconds);
         }
         ChipRead newEntry = new(theEvent!.Identifier, locationId, bib, time, Constants.Timing.CHIPREAD_STATUS_DNF);
-        Log.D("UI.Timing.ManualEntryWindow", "Bib " + BibBox + " LocationId " + locationId + " Time " + newEntry.TimeString);
+        Log.D("UI.Timing.ManualEntryWindow", $"Bib {BibBox} LocationId {locationId} Time {newEntry.TimeString}");
         database.AddChipRead(newEntry);
         bibsAdded.Add(bib);
         ClearBib();
@@ -224,13 +224,13 @@ public partial class ManualEntryWindow : ChronokeepWindow
             {
                 startOffset = oStart;
             }
-            time = DateTime.Parse(theEvent.Date + " 00:00:00.000");
+            time = DateTime.Parse($"{theEvent.Date} 00:00:00.000");
             milliseconds += theEvent.StartMilliseconds + startOffset.milliseconds;
             seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds + startOffset.seconds;
         }
         else if (ClockTimeButton.IsChecked == true)
         {
-            time = DateTime.Parse(theEvent!.Date + " 00:00:00.000");
+            time = DateTime.Parse($"{theEvent!.Date} 00:00:00.000");
             milliseconds += theEvent.StartMilliseconds;
             seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds;
         }
@@ -246,7 +246,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         time = time.AddSeconds(seconds);
         time = time.AddMilliseconds(milliseconds);
         ChipRead newEntry = new(theEvent!.Identifier, locationId, bib, time, Constants.Timing.CHIPREAD_STATUS_NONE);
-        Log.D("UI.Timing.ManualEntryWindow", "Bib " + BibBox + " LocationId " + locationId + " Time " + newEntry.TimeString);
+        Log.D("UI.Timing.ManualEntryWindow", $"Bib {BibBox} LocationId {locationId} Time {newEntry.TimeString}");
         database.AddChipRead(newEntry);
         bibsAdded.Add(bib);
         ClearBib();

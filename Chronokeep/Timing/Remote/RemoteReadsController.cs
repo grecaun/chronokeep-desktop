@@ -154,7 +154,7 @@ namespace Chronokeep.Timing.Remote
                         }
                         catch (Exception ex)
                         {
-                            Log.E("API.RemoteReadsController", "Unable to handle API response - " + ex.Message);
+                            Log.E("API.RemoteReadsController", $"Unable to handle API response - {ex.Message}");
                             apiError = true;
                         }
                         foreach (ChipRead read in reads)

@@ -316,7 +316,7 @@ namespace Chronokeep.Database.SQLite
 
         internal static List<Participant> GetParticipants(int eventId, SQLiteConnection connection)
         {
-            Log.D("SQLite.Participants", "Getting all participants for event with id of " + eventId);
+            Log.D("SQLite.Participants", $"Getting all participants for event with id of {eventId}");
             return GetParticipantsWorker("SELECT MAX(s.eventspecific_id) AS max_id, * FROM participants p " +
                 "JOIN eventspecific s ON p.participant_id = s.participant_id " +
                 "JOIN distances d ON s.distance_id = d.distance_id " +
@@ -329,7 +329,7 @@ namespace Chronokeep.Database.SQLite
 
         internal static List<Participant> GetParticipants(int eventId, int distanceId, SQLiteConnection connection)
         {
-            Log.D("SQLite.Participants", "Getting all participants for event with id of " + eventId);
+            Log.D("SQLite.Participants", $"Getting all participants for event with id of {eventId}");
             return GetParticipantsWorker("SELECT MAX(s.eventspecific_id) AS max_id, * FROM participants p " +
                 "JOIN eventspecific s ON p.participant_id = s.participant_id " +
                 "JOIN distances d ON s.distance_id = d.distance_id " +

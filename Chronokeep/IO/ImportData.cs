@@ -22,7 +22,7 @@ namespace Chronokeep.IO
         {
             Type = type;
             FileName = DataRegex().Match(filename).Value.TrimEnd('.');
-            Log.D("IO.ImportData", FileName + " is the filename.");
+            Log.D("IO.ImportData", $"{FileName} is the filename.");
             string[] newheaders = new string[headers.Length + 1];
             Array.Copy(headers, 0, newheaders, 1, headers.Length);
             GatheredInformationLog("Headers are", newheaders);
@@ -36,7 +36,7 @@ namespace Chronokeep.IO
             StringBuilder sb = new(named);
             foreach (string s in data)
             {
-                sb.Append(" '" + s + "'");
+                sb.Append($" '{s}'");
             }
             Log.D("IO.ImportData", sb.ToString());
         }
@@ -52,7 +52,7 @@ namespace Chronokeep.IO
             Array.Copy(data, 0, newdata, 1, data.Length);
             if (Headers.Length != newdata.Length)
             {
-                Log.E("IO.ImportData", "Header count wrong on import of data: " + Headers.Length + " - " + newdata.Length);
+                Log.E("IO.ImportData", $"Header count wrong on import of data: {Headers.Length} - {newdata.Length}");
             }
             Data.Add(newdata);
             GatheredInformationLog("Data input is", newdata);

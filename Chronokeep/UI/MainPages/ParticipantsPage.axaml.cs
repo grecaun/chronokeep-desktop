@@ -181,14 +181,14 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 {
                     GetParticipantsResponse response = await ApiHandlers.GetParticipants(api, eventIds[0], eventIds[1], 50, page);
                     newPersons.AddRange(response.Participants);
-                    Log.D("UI.MainPages.ParticipantsPage", response.Participants.Count.ToString() + " participants downloaded.");
+                    Log.D("UI.MainPages.ParticipantsPage", $"{response.Participants.Count} participants downloaded.");
                     if (response.Participants.Count != 50)
                     {
                         break;
                     }
                     page++;
                 } while (true);
-                Log.D("UI.MainPages.ParticipantsPage", newPersons.Count.ToString() + " total participants downloaded.");
+                Log.D("UI.MainPages.ParticipantsPage", $"{newPersons.Count} total participants downloaded.");
                 // Key is (First, Last, Birthdate, Distance)
                 Dictionary<(string, string, string, string), Participant> partDictionary = [];
                 Dictionary<string, Participant> partEsDictionary = [];
@@ -462,13 +462,13 @@ public partial class ParticipantsPage : UserControl, IMainPage
             // Change Participant to APIPerson
             List<ApiPerson> upParticipants = [];
             List<BibChip> upBibChips = [];
-            Log.D("UI.MainPages.ParticipantsPage", "Participants count: " + participants.Count);
+            Log.D("UI.MainPages.ParticipantsPage", $"Participants count: {participants.Count}");
             AppSetting programId = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!;
-            string uniqueId = programId.Value + "-";
+            string uniqueId = $"{programId.Value}-";
             upParticipants.AddRange(participants.Select(part => new ApiPerson(part, uniqueId)));
-            Log.D("UI.MainPages.ParticipantsPage", "BibChips count: " + bibChips.Count);
+            Log.D("UI.MainPages.ParticipantsPage", $"BibChips count: {bibChips.Count}");
             upBibChips.AddRange(bibChips.Select(bc => new BibChip() { Bib = bc.Bib, Chip = bc.Chip, }));
-            Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upParticipants.Count + " participants.");
+            Log.D("UI.MainPages.ParticipantsPage", $"Attempting to upload {upParticipants.Count} participants.");
             int total = 0;
             int loops = upParticipants.Count / Constants.Timing.API_LOOP_COUNT;
             AddResultsResponse response;
@@ -485,7 +485,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     return;
                 }
                 total += response.Count;
-                Log.D("UI.MainPages.ParticipantsPage", "Total: " + total + " Count: " + response.Count);
+                Log.D("UI.MainPages.ParticipantsPage", $"Total: {total} Count: {response.Count}");
             }
             int leftovers = upParticipants.Count - (loops * Constants.Timing.API_LOOP_COUNT);
             if (leftovers > 0)
@@ -501,8 +501,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     return;
                 }
                 total += response.Count;
-                Log.D("UI.MainPages.TimingPage", "Total: " + total + " Count: " + response.Count);
-                Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
+                Log.D("UI.MainPages.TimingPage", $"Total: {total} Count: {response.Count}");
+                Log.D("UI.MainPages.TimingPage", $"Upload finished. Count total: {total}");
             }
             foreach (Participant part in participants)
             {
@@ -526,7 +526,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     return;
                 }
                 total += response.Count;
-                Log.D("UI.MainPages.ParticipantsPage", "Total: " + total + " Count: " + response.Count);
+                Log.D("UI.MainPages.ParticipantsPage", $"Total: {total} Count: {response.Count}");
             }
             leftovers = upBibChips.Count - (loops * Constants.Timing.API_LOOP_COUNT);
             if (leftovers > 0)
@@ -542,8 +542,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     return;
                 }
                 total += response.Count;
-                Log.D("UI.MainPages.TimingPage", "Total: " + total + " Count: " + response.Count);
-                Log.D("UI.MainPages.TimingPage", "Upload finished. Count total: " + total);
+                Log.D("UI.MainPages.TimingPage", $"Total: {total} Count: {response.Count}");
+                Log.D("UI.MainPages.TimingPage", $"Upload finished. Count total: {total}");
             }
             Upload.Content = "Upload";
         }

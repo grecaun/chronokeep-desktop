@@ -34,7 +34,7 @@ namespace Chronokeep.IO
             {
                 string name = workbook.Worksheets.Worksheet(i).Name;
                 SheetNames.Add(name);
-                Log.D("IO.ExcelImporter", "Sheet name is " + name);
+                Log.D("IO.ExcelImporter", $"Sheet name is {name}");
             }
         }
 
@@ -68,7 +68,7 @@ namespace Chronokeep.IO
                     numHeaders = numHeaders > tmp ? numHeaders : tmp;
                     numDataRows++;
                 }
-                Log.D("IO.ExcelImporter", "Value array populated. Rows " + numDataRows + " Columns " + numHeaders);
+                Log.D("IO.ExcelImporter", $"Value array populated. Rows {numDataRows} Columns {numHeaders}");
                 string[] headers = new string[numHeaders];
                 for (int i = 1; i <= numHeaders; i++)
                 {
@@ -106,7 +106,7 @@ namespace Chronokeep.IO
                         valueArray[i - 1, j - 1] = worksheet.Cell(i, j).Value;
                     }
                 }
-                Log.D("IO.ExcelImporter", "Value array populated. Rows " + numDataRows + " Columns " + numHeaders);
+                Log.D("IO.ExcelImporter", $"Value array populated. Rows {numDataRows} Columns {numHeaders}");
                 for (int row = 1; row < numDataRows; row++)
                 {
                     string[] dataLine = new string[numHeaders];

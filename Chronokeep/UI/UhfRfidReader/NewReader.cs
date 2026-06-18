@@ -28,7 +28,7 @@ namespace Chronokeep.UI.UhfRfidReader
                 }
                 Thread.Sleep(Delay);
             }
-            Log.D("UI.UhfRfidReader.NewReader", "InActive - Finished after " + counter + @" loops.");
+            Log.D("UI.UhfRfidReader.NewReader", $"InActive - Finished after {counter} loops.");
         }
 
         public void Kill()

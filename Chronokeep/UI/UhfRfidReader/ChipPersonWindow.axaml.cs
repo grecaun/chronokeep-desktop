@@ -36,11 +36,11 @@ public partial class ChipPersonWindow : ChronokeepWindow
             });
             if (person != null)
             {
-                Bib.Text = "Bib: " + person.EventSpecific.Bib;
-                Chip.Text = "Chip: " + chip;
+                Bib.Text = $"Bib: {person.EventSpecific.Bib}";
+                Chip.Text = $"Chip: {chip}";
                 PersonName.Text = $"{person.FirstName} {person.LastName}";
                 AgeGender.Text = $"{person.Age(eventDate)} {person.Gender}";
-                Distance.Text = "" + person.EventSpecific.DistanceName;
+                Distance.Text = $"{person.EventSpecific.DistanceName}";
                 Unknown.Text = "";
                 Unknown.IsVisible = false;
                 InfoHolder.IsVisible = true;

@@ -173,11 +173,11 @@ namespace Chronokeep.Network
             }
             else if (filename.StartsWith("css/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("js/", StringComparison.OrdinalIgnoreCase))
             {
-                Log.D("Network.HttpServer", "Fetching " + filename);
+                Log.D("Network.HttpServer", $"Fetching {filename}");
                 answer = true;
                 // Serve up the file requested.
                 string newName = filename.Replace('/', '.');
-                Log.D("Network.HttpServer", "Newname is " + newName);
+                Log.D("Network.HttpServer", $"Newname is {newName}");
                 using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Chronokeep.IO.HtmlTemplates.{newName}")!)
                 {
                     message = new byte[stream.Length];

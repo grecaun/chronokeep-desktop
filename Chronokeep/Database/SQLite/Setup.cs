@@ -53,7 +53,7 @@ namespace Chronokeep.Database.SQLite
                     }
                     v2Checker.Close();
                 }
-                Log.D("SQLite.Setup", "Old Version: " + oldVersion);
+                Log.D("SQLite.Setup", $"Old Version: {oldVersion}");
             }
             else
             {
@@ -309,7 +309,7 @@ namespace Chronokeep.Database.SQLite
                 queries.Add("CREATE INDEX idx_distance_id ON distances(distance_id);");
 
                 string gitVersion;
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep." + "version.txt")!)
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.version.txt")!)
                 {
                     using StreamReader fileReader = new(stream);
                     gitVersion = fileReader.ReadToEnd();
@@ -326,7 +326,7 @@ namespace Chronokeep.Database.SQLite
                     int counter = 1;
                     foreach (string q in queries)
                     {
-                        Log.D("SQLite.Setup", $"Table query number {counter} Query string is: " + q);
+                        Log.D("SQLite.Setup", $"Table query number {counter} Query string is: {q}");
                         counter++;
                         command = new SQLiteCommand(q, connection);
                         command.ExecuteNonQuery();

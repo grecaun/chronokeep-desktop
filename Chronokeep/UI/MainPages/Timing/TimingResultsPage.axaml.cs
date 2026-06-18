@@ -103,7 +103,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
                 break;
         }
         newResults.RemoveAll(result => result.IsNotMatch(search));
-        Log.D("UI.Timing.TimingResultsPage", "Removing all location based items. " + location);
+        Log.D("UI.Timing.TimingResultsPage", $"Removing all location based items. {location}");
         if (location.Length > 0 && !location.Equals("All Locations", StringComparison.OrdinalIgnoreCase))
         {
             newResults.RemoveAll(read => !read.LocationName.Equals(location, StringComparison.OrdinalIgnoreCase));

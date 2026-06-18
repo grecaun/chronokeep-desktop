@@ -48,7 +48,7 @@ public partial class ChipTool : ChronokeepWindow
             _ = int.TryParse(part.EndBib.Text, out int endBib);
             _ = int.TryParse(part.StartChip.Text, out int startChip);
             _ = int.TryParse(part.EndChip.Text!, out int endChip);
-            Log.D("UI.ChipAssignment.ChipTool", "StartBib " + startBib + " EndBib " + endBib + " StartChip " + startChip + " EndChip " + endChip);
+            Log.D("UI.ChipAssignment.ChipTool", $"StartBib {startBib} EndBib {endBib} StartChip {startChip} EndChip {endChip}");
             Range curRange = new()
             {
                 StartBib = startBib,

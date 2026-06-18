@@ -82,7 +82,7 @@ public partial class ImportLogPage1 : UserControl
     {
         Log.D("UI.Timing.ImportLog", "Next Button Clicked.");
         int locationId = Convert.ToInt32(((ComboBoxItem)LocationHolder.SelectedItem!).Tag);
-        Log.D("UI.Timing.ImportLog", "Location ID is: " + locationId + " name of: " + ((ComboBoxItem)LocationHolder.SelectedItem).Content);
+        Log.D("UI.Timing.ImportLog", $"Location ID is: {locationId} name of: {((ComboBoxItem)LocationHolder.SelectedItem).Content}");
         if (((ComboBoxItem)TypeHolder.SelectedItem!).Tag!.ToString() == nameof(LogImporter.Type.CUSTOM))
         {
             parent.Next(locationId);

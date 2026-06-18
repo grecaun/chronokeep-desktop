@@ -727,7 +727,7 @@ namespace Chronokeep.Timing.Routines
             // process results based upon the segment they're in
             foreach (Segment segment in segments)
             {
-                Log.D("Timing.TimingWorker", "Processing segment " + segment.Name);
+                Log.D("Timing.TimingWorker", $"Processing segment {segment.Name}");
                 if (segmentDictionary.TryGetValue(segment.Identifier, out List<TimeResult>? tSegResults))
                 {
                     output.AddRange(ProcessSegmentPlacements(theEvent, tSegResults, dictionary));

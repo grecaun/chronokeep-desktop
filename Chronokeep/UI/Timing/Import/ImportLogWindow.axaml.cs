@@ -84,7 +84,7 @@ public partial class ImportLogWindow : ChronokeepWindow
     {
         try
         {
-            Log.D("UI.Timing.Import.ImportLogWindow", "Type is " + type + " ChipIx " + chipColumn + " TimeIx " + timeColumn);
+            Log.D("UI.Timing.Import.ImportLogWindow", $"Type is {type} ChipIx {chipColumn} TimeIx {timeColumn}");
             await Task.Run(() =>
             {
                 importer.FetchData();
@@ -167,7 +167,7 @@ public partial class ImportLogWindow : ChronokeepWindow
                             }
                         }
                         bool dateIncluded = DateRegex().IsMatch(data.Headers[time]);
-                        DateTime date = !dateIncluded ? DateTime.Parse(theEvent.Date + " " + data.Headers[time]) : DateTime.Parse(data.Headers[time]);
+                        DateTime date = !dateIncluded ? DateTime.Parse($"{theEvent.Date} {data.Headers[time]}") : DateTime.Parse(data.Headers[time]);
                         chipReads.Add(new ChipRead(theEvent.Identifier, locationId, data.Headers[chip], date));
                         int numEntries = data.Data.Count;
                         for (int counter = 0; counter < numEntries; counter++)

@@ -73,7 +73,7 @@ public partial class ClockPart : UserControl
         }
         catch (ApiException ex)
         {
-            Log.D("UI.Timing.ClockControl.ClockListItem", "Unable to fetch clock config." + ex.Message);
+            Log.D("UI.Timing.ClockControl.ClockListItem", $"Unable to fetch clock config. {ex.Message}");
         }
         catch (Exception)
         {

@@ -89,7 +89,7 @@ public partial class AlarmsPage : UserControl, ISubPage
     internal void RemoveAlarm(AlarmPart alarm)
     {
         Alarm newAlarm = alarm.GetUpdatedAlarm();
-        Log.D("UI.Timing.AlarmsPage", "Alarm has ID of " + newAlarm.Identifier);
+        Log.D("UI.Timing.AlarmsPage", $"Alarm has ID of {newAlarm.Identifier}");
         if (newAlarm.Identifier >= 0)
         {
             database.DeleteAlarm(newAlarm);

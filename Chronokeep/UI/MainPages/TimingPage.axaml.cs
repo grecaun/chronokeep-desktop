@@ -112,8 +112,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 webAddress = $"http://{ipinfo.Address.ToString()}:{6933}";
                 WebBlock.Text = webAddress;
                 WebButton.NavigateUri = new Uri(webAddress);
-                Log.D("UI.MainPages.TimingPage", "IP Address :" + ipinfo.Address);
-                Log.D("UI.MainPages.TimingPage", "IPv4 Mask  :" + ipinfo.IPv4Mask);
+                Log.D("UI.MainPages.TimingPage", $"IP Address :{ipinfo.Address}");
+                Log.D("UI.MainPages.TimingPage", $"IPv4 Mask  :{ipinfo.IPv4Mask}");
                 string[] ipParts = ipinfo.Address.ToString().Split('.');
                 string[] maskParts = ipinfo.IPv4Mask.ToString().Split('.');
                 if (ipParts.Length != 4 || maskParts.Length != 4) continue;
@@ -147,7 +147,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             relativeToWaveList.Add(new TimeRelativeWave
             {
-                Name = div.Name + " (Wave " + div.Wave + ")",
+                Name = $"{div.Name} (Wave {div.Wave})",
                 Wave = div.Wave
             });
             waveTimes[div.Wave] = (div.StartOffsetSeconds, div.StartOffsetMilliseconds);
@@ -215,7 +215,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         }
         if (numSystems < 3)
         {
-            Log.D("UI.MainPages.TimingPage", systems.Count + " systems found.");
+            Log.D("UI.MainPages.TimingPage", $"{systems.Count} systems found.");
             for (int i = 0; i < 3 - numSystems; i++)
             {
                 systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
@@ -566,9 +566,9 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         StartRace.IsEnabled = false;
         ElapsedRelativeToBox.IsVisible = waves.Count > 1;
         StartTime.Text = startTimeValue;
-        Log.D("UI.MainPages.TimingPage", "Start time is " + startTimeValue);
-        startTime = DateTime.ParseExact(startTimeValue + DateTime.Parse(theEvent!.Date).ToString("ddMMyyyy"), "HH:mm:ss.fffddMMyyyy", null);
-        Log.D("UI.MainPages.TimingPage", "Start time is " + startTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+        Log.D("UI.MainPages.TimingPage", $"Start time is {startTimeValue}");
+        startTime = DateTime.ParseExact($"{startTimeValue}{DateTime.Parse(theEvent!.Date):ddMMyyyy}", "HH:mm:ss.fffddMMyyyy", null);
+        Log.D("UI.MainPages.TimingPage", $"Start time is {startTime:yyyy-MM-dd HH:mm:ss.fff}");
     }
 
     public void NewMessage()
@@ -724,7 +724,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 return;
             }
             // Upload results
-            Log.D("UI.MainPages.TimingPage", "Results count: " + results.Count);
+            Log.D("UI.MainPages.TimingPage", $"Results count: {results.Count}");
             if (ApiController.GetUploadable(3000))
             {
                 await ApiController.UploadResults(results, api, eventIds, database, null, null, theEvent);
@@ -1074,7 +1074,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             return;
         }
-        Log.D("UI.MainPages.TimingPage", "Stats double clicked. Distance is " + selected.DistanceName);
+        Log.D("UI.MainPages.TimingPage", $"Stats double clicked. Distance is {selected.DistanceName}");
         SetRawReadsFinished();
         subPage = new DistanceStatsPage(this, mWindow, database, selected.DistanceId, selected.DistanceName, CondenseSwitch.IsChecked == false);
         TimingFrame.Content = subPage;
@@ -1107,7 +1107,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                             return true;
                         }
                         counter++;
-                        //Log.D("UI.MainPages.TimingPage", "APIController is uploading. Sleeping for 1 second. Counter is " + counter.ToString());
+                        //Log.D("UI.MainPages.TimingPage", $"APIController is uploading. Sleeping for 1 second. Counter is {counter.ToString()}");
                         Thread.Sleep(1000);
                     }
                 });
@@ -1149,7 +1149,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             // Get the event id values. Exit if not valid.
             string[] eventIds = theEvent!.ApiEventId.Split(',');
-            Log.D("UI.MainPages.TimingPage", "Event Id's found: " + eventIds.Length + " API is null? " + (api == null));
+            Log.D("UI.MainPages.TimingPage", $"Event Id's found: {eventIds.Length} API is null? {api == null}");
             if (eventIds.Length == 2 && api != null)
             {
                 try

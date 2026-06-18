@@ -546,7 +546,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         // Get segments for header.
         foreach (Segment seg in segments)
         {
-            Log.D("UI.Export.ExportDistanceResults", "Segment:  " + seg.Name);
+            Log.D("UI.Export.ExportDistanceResults", $"Segment:  {seg.Name}");
             tmp.Add($"{seg.CumulativeDistance} {Distances.DistanceString(seg.DistanceUnit)}");
         }
         data.Add([.. tmp]);

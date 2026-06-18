@@ -40,7 +40,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 try
                 {
-                    Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + ipAddress + ":" + Constants.Readers.IPICO_CONTROL_PORT);
+                    Log.D("Timing.Interfaces.IpicoInterface", $"Attempting to connect to {ipAddress}:{Constants.Readers.IPICO_CONTROL_PORT}");
                     IAsyncResult result = controlSocket.BeginConnect(ipAddress, Constants.Readers.IPICO_CONTROL_PORT, null, null);
                     result.AsyncWaitHandle.WaitOne(Constants.Readers.TIMEOUT, true);
                     if (controlSocket.Connected)
@@ -67,7 +67,7 @@ namespace Chronokeep.Timing.Interfaces
             }
             try
             {
-                Log.D("Timing.Interfaces.IpicoInterface", "Attempting to connect to " + ipAddress + ":" + Constants.Readers.IPICO_DEFAULT_PORT);
+                Log.D("Timing.Interfaces.IpicoInterface", $"Attempting to connect to {ipAddress}:{Constants.Readers.IPICO_CONTROL_PORT}");
                 IAsyncResult result = streamSocket.BeginConnect(ipAddress, Constants.Readers.IPICO_DEFAULT_PORT, null, null);
                 result.AsyncWaitHandle.WaitOne(Constants.Readers.TIMEOUT, true);
                 if (streamSocket.Connected)
@@ -108,7 +108,7 @@ namespace Chronokeep.Timing.Interfaces
             }
 
             buff.Append(inMessage);
-            Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- new message is '" + inMessage + "' with a length of " + inMessage.Length);
+            Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- new message is '{inMessage}' with a length of {inMessage.Length}");
             Match m = Msg().Match(buff.ToString());
             HashSet<string> ignoredChips = [];
             foreach (BibChipAssociation ignore in database.GetBibChips(-1))
@@ -120,11 +120,11 @@ namespace Chronokeep.Timing.Interfaces
             int count = 1;
             while (m.Success)
             {
-                Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- message " + count);
+                Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- message {count}");
                 count++;
                 buff.Remove(m.Index, m.Length);
                 string message = m.Value;
-                Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- message is : " + message);
+                Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- message is : {message}");
                 // a chipread is as follows: (note that milliseconds don't appear to be an actual millisecond but a hundredth of a second)
                 // aa[ReaderId{2}][TagID{12}(Starts with 058)][ICount?{2}][QCount{2}][Date{yyMMdd}][Time{HHmmss}][Milliseconds{2}(Hex)][Checksum{2}][FS|LS]
                 if (ChipRead().IsMatch(message))
@@ -165,7 +165,7 @@ namespace Chronokeep.Timing.Interfaces
                     string time = message.Substring(16, 8);
                     string year = message.Substring(29, 4);
                     string dateStr = $"{dayVal:D2} {month} {year}  {time}";
-                    Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- date string is " + dateStr);
+                    Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- date string is {dateStr}");
                     output[MessageType.TIME] =
                     [
                         dateStr
@@ -188,7 +188,7 @@ namespace Chronokeep.Timing.Interfaces
         public void SetTime(DateTime date)
         {
             // setdate.YYMMDDHH:MM:SS
-            SendMessage("setdate." + DateTime.Now.ToString("yyMMddHH:mm:ss"));
+            SendMessage($"setdate.{DateTime.Now:yyMMddHH:mm:ss}");
         }
 
         public void GetTime()
@@ -225,7 +225,7 @@ namespace Chronokeep.Timing.Interfaces
                 while (numRecvd > 0)
                 {
                     string msg = Encoding.UTF8.GetString(recvd, 0, numRecvd);
-                    Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- Rewind -- message :" + msg);
+                    Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- Rewind -- message :{msg}");
                     ParseMessages(msg, rewindSocket);
                     numRecvd = rewindSocket.Receive(recvd);
                 }
@@ -251,11 +251,11 @@ namespace Chronokeep.Timing.Interfaces
             // yyMMddHHmmss
             if (reader == 1)
             {
-                SendMessage("replay_start file.ttyS0 port.10300 datetime." + start.ToString("yyMMddHHmmss"));
+                SendMessage($"replay_start file.ttyS0 port.10300 datetime.{start:yyMMddHHmmss}");
             }
             else
             {
-                SendMessage("replay_start file.ttyS1 port.10300 datetime." + start.ToString("yyMMddHHmmss"));
+                SendMessage($"replay_start file.ttyS1 port.10300 datetime.{start:yyMMddHHmmss}");
             }
         }
 
@@ -280,8 +280,8 @@ namespace Chronokeep.Timing.Interfaces
 
         private void SendMessage(string msg)
         {
-            Log.D("Timing.Interfaces.IpicoInterface", "Sending message '" + msg + "'");
-            controlSocket?.Send(Encoding.ASCII.GetBytes(msg + "\n"));
+            Log.D("Timing.Interfaces.IpicoInterface", $"Sending message '{msg}'");
+            controlSocket?.Send(Encoding.ASCII.GetBytes($"{msg}\n"));
         }
 
         public bool SettingsEditable()

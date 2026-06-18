@@ -404,9 +404,8 @@ namespace Chronokeep.Objects
                 tmpPhone = Phone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
                 Phone = tmpPhone.Length switch
                 {
-                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
-                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
-                          tmpPhone.Substring(7, 4),
+                    10 => $"{tmpPhone[..3]}-{tmpPhone.Substring(3, 3)}-{tmpPhone.Substring(6, 4)}",
+                    11 => $"{tmpPhone[..1]}-{tmpPhone.Substring(1, 3)}-{tmpPhone.Substring(4, 3)}-{tmpPhone.Substring(7, 4)}",
                     _ => Phone
                 };
             }
@@ -415,9 +414,8 @@ namespace Chronokeep.Objects
                 tmpPhone = Mobile.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
                 Mobile = tmpPhone.Length switch
                 {
-                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
-                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
-                          tmpPhone.Substring(7, 4),
+                    10 => $"{tmpPhone[..3]}-{tmpPhone.Substring(3, 3)}-{tmpPhone.Substring(6, 4)}",
+                    11 => $"{tmpPhone[..1]}-{tmpPhone.Substring(1, 3)}-{tmpPhone.Substring(4, 3)}-{tmpPhone.Substring(7, 4)}",
                     _ => Mobile
                 };
             }
@@ -426,9 +424,8 @@ namespace Chronokeep.Objects
                 tmpPhone = EcPhone.Replace("-", "").Replace("+", "").Replace("(", "").Replace(")", "").Replace(" ", "").Replace(",", "").Replace(".", "").Trim();
                 EcPhone = tmpPhone.Length switch
                 {
-                    10 => tmpPhone[..3] + "-" + tmpPhone.Substring(3, 3) + "-" + tmpPhone.Substring(6, 4),
-                    11 => tmpPhone[..1] + "-" + tmpPhone.Substring(1, 3) + "-" + tmpPhone.Substring(4, 3) + "-" +
-                          tmpPhone.Substring(7, 4),
+                    10 => $"{tmpPhone[..3]}-{tmpPhone.Substring(3, 3)}-{tmpPhone.Substring(6, 4)}",
+                    11 => $"{tmpPhone[..1]}-{tmpPhone.Substring(1, 3)}-{tmpPhone.Substring(4, 3)}-{tmpPhone.Substring(7, 4)}",
                     _ => EcPhone
                 };
             }
@@ -490,7 +487,7 @@ namespace Chronokeep.Objects
             StringBuilder output = new();
             foreach (string s in tmp)
             {
-                output.Append(CapitalizeFirst(s.Trim()) + " ");
+                output.Append($"{CapitalizeFirst(s.Trim())} ");
             }
             return output.ToString().Trim();
         }

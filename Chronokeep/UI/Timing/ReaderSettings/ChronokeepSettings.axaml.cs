@@ -344,7 +344,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
         }
         catch (Exception ex)
         {
-            Log.E("UI.Timing.ReaderSettings.ChronokeepSettings", "Error saving settings: " + ex.Message);
+            Log.E("UI.Timing.ReaderSettings.ChronokeepSettings", $"Error saving settings: {ex.Message}");
             DialogBox.Show("Error saving settings.");
         }
     }

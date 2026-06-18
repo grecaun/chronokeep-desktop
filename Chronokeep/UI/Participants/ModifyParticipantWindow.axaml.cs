@@ -270,9 +270,9 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 year = 0;
             }
             year = year < 1969 ? DateTime.Now.Year : year;
-            birthdate = "1/1/" + (year - age);
+            birthdate = $"1/1/{year - age}";
         }
-        Log.D("UI.Participants.ModifyParticipantWindow", "----- Birthdate -----" + birthdate);
+        Log.D("UI.Participants.ModifyParticipantWindow", $"----- Birthdate ----- {birthdate}");
         Participant output = new(
             participantId,
             FirstBox.Text!,
@@ -440,7 +440,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         }
         else
         {
-            Log.D("UI.Participants.ModifyParticipantWindow", "NewPart not null ---- Should update --- NewPart birthdate ----" + newPart.Birthdate);
+            Log.D("UI.Participants.ModifyParticipantWindow", $"NewPart not null ---- Should update --- NewPart birthdate ---- {newPart.Birthdate}");
             // New Part has information that doesn't match the old participant.
             // so increment the version
             if (!newPart.Matches(person))

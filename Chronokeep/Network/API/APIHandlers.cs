@@ -36,7 +36,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown checking health: " + ex.Message);
+                throw new ApiException($"Exception thrown checking health: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -70,7 +70,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException($"Exception thrown getting events: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -112,7 +112,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException($"Exception thrown getting events: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -154,7 +154,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting event years: " + ex.Message);
+                throw new ApiException($"Exception thrown getting event years: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -197,7 +197,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting event years: " + ex.Message);
+                throw new ApiException($"Exception thrown getting event years: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -239,7 +239,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding event: " + ex.Message);
+                throw new ApiException($"Exception thrown adding event: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -281,7 +281,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding event: " + ex.Message);
+                throw new ApiException($"Exception thrown adding event: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -324,12 +324,12 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding event year: " + ex.Message);
+                throw new ApiException($"Exception thrown adding event year: {ex.Message}");
             }
             throw new ApiException(content);
         }
 
-        public static async Task<EventYearResponse> UpdateEventYear(ApiObject api, string slug, ApiEventYear year)
+        public static async Task UpdateEventYear(ApiObject api, string slug, ApiEventYear year)
         {
             string content;
             Log.D("Network.API.APIHandlers", "Updating event year.");
@@ -357,7 +357,7 @@ namespace Chronokeep.Network.API
                     Log.D("Network.API.APIHandlers", "Status code ok.");
                     string json = await response.Content.ReadAsStringAsync();
                     EventYearResponse result = JsonSerializer.Deserialize<EventYearResponse>(json)!;
-                    return result;
+                    return;
                 }
                 Log.D("Network.API.APIHandlers", "Status code not ok.");
                 string errjson = await response.Content.ReadAsStringAsync();
@@ -367,7 +367,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding event year: " + ex.Message);
+                throw new ApiException($"Exception thrown adding event year: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -775,7 +775,7 @@ namespace Chronokeep.Network.API
                 HttpRequestMessage request = new()
                 {
                     Method = HttpMethod.Get,
-                    RequestUri = new Uri(Constants.ApiConstants.API_URL[Constants.ApiConstants.CHRONOKEEP_RESULTS] + "blocked/phones/get"),
+                    RequestUri = new Uri($"{Constants.ApiConstants.API_URL[Constants.ApiConstants.CHRONOKEEP_RESULTS]}blocked/phones/get"),
                 };
                 HttpResponseMessage response = await client.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)

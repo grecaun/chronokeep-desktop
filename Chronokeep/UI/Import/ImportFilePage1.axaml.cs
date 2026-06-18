@@ -82,7 +82,7 @@ public partial class ImportFilePage1 : UserControl
 
     internal void UpdateSheetNo(int selection)
     {
-        Log.D("ImportFilePage1", "Changing sheet to " + selection);
+        Log.D("ImportFilePage1", $"Changing sheet to {selection}");
         ExcelImporter excelImporter = (ExcelImporter)importer;
         excelImporter.ChangeSheet(selection);
         excelImporter.FetchHeaders();
