@@ -121,7 +121,7 @@ public partial class AwardPage : UserControl, ISubPage
         foreach (TimeResult result in results)
         {
             // Gather the gender and modify it to what we want for use in results.
-            string gend = result.Gender switch
+            string gender = result.Gender switch
             {
                 "Woman" => "Women",
                 "Man" => "Men",
@@ -140,10 +140,10 @@ public partial class AwardPage : UserControl, ISubPage
                 // Check if we're printing the overall results.
                 if (options.PrintOverall)
                 {
-                    if (!distResultsDict.TryGetValue(gend, out List<TimeResult>? ovResults))
+                    if (!distResultsDict.TryGetValue(gender, out List<TimeResult>? ovResults))
                     {
                         ovResults = [];
-                        distResultsDict[gend] = ovResults;
+                        distResultsDict[gender] = ovResults;
                     }
                     ovResults.Add(result);
                 }
@@ -153,9 +153,9 @@ public partial class AwardPage : UserControl, ISubPage
                 // Exclude any genders we don't know about.
                 if (!options.ExcludeOverallAg
                     && result.GenderPlace <= options.NumAgeGroups
-                    && gend != "")
+                    && gender != "")
                 {
-                    string ageGroup = $"{gend} {result.AgeGroupName}";
+                    string ageGroup = $"{gender} {result.AgeGroupName}";
                     int oAgCount = ageGroupCounter.GetValueOrDefault((result.DistanceName, ageGroup), 0);
                     if (options.PrintAgeGroups)
                     {
@@ -171,21 +171,21 @@ public partial class AwardPage : UserControl, ISubPage
                 }
                 // This is almost the same as the age groups category.
                 // Check if told to exclude from custom results.
-                // and if we were told to print custom results
+                // If we were told to print custom results
                 // exclude any unknown genders
-                // check if we were told to exclude age group winners from custom winners, if so only include ones we didn't add above
-                // this will exclude any that would have won an age group award even if we didn't actually print it
+                // check if we were told to exclude age group winners from custom winners, if so only include ones we didn't add above.
+                // this will exclude any that would have won an age group award even if we didn't actually print it.
                 // this is the behavior we want and should work the same for overall as well
                 if (options.ExcludeOverallCustom
                     || !options.PrintCustom
-                    || gend == ""
+                    || gender == ""
                     || (options.ExcludeAgeGroupsCustom && addedToAgeGroupResults)) continue;
                 {
                     int age = result.Age(theEvent.Date);
                     foreach (AgeGroup group in customAgeGroups)
                     {
                         if (age < group.StartAge || age > group.EndAge) continue;
-                        string ageGroup = $"{gend} {group.PrettyName()}";
+                        string ageGroup = $"{gender} {group.PrettyName()}";
                         if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
                         {
                             oResList = [];
@@ -199,11 +199,11 @@ public partial class AwardPage : UserControl, ISubPage
                     }
                 }
             }
-            else if (gend != "")
+            else if (gender != "")
             {
                 // We're not in the overall results.
                 // Check for age groups.
-                string ageGroup = $"{gend} {result.AgeGroupName}";
+                string ageGroup = $"{gender} {result.AgeGroupName}";
                 if (!distResultsDict.TryGetValue(ageGroup, out List<TimeResult>? oResList))
                 {
                     oResList = [];
@@ -237,7 +237,7 @@ public partial class AwardPage : UserControl, ISubPage
                 }
             }
         }
-        // Collect all of the groups into lists according to their distance
+        // Collect all the groups into lists according to their distance
         // We do this so we can sort them by age group.
         Dictionary<string, List<string>> distanceGroups = [];
         foreach (string dist in resultsDictionary.Keys)
@@ -408,103 +408,108 @@ public partial class AwardPage : UserControl, ISubPage
         try
         {
             Log.D("UI.Timing.AwardPage", "Save clicked.");
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+            IStorageFolder? startingFolder;
+            try
             {
-                IStorageFolder? startingFolder;
-                try
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
+            }
+            catch
+            {
+                startingFolder = null;
+            }
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                FileTypeChoices = [Utils.PdfType],
+                SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Awards.pdf".Replace(' ', '-'),
+                SuggestedStartLocation = startingFolder,
+            });
+            AwardOptions options = GetOptions();
+            List<string> divsToPrint = [];
+            if (DistancesBox.SelectedItems != null)
+            {
+                foreach (object? divItem in DistancesBox.SelectedItems)
                 {
-                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-                }
-                catch
-                {
-                    startingFolder = null;
-                }
-                var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-                {
-                    FileTypeChoices = [Utils.PdfType],
-                    SuggestedFileName = $"{theEvent!.YearCode}-{theEvent.Name}-Awards.pdf".Replace(' ', '-'),
-                    SuggestedStartLocation = startingFolder,
-                });
-                AwardOptions options = GetOptions();
-                List<string> divsToPrint = [];
-                if (DistancesBox.SelectedItems != null)
-                {
-                    foreach (object? divItem in DistancesBox.SelectedItems)
+                    if (divItem is not ListBoxItem div || div.Content == null) continue;
+                    if (div.Content.Equals("All"))
                     {
-                        if (divItem is not ListBoxItem div || div.Content == null) continue;
-                        if (div.Content.Equals("All"))
-                        {
-                            divsToPrint.Clear();
-                            break;
-                        }
-                        divsToPrint.Add(div.Content.ToString()!);
+                        divsToPrint.Clear();
+                        break;
                     }
+                    divsToPrint.Add(div.Content.ToString()!);
                 }
-                if (options is { PrintCustom: false, PrintAgeGroups: false, PrintOverall: false })
-                {
-                    DialogBox.Show("No awards group selected to print/save.");
-                    return;
-                }
+            }
+            if (options is { PrintCustom: false, PrintAgeGroups: false, PrintOverall: false })
+            {
+                DialogBox.Show("No awards group selected to print/save.");
+                return;
+            }
 
-                if (file is null) return;
-                try
+            if (file is null) return;
+            try
+            {
+                string htmlString = GetPrintableAwards(divsToPrint, options);
+                string weasyName;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    string htmlString = GetPrintableAwards(divsToPrint, options);
-                    string weasyName;
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    weasyName = Path.Combine(Directory.GetCurrentDirectory(), "weasyprint.exe");
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    weasyName = "weasyprint";
+                    using Process testWeasy = new();
+                    testWeasy.StartInfo.FileName = "which";
+                    testWeasy.StartInfo.Arguments = weasyName;
+                    testWeasy.Start();
+                    await testWeasy.WaitForExitAsync();
+                    int exitVal = testWeasy.ExitCode;
+                    testWeasy.Close();
+                    if (exitVal != 0)
                     {
-                        weasyName = Path.Combine(Directory.GetCurrentDirectory(), "weasyprint.exe");
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        weasyName = "weasyprint";
-                        using Process testWeasy = new();
-                        testWeasy.StartInfo.FileName = "which";
-                        testWeasy.StartInfo.Arguments = weasyName;
-                        testWeasy.Start();
-                        await testWeasy.WaitForExitAsync();
-                        testWeasy.Close();
-                        if (testWeasy.ExitCode != 0)
-                        {
-                            DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
-                                "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        DialogBox.Show("Operating System detected does not support this function currently.");
+                        DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
+                            "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
                         return;
                     }
-                    // Write HTML to a temp file.
-                    string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
-                    await using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
-                    await streamwriter.WriteAsync(htmlString);
-                    streamwriter.Close();
-                    // Delete old file if it exists.
-                    string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
-                    if (File.Exists(filePath))
-                    {
-                        File.Delete(filePath);
-                    }
-                    // Use weasyprint to convert our temp html file to a saved pdf file.
-                    using Process createPdf = new();
-                    createPdf.StartInfo.FileName = weasyName;
-                    createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
-                    createPdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    createPdf.Start();
-                    // wait for it to exit then kill it, even if the wait timed out
-                    await createPdf.WaitForExitAsync();
-                    createPdf.Close();
-                    // delete old file
-                    File.Delete(tmpFile);
-                    DialogBox.Show("File saved.");
                 }
-                catch
+                else
                 {
-                    DialogBox.Show("Unable to save file.");
+                    DialogBox.Show("Operating System detected does not support this function currently.");
+                    return;
                 }
+                // Write HTML to a temp file.
+                string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
+                await using StreamWriter streamWriter = new(File.Open(tmpFile, FileMode.Create));
+                await streamWriter.WriteAsync(htmlString);
+                streamWriter.Close();
+                // Delete old file if it exists.
+                string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                // Use weasyprint to convert our temp html file to a saved PDF file.
+                using Process createPdf = new();
+                createPdf.StartInfo.FileName = weasyName;
+                createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
+                createPdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                createPdf.Start();
+                // wait for it to exit then kill it, even if the wait timed out
+                await createPdf.WaitForExitAsync();
+                createPdf.Close();
+                // delete old file
+                File.Delete(tmpFile);
+                // DialogBox.Show("File saved.");
+                using Process openPdf = new();
+                openPdf.StartInfo.FileName = filePath;
+                openPdf.StartInfo.UseShellExecute = true;
+                openPdf.Start();
+                await openPdf.WaitForExitAsync();
+                openPdf.Close();
+            }
+            catch
+            {
+                DialogBox.Show("Unable to save file.");
             }
         }
         catch (Exception)

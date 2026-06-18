@@ -23,7 +23,7 @@ namespace Chronokeep.Timing
 
         private static readonly Semaphore Semaphore = new(0, 2);
         private static readonly Lock WorkLock = new();
-        private static readonly Lock ResetDictionarysLock = new();
+        private static readonly Lock ResetDictionariesLock = new();
         private static readonly Lock ResultsLock = new();
         private static bool quittingTime;
         private static bool newResults;
@@ -94,14 +94,14 @@ namespace Chronokeep.Timing
         {
             Log.D("Timing.TimingWorker", "Resetting dictionaries next go around.");
             Log.D("Timing.TimingWorker", "Lock Wait 04");
-            if (!ResetDictionarysLock.TryEnter(3000)) return;
+            if (!ResetDictionariesLock.TryEnter(3000)) return;
             try
             {
                 resetDictionariesBool = true;
             }
             finally
             {
-                ResetDictionarysLock.Exit();
+                ResetDictionariesLock.Exit();
             }
         }
 
@@ -189,22 +189,22 @@ namespace Chronokeep.Timing
                 }
                 Dictionary.DistanceNameDictionary[d.Name] = d;
                 Log.D("Timing.TimingWorker", "Distance " + d.Name + " offsets are " + d.StartOffsetSeconds + " " + d.StartOffsetMilliseconds);
-                long startSecs = Dictionary.DistanceStartDict[0].Seconds + d.StartOffsetSeconds;
-                int startMillisecs = Dictionary.DistanceStartDict[0].Milliseconds + d.StartOffsetMilliseconds;
-                switch (startMillisecs)
+                long startSeconds = Dictionary.DistanceStartDict[0].Seconds + d.StartOffsetSeconds;
+                int startMilliseconds = Dictionary.DistanceStartDict[0].Milliseconds + d.StartOffsetMilliseconds;
+                switch (startMilliseconds)
                 {
                     case < 0:
-                        startSecs -= 1;
-                        startMillisecs += 1000;
+                        startSeconds -= 1;
+                        startMilliseconds += 1000;
                         break;
                     case >= 1000:
-                        startSecs += 1;
-                        startMillisecs -= 1000;
+                        startSeconds += 1;
+                        startMilliseconds -= 1000;
                         break;
                 }
-                Dictionary.DistanceStartDict[d.Identifier] = (startSecs, startMillisecs);
-                Dictionary.DistanceEndDict[d.Identifier] = (startSecs + d.EndSeconds, startMillisecs);
-                Dictionary.DistanceEndDict[0] = (startSecs + d.EndSeconds, startMillisecs);
+                Dictionary.DistanceStartDict[d.Identifier] = (startSeconds, startMilliseconds);
+                Dictionary.DistanceEndDict[d.Identifier] = (startSeconds + d.EndSeconds, startMilliseconds);
+                Dictionary.DistanceEndDict[0] = (startSeconds + d.EndSeconds, startMilliseconds);
             }
             // Set up bibToChipDictionary so we can link bibs to chips
             List<BibChipAssociation> bibChips = database.GetBibChips(theEvent.Identifier);
@@ -338,7 +338,7 @@ namespace Chronokeep.Timing
                     // ensure the event exists and we've got unprocessed reads
                     if (theEvent.Identifier == -1) continue;
                     Log.D("Timing.TimingWorker", "Lock Wait 06");
-                    if (ResetDictionarysLock.TryEnter(3000))
+                    if (ResetDictionariesLock.TryEnter(3000))
                     {
                         try
                         {
@@ -350,7 +350,7 @@ namespace Chronokeep.Timing
                         }
                         finally
                         {
-                            ResetDictionarysLock.Exit();
+                            ResetDictionariesLock.Exit();
                         }
                     }
                     bool touched = false;
@@ -368,17 +368,17 @@ namespace Chronokeep.Timing
 #endif
                         switch (theEvent.EventType)
                         {
-                            // If RACETYPE is DISTANCE
+                            // If RACE TYPE is DISTANCE
                             case Constants.Timing.EVENT_TYPE_DISTANCE:
                                 _ = DistanceRoutine.ProcessRace(theEvent, database, Dictionary, window);
                                 touched = true;
                                 break;
-                            // Else RACETYPE is TIME
+                            // Else RACE TYPE is TIME
                             case Constants.Timing.EVENT_TYPE_TIME:
                                 _ = TimeRoutine.ProcessRace(theEvent, database, Dictionary, window);
                                 touched = true;
                                 break;
-                            // Else if RACETYPE is BACKYARD_ULTRA
+                            // Else if RACE TYPE is BACKYARD_ULTRA
                             case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
                                 _ = BackyardUltraRoutine.ProcessRace(theEvent, database, Dictionary, window);
                                 touched = true;
@@ -399,18 +399,18 @@ namespace Chronokeep.Timing
 #endif
                         switch (theEvent.EventType)
                         {
-                            // If RACETYPE is DISTANCE
+                            // If RACE TYPE is DISTANCE
                             case Constants.Timing.EVENT_TYPE_DISTANCE:
                                 _ = DistanceRoutine.ProcessPlacements(theEvent, database, Dictionary);
                                 touched = true;
                                 break;
-                            // Else if RACETYPE is TIME
+                            // Else if RACE TYPE is TIME
                             case Constants.Timing.EVENT_TYPE_TIME:
                                 TimeRoutine.ProcessLapTimes(theEvent, database);
                                 _ = TimeRoutine.ProcessPlacements(theEvent, database, Dictionary);
                                 touched = true;
                                 break;
-                            // Else if RACETYPE is BACKYARD_ULTRA
+                            // Else if RACE TYPE is BACKYARD_ULTRA
                             case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
                                 _ = BackyardUltraRoutine.ProcessPlacements(theEvent, database, Dictionary);
                                 touched = true;
@@ -470,7 +470,7 @@ namespace Chronokeep.Timing
                                                                 result.SegmentId))
                                                             || result.SystemTime.CompareTo(fifteenPrior) <= 0)
                                     continue;
-                                //deal with sms subcriptions
+                                //deal with sms subscriptions
                                 if (Constants.Timing.SEGMENT_START != result.SegmentId && Constants.Timing.SEGMENT_NONE != result.SegmentId)
                                 {
                                     smsResults.Add(result);
@@ -481,13 +481,13 @@ namespace Chronokeep.Timing
                             {
                                 if (lastSubscriptionFetch.AddSeconds(30).CompareTo(now) < 0)
                                 {
-                                    ApiObject lapi = database.GetApi(theEvent.ApiId)!;
+                                    ApiObject apiObject = database.GetApi(theEvent.ApiId)!;
                                     string[] eventIds = theEvent.ApiEventId.Split(',');
                                     if (eventIds.Length == 2)
                                     {
                                         try
                                         {
-                                            GetSmsSubscriptionsResponse subscriptionResponse = await ApiHandlers.GetSmsSubscriptions(lapi, eventIds[0], eventIds[1]);
+                                            GetSmsSubscriptionsResponse subscriptionResponse = await ApiHandlers.GetSmsSubscriptions(apiObject, eventIds[0], eventIds[1]);
                                             // delete old then upload all the new subscriptions
                                             // this is just to make sure that we remove anyone who may have unsubscribed
                                             database.DeleteSmsSubscriptions(theEvent.Identifier);

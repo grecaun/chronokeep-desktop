@@ -84,7 +84,7 @@ public partial class ChipTool : ChronokeepWindow
         Event theEvent = database!.GetCurrentEvent()!;
         database.AddBibChipAssociation(theEvent.Identifier, list);
         ImportComplete = true;
-        this.Close();
+        Close();
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)

@@ -180,13 +180,10 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        foreach (Participant person in participants.Values)
+                        foreach (Participant person in participants.Values.Where(person => person.Identifier == identifier))
                         {
-                            if (person.Identifier == identifier)
-                            {
-                                output = person;
-                                break;
-                            }
+                            output = person;
+                            break;
                         }
                     }
                 }
@@ -432,13 +429,7 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        foreach (Participant person in participants.Values)
-                        {
-                            if (person.EventSpecific.DistanceIdentifier == distanceId)
-                            {
-                                output.Add(person);
-                            }
-                        }
+                        output.AddRange(participants.Values.Where(person => person.EventSpecific.DistanceIdentifier == distanceId));
                     }
                 }
                 finally

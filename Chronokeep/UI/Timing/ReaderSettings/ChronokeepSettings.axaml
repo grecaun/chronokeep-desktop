@@ -198,7 +198,7 @@
                              HorizontalAlignment="Center"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </Expander>
-                <Expander Header="ntfy"
+                <Expander Header="Ntfy"
                           Margin="5,5,5,5"
                           HorizontalAlignment="Stretch">
                     <StackPanel>
@@ -303,7 +303,7 @@
                                   OnContent=""
                                   OffContent=""
                                   Margin="10,-7,-7,0"/>
-                    <Label Content="Enable NTFY" VerticalAlignment="Center" Margin="0,-7,0,0"/>
+                    <Label Content="Enable Ntfy" VerticalAlignment="Center" Margin="0,-7,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button Name="ManualResultsButton"

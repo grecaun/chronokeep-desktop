@@ -411,7 +411,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown uploading results: " + ex.Message);
+                throw new ApiException($"Exception thrown uploading results: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -454,7 +454,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting results: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting results: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -498,7 +498,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting results: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting results: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -542,7 +542,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding bibchips: " + ex.Message);
+                throw new ApiException($"Exception thrown adding bibchips: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -585,7 +585,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting bibchips: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting bibchips: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -628,7 +628,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting bibchips: " + ex.Message);
+                throw new ApiException($"Exception thrown getting bibchips: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -672,7 +672,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown uploading participants: " + ex.Message);
+                throw new ApiException($"Exception thrown uploading participants: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -715,7 +715,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting participants: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting participants: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -760,7 +760,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting participants: " + ex.Message);
+                throw new ApiException($"Exception thrown getting participants: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -793,7 +793,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting banned phone numbers: " + ex.Message);
+                throw new ApiException($"Exception thrown getting banned phone numbers: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -837,7 +837,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown blocking phone number: " + ex.Message);
+                throw new ApiException($"Exception thrown blocking phone number: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -881,7 +881,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown unblocking phone number: " + ex.Message);
+                throw new ApiException($"Exception thrown unblocking phone number: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -914,7 +914,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting banned emails: " + ex.Message);
+                throw new ApiException($"Exception thrown getting banned emails: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -953,7 +953,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown blocking email: " + ex.Message);
+                throw new ApiException($"Exception thrown blocking email: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -992,7 +992,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown unblocking email: " + ex.Message);
+                throw new ApiException($"Exception thrown unblocking email: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -1036,7 +1036,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding segments: " + ex.Message);
+                throw new ApiException($"Exception thrown adding segments: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -1079,7 +1079,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting segments: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting segments: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -1123,7 +1123,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown adding distances: " + ex.Message);
+                throw new ApiException($"Exception thrown adding distances: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -1166,7 +1166,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown deleting distances: " + ex.Message);
+                throw new ApiException($"Exception thrown deleting distances: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -1209,7 +1209,7 @@ namespace Chronokeep.Network.API
             catch (Exception ex)
             {
                 Log.D("Network.API.APIHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting sms subscriptions: " + ex.Message);
+                throw new ApiException($"Exception thrown getting sms subscriptions: {ex.Message}");
             }
             throw new ApiException(content);
         }

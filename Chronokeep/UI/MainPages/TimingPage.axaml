@@ -51,7 +51,7 @@
         <Grid Grid.Column="1" RowDefinitions="Auto,*">
             <StackPanel Grid.Row="0">
                 <TextBlock
-                        Name="EllapsedTime"
+                        Name="ElapsedTime"
                         Text="00:00:00"
                         TextAlignment="Center"
                         Margin="0,0,10,0"
@@ -59,7 +59,7 @@
                         FontSize="40"
                         />
                 <ComboBox
-                        Name="EllapsedRelativeToBox"
+                        Name="ElapsedRelativeToBox"
                         Margin="0,0,0,5"
                         Width="250"
                         Height="35"
@@ -427,8 +427,8 @@
                                         Margin="0,5,5,0"
                                         />
                                     <Button
-                                        Content="Runsignup"
-                                        Click="Export_Runsignup_Click"
+                                        Content="RunSignup"
+                                        Click="Export_RunSignup_Click"
                                         Classes="tim"
                                         Margin="0,5,5,0"
                                         />

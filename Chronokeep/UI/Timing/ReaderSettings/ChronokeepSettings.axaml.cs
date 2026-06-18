@@ -50,18 +50,13 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 UploadSlider.Value = allSettings.UploadInterval;
                 BeepSlider.Value = allSettings.BeepInterval;
                 SoundBox.IsChecked = allSettings.PlaySound;
-                switch (allSettings.Voice)
+                VoiceBox.SelectedIndex = allSettings.Voice switch
                 {
-                    case PortalSettingsHolder.VoiceType.EMILY:
-                        VoiceBox.SelectedIndex = 0;
-                        break;
-                    case PortalSettingsHolder.VoiceType.MICHAEL:
-                        VoiceBox.SelectedIndex = 1;
-                        break;
-                    case PortalSettingsHolder.VoiceType.CUSTOM:
-                        VoiceBox.SelectedIndex = 2;
-                        break;
-                }
+                    PortalSettingsHolder.VoiceType.EMILY => 0,
+                    PortalSettingsHolder.VoiceType.MICHAEL => 1,
+                    PortalSettingsHolder.VoiceType.CUSTOM => 2,
+                    _ => VoiceBox.SelectedIndex
+                };
                 NtfyUrlBox.Text = allSettings.NtfyUrl;
                 NtfyTopicBox.Text = allSettings.NtfyTopic;
                 NtfyUserBox.Text = allSettings.NtfyUser;
@@ -157,6 +152,9 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 case PortalStatus.STOPPING:
                     AutoResultsSwitch.IsEnabled = false;
                     AutoResultsSwitch.IsChecked = true;
+                    break;
+                case PortalStatus.NOTSET:
+                default:
                     break;
             }
         });

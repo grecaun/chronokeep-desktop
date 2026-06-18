@@ -389,61 +389,24 @@ namespace Chronokeep.Objects
         {
             get
             {
-                if (Constants.Timing.CHIPREAD_STATUS_NONE == Status)
+                return Status switch
                 {
-                    return "Unprocessed";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_PRESTART == Status)
-                {
-                    return "Before Start";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_UNUSEDSTART == Status)
-                {
-                    return "Unused Start";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_IGNORE == Status ||
-                    Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE == Status ||
-                    Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE == Status)
-                {
-                    return "Ignored";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_USED == Status)
-                {
-                    return "Used";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_WITHINIGN == Status)
-                {
-                    return "Too Soon";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_OVERMAX == Status)
-                {
-                    return "Extra";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_STARTTIME == Status)
-                {
-                    return "Start";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_DNF == Status || Constants.Timing.CHIPREAD_STATUS_AUTO_DNF == Status)
-                {
-                    return "DNF";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_SEEN == Status)
-                {
-                    return "A-Seen";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED == Status)
-                {
-                    return "A-Used";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_DNS == Status)
-                {
-                    return "DNS";
-                }
-                if (Constants.Timing.CHIPREAD_STATUS_AFTER_DNS == Status)
-                {
-                    return "After DNS";
-                }
-                return Constants.Timing.CHIPREAD_STATUS_AFTER_FINISH == Status ? "After Finish" : "Unknown";
+                    Constants.Timing.CHIPREAD_STATUS_NONE => "Unprocessed",
+                    Constants.Timing.CHIPREAD_STATUS_PRESTART => "Before Start",
+                    Constants.Timing.CHIPREAD_STATUS_UNUSEDSTART => "Unused Start",
+                    Constants.Timing.CHIPREAD_STATUS_IGNORE or Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE
+                        or Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE => "Ignored",
+                    Constants.Timing.CHIPREAD_STATUS_USED => "Used",
+                    Constants.Timing.CHIPREAD_STATUS_WITHINIGN => "Too Soon",
+                    Constants.Timing.CHIPREAD_STATUS_OVERMAX => "Extra",
+                    Constants.Timing.CHIPREAD_STATUS_STARTTIME => "Start",
+                    Constants.Timing.CHIPREAD_STATUS_DNF or Constants.Timing.CHIPREAD_STATUS_AUTO_DNF => "DNF",
+                    Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_SEEN => "A-Seen",
+                    Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED => "A-Used",
+                    Constants.Timing.CHIPREAD_STATUS_DNS => "DNS",
+                    Constants.Timing.CHIPREAD_STATUS_AFTER_DNS => "After DNS",
+                    _ => Constants.Timing.CHIPREAD_STATUS_AFTER_FINISH == Status ? "After Finish" : "Unknown"
+                };
             }
         }
 
@@ -479,19 +442,12 @@ namespace Chronokeep.Objects
 
         public bool IsIgnored()
         {
-            return Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE == Status ||
-                    Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE == Status ||
-                    Constants.Timing.CHIPREAD_STATUS_IGNORE == Status;
+            return Status is Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE or Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE or Constants.Timing.CHIPREAD_STATUS_IGNORE;
         }
 
         public bool IsUseful()
         {
-            return Constants.Timing.CHIPREAD_STATUS_NONE == Status
-                || Constants.Timing.CHIPREAD_STATUS_USED == Status
-                || Constants.Timing.CHIPREAD_STATUS_STARTTIME == Status
-                || Constants.Timing.CHIPREAD_STATUS_DNF == Status
-                || Constants.Timing.CHIPREAD_STATUS_DNS == Status
-                || Constants.Timing.CHIPREAD_STATUS_AUTO_DNF == Status;
+            return Status is Constants.Timing.CHIPREAD_STATUS_NONE or Constants.Timing.CHIPREAD_STATUS_USED or Constants.Timing.CHIPREAD_STATUS_STARTTIME or Constants.Timing.CHIPREAD_STATUS_DNF or Constants.Timing.CHIPREAD_STATUS_DNS or Constants.Timing.CHIPREAD_STATUS_AUTO_DNF;
         }
 
         public bool CanBeReset()

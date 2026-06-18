@@ -16,6 +16,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Chronokeep.Objects.ChronokeepRemote;
+
 namespace Chronokeep.Timing.Interfaces
 {
     public partial class ChronokeepInterface(IdbInterface database, int locationId, IMainWindow window) : ITimingSystemInterface
@@ -172,9 +174,9 @@ namespace Chronokeep.Timing.Interfaces
                             try
                             {
                                 ReaderAntennasResponse antRes = JsonSerializer.Deserialize<ReaderAntennasResponse>(message)!;
-                                settingsWindow?.UpdateView(new()
+                                settingsWindow?.UpdateView(new PortalSettingsHolder
                                 {
-                                    Antennas = new()
+                                    Antennas = new PortalSettingsHolder.ReaderAntennas
                                     {
                                         ReaderName = antRes.ReaderName,
                                         Antennas = antRes.Antennas,
@@ -205,7 +207,7 @@ namespace Chronokeep.Timing.Interfaces
                                     output[MessageType.ERROR] = errorList;
                                 }
                                 Log.E("Timing.Interfaces.ChronokeepInterface", "Error sent to us is of type '" + err.Value.Type + "' and has message '" + err.Value.Message + "'.");
-                                window?.ShowNotificationDialog(readerName, readerIp, new()
+                                window?.ShowNotificationDialog(readerName, readerIp, new RemoteNotification
                                 {
                                     Type = err.Value.Type,
                                     When = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -300,7 +302,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing settings. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing settings. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -329,7 +331,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing api list. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing api list. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -372,22 +374,14 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.Volume = double.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_VOICE:
-                                                if (set.Value == PortalSetting.VOICE_EMILY)
+                                                updSettings.Voice = set.Value switch
                                                 {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.EMILY;
-                                                }
-                                                else if (set.Value == PortalSetting.VOICE_MICHAEL)
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.MICHAEL;
-                                                }
-                                                else if (set.Value == PortalSetting.VOICE_CUSTOM)
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.CUSTOM;
-                                                }
-                                                else
-                                                {
-                                                    updSettings.Voice = PortalSettingsHolder.VoiceType.EMILY;
-                                                }
+                                                    PortalSetting.VOICE_EMILY => PortalSettingsHolder.VoiceType.EMILY,
+                                                    PortalSetting.VOICE_MICHAEL => PortalSettingsHolder.VoiceType
+                                                        .MICHAEL,
+                                                    PortalSetting.VOICE_CUSTOM => PortalSettingsHolder.VoiceType.CUSTOM,
+                                                    _ => PortalSettingsHolder.VoiceType.EMILY
+                                                };
                                                 break;
                                             case PortalSetting.SETTING_UPLOAD_INTERVAL:
                                                 updSettings.UploadInterval = int.Parse(set.Value);
@@ -466,32 +460,28 @@ namespace Chronokeep.Timing.Interfaces
                                 ReadsResponse reads = JsonSerializer.Deserialize<ReadsResponse>(message)!;
                                 if (reads.List.Count > 0)
                                 {
-                                    foreach (PortalRead pRead in reads.List)
+                                    foreach (ChipRead chipRead in from pRead in reads.List where pRead.IdentType != PortalRead.READ_IDENT_TYPE_CHIP || !ignoredChips.Contains(pRead.Identifier) select new ChipRead(
+                                                 theEvent.Identifier,
+                                                 locationId,
+                                                 pRead.IdentType == PortalRead.READ_IDENT_TYPE_CHIP,
+                                                 pRead.Identifier,
+                                                 Constants.Timing.UtcSecondsToRfidSeconds(pRead.Seconds),
+                                                 pRead.Milliseconds,
+                                                 pRead.Antenna,
+                                                 pRead.Rssi,
+                                                 pRead.Reader,
+                                                 pRead.Type == PortalRead.READ_KIND_CHIP ? Constants.Timing.CHIPREAD_TYPE_CHIP : Constants.Timing.CHIPREAD_TYPE_MANUAL,
+                                                 Constants.Timing.UtcToLocalDate(pRead.ReaderSeconds, pRead.ReaderMilliseconds).ToString("yyyy/MM/dd HH:mm:ss.fff"),
+                                                 readerName
+                                             ))
                                     {
-                                        // Only save a chip read if the chip is not on the ignored list.
-                                        if (pRead.IdentType != PortalRead.READ_IDENT_TYPE_CHIP || !ignoredChips.Contains(pRead.Identifier))
+                                        if (window != null && window.InDidNotStartMode())
                                         {
-                                            ChipRead chipRead = new(
-                                                theEvent.Identifier,
-                                                locationId,
-                                                pRead.IdentType == PortalRead.READ_IDENT_TYPE_CHIP,
-                                                pRead.Identifier,
-                                                Constants.Timing.UtcSecondsToRfidSeconds(pRead.Seconds),
-                                                pRead.Milliseconds,
-                                                pRead.Antenna,
-                                                pRead.Rssi,
-                                                pRead.Reader,
-                                                pRead.Type == PortalRead.READ_KIND_CHIP ? Constants.Timing.CHIPREAD_TYPE_CHIP : Constants.Timing.CHIPREAD_TYPE_MANUAL,
-                                                Constants.Timing.UtcToLocalDate(pRead.ReaderSeconds, pRead.ReaderMilliseconds).ToString("yyyy/MM/dd HH:mm:ss.fff"),
-                                                readerName
-                                                );
-                                            if (window != null && window.InDidNotStartMode())
-                                            {
-                                                chipRead.Status = Constants.Timing.CHIPREAD_STATUS_DNS;
-                                            }
-                                            chipReads.Add(chipRead);
+                                            chipRead.Status = Constants.Timing.CHIPREAD_STATUS_DNS;
                                         }
+                                        chipReads.Add(chipRead);
                                     }
+
                                     if (chipReads.Count > 0)
                                     {
                                         output[MessageType.CHIPREAD] = [];
@@ -544,11 +534,10 @@ namespace Chronokeep.Timing.Interfaces
                             try
                             {
                                 ReadAutoUploadResponse autoUploadResponse = JsonSerializer.Deserialize<ReadAutoUploadResponse>(message)!;
-                                settingsWindow?.UpdateView(new()
+                                settingsWindow?.UpdateView(new PortalSettingsHolder
                                 {
                                     AutoUpload = autoUploadResponse.Status,
-                                }
-                                    );
+                                });
                             }
                             catch (Exception e)
                             {
@@ -564,14 +553,7 @@ namespace Chronokeep.Timing.Interfaces
                         case Response.CONNECTION_SUCCESSFUL:
                             Log.D("Timing.Interfaces.ChronokeepInterface", "Reader sent connection successful message.");
                             ConnectionSuccessfulResponse connectionResponse = JsonSerializer.Deserialize<ConnectionSuccessfulResponse>(message)!;
-                            int readingCount = 0;
-                            foreach (PortalReader reader in connectionResponse.Readers)
-                            {
-                                if (reader.Reading)
-                                {
-                                    readingCount++;
-                                }
-                            }
+                            int readingCount = connectionResponse.Readers.Count(reader => reader.Reading);
                             if (!output.TryGetValue(MessageType.STATUS, out List<string>? statusList))
                             {
                                 statusList = [];
@@ -600,43 +582,21 @@ namespace Chronokeep.Timing.Interfaces
                             try
                             {
                                 NotificationResponse notRes = JsonSerializer.Deserialize<NotificationResponse>(message)!;
-                                string msg = "";
-                                switch (notRes.Type)
+                                string msg = notRes.Type switch
                                 {
-                                    case PortalNotification.UPS_DISCONNECTED:
-                                        msg = "Portal at " + readerIp + " UPS has been disconnected.";
-                                        break;
-                                    case PortalNotification.UPS_CONNECTED:
-                                        msg = "Portal at " + readerIp + " UPS connection has been re-established.";
-                                        break;
-                                    case PortalNotification.UPS_ON_BATTERY:
-                                        msg = "Portal at " + readerIp + " UPS is working from battery power.";
-                                        break;
-                                    case PortalNotification.UPS_LOW_BATTERY:
-                                        msg = "Portal at " + readerIp + " UPS battery is low. Shutdown imminent.";
-                                        break;
-                                    case PortalNotification.UPS_ONLINE:
-                                        msg = "Portal at " + readerIp + " UPS is back on line power.";
-                                        break;
-                                    case PortalNotification.SHUTTING_DOWN:
-                                        msg = "Portal at " + readerIp + " is shutting down.";
-                                        break;
-                                    case PortalNotification.RESTARTING:
-                                        msg = "Portal at " + readerIp + " is restarting.";
-                                        break;
-                                    case PortalNotification.HIGH_TEMP:
-                                        msg = "Portal at " + readerIp + " temperature is high.";
-                                        break;
-                                    case PortalNotification.MAX_TEMP:
-                                        msg = "Portal at " + readerIp + " temperature is very high. Throttling will most likely occur.";
-                                        break;
-                                    case PortalNotification.BATTERY_LOW:
-                                        msg = "Portal at " + readerIp + " is indicating the battery is low.";
-                                        break;
-                                    case PortalNotification.BATTERY_CRITICAL:
-                                        msg = "Portal at " + readerIp + " is indicating the battery is critical.";
-                                        break;
-                                }
+                                    PortalNotification.UPS_DISCONNECTED => $"Portal at {readerIp} UPS has been disconnected.",
+                                    PortalNotification.UPS_CONNECTED => $"Portal at {readerIp} UPS connection has been re-established.",
+                                    PortalNotification.UPS_ON_BATTERY => $"Portal at {readerIp} UPS is working from battery power.",
+                                    PortalNotification.UPS_LOW_BATTERY => $"Portal at {readerIp} UPS battery is low. Shutdown imminent.",
+                                    PortalNotification.UPS_ONLINE => $"Portal at {readerIp} UPS is back on line power.",
+                                    PortalNotification.SHUTTING_DOWN => $"Portal at {readerIp} is shutting down.",
+                                    PortalNotification.RESTARTING => $"Portal at {readerIp} is restarting.",
+                                    PortalNotification.HIGH_TEMP => $"Portal at {readerIp} temperature is high.",
+                                    PortalNotification.MAX_TEMP => $"Portal at {readerIp} temperature is very high. Throttling will most likely occur.",
+                                    PortalNotification.BATTERY_LOW => $"Portal at {readerIp} is indicating the battery is low.",
+                                    PortalNotification.BATTERY_CRITICAL => $"Portal at {readerIp} is indicating the battery is critical.",
+                                    _ => ""
+                                };
                                 Application.Current!.Dispatcher.Invoke(() =>
                                 {
                                     DialogBox.Show(msg);
@@ -644,7 +604,7 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             catch (Exception e)
                             {
-                                Log.E("Timing.Interfaces.ChronokeepInterface", "Error processing reader antennas. " + e.Message);
+                                Log.E("Timing.Interfaces.ChronokeepInterface", $"Error processing reader antennas. {e.Message}");
                                 if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
                                 {
                                     errorList = [];
@@ -654,14 +614,14 @@ namespace Chronokeep.Timing.Interfaces
                             }
                             break;
                         default:
-                            Log.E("Timing.Interfaces.ChronokeepInterface", "Unknown message received: " + res.Command);
+                            Log.E("Timing.Interfaces.ChronokeepInterface", $"Unknown message received: {res.Command}");
                             output[MessageType.UNKNOWN] = [];
                             break;
                     }
                 }
                 catch (Exception e)
                 {
-                    Log.E("Timing.Interfaces.ChronokeepInterface", "Error deserializing json. " + e.Message);
+                    Log.E("Timing.Interfaces.ChronokeepInterface", $"Error deserializing json. {e.Message}");
                 }
                 m = Msg().Match(buffer.ToString());
             }
@@ -921,7 +881,7 @@ namespace Chronokeep.Timing.Interfaces
 
         private void SendMessage(string msg)
         {
-            Log.D("Timing.Interfaces.ChronokeepInterface", "Sending message '" + msg + "'");
+            Log.D("Timing.Interfaces.ChronokeepInterface", $"Sending message '{msg}'");
             sock!.Send(Encoding.Default.GetBytes(msg + "\n"));
         }
 

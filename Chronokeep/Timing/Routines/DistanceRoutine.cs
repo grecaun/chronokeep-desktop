@@ -31,7 +31,7 @@ namespace Chronokeep.Timing.Routines
             Dictionary<int, TimeResult> lastSeen = [];
             foreach (TimeResult result in database.GetTimingResults(theEvent.Identifier))
             {
-                // if there is no time result
+                // if there is no time result,
                 // or we've seen the person but our time is BEFORE the one we're looking at
                 // set the last seen as this result
                 if (!lastSeen.TryGetValue(result.EventSpecificId, out TimeResult? lastSee)
@@ -40,7 +40,7 @@ namespace Chronokeep.Timing.Routines
                     lastSeen[result.EventSpecificId] = result;
                 }
             }
-            // Get all of the Chip Reads we find useful (Unprocessed, and those used as a result.)
+            // Get all the Chip Reads we find useful (Unprocessed, and those used as a result.)
             // and then sort them into groups based upon Bib, Chip, or put them in the ignore pile if
             // they have no bib or chip.
             Dictionary<string, List<ChipRead>> bibReadPairs = [];
@@ -51,11 +51,11 @@ namespace Chronokeep.Timing.Routines
             Dictionary<(string, int), (ChipRead Read, int Occurrence)> bibLastReadDictionary = [];
             Dictionary<(string, int), (ChipRead Read, int Occurrence)> chipLastReadDictionary = [];
             // Keep a list of DNF participants so we can mark them as DNF in results.
-            // Keep a record of the DNF chipread so we can link it with the TimeResult
+            // Keep a record of the DNF chip read so we can link it with the TimeResult
             Dictionary<string, ChipRead> bibDnfDictionary = [];
             Dictionary<string, ChipRead> chipDnfDictionary = [];
             // Keep a list of DNS participants so we can mark them as DNS in results.
-            // Keep a record of the DNS chipread so we can link it with the TimeResult
+            // Keep a record of the DNS chip read so we can link it with the TimeResult
             Dictionary<string, ChipRead> bibDnsDictionary = [];
             Dictionary<string, ChipRead> chipDnsDictionary = [];
 
@@ -63,7 +63,7 @@ namespace Chronokeep.Timing.Routines
             allChipReads.Sort();
             List<ChipRead> setUnknown = [];
 
-            // Create a dictionary for keeping track of all of our chipreads.
+            // Create a dictionary for keeping track of all of our chip reads.
             Dictionary<int, ChipRead> chipReadDict = [];
 
             // Get some variables to check if we need to sound an alarm.
@@ -77,13 +77,13 @@ namespace Chronokeep.Timing.Routines
                 // Check to set off an alarm.
                 if (read.Time > before)
                 {
-                    // Bib set on the read, alarm exists and it hasn't went off.
+                    // Bib set on the read, alarm exists, and it has not went off.
                     if (read.Bib.Length > 0 && read.Bib != Constants.Timing.CHIPREAD_DUMMYBIB
                                             && bibAlarms.TryGetValue(read.Bib, out Alarm? alarm1) && alarm1.Enabled)
                     {
                         window.NotifyAlarm(read.Bib, "");
                     }
-                    // Bib not set, chip is set, alarm exists and it hasn't went off.
+                    // Bib not set, chip is set, alarm exists, and it has not went off.
                     else if (read.ChipNumber != Constants.Timing.CHIPREAD_DUMMYCHIP
                         && chipAlarms.TryGetValue(read.ChipNumber, out Alarm? alarm2) && alarm2.Enabled)
                     {
@@ -107,37 +107,40 @@ namespace Chronokeep.Timing.Routines
                             bibDnsDictionary.TryAdd(read.Bib, read);
                         }
                     }
-                    // if we process all the used reads before putting them in the list
-                    // we can ensure that all of the reads we process are STATUS_NONE
-                    // and then we can verify that we aren't inserting results BEFORE
-                    // results we've already calculated
-                    else if (Constants.Timing.CHIPREAD_STATUS_USED == read.Status)
+                    else switch (read.Status)
                     {
-                        if (!bibLastReadDictionary.TryGetValue((read.Bib, read.LocationId), out (ChipRead Read, int Occurrence) bLastReads))
+                        // if we process all the used reads before putting them in the list
+                        // we can ensure that all the reads we process are STATUS_NONE,
+                        // and then we can verify that we aren't inserting results BEFORE
+                        // results we've already calculated
+                        case Constants.Timing.CHIPREAD_STATUS_USED:
                         {
-                            bLastReads = (read, 0);
+                            if (!bibLastReadDictionary.TryGetValue((read.Bib, read.LocationId), out (ChipRead Read, int Occurrence) bLastReads))
+                            {
+                                bLastReads = (read, 0);
+                            }
+                            bibLastReadDictionary[(read.Bib, read.LocationId)] = (read, bLastReads.Occurrence + 1);
+                            break;
                         }
-                        bibLastReadDictionary[(read.Bib, read.LocationId)] = (read, bLastReads.Occurrence + 1);
-                    }
-                    else if (Constants.Timing.CHIPREAD_STATUS_STARTTIME == read.Status &&
-                        (Constants.Timing.LOCATION_START == read.LocationId ||
-                        (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish)))
-                    {
-                        // If we haven't found anything, let us know what our start time was
-                        bibLastReadDictionary.TryAdd((read.Bib, read.LocationId), (read, 0));
-                    }
-                    else if (Constants.Timing.CHIPREAD_STATUS_DNF == read.Status)
-                    {
-                        bibDnfDictionary[read.Bib] = read;
-                    }
-                    else
-                    {
-                        if (!bibReadPairs.TryGetValue(read.Bib, out List<ChipRead>? bibReads))
+                        case Constants.Timing.CHIPREAD_STATUS_STARTTIME when
+                            (Constants.Timing.LOCATION_START == read.LocationId ||
+                             (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish)):
+                            // If we haven't found anything, let us know what our start time was
+                            bibLastReadDictionary.TryAdd((read.Bib, read.LocationId), (read, 0));
+                            break;
+                        case Constants.Timing.CHIPREAD_STATUS_DNF:
+                            bibDnfDictionary[read.Bib] = read;
+                            break;
+                        default:
                         {
-                            bibReads = [];
-                            bibReadPairs[read.Bib] = bibReads;
+                            if (!bibReadPairs.TryGetValue(read.Bib, out List<ChipRead>? bibReads))
+                            {
+                                bibReads = [];
+                                bibReadPairs[read.Bib] = bibReads;
+                            }
+                            bibReads.Add(read);
+                            break;
                         }
-                        bibReads.Add(read);
                     }
                 }
                 else if (read.ChipNumber != Constants.Timing.CHIPREAD_DUMMYCHIP)
@@ -157,38 +160,40 @@ namespace Chronokeep.Timing.Routines
                             chipDnsDictionary.TryAdd(read.ChipNumber, read);
                         }
                     }
-                    // Otherwise check the status and everything as we did for Bib reads.
-                    else if (Constants.Timing.CHIPREAD_STATUS_USED == read.Status)
+                    else switch (read.Status)
                     {
-                        if (!chipLastReadDictionary.TryGetValue((read.ChipNumber, read.LocationId), out (ChipRead Read, int Occurrence) cLastReads))
+                        // Otherwise check the status and everything as we did for Bib reads.
+                        case Constants.Timing.CHIPREAD_STATUS_USED:
                         {
-                            cLastReads = (read, 0);
+                            if (!chipLastReadDictionary.TryGetValue((read.ChipNumber, read.LocationId), out (ChipRead Read, int Occurrence) cLastReads))
+                            {
+                                cLastReads = (read, 0);
+                            }
+                            chipLastReadDictionary[(read.ChipNumber, read.LocationId)] = (read, cLastReads.Occurrence + 1);
+                            break;
                         }
-                        chipLastReadDictionary[(read.ChipNumber, read.LocationId)] = (read, cLastReads.Occurrence + 1);
-                    }
-                    else if (Constants.Timing.CHIPREAD_STATUS_STARTTIME == read.Status &&
-                        (Constants.Timing.LOCATION_START == read.LocationId ||
-                        (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish)))
-                    {
-                        // If we haven't found anything, let us know what our start time was
-                        chipLastReadDictionary.TryAdd((read.ChipNumber, read.LocationId), (read, 0));
-                    }
-                    else if (Constants.Timing.CHIPREAD_STATUS_DNF == read.Status)
-                    {
-                        chipDnfDictionary[read.ChipNumber] = read;
-                    }
-                    else if (Constants.Timing.CHIPREAD_STATUS_DNS == read.Status)
-                    {
-                        dictionary.DnsChips.Add(read.ChipNumber);
-                    }
-                    else
-                    {
-                        if (!chipReadPairs.TryGetValue(read.ChipNumber, out List<ChipRead>? chipReads))
+                        case Constants.Timing.CHIPREAD_STATUS_STARTTIME when
+                            (Constants.Timing.LOCATION_START == read.LocationId ||
+                             (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish)):
+                            // If we haven't found anything, let us know what our start time was
+                            chipLastReadDictionary.TryAdd((read.ChipNumber, read.LocationId), (read, 0));
+                            break;
+                        case Constants.Timing.CHIPREAD_STATUS_DNF:
+                            chipDnfDictionary[read.ChipNumber] = read;
+                            break;
+                        case Constants.Timing.CHIPREAD_STATUS_DNS:
+                            dictionary.DnsChips.Add(read.ChipNumber);
+                            break;
+                        default:
                         {
-                            chipReads = [];
-                            chipReadPairs[read.ChipNumber] = chipReads;
+                            if (!chipReadPairs.TryGetValue(read.ChipNumber, out List<ChipRead>? chipReads))
+                            {
+                                chipReads = [];
+                                chipReadPairs[read.ChipNumber] = chipReads;
+                            }
+                            chipReads.Add(read);
+                            break;
                         }
-                        chipReads.Add(read);
                     }
                 }
                 else
@@ -233,7 +238,7 @@ namespace Chronokeep.Timing.Routines
                         if ((read.TimeSeconds < maxStartSeconds || (read.TimeSeconds == maxStartSeconds && read.TimeMilliseconds <= startMilliseconds))
                             && (Constants.Timing.LOCATION_START == read.LocationId || (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish)))
                         {
-                            // check if we've stored a chipread as the start chipread, update it to unused if so
+                            // check if we've stored a chip read as the start chip read, update it to unused if so
                             if (bibLastReadDictionary.TryGetValue((bib, read.LocationId), out (ChipRead Read, int Occurrence) bLastReads))
                             {
                                 bLastReads.Read.Status = Constants.Timing.CHIPREAD_STATUS_UNUSEDSTART;
@@ -248,34 +253,33 @@ namespace Chronokeep.Timing.Routines
                             }
                             // Create a result for the start value.
                             long secondsDiff = read.TimeSeconds - startSeconds;
-                            int millisecDiff = read.TimeMilliseconds - startMilliseconds;
+                            int millisecondsDiff = read.TimeMilliseconds - startMilliseconds;
                             // If the distance is linked as a late distance, use the linked distance's start time as the gun time.
-                            if (d != null
-                                && d.Type == Constants.Timing.DISTANCE_TYPE_LATE
+                            if (d is { Type: Constants.Timing.DISTANCE_TYPE_LATE }
                                 && d.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER
                                 && dictionary.DistanceStartDict.TryGetValue(d.LinkedDistance, out (long sec, int mill) linkedStart))
                             {
                                 secondsDiff = read.TimeSeconds - linkedStart.sec;
-                                millisecDiff = read.TimeMilliseconds - linkedStart.mill;
+                                millisecondsDiff = read.TimeMilliseconds - linkedStart.mill;
                             }
-                            while (millisecDiff < 0)
+                            while (millisecondsDiff < 0)
                             {
                                 secondsDiff--;
-                                millisecDiff += 1000;
+                                millisecondsDiff += 1000;
                             }
-                            while (millisecDiff >= 1000)
+                            while (millisecondsDiff >= 1000)
                             {
                                 secondsDiff++;
-                                millisecDiff -= 1000;
+                                millisecondsDiff -= 1000;
                             }
-                            startResult = new(theEvent.Identifier,
+                            startResult = new TimeResult(theEvent.Identifier,
                                 read.ReadId,
                                 part == null ? Constants.Timing.TIMERESULT_DUMMYPERSON : part.EventSpecific.Identifier,
                                 read.LocationId,
                                 Constants.Timing.SEGMENT_START,
                                 0, // start reads are not an occurrence at the start line
                                 secondsDiff,
-                                millisecDiff,
+                                millisecondsDiff,
                                 TimeResult.BibToIdentifier(bib),
                                 0,
                                 0,
@@ -286,14 +290,13 @@ namespace Chronokeep.Timing.Routines
                             );
                             startTimes[startResult.Identifier] = startResult;
                             newResults.Add(startResult);
-                            if (part != null &&
-                                (Constants.Timing.EVENTSPECIFIC_UNKNOWN == part.Status
-                                 && !bibDnfDictionary.ContainsKey(bib)))
+                            if (part is { Status: Constants.Timing.EVENTSPECIFIC_UNKNOWN }
+                                && !bibDnfDictionary.ContainsKey(bib))
                             {
                                 part.Status = Constants.Timing.EVENTSPECIFIC_STARTED;
                                 updateParticipants.Add(part);
                             }
-                            // Finally, set the chipread status to STARTTIME.
+                            // Finally, set the chip read status to START TIME.
                             read.Status = Constants.Timing.CHIPREAD_STATUS_STARTTIME;
                         }
                         // Possible reads at this point:
@@ -304,29 +307,32 @@ namespace Chronokeep.Timing.Routines
                         else
                         {
                             int maxOccurrences = 0;
-                            if (Constants.Timing.LOCATION_FINISH == read.LocationId)
+                            switch (read.LocationId)
                             {
-                                maxOccurrences = theEvent.FinishMaxOccurrences;
-                            }
-                            else if (Constants.Timing.LOCATION_START == read.LocationId)
-                            {
-                                maxOccurrences = theEvent.StartMaxOccurrences - 1;
-                            }
-                            else
-                            {
-                                if (dictionary.LocationDictionary.TryGetValue(read.LocationId, out TimingLocation? locationValue))
+                                case Constants.Timing.LOCATION_FINISH:
+                                    maxOccurrences = theEvent.FinishMaxOccurrences;
+                                    break;
+                                case Constants.Timing.LOCATION_START:
+                                    maxOccurrences = theEvent.StartMaxOccurrences - 1;
+                                    break;
+                                default:
                                 {
-                                    maxOccurrences = locationValue.MaxOccurrences;
-                                }
-                                else
-                                {
-                                    Log.E("Timing.Routines.DistanceRoutine", "Somehow the location was not found.");
+                                    if (dictionary.LocationDictionary.TryGetValue(read.LocationId, out TimingLocation? locationValue))
+                                    {
+                                        maxOccurrences = locationValue.MaxOccurrences;
+                                    }
+                                    else
+                                    {
+                                        Log.E("Timing.Routines.DistanceRoutine", "Somehow the location was not found.");
+                                    }
+
+                                    break;
                                 }
                             }
                             int occurrence = 1;
                             int occursWithin = 0;
                             // Use the finish location ignore within parameter for redundant start reads since it's normal value is the start window.
-                            if (Constants.Timing.LOCATION_FINISH == read.LocationId || Constants.Timing.LOCATION_START == read.LocationId)
+                            if (read.LocationId is Constants.Timing.LOCATION_FINISH or Constants.Timing.LOCATION_START)
                             {
                                 occursWithin = theEvent.FinishIgnoreWithin;
                             }
@@ -345,7 +351,7 @@ namespace Chronokeep.Timing.Routines
                                 minMilliseconds = bLastReads.Read.TimeMilliseconds;
                             }
                             // Ensure when there's separate start finish lines that there is no finish within the ignore period after a start.
-                            else if (theEvent.CommonStartFinish != true && Constants.Timing.LOCATION_FINISH == read.LocationId && startResult != null)
+                            else if (!theEvent.CommonStartFinish && Constants.Timing.LOCATION_FINISH == read.LocationId && startResult != null)
                             {
                                 minSeconds += startResult.Seconds + occursWithin;
                                 minMilliseconds += startResult.Milliseconds;
@@ -356,7 +362,7 @@ namespace Chronokeep.Timing.Routines
                                 }
                             }
                             // Ensure that there are no reads within the StartWindow or the IgnoreWithin period after the start of a race.
-                            else if (Constants.Timing.LOCATION_FINISH == read.LocationId || Constants.Timing.LOCATION_START == read.LocationId)
+                            else if (read.LocationId is Constants.Timing.LOCATION_FINISH or Constants.Timing.LOCATION_START)
                             {
                                 // If no previous entry at this location, ensure we don't let a time pop up 
                                 minSeconds += occursWithin;
@@ -367,7 +373,7 @@ namespace Chronokeep.Timing.Routines
                                 // The distanceId is either the participant's current distance
                                 int distanceId = d.Identifier;
                                 // the common distance ID
-                                if (theEvent.DistanceSpecificSegments == false)
+                                if (!theEvent.DistanceSpecificSegments)
                                 {
                                     distanceId = Constants.Timing.COMMON_SEGMENTS_DISTANCEID;
                                 }
@@ -381,25 +387,20 @@ namespace Chronokeep.Timing.Routines
                                     && dictionary.DistanceSegmentOrder.TryGetValue(distanceId, out List<Segment>? distanceSegments)
                                     && dictionary.SegmentByIdDictionary.TryGetValue(lastResult.SegmentId, out Segment? otherSeg))
                                 {
-                                    foreach (Segment seg in distanceSegments)
+                                    foreach (Segment seg in distanceSegments.Where(seg => seg.LocationId == read.LocationId && seg.CumulativeDistance > otherSeg.CumulativeDistance))
                                     {
-                                        // find the next segment at the location where the Cumulative (total) distance is greater than the distance
-                                        // when we last saw the runner
-                                        if (seg.LocationId == read.LocationId && seg.CumulativeDistance > otherSeg.CumulativeDistance)
+                                        // if we are set to set the occurrence too low
+                                        if (occurrence < seg.Occurrence)
                                         {
-                                            // if we are set to set the occurrence too low
-                                            if (occurrence < seg.Occurrence)
-                                            {
-                                                // set it properly
-                                                occurrence = seg.Occurrence;
-                                            }
-                                            // break the loop since the occurrence is correct
-                                            break;
+                                            // set it properly
+                                            occurrence = seg.Occurrence;
                                         }
+                                        // break the loop since the occurrence is correct
+                                        break;
                                     }
                                 }
                             }
-                            // Check if we're past the max occurances allowed for this spot.
+                            // Check if we're past the max occurrences allowed for this spot.
                             // Also check if we've passed the finish occurrence for the finish line and that distance
                             // which requires an active distance and the person's information
                             if (occurrence > maxOccurrences ||
@@ -422,7 +423,7 @@ namespace Chronokeep.Timing.Routines
                                 Log.D("Timing.Routines.DistanceRoutine", "bibDNFDictionary contains DNF for bib " + bib);
                                 read.Status = Constants.Timing.CHIPREAD_STATUS_OVERMAX;
                             }
-                            // occurrence is in [1, maxOccurences] but not in the ignore period
+                            // occurrence is in [1, maxOccurrences] but not in the ignore period
                             else
                             {
                                 bibLastReadDictionary[(bib, read.LocationId)] = (read, occurrence);
@@ -454,38 +455,37 @@ namespace Chronokeep.Timing.Routines
                                 string identifier = TimeResult.BibToIdentifier(bib);
                                 // Create a result for the start value.
                                 long secondsDiff = read.TimeSeconds - startSeconds;
-                                int millisecDiff = read.TimeMilliseconds - startMilliseconds;
+                                int millisecondsDiff = read.TimeMilliseconds - startMilliseconds;
                                 // If the distance is linked as a late distance, use the linked distance's start time as the gun time.
-                                if (d != null
-                                    && d.Type == Constants.Timing.DISTANCE_TYPE_LATE
+                                if (d is { Type: Constants.Timing.DISTANCE_TYPE_LATE }
                                     && d.LinkedDistance != Constants.Timing.DISTANCE_DUMMYIDENTIFIER
                                     && dictionary.DistanceStartDict.TryGetValue(d.LinkedDistance, out (long sec, int mill) linkedStart))
                                 {
                                     secondsDiff = read.TimeSeconds - linkedStart.sec;
-                                    millisecDiff = read.TimeMilliseconds - linkedStart.mill;
+                                    millisecondsDiff = read.TimeMilliseconds - linkedStart.mill;
                                 }
-                                while (millisecDiff < 0)
+                                while (millisecondsDiff < 0)
                                 {
                                     secondsDiff--;
-                                    millisecDiff += 1000;
+                                    millisecondsDiff += 1000;
                                 }
-                                while (millisecDiff >= 1000)
+                                while (millisecondsDiff >= 1000)
                                 {
                                     secondsDiff++;
-                                    millisecDiff -= 1000;
+                                    millisecondsDiff -= 1000;
                                 }
                                 bool startResExists = startTimes.TryGetValue(identifier, out TimeResult? startRes);
-                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(startRes!.SystemTime) : startSeconds);
-                                int chipMillisecDiff = read.TimeMilliseconds - (startResExists ? startRes!.SystemTime.Millisecond : startMilliseconds);
-                                while (chipMillisecDiff < 0)
+                                long chipSecondsDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(startRes!.SystemTime) : startSeconds);
+                                int chipMillisecondsDiff = read.TimeMilliseconds - (startResExists ? startRes!.SystemTime.Millisecond : startMilliseconds);
+                                while (chipMillisecondsDiff < 0)
                                 {
-                                    chipSecDiff--;
-                                    chipMillisecDiff += 1000;
+                                    chipSecondsDiff--;
+                                    chipMillisecondsDiff += 1000;
                                 }
-                                while (chipMillisecDiff >= 1000)
+                                while (chipMillisecondsDiff >= 1000)
                                 {
-                                    chipSecDiff++;
-                                    chipMillisecDiff -= 1000;
+                                    chipSecondsDiff++;
+                                    chipMillisecondsDiff -= 1000;
                                 }
                                 // Check that we're not adding a finish time for a DNF person, we can use any other times
                                 // for information for that person.
@@ -498,10 +498,10 @@ namespace Chronokeep.Timing.Routines
                                         segId,
                                         occurrence,
                                         secondsDiff,
-                                        millisecDiff,
+                                        millisecondsDiff,
                                         identifier,
-                                        chipSecDiff,
-                                        chipMillisecDiff,
+                                        chipSecondsDiff,
+                                        chipMillisecondsDiff,
                                         read.Time,
                                         bib,
                                         Constants.Timing.TIMERESULT_STATUS_NONE,
@@ -522,7 +522,7 @@ namespace Chronokeep.Timing.Routines
                                             part.Status = Constants.Timing.EVENTSPECIFIC_FINISHED;
                                             updateParticipants.Add(part);
                                         }
-                                        // If they were marked as noshow previously, mark them as started
+                                        // If they were marked as no show previously, mark them as started
                                         else if (Constants.Timing.EVENTSPECIFIC_UNKNOWN == part.Status
                                                  && !bibDnfDictionary.ContainsKey(bib))
                                         {
@@ -559,7 +559,7 @@ namespace Chronokeep.Timing.Routines
                              || (Constants.Timing.LOCATION_FINISH == read.LocationId
                                  && theEvent.CommonStartFinish)))
                         {
-                            // check if we've stored a chipread as the start chipread, update it to unused if so
+                            // check if we've stored a chip read as the start chip read, update it to unused if so
                             if (chipLastReadDictionary.TryGetValue((chip, read.LocationId), out (ChipRead Read, int Occurrence) cLastReads))
                             {
                                 cLastReads.Read.Status = Constants.Timing.CHIPREAD_STATUS_UNUSEDSTART;
@@ -575,25 +575,25 @@ namespace Chronokeep.Timing.Routines
                             string identifier = TimeResult.ChipToIdentifier(chip);
                             // Create a result for the start value.
                             long secondsDiff = read.TimeSeconds - startSeconds;
-                            int millisecDiff = read.TimeMilliseconds - startMilliseconds;
-                            while (millisecDiff < 0)
+                            int millisecondsDiff = read.TimeMilliseconds - startMilliseconds;
+                            while (millisecondsDiff < 0)
                             {
                                 secondsDiff--;
-                                millisecDiff += 1000;
+                                millisecondsDiff += 1000;
                             }
-                            while (millisecDiff >= 1000)
+                            while (millisecondsDiff >= 1000)
                             {
                                 secondsDiff++;
-                                millisecDiff -= 1000;
+                                millisecondsDiff -= 1000;
                             }
-                            startResult = new(theEvent.Identifier,
+                            startResult = new TimeResult(theEvent.Identifier,
                                 read.ReadId,
                                 Constants.Timing.TIMERESULT_DUMMYPERSON,
                                 read.LocationId,
                                 Constants.Timing.SEGMENT_START,
                                 0, // start reads are not an occurrence at the start line
                                 secondsDiff,
-                                millisecDiff,
+                                millisecondsDiff,
                                 identifier,
                                 0,
                                 0,
@@ -604,7 +604,7 @@ namespace Chronokeep.Timing.Routines
                             );
                             newResults.Add(startResult);
                             startTimes[startResult.Identifier] = startResult;
-                            // Finally, set the chipread status to USED.
+                            // Finally, set the chip read status to USED.
                             read.Status = Constants.Timing.CHIPREAD_STATUS_USED;
                         }
                         // Possible reads at this point:
@@ -614,28 +614,31 @@ namespace Chronokeep.Timing.Routines
                         else
                         {
                             int maxOccurrences = 0;
-                            if (Constants.Timing.LOCATION_FINISH == read.LocationId)
+                            switch (read.LocationId)
                             {
-                                maxOccurrences = theEvent.FinishMaxOccurrences;
-                            }
-                            else if (Constants.Timing.LOCATION_START == read.LocationId)
-                            {
-                                maxOccurrences = theEvent.StartMaxOccurrences - 1;
-                            }
-                            else
-                            {
-                                if (!dictionary.LocationDictionary.TryGetValue(read.LocationId, out TimingLocation? oLoc))
+                                case Constants.Timing.LOCATION_FINISH:
+                                    maxOccurrences = theEvent.FinishMaxOccurrences;
+                                    break;
+                                case Constants.Timing.LOCATION_START:
+                                    maxOccurrences = theEvent.StartMaxOccurrences - 1;
+                                    break;
+                                default:
                                 {
-                                    Log.E("Timing.Routines.DistanceRoutine", "Somehow the location was not found.");
-                                }
-                                else
-                                {
-                                    maxOccurrences = oLoc.MaxOccurrences;
+                                    if (!dictionary.LocationDictionary.TryGetValue(read.LocationId, out TimingLocation? oLoc))
+                                    {
+                                        Log.E("Timing.Routines.DistanceRoutine", "Somehow the location was not found.");
+                                    }
+                                    else
+                                    {
+                                        maxOccurrences = oLoc.MaxOccurrences;
+                                    }
+
+                                    break;
                                 }
                             }
                             int occurrence = 1;
                             int occursWithin = 0;
-                            if (Constants.Timing.LOCATION_FINISH == read.LocationId || Constants.Timing.LOCATION_START == read.LocationId)
+                            if (read.LocationId is Constants.Timing.LOCATION_FINISH or Constants.Timing.LOCATION_START)
                             {
                                 occursWithin = theEvent.FinishIgnoreWithin;
                             }
@@ -654,7 +657,7 @@ namespace Chronokeep.Timing.Routines
                                 minMilliseconds = cLastReads.Read.TimeMilliseconds;
                             }
                             // Ensure when there's separate start finish lines that there is no finish within the ignore period after a start.
-                            else if (theEvent.CommonStartFinish != true && Constants.Timing.LOCATION_FINISH == read.LocationId && startResult != null)
+                            else if (!theEvent.CommonStartFinish && Constants.Timing.LOCATION_FINISH == read.LocationId && startResult != null)
                             {
                                 minSeconds += startResult.Seconds + occursWithin;
                                 minMilliseconds += startResult.Milliseconds;
@@ -665,12 +668,12 @@ namespace Chronokeep.Timing.Routines
                                 }
                             }
                             // Ensure that there are no reads within the StartWindow or the IgnoreWithin period after the start of a race.
-                            else if (Constants.Timing.LOCATION_FINISH == read.LocationId || Constants.Timing.LOCATION_START == read.LocationId)
+                            else if (read.LocationId is Constants.Timing.LOCATION_FINISH or Constants.Timing.LOCATION_START)
                             {
                                 // If no previous entry at this location, ensure we don't let a time pop up 
                                 minSeconds += occursWithin;
                             }
-                            // Check if we're past the max occurances allowed for this spot.
+                            // Check if we're past the max occurrences allowed for this spot.
                             if (occurrence > maxOccurrences)
                             {
                                 read.Status = Constants.Timing.CHIPREAD_STATUS_OVERMAX;
@@ -690,7 +693,7 @@ namespace Chronokeep.Timing.Routines
                                 Log.D("Timing.Routines.DistanceRoutine", "chipDNFDictionary contains DNF for chip " + chip);
                                 read.Status = Constants.Timing.CHIPREAD_STATUS_OVERMAX;
                             }
-                            // occurrence is in [1, maxOccurences] but not in the ignore period
+                            // occurrence is in [1, maxOccurrences] but not in the ignore period
                             else
                             {
                                 chipLastReadDictionary[(chip, read.LocationId)] = (read, occurrence);
@@ -704,29 +707,29 @@ namespace Chronokeep.Timing.Routines
                                 string identifier = TimeResult.ChipToIdentifier(chip);
                                 // Create a result for the start value.
                                 long secondsDiff = read.TimeSeconds - startSeconds;
-                                int millisecDiff = read.TimeMilliseconds - startMilliseconds;
-                                while (millisecDiff < 0)
+                                int millisecondsDiff = read.TimeMilliseconds - startMilliseconds;
+                                while (millisecondsDiff < 0)
                                 {
                                     secondsDiff--;
-                                    millisecDiff += 1000;
+                                    millisecondsDiff += 1000;
                                 }
-                                while (millisecDiff >= 1000)
+                                while (millisecondsDiff >= 1000)
                                 {
                                     secondsDiff++;
-                                    millisecDiff -= 1000;
+                                    millisecondsDiff -= 1000;
                                 }
                                 bool startResExists = startTimes.TryGetValue(identifier, out TimeResult? oStartRes);
-                                long chipSecDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(oStartRes!.SystemTime) : startSeconds);
-                                int chipMillisecDiff = read.TimeMilliseconds - (startResExists ? oStartRes!.SystemTime.Millisecond : startMilliseconds);
-                                while (chipMillisecDiff < 0)
+                                long chipSecondsDiff = read.TimeSeconds - (startResExists ? Constants.Timing.RfidDateToEpoch(oStartRes!.SystemTime) : startSeconds);
+                                int chipMillisecondsDiff = read.TimeMilliseconds - (startResExists ? oStartRes!.SystemTime.Millisecond : startMilliseconds);
+                                while (chipMillisecondsDiff < 0)
                                 {
-                                    chipSecDiff--;
-                                    chipMillisecDiff += 1000;
+                                    chipSecondsDiff--;
+                                    chipMillisecondsDiff += 1000;
                                 }
-                                while (chipMillisecDiff >= 1000)
+                                while (chipMillisecondsDiff >= 1000)
                                 {
-                                    chipSecDiff++;
-                                    chipMillisecDiff -= 1000;
+                                    chipSecondsDiff++;
+                                    chipMillisecondsDiff -= 1000;
                                 }
                                 // Check that we're not adding a finish time for a DNF person, we can use any other times
                                 // for information for that person.
@@ -739,10 +742,10 @@ namespace Chronokeep.Timing.Routines
                                     segId,
                                     occurrence,
                                     secondsDiff,
-                                    millisecDiff,
+                                    millisecondsDiff,
                                     identifier,
-                                    chipSecDiff,
-                                    chipMillisecDiff,
+                                    chipSecondsDiff,
+                                    chipMillisecondsDiff,
                                     read.Time,
                                     read.ChipBib == Constants.Timing.CHIPREAD_DUMMYBIB ? read.ReadBib : read.ChipBib,
                                     Constants.Timing.TIMERESULT_STATUS_NONE,
@@ -976,7 +979,7 @@ namespace Chronokeep.Timing.Routines
                 if (!placementDictionary.TryGetValue(
                         (result.Place, result.LocationId, result.Occurrence, result.DistanceName),
                         out TimeResult? oRes) || oRes.Bib == result.Bib) continue;
-                Log.D("Timing.Routines.DistanceRoutine", $"Oudated placement found. {result.ParticipantName} && {oRes.ParticipantName}");
+                Log.D("Timing.Routines.DistanceRoutine", $"Outdated placement found. {result.ParticipantName} && {oRes.ParticipantName}");
                 result.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_FALSE;
                 oRes.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_FALSE;
                 reUpload.Add(result);
@@ -1000,13 +1003,13 @@ namespace Chronokeep.Timing.Routines
                     int rank1 = 0, rank2 = 0;
                     Log.D("Timing.Routines.DistanceRoutine", "x1 distance name: " + x1.RealDistanceName + " -- x2 distance name: " + x2.RealDistanceName);
                     // Get *linked* distances. (Could be that specific distance)
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oLinkedDists))
+                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oLinkedDistances))
                     {
-                        (distance1, rank1) = oLinkedDists;
+                        (distance1, rank1) = oLinkedDistances;
                     }
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tLinkedDists))
+                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tLinkedDistances))
                     {
-                        (distance2, rank2) = tLinkedDists;
+                        (distance2, rank2) = tLinkedDistances;
                     }
                     Log.D("Timing.Routines.DistanceRoutine", (distance1 == null || distance2 == null) ? "One of the distances not found." : "Rank 1: " + rank1 + " -- Rank 2: " + rank2);
                     // Check if they're in the same distance or a linked distance.
@@ -1114,9 +1117,9 @@ namespace Chronokeep.Timing.Routines
                     int oPl = placeDictionary.GetValueOrDefault(distanceId, 0);
                     result.Place = ++oPl;
                     placeDictionary[distanceId] = oPl;
-                    int gendPl = genderPlaceDictionary.GetValueOrDefault((distanceId, gender), 0);
-                    result.GenderPlace = ++gendPl;
-                    genderPlaceDictionary[(distanceId, gender)] = gendPl;
+                    int genderPl = genderPlaceDictionary.GetValueOrDefault((distanceId, gender), 0);
+                    result.GenderPlace = ++genderPl;
+                    genderPlaceDictionary[(distanceId, gender)] = genderPl;
                     if (ageGroupId != Constants.Timing.TIMERESULT_DUMMYAGEGROUP)
                     {
                         int agPl = ageGroupPlaceDictionary.GetValueOrDefault((distanceId, ageGroupId, gender), 0);

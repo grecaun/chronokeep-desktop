@@ -510,7 +510,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 part.EventSpecific.UploadedVersion = part.EventSpecific.Version;
             }
             database.UpdateParticipants(participants);
-            Log.D("UI.MainPages.ParticipantsPage", "Attempting to upload " + upBibChips.Count + " bibchips.");
+            Log.D("UI.MainPages.ParticipantsPage", $"Attempting to upload {upBibChips.Count} BibChips.");
             total = 0;
             loops = upBibChips.Count / Constants.Timing.API_LOOP_COUNT;
             for (int i = 0; i < loops; i += 1)
@@ -632,7 +632,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             if (theEvent == null) return;
             await Task.Run(() =>
             {
-                Log.D("UI.MainPages.ParticipantsPage", "Event has name " + theEvent.Name + " and date of " + theEvent.Date + " and finally has ID " + theEvent.Identifier);
+                Log.D("UI.MainPages.ParticipantsPage", $"Event has name {theEvent.Name} and date of {theEvent.Date} and finally has ID {theEvent.Identifier}");
                 List<Participant> parts = database.GetParticipants(theEvent.Identifier);
                 string[] headers = [
                     "Bib",
@@ -814,7 +814,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
         Log.D("UI.MainPages.ParticipantsPage", "Modify clicked.");
         List<Participant> selected = [];
         selected.AddRange(ParticipantsList.SelectedItems.Cast<Participant>());
-        Log.D("UI.MainPages.ParticipantsPage", selected.Count + " participants selected.");
+        Log.D("UI.MainPages.ParticipantsPage", $"{selected.Count} participants selected.");
         if (selected.Count > 1)
         {
             ChangeMultiParticipantWindow changeMultiParticipantWindow = new(mWindow, database, selected);

@@ -9,17 +9,17 @@ namespace Chronokeep.Objects.ChronokeepRemote
     public class GetReadsResponse
     {
         [JsonPropertyName("count")]
-        public long Count { get; set; }
+        public long Count { get; init; }
         [JsonPropertyName("reads")]
-        public List<RemoteRead> Reads { get; set; } = [];
+        public List<RemoteRead> Reads { get; init; } = [];
         [JsonPropertyName("notification")]
-        public RemoteNotification Notification { get; set; } = new();
+        public RemoteNotification Notification { get; init; } = new();
     }
 
     public class DeleteReadsResponse
     {
         [JsonPropertyName("count")]
-        public long Count { get; set; }
+        public long Count { get; init; }
     }
 
     /*
@@ -28,6 +28,6 @@ namespace Chronokeep.Objects.ChronokeepRemote
     public class GetReadersResponse
     {
         [JsonPropertyName("readers")]
-        public List<RemoteReader> Readers { get; set; } = [];
+        public List<RemoteReader> Readers { get; init; } = [];
     }
 }

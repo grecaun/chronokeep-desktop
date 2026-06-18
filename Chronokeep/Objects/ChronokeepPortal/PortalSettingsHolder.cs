@@ -27,8 +27,8 @@ namespace Chronokeep.Objects.ChronokeepPortal
 
         public class ReaderAntennas
         {
-            public string ReaderName { get; set; } = "";
-            public int[] Antennas { get; set; } = [];
+            public string ReaderName { get; init; } = "";
+            public int[] Antennas { get; init; } = [];
         }
 
         public string Name { get; set; } = "";

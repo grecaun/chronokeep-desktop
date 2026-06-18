@@ -141,7 +141,7 @@ public partial class DistancePart : UserControl
                 Text = "Max Time",
                 Width = 65,
                 FontSize = 12,
-                Margin = new(10, 0, 0, 0),
+                Margin = new Thickness(10, 0, 0, 0),
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             });
             string limit = string.Format(LimitFormat, theDistance.EndSeconds / 3600,
@@ -209,31 +209,28 @@ public partial class DistancePart : UserControl
             });
         Ranking.Text = theDistance.Ranking.ToString();
         Ranking.IsEnabled = true;
-        if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_EARLY)
+        switch (theDistance.Type)
         {
-            TypeBox.SelectedIndex = 1;
-        }
-        else if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_LATE)
-        {
-            Ranking.Text = "0";
-            Ranking.IsEnabled = false;
-            TypeBox.SelectedIndex = 2;
-        }
-        else if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_DROP)
-        {
-            TypeBox.SelectedIndex = 3;
-        }
-        else if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL)
-        {
-            TypeBox.SelectedIndex = 4;
-        }
-        else if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_VIRTUAL)
-        {
-            TypeBox.SelectedIndex = 5;
-        }
-        else if (theDistance.Type == Constants.Timing.DISTANCE_TYPE_NORMAL)
-        {
-            TypeBox.SelectedIndex = 0;
+            case Constants.Timing.DISTANCE_TYPE_EARLY:
+                TypeBox.SelectedIndex = 1;
+                break;
+            case Constants.Timing.DISTANCE_TYPE_LATE:
+                Ranking.Text = "0";
+                Ranking.IsEnabled = false;
+                TypeBox.SelectedIndex = 2;
+                break;
+            case Constants.Timing.DISTANCE_TYPE_DROP:
+                TypeBox.SelectedIndex = 3;
+                break;
+            case Constants.Timing.DISTANCE_TYPE_UNOFFICIAL:
+                TypeBox.SelectedIndex = 4;
+                break;
+            case Constants.Timing.DISTANCE_TYPE_VIRTUAL:
+                TypeBox.SelectedIndex = 5;
+                break;
+            case Constants.Timing.DISTANCE_TYPE_NORMAL:
+                TypeBox.SelectedIndex = 0;
+                break;
         }
         DistPanel.IsVisible = parent == null;
         CopyPanel.IsVisible = parent == null;
@@ -245,12 +242,10 @@ public partial class DistancePart : UserControl
         IntervalBlock.IsVisible = Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType;
         MaxTimePanel.IsVisible = Constants.Timing.EVENT_TYPE_DISTANCE != theEvent.EventType;
         OccurrencePanel.IsVisible = Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType;
-        if (parent != null)
-        {
-            MainPanel.Margin = new Thickness(50, 0);
-            MainPanel.MaxWidth = 500;
-            SepPanel.Margin = new Thickness(-50, 5, -50, 0);
-        }
+        if (parent == null) return;
+        MainPanel.Margin = new Thickness(50, 0);
+        MainPanel.MaxWidth = 500;
+        SepPanel.Margin = new Thickness(-50, 5, -50, 0);
     }
 
     public Distance GetDistance()
@@ -300,14 +295,14 @@ public partial class DistancePart : UserControl
         {
             theDistance.Wave = wave;
         }
-        string[] firstparts = StartOffset.Text!.Replace('_', '0').Split(':');
-        string[] secondparts = firstparts[2].Split('.');
+        string[] firstParts = StartOffset.Text!.Replace('_', '0').Split(':');
+        string[] secondParts = firstParts[2].Split('.');
         try
         {
-            theDistance.StartOffsetSeconds = (Convert.ToInt32(firstparts[0]) * 3600)
-                + (Convert.ToInt32(firstparts[1]) * 60)
-                + Convert.ToInt32(secondparts[0]);
-            theDistance.StartOffsetMilliseconds = Convert.ToInt32(secondparts[1]);
+            theDistance.StartOffsetSeconds = (Convert.ToInt32(firstParts[0]) * 3600)
+                + (Convert.ToInt32(firstParts[1]) * 60)
+                + Convert.ToInt32(secondParts[0]);
+            theDistance.StartOffsetMilliseconds = Convert.ToInt32(secondParts[1]);
         }
         catch
         {
@@ -389,19 +384,17 @@ public partial class DistancePart : UserControl
         Log.D("UI.MainPages.DistancesPage", "Attempting to copy from a different distance! Here we go!");
         // Ensure we've got something selected, it has a parseable UID,
         // and there's a distance related to it
-        if (CopyFromBox.SelectedItem != null
-            && int.TryParse((string)((ComboBoxItem)CopyFromBox.SelectedItem).Tag!, out int newDivId)
-            && distanceDictionary.TryGetValue(newDivId, out Distance? newDiv))
-        {
-            theDistance.Name = DistanceName.Text!;
-            theDistance.DistanceValue = newDiv.DistanceValue;
-            theDistance.DistanceUnit = newDiv.DistanceUnit;
-            theDistance.FinishOccurrence = newDiv.FinishOccurrence;
-            theDistance.Wave = newDiv.Wave;
-            theDistance.StartOffsetSeconds = newDiv.StartOffsetSeconds;
-            theDistance.StartOffsetMilliseconds = newDiv.StartOffsetMilliseconds;
-            theDistance.Upload = newDiv.Upload;
-            page.UpdateDistance(theDistance);
-        }
+        if (CopyFromBox.SelectedItem == null
+            || !int.TryParse((string)((ComboBoxItem)CopyFromBox.SelectedItem).Tag!, out int newDivId)
+            || !distanceDictionary.TryGetValue(newDivId, out Distance? newDiv)) return;
+        theDistance.Name = DistanceName.Text!;
+        theDistance.DistanceValue = newDiv.DistanceValue;
+        theDistance.DistanceUnit = newDiv.DistanceUnit;
+        theDistance.FinishOccurrence = newDiv.FinishOccurrence;
+        theDistance.Wave = newDiv.Wave;
+        theDistance.StartOffsetSeconds = newDiv.StartOffsetSeconds;
+        theDistance.StartOffsetMilliseconds = newDiv.StartOffsetMilliseconds;
+        theDistance.Upload = newDiv.Upload;
+        page.UpdateDistance(theDistance);
     }
 }

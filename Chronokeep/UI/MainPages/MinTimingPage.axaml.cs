@@ -28,7 +28,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
 
     private int total = 4, connected;
 
-    private const string Ipformat = "{0:D}.{1:D}.{2:D}.{3:D}";
+    private const string IpFormat = "{0:D}.{1:D}.{2:D}.{3:D}";
     private readonly int[] baseIp = [0, 0, 0, 0];
 
     public MinTimingPage(IMainWindow window, IdbInterface database)
@@ -108,15 +108,15 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
             Log.D("UI.MainPages.TimingPage", systems.Count + " systems found.");
             for (int i = 0; i < 3 - numSystems; i++)
             {
-                systems.Add(new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
+                systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
             }
         }
-        systems.Add(new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
+        systems.Add(new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system));
         connected = 0;
         foreach (TimingSystem sys in systems)
         {
             ReadersBox.Items.Add(new ReaderPart(this, sys, locations));
-            if (sys.Status == SYSTEM_STATUS.CONNECTED || sys.Status == SYSTEM_STATUS.WORKING)
+            if (sys.Status is SYSTEM_STATUS.CONNECTED or SYSTEM_STATUS.WORKING)
             {
                 connected++;
             }
@@ -203,14 +203,14 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
             {
                 ReadersBox.Items.Add(new ReaderPart(
                     this,
-                    new(
-                        string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
+                    new TimingSystem(
+                        string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]),
                         system),
                         locations));
             }
         }
 
-        subPage.SafemodeUpdateView();
+        subPage.SafeModeUpdateView();
     }
 
     public void DatasetChanged()
@@ -231,7 +231,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
     public void OpenTimeWindow(TimingSystem system)
     {
         Log.D("UI.MainPages.TimingPage", "Opening Set Time Window.");
-        timeWindow = new(this, system);
+        timeWindow = new SetTimeWindow(this, system);
         timeWindow.ShowDialog((Window)mWindow);
     }
 
@@ -263,15 +263,7 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
 
     public void RemoveSystem(TimingSystem sys)
     {
-        ReaderPart? removed = null;
-        foreach (ReaderPart? box in ReadersBox.Items.Cast<ReaderPart?>())
-        {
-            if (box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved())
-            {
-                removed = box;
-                break;
-            }
-        }
+        ReaderPart? removed = ReadersBox.Items.Cast<ReaderPart?>().FirstOrDefault(box => box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved());
         ReadersBox.Items.Remove(removed);
         UpdateView();
     }
@@ -279,26 +271,24 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
     public bool ConnectSystem(TimingSystem sys)
     {
         mWindow.ConnectTimingSystem(sys);
-        if (sys.Status == SYSTEM_STATUS.CONNECTED || sys.Status == SYSTEM_STATUS.WORKING)
+        if (sys.Status is SYSTEM_STATUS.CONNECTED or SYSTEM_STATUS.WORKING)
         {
             connected++;
         }
         Log.D("UI.MainPages.TimingPage", connected + " systems connected or trying to connect.");
-        if (connected >= total)
+        if (connected < total) return sys.Status != SYSTEM_STATUS.DISCONNECTED;
+        string system;
+        try
         {
-            string system;
-            try
-            {
-                system = database.GetAppSetting(Settings.DEFAULT_TIMING_SYSTEM)!.Value;
-            }
-            catch
-            {
-                Log.D("UI.MainPages.TimingPage", "Error fetching default timing system information.");
-                system = Readers.DEFAULT_TIMING_SYSTEM;
-            }
-            ReadersBox.Items.Add(new ReaderPart(this, new(string.Format(Ipformat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system), locations!));
-            total = ReadersBox.Items.Count;
+            system = database.GetAppSetting(Settings.DEFAULT_TIMING_SYSTEM)!.Value;
         }
+        catch
+        {
+            Log.D("UI.MainPages.TimingPage", "Error fetching default timing system information.");
+            system = Readers.DEFAULT_TIMING_SYSTEM;
+        }
+        ReadersBox.Items.Add(new ReaderPart(this, new TimingSystem(string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]), system), locations!));
+        total = ReadersBox.Items.Count;
         return sys.Status != SYSTEM_STATUS.DISCONNECTED;
     }
 

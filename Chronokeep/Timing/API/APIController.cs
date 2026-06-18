@@ -38,7 +38,7 @@ namespace Chronokeep.Timing.API
                     response = await ApiHandlers.DeleteResults(api, slug, year);
                 }
 
-                Log.D("API.APIController", "API Controller response: " + response.Count);
+                Log.D("API.APIController", $"API Controller response: {response.Count}");
             }
             catch
             {
@@ -62,14 +62,14 @@ namespace Chronokeep.Timing.API
             foreach (Distance d in database.GetDistances(theEvent.Identifier))
             {
                 waveStartTimes[d.Name] = start.AddSeconds(d.StartOffsetSeconds).AddMilliseconds(d.StartOffsetMilliseconds);
-                if (d.Upload && d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID)
+                if (d is { Upload: true, LinkedDistance: Constants.Timing.DISTANCE_NO_LINKED_ID })
                 {
                     uploadDistances.Add(d.Name);
                 }
             }
             AppSetting uniqueId = database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)!;
             string uniquePad = uniqueId.Value;
-            Log.D("API.APIController", "Attempting to upload " + results.Count.ToString() + " results.");
+            Log.D("API.APIController", $"Attempting to upload {results.Count} results.");
             if (ApiLock.TryEnter(3000))
             {
                 try
@@ -175,10 +175,7 @@ namespace Chronokeep.Timing.API
                     // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
                     Log.D("API.APIController", "Unable to handle API response. Leftovers");
                     loopError = true;
-                    if (controller != null)
-                    {
-                        controller.Errors += 1;
-                    }
+                    controller?.Errors += 1;
                     mainWindow?.UpdateTiming();
                 }
                 if (response != null)
@@ -378,7 +375,7 @@ namespace Chronokeep.Timing.API
                                            && x.Status != Constants.Timing.TIMERESULT_STATUS_DNF
                                            && x.Status != Constants.Timing.TIMERESULT_STATUS_DNS
                                            && x.SegmentId != Constants.Timing.SEGMENT_START);
-                    Log.D("API.APIController", "Results count: " + results.Count.ToString());
+                    Log.D("API.APIController", $"Results count: {results.Count}");
                     bool upload = false;
                     if (ApiLock.TryEnter(3000))
                     {

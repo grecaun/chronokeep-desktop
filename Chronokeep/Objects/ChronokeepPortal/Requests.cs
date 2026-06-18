@@ -8,51 +8,51 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public const string UNKNOWN = "unknown";
 
         // API related commands
-        public const string API_SAVE                      = "api_save";
-        public const string API_SAVE_ALL                  = "api_save_all";
-        public const string API_LIST                      = "api_list";
-        public const string API_REMOTE_AUTO_UPLOAD        = "api_remote_auto_upload";
-        public const string API_REMOTE_MANUAL_UPLOAD      = "api_remote_manual_upload";
-        public const string API_REMOVE                    = "api_remove";
+        protected const string API_SAVE                      = "api_save";
+        protected const string API_SAVE_ALL                  = "api_save_all";
+        protected const string API_LIST                      = "api_list";
+        protected const string API_REMOTE_AUTO_UPLOAD        = "api_remote_auto_upload";
+        protected const string API_REMOTE_MANUAL_UPLOAD      = "api_remote_manual_upload";
+        protected const string API_REMOVE                    = "api_remove";
 
         // Connection or program related requests
-        public const string CONNECT       = "connect"; 
-        public const string DISCONNECT    = "disconnect";
-        public const string KEEPALIVE_ACK = "keepalive_ack";
-        public const string QUIT          = "quit";
-        public const string SHUTDOWN      = "shutdown";
-        public const string RESTART       = "restart";
-        public const string UPDATE        = "update";
+        protected const string CONNECT       = "connect";
+        protected const string DISCONNECT    = "disconnect";
+        protected const string KEEPALIVE_ACK = "keepalive_ack";
+        protected const string QUIT          = "quit";
+        protected const string SHUTDOWN      = "shutdown";
+        protected const string RESTART       = "restart";
+        protected const string UPDATE        = "update";
 
         // Reader related requests
-        public const string READER_ADD        = "reader_add";
-        public const string READER_CONNECT    = "reader_connect";
-        public const string READER_DISCONNECT = "reader_disconnect";
-        public const string READER_LIST       = "reader_list";
-        public const string READER_REMOVE     = "reader_remove";
-        public const string READER_START      = "reader_start";
-        public const string READER_STOP       = "reader_stop";
-        public const string READER_START_ALL  = "reader_start_all";
-        public const string READER_STOP_ALL   = "reader_stop_all";
+        protected const string READER_ADD        = "reader_add";
+        protected const string READER_CONNECT    = "reader_connect";
+        protected const string READER_DISCONNECT = "reader_disconnect";
+        protected const string READER_LIST       = "reader_list";
+        protected const string READER_REMOVE     = "reader_remove";
+        protected const string READER_START      = "reader_start";
+        protected const string READER_STOP       = "reader_stop";
+        protected const string READER_START_ALL  = "reader_start_all";
+        protected const string READER_STOP_ALL   = "reader_stop_all";
 
         // Reads related requests
-        public const string READS_ADD         = "reads_add";
-        public const string READS_DELETE_ALL  = "reads_delete_all";
-        public const string READS_DELETE      = "reads_delete";
-        public const string READS_GET_ALL     = "reads_get_all";
-        public const string READS_GET         = "reads_get";
+        protected const string READS_ADD         = "reads_add";
+        protected const string READS_DELETE_ALL  = "reads_delete_all";
+        protected const string READS_DELETE      = "reads_delete";
+        protected const string READS_GET_ALL     = "reads_get_all";
+        protected const string READS_GET         = "reads_get";
 
         // Settings related requests
-        public const string SETTINGS_SET      = "settings_set";
-        public const string SETTINGS_GET      = "settings_get";
-        public const string SETTINGS_GET_ALL  = "settings_get_all";
+        protected const string SETTINGS_SET      = "settings_set";
+        protected const string SETTINGS_GET      = "settings_get";
+        protected const string SETTINGS_GET_ALL  = "settings_get_all";
 
         // Subscription request to subscribe to new reads
-        public const string SUBSCRIBE = "subscribe";
+        protected const string SUBSCRIBE = "subscribe";
 
         // Time related requests
-        public const string TIME_GET = "time_get";
-        public const string TIME_SET = "time_set";
+        protected const string TIME_GET = "time_get";
+        protected const string TIME_SET = "time_set";
 
         public const string AUTO_UPLOAD_QUERY_STOP = "stop";
         public const string AUTO_UPLOAD_QUERY_START = "start";

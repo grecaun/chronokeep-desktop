@@ -6,7 +6,7 @@
         x:Class="Chronokeep.UI.Export.ExportDistanceResults"
         Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
-        Title="Export Ultrasignup Results"
+        Title="Export Results"
         Width="300"
         CanResize="False"
         Topmost="True"

@@ -156,7 +156,7 @@ public partial class DashboardPage : UserControl, IMainPage
                                 {
                                     startingFolder = null;
                                 }
-                                var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                                IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                                 {
                                     FileTypeFilter = [Utils.SqLiteType, FilePickerFileTypes.All],
                                     AllowMultiple = false,
@@ -244,7 +244,7 @@ public partial class DashboardPage : UserControl, IMainPage
         Log.D("UI.DashboardPage", "Adding bib chip associations.");
         List<BibChipAssociation> bibChipAssociations = loadFrom.GetBibChips(oldEvent.Identifier);
         saveTo.AddBibChipAssociation(newEvent.Identifier, bibChipAssociations);
-        // Distances can link to themselves. DistanceID is also used by EVENTSPECIFIC, SEGMENTS, and AGE_GROUPS
+        // Distances can link to themselves. DistanceID is also used by EVENT_SPECIFIC, SEGMENTS, and AGE_GROUPS
         Log.D("UI.DashboardPage", "Adding distances.");
         Dictionary<int, int> distanceIdTranslation = [];
         Dictionary<string, int> oldDistanceIdDictionary = [];
@@ -283,7 +283,7 @@ public partial class DashboardPage : UserControl, IMainPage
         }
         saveTo.AddDistances(linkedDistances);
         // Age groups rely only on the event, and the distance.
-        // Age group id is used by EVENTSPECIFIC
+        // Age group id is used by EVENT_SPECIFIC
         Log.D("UI.DashboardPage", "Adding age groups.");
         List<AgeGroup> ageGroups = [];
         Dictionary<int, int> ageGroupIdTranslation = [];
@@ -293,7 +293,7 @@ public partial class DashboardPage : UserControl, IMainPage
         {
             item.EventId = newEvent.Identifier;
             oldAgeGroupDictionary[item.StartAge] = item.GroupId;
-            // Add the item to our list to save IFF it has a corred DistanceID set to it.
+            // Add the item to our list to save IFF it has a common DistanceID set to it.
             if (item.DistanceId != Constants.Timing.COMMON_AGEGROUPS_DISTANCEID)
             {
                 if (!distanceIdTranslation.TryGetValue(item.DistanceId, out int oDistId)) continue;
@@ -309,7 +309,7 @@ public partial class DashboardPage : UserControl, IMainPage
                 ageGroupIdTranslation[oAgId] = item.GroupId;
             }
         }
-        // Locations are relied upon by SEGMENTS, CHIPREADS, and TIMERESULTS
+        // Locations are relied upon by SEGMENTS, CHIP_READS, and TIME_RESULTS
         Log.D("UI.DashboardPage", "Adding locations.");
         List<TimingLocation> locations = loadFrom.GetTimingLocations(oldEvent.Identifier);
         Dictionary<int, int> locationIdTranslation = [];
@@ -371,11 +371,11 @@ public partial class DashboardPage : UserControl, IMainPage
         segmentIdTranslator[Constants.Timing.SEGMENT_FINISH] = Constants.Timing.SEGMENT_FINISH;
         segmentIdTranslator[Constants.Timing.SEGMENT_START] = Constants.Timing.SEGMENT_START;
         segmentIdTranslator[Constants.Timing.SEGMENT_NONE] = Constants.Timing.SEGMENT_NONE;
-        // Participants contain EVENTSPECIFIC which relies on distance and age groups.
-        // Eventspecific ID is used by TIME_RESULT
+        // Participants contain EVENT_SPECIFIC which relies on distance and age groups.
+        // EventSpecific ID is used by TIME_RESULT
         Log.D("UI.DashboardPage", "Adding participants.");
         List<Participant> participants = [];
-        Dictionary<int, int> eventspecificIdTranslation = [];
+        Dictionary<int, int> eventSpecificIdTranslation = [];
         // Bib is the key here
         Dictionary<string, int> oldEventSpecificDictionary = [];
         foreach (Participant item in loadFrom.GetParticipants(oldEvent.Identifier))
@@ -394,14 +394,14 @@ public partial class DashboardPage : UserControl, IMainPage
         {
             if (oldEventSpecificDictionary.TryGetValue(item.Bib, out int oEsId))
             {
-                eventspecificIdTranslation[oEsId] = item.EventSpecific.Identifier;
+                eventSpecificIdTranslation[oEsId] = item.EventSpecific.Identifier;
             }
         }
-        // Chipreads depend on location_id.
-        Log.D("UI.DashboardPage", "Adding chipreads.");
+        // ChipReads depend on location_id.
+        Log.D("UI.DashboardPage", "Adding ChipReads.");
         List<ChipRead> chipReads = [];
         Dictionary<int, int> readIdTranslation = [];
-        // (CHIPNUMBER, BIB, SECONDS, MILLISECONDS) for the key
+        // (CHIP_NUMBER, BIB, SECONDS, MILLISECONDS) for the key
         Dictionary<(string, string, long, int), int> oldReadDictionary = [];
         foreach (ChipRead item in loadFrom.GetChipReads(oldEvent.Identifier))
         {
@@ -410,17 +410,11 @@ public partial class DashboardPage : UserControl, IMainPage
             // If the location is not a pre-set location, i.e. a custom location
             if (item.LocationId != Constants.Timing.LOCATION_START && item.LocationId != Constants.Timing.LOCATION_FINISH && item.LocationId != Constants.Timing.LOCATION_ANNOUNCER)
             {
-                if (locationIdTranslation.TryGetValue(item.LocationId, out int oLocId))
-                {
-                    item.LocationId = oLocId;
-                    chipReads.Add(item);
-                }
+                if (!locationIdTranslation.TryGetValue(item.LocationId, out int oLocId)) continue;
+                item.LocationId = oLocId;
             }
-            else
-            {
-                // this is a known location (start, finish, or announce)
-                chipReads.Add(item);
-            }
+            // this is a known location (start, finish, or announce)
+            chipReads.Add(item);
         }
         saveTo.AddChipReads(chipReads);
         foreach (ChipRead item in saveTo.GetChipReads(newEvent.Identifier))
@@ -440,7 +434,7 @@ public partial class DashboardPage : UserControl, IMainPage
                                                                                  item.LocationId, out int tLocId)
                                                                              || !segmentIdTranslator.TryGetValue(
                                                                                  item.SegmentId, out int tSegId) ||
-                                                                             !eventspecificIdTranslation.TryGetValue(
+                                                                             !eventSpecificIdTranslation.TryGetValue(
                                                                                  item.EventSpecificId, out int tEsId))
                 continue;
             item.ReadId = tReadId;
@@ -553,41 +547,39 @@ public partial class DashboardPage : UserControl, IMainPage
             {
                 return;
             }
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
+            TopLevel? topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+            IStorageFolder? startingFolder;
+            try
             {
-                IStorageFolder? startingFolder;
-                try
-                {
-                    startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
-                }
-                catch
-                {
-                    startingFolder = null;
-                }
-                IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    FileTypeFilter = [Utils.SqLiteType, FilePickerFileTypes.All],
-                    AllowMultiple = false,
-                    SuggestedStartLocation = startingFolder,
-                });
-                if (files.Count <= 0) return;
-                SqLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
-                savedDatabase.Initialize();
-                List<Event> events = savedDatabase.GetEvents();
-                int lastId = -1;
-                foreach (int tmp in events.Select(ev => Save_Event(ev, savedDatabase, database)).Where(tmp => tmp > 0))
-                {
-                    lastId = tmp;
-                }
-                database.SetCurrentEvent(lastId);
-                UpdateView();
-                mWindow.UpdateStatus();
+                startingFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(database.GetAppSetting(Constants.Settings.DEFAULT_EXPORT_DIR)!.Value));
             }
+            catch
+            {
+                startingFolder = null;
+            }
+            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                FileTypeFilter = [Utils.SqLiteType, FilePickerFileTypes.All],
+                AllowMultiple = false,
+                SuggestedStartLocation = startingFolder,
+            });
+            if (files.Count <= 0) return;
+            SqLiteInterface savedDatabase = new(files[0].TryGetLocalPath()!);
+            savedDatabase.Initialize();
+            List<Event> events = savedDatabase.GetEvents();
+            int lastId = -1;
+            foreach (int tmp in events.Select(ev => Save_Event(ev, savedDatabase, database)).Where(tmp => tmp > 0))
+            {
+                lastId = tmp;
+            }
+            database.SetCurrentEvent(lastId);
+            UpdateView();
+            mWindow.UpdateStatus();
         }
         catch (Exception)
         {
-            Log.D("UI.DashboardPage", "Erorr importing.");
+            Log.D("UI.DashboardPage", "Error importing.");
         }
     }
 

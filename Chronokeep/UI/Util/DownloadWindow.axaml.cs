@@ -175,15 +175,14 @@ namespace Chronokeep.UI.Util
             BackupDatabaseButton.IsVisible = false;
             BackupPanel.IsVisible = true;
             BackupBlock.Text = $"{BackupBlock.Text}\nChecking for old database files.";
-            // TODO - Might be windows specific -- turn into non-platform specific code.
             string dirPath = App.IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
                 : Path.Combine(Directory.GetCurrentDirectory(), "data");
-            string path = Path.Combine(dirPath, MainWindow.DatabaseFileName);
+            string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);
             Log.D("Updates.DownloadWindow", "Looking for database file.");
             if (!Directory.Exists(dirPath)) return;
             if (!File.Exists(path)) return;
-            string backup = Path.Combine(dirPath, $"{DateTime.Now:yyyy-MM-dd}-backup-{MainWindow.DatabaseFileName}");
+            string backup = Path.Combine(dirPath, $"{DateTime.Now:yyyy-MM-dd}-backup-{MainWindow.DATABASE_FILE_NAME}");
             try
             {
                 BackupBlock.Text = $"{BackupBlock.Text}\nBacking up database.";

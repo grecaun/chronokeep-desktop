@@ -28,11 +28,11 @@ namespace Chronokeep.Timing.Interfaces
         [GeneratedRegex(@"^Connected,.*")]
         private static partial Regex Connected();
         [GeneratedRegex(@"^0,.*")]
-        private static partial Regex Chipread();
+        private static partial Regex ChipRead();
         [GeneratedRegex(@"^U.*")]
-        private static partial Regex Settinginfo();
+        private static partial Regex SettingInfo();
         [GeneratedRegex(@"^u.*")]
-        private static partial Regex Settingconfirmation();
+        private static partial Regex SettingConfirmation();
         [GeneratedRegex(@"^(\d{1,2}:\d{1,2}:\d{1,2} \d{1,2}-\d{1,2}-\d{4}) \(\d*\)")]
         private static partial Regex Time();
         [GeneratedRegex(@"^S=(\d)(\d)")]
@@ -89,7 +89,7 @@ namespace Chronokeep.Timing.Interfaces
                 string message = m.Value;
                 // all incoming messages are terminated by a linefeed character (0x0A)
                 // If "0,[...]" Chip read
-                if (Chipread().IsMatch(message))
+                if (ChipRead().IsMatch(message))
                 {
                     // Only add a chip read if it isn't on the ignore list.
                     string[] chipVals = message.Split(',');
@@ -116,7 +116,7 @@ namespace Chronokeep.Timing.Interfaces
                             chipRead.Status = Constants.Timing.CHIPREAD_STATUS_DNS;
                         }
                         chipReads.Add(chipRead);
-                        // we don't need to do anything other than notify of a chipread
+                        // we don't need to do anything other than notify of a chip read
                         output[MessageType.CHIPREAD] = [];
                     }
                 }
@@ -149,7 +149,7 @@ namespace Chronokeep.Timing.Interfaces
                     }
                 }
                 // If "U[...]" Setting information
-                else if (Settinginfo().IsMatch(message))
+                else if (SettingInfo().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a setting information message. " + message);
                     settingsHolder ??= new RfidSettingsHolder();
@@ -230,7 +230,7 @@ namespace Chronokeep.Timing.Interfaces
                     output[MessageType.SETTINGVALUE] = [];
                 }
                 // If "u[...]" setting changed
-                else if (Settingconfirmation().IsMatch(message))
+                else if (SettingConfirmation().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", "It's a settings confirmation message. " + message + BitConverter.ToString([.. message.Select(c => (byte)c)]));
                     settingsHolder ??= new RfidSettingsHolder();
@@ -373,7 +373,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void Rewind(DateTime start, DateTime end, int reader = 1)
         {
-            SendMessage("800" + Constants.Timing.RfidDateToEpoch(start).ToString() + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RfidDateToEpoch(end).ToString());
+            SendMessage("800" + Constants.Timing.RfidDateToEpoch(start) + RfidUltraCodes.REWIND_DELIMITER + Constants.Timing.RfidDateToEpoch(end));
         }
 
         public void Rewind(int reader = 1)
@@ -387,7 +387,7 @@ namespace Chronokeep.Timing.Interfaces
             {
                 start = 1;
             }
-            SendMessage("600" + start.ToString() + RfidUltraCodes.REWIND_DELIMITER + end.ToString());
+            SendMessage("600" + start + RfidUltraCodes.REWIND_DELIMITER + end);
         }
 
         public void StopRewind()
@@ -457,7 +457,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SetGprsPort(int port)
         {
-            SendMessage("u" + RfidUltraCodes.GPRS_PORT + port.ToString() + RfidUltraCodes.SETTINGS_TERM);
+            SendMessage("u" + RfidUltraCodes.GPRS_PORT + port + RfidUltraCodes.SETTINGS_TERM);
         }
 
         public void SetApnName(string name)
@@ -576,17 +576,16 @@ namespace Chronokeep.Timing.Interfaces
         public void SetReaderMode(int readerNo, char mode)
         {
             char code;
-            if (readerNo == 1)
+            switch (readerNo)
             {
-                code = RfidUltraCodes.READ1_MODE;
-            }
-            else if (readerNo == 2)
-            {
-                code = RfidUltraCodes.READ2_MODE;
-            }
-            else
-            {
-                return;
+                case 1:
+                    code = RfidUltraCodes.READ1_MODE;
+                    break;
+                case 2:
+                    code = RfidUltraCodes.READ2_MODE;
+                    break;
+                default:
+                    return;
             }
             SendMessage("u" + code + mode + RfidUltraCodes.SETTINGS_TERM);
         }
@@ -735,7 +734,7 @@ namespace Chronokeep.Timing.Interfaces
         }
 
         /**
-         * Id can be any value from 1 to 255.
+         * ID can be any value from 1 to 255.
          */
         public void SetUltraId(int id)
         {
@@ -871,11 +870,11 @@ namespace Chronokeep.Timing.Interfaces
 
         public enum RfidMessage
         {
-            CONNECTED, VOLTAGENORMAL, VOLTAGELOW, CHIPREAD, TIME, SETTINGVALUE, SETTINGCHANGE, STATUS, UNKNOWN, ERROR
+            CONNECTED, VOLTAGE_NORMAL, VOLTAGE_LOW, CHIPREAD, TIME, SETTING_VALUE, SETTING_CHANGE, STATUS, UNKNOWN, ERROR
         }
     }
 
-    public class RfidUltraCodes
+    public static class RfidUltraCodes
     {
         public const char SETTINGS_TERM = (char)0xFF;
         public const char GPRS = (char)0x01;

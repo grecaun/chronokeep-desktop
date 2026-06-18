@@ -52,16 +52,16 @@ public partial class EditRawReadsWindow : ChronokeepWindow
     {
         Log.D("UI.Timing.EditRawReadsWindow", "Submit clicked.");
         bool add = AddRadio.IsChecked == true;
-        string[] firstparts = TimeBox.Text!.Replace('_', '0').Split(':');
-        string[] secondparts = firstparts[2].Split('.');
+        string[] firstParts = TimeBox.Text!.Replace('_', '0').Split(':');
+        string[] secondParts = firstParts[2].Split('.');
         int seconds, milliseconds;
         _ = int.TryParse(DaysBox.Text, out int days);
         try
         {
-            int hours = Convert.ToInt32(firstparts[0]),
-                minutes = Convert.ToInt32(firstparts[1]);
-            seconds = Convert.ToInt32(secondparts[0]);
-            milliseconds = Convert.ToInt32(secondparts[1]);
+            int hours = Convert.ToInt32(firstParts[0]),
+                minutes = Convert.ToInt32(firstParts[1]);
+            seconds = Convert.ToInt32(secondParts[0]);
+            milliseconds = Convert.ToInt32(secondParts[1]);
             seconds = (hours * 3600) + (minutes * 60) + seconds;
         }
         catch

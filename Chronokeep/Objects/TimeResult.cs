@@ -67,25 +67,31 @@ namespace Chronokeep.Objects
             Time = time;
             Occurrence = occurrence;
             LocationName = locations.TryGetValue(locationId, out TimingLocation? loc) ? loc.Name : "Unknown";
-            if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+            switch (SegmentId)
             {
-                SegmentName = "Finish ";
+                case Constants.Timing.SEGMENT_FINISH:
+                    SegmentName = "Finish ";
+                    break;
+                case Constants.Timing.SEGMENT_START:
+                    SegmentName = "Start ";
+                    break;
+                default:
+                {
+                    if (segments.TryGetValue(SegmentId, out Segment? seg))
+                    {
+                        SegmentName = seg.Name + " ";
+                    }
+                    else
+                    {
+                        SegmentName = "";
+                    }
+
+                    break;
+                }
             }
-            else if (Constants.Timing.SEGMENT_START == SegmentId)
+            switch (theEvent.EventType)
             {
-                SegmentName = "Start ";
-            }
-            else if (segments.TryGetValue(SegmentId, out Segment? seg))
-            {
-                SegmentName = seg.Name + " ";
-            }
-            else
-            {
-                SegmentName = "";
-            }
-            if (theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
-            {
-                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+                case Constants.Timing.EVENT_TYPE_TIME when Constants.Timing.SEGMENT_FINISH == SegmentId:
                 {
                     if (linkedDistanceName.Length > 0
                         && distances.TryGetValue(linkedDistanceName, out Distance? linkedDist)
@@ -95,75 +101,70 @@ namespace Chronokeep.Objects
                             occurrence,
                             linkedDist.DistanceValue * occurrence,
                             Distances.DistanceString(linkedDist.DistanceUnit)
-                            );
+                        );
                     }
                     else if (distance.Length > 0
-                        && distances.TryGetValue(distance, out Distance? oDist)
-                        && oDist.DistanceValue > 0)
+                             && distances.TryGetValue(distance, out Distance? oDist)
+                             && oDist.DistanceValue > 0)
                     {
                         SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
                             occurrence,
                             oDist.DistanceValue * occurrence,
                             Distances.DistanceString(oDist.DistanceUnit)
-                            );
+                        );
                     }
                     else
                     {
                         SegmentName = $"Lap {occurrence}";
                     }
+
+                    break;
                 }
-                else if (Constants.Timing.SEGMENT_START != SegmentId)
+                case Constants.Timing.EVENT_TYPE_TIME:
                 {
-                    if (linkedDistanceName.Length > 0
-                        && segments.TryGetValue(SegmentId, out Segment? oSeg)
-                        && oSeg.CumulativeDistance > 0)
+                    if (Constants.Timing.SEGMENT_START != SegmentId)
                     {
-                        SegmentName = string.Format("{2:0.##} {3} - {0}{1}",
-                            SegmentName,
-                            occurrence,
-                            oSeg.CumulativeDistance * occurrence,
-                            Distances.DistanceString(oSeg.DistanceUnit)
+                        if (linkedDistanceName.Length > 0
+                            && segments.TryGetValue(SegmentId, out Segment? oSeg)
+                            && oSeg.CumulativeDistance > 0)
+                        {
+                            SegmentName = string.Format("{2:0.##} {3} - {0}{1}",
+                                SegmentName,
+                                occurrence,
+                                oSeg.CumulativeDistance * occurrence,
+                                Distances.DistanceString(oSeg.DistanceUnit)
                             );
+                        }
+                        else
+                        {
+                            SegmentName = $"{SegmentName} {occurrence}";
+                        }
                     }
-                    else
-                    {
-                        SegmentName = $"{SegmentName} {occurrence}";
-                    }
+
+                    break;
                 }
-            }
-            else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
-            {
-                int hour = (Occurrence / 2) + 1;
-                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+                case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
                 {
-                    if (linkedDistanceName.Length > 0
-                        && distances.TryGetValue(linkedDistanceName, out Distance? linkedDist)
-                        && linkedDist.DistanceValue > 0)
+                    int hour = (Occurrence / 2) + 1;
+                    SegmentName = SegmentId switch
                     {
-                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
-                            hour,
-                            linkedDist.DistanceValue * hour,
-                            Distances.DistanceString(linkedDist.DistanceUnit)
-                            );
-                    }
-                    else if (distance.Length > 0
-                        && distances.TryGetValue(distance, out Distance? oDist)
-                        && oDist.DistanceValue > 0)
-                    {
-                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
-                            hour,
-                            oDist.DistanceValue * hour,
-                            Distances.DistanceString(oDist.DistanceUnit)
-                            );
-                    }
-                    else
-                    {
-                        SegmentName = $"Hour {hour}";
-                    }
-                }
-                else if (Constants.Timing.SEGMENT_START == SegmentId)
-                {
-                    SegmentName = $"Start {hour}";
+                        Constants.Timing.SEGMENT_FINISH when linkedDistanceName.Length > 0 &&
+                                                             distances.TryGetValue(linkedDistanceName,
+                                                                 out Distance? linkedDist) &&
+                                                             linkedDist.DistanceValue > 0 => string.Format(
+                            "{1:0.##} {2} - Hour {0}", hour, linkedDist.DistanceValue * hour,
+                            Distances.DistanceString(linkedDist.DistanceUnit)),
+                        Constants.Timing.SEGMENT_FINISH when distance.Length > 0 &&
+                                                             distances.TryGetValue(distance, out Distance? oDist) &&
+                                                             oDist.DistanceValue > 0 => string.Format(
+                            "{1:0.##} {2} - Hour {0}", hour, oDist.DistanceValue * hour,
+                            Distances.DistanceString(oDist.DistanceUnit)),
+                        Constants.Timing.SEGMENT_FINISH => $"Hour {hour}",
+                        Constants.Timing.SEGMENT_START => $"Start {hour}",
+                        _ => SegmentName
+                    };
+
+                    break;
                 }
             }
             SegmentName = SegmentName.Trim();
@@ -174,11 +175,11 @@ namespace Chronokeep.Objects
             UnknownId = unknownId;
             ReadId = readId;
             systemTime = Constants.Timing.RfidEpochToDate(systemTimeSec).AddMilliseconds(systemTimeMill);
-            this.ChipTime = chipTime;
+            ChipTime = chipTime;
             Place = place;
             AgePlace = agePlace;
             GenderPlace = genderPlace;
-            this.Gender = gender;
+            Gender = gender;
             AgeGroupId = ageGroupId;
             this.ageGroupName = ageGroupName;
             Match chipTimeMatch = TimeRegex().Match(chipTime);
@@ -299,19 +300,22 @@ namespace Chronokeep.Objects
 
         private string PrettyTypeStr()
         {
-            string output = Type == Constants.Timing.DISTANCE_TYPE_EARLY ? "E"
-                : Type == Constants.Timing.DISTANCE_TYPE_UNOFFICIAL ? "U"
-                : Type == Constants.Timing.DISTANCE_TYPE_LATE ? "L"
-                : Type == Constants.Timing.DISTANCE_TYPE_VIRTUAL ? "V"
-                : Type == Constants.Timing.DISTANCE_TYPE_DROP ? "D"
-                : "";
+            string output = Type switch
+            {
+                Constants.Timing.DISTANCE_TYPE_EARLY => "E",
+                Constants.Timing.DISTANCE_TYPE_UNOFFICIAL => "U",
+                Constants.Timing.DISTANCE_TYPE_LATE => "L",
+                Constants.Timing.DISTANCE_TYPE_VIRTUAL => "V",
+                Constants.Timing.DISTANCE_TYPE_DROP => "D",
+                _ => ""
+            };
             return Anonymous ? "A" + output : output;
         }
 
         public DateTime SystemTime { get => systemTime; set => systemTime = value; }
 
         public string SysTime => systemTime.ToString("MMM dd HH:mm:ss.fff");
-        public string ChipLapTime => theEvent != null && theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME ? LapTime : ChipTime;
+        public string ChipLapTime => theEvent is { EventType: Constants.Timing.EVENT_TYPE_TIME } ? LapTime : ChipTime;
         public string ChipTime { get; set; }
         public string ChipTimeNoMilliseconds => ChipTime.Split('.').Length > 0 ? ChipTime.Split('.')[0] : ChipTime;
         public string Gender { get; private set; } = "";
@@ -407,25 +411,31 @@ namespace Chronokeep.Objects
             )
         {
             LocationName = locations.TryGetValue(LocationId, out TimingLocation? loc) ? loc.Name : "Unknown";
-            if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+            switch (SegmentId)
             {
-                SegmentName = "Finish ";
+                case Constants.Timing.SEGMENT_FINISH:
+                    SegmentName = "Finish ";
+                    break;
+                case Constants.Timing.SEGMENT_START:
+                    SegmentName = "Start ";
+                    break;
+                default:
+                {
+                    if (segments.TryGetValue(SegmentId, out Segment? seg))
+                    {
+                        SegmentName = seg.Name + " ";
+                    }
+                    else
+                    {
+                        SegmentName = "";
+                    }
+
+                    break;
+                }
             }
-            else if (Constants.Timing.SEGMENT_START == SegmentId)
+            switch (iEvent.EventType)
             {
-                SegmentName = "Start ";
-            }
-            else if (segments.TryGetValue(SegmentId, out Segment? seg))
-            {
-                SegmentName = seg.Name + " ";
-            }
-            else
-            {
-                SegmentName = "";
-            }
-            if (iEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
-            {
-                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+                case Constants.Timing.EVENT_TYPE_TIME when Constants.Timing.SEGMENT_FINISH == SegmentId:
                 {
                     if (LinkedDistanceName.Length > 0
                         && distances.TryGetValue(LinkedDistanceName, out Distance? linkedDist)
@@ -435,70 +445,66 @@ namespace Chronokeep.Objects
                             Occurrence,
                             linkedDist.DistanceValue * Occurrence,
                             Distances.DistanceString(linkedDist.DistanceUnit)
-                            );
+                        );
                     }
                     else if (RealDistanceName.Length > 0
-                        && distances.TryGetValue(RealDistanceName, out Distance? oDist)
-                        && oDist.DistanceValue > 0)
+                             && distances.TryGetValue(RealDistanceName, out Distance? oDist)
+                             && oDist.DistanceValue > 0)
                     {
                         SegmentName = string.Format("{1:0.##} {2} - Lap {0}",
                             Occurrence,
                             oDist.DistanceValue * Occurrence,
                             Distances.DistanceString(oDist.DistanceUnit)
-                            );
+                        );
                     }
                     else
                     {
                         SegmentName = $"Lap {Occurrence}";
                     }
+
+                    break;
                 }
-                else if (Constants.Timing.SEGMENT_START != SegmentId)
+                case Constants.Timing.EVENT_TYPE_TIME:
                 {
-                    if (LinkedDistanceName.Length > 0
-                        && segments.TryGetValue(SegmentId, out Segment? oSeg)
-                        && oSeg.CumulativeDistance > 0)
+                    if (Constants.Timing.SEGMENT_START != SegmentId)
                     {
-                        SegmentName = $"{oSeg.CumulativeDistance * Occurrence:0.##} {Distances.DistanceString(oSeg.DistanceUnit)} - {SegmentName}{Occurrence}";
+                        if (LinkedDistanceName.Length > 0
+                            && segments.TryGetValue(SegmentId, out Segment? oSeg)
+                            && oSeg.CumulativeDistance > 0)
+                        {
+                            SegmentName = $"{oSeg.CumulativeDistance * Occurrence:0.##} {Distances.DistanceString(oSeg.DistanceUnit)} - {SegmentName}{Occurrence}";
+                        }
+                        else
+                        {
+                            SegmentName = $"{SegmentName} {Occurrence}";
+                        }
                     }
-                    else
-                    {
-                        SegmentName = $"{SegmentName} {Occurrence}";
-                    }
+
+                    break;
                 }
-            }
-            else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == iEvent.EventType)
-            {
-                int hour = (Occurrence / 2) + 1;
-                if (Constants.Timing.SEGMENT_FINISH == SegmentId)
+                case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
                 {
-                    if (LinkedDistanceName.Length > 0
-                        && distances.TryGetValue(LinkedDistanceName, out Distance? linkedDist)
-                        && linkedDist.DistanceValue > 0)
+                    int hour = (Occurrence / 2) + 1;
+                    SegmentName = SegmentId switch
                     {
-                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
-                            hour,
-                            linkedDist.DistanceValue * hour,
-                            Distances.DistanceString(linkedDist.DistanceUnit)
-                            );
-                    }
-                    else if (RealDistanceName.Length > 0
-                        && distances.TryGetValue(RealDistanceName, out Distance? oDist)
-                        && oDist.DistanceValue > 0)
-                    {
-                        SegmentName = string.Format("{1:0.##} {2} - Hour {0}",
-                            hour,
-                            oDist.DistanceValue * hour,
-                            Distances.DistanceString(oDist.DistanceUnit)
-                            );
-                    }
-                    else
-                    {
-                        SegmentName = $"Hour {hour}";
-                    }
-                }
-                else if (Constants.Timing.SEGMENT_START == SegmentId)
-                {
-                    SegmentName = $"Start {hour}";
+                        Constants.Timing.SEGMENT_FINISH when LinkedDistanceName.Length > 0 &&
+                                                             distances.TryGetValue(LinkedDistanceName,
+                                                                 out Distance? linkedDist) &&
+                                                             linkedDist.DistanceValue > 0 => string.Format(
+                            "{1:0.##} {2} - Hour {0}", hour, linkedDist.DistanceValue * hour,
+                            Distances.DistanceString(linkedDist.DistanceUnit)),
+                        Constants.Timing.SEGMENT_FINISH when RealDistanceName.Length > 0 &&
+                                                             distances.TryGetValue(RealDistanceName,
+                                                                 out Distance? oDist) &&
+                                                             oDist.DistanceValue > 0 => string.Format(
+                            "{1:0.##} {2} - Hour {0}", hour, oDist.DistanceValue * hour,
+                            Distances.DistanceString(oDist.DistanceUnit)),
+                        Constants.Timing.SEGMENT_FINISH => $"Hour {hour}",
+                        Constants.Timing.SEGMENT_START => $"Start {hour}",
+                        _ => SegmentName
+                    };
+
+                    break;
                 }
             }
             SegmentName = SegmentName.Trim();
@@ -694,7 +700,6 @@ namespace Chronokeep.Objects
             {
                 validPhone = GlobalVars.GetValidPhone(part.Phone);
             }
-
             // Invalid length. +15555551234 is a valid phone
             return validPhone.Length == 12 && GlobalVars.TwilioCredentials.PhoneNumber.Length == 12;
         }

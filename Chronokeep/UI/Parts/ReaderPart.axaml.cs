@@ -36,14 +36,14 @@ public partial class ReaderPart : UserControl
         InitializeComponent();
         Reader = sys;
         ComboBoxItem? current, selected = null;
-        foreach (string systemIdval in Readers.SYSTEM_NAMES.Keys)
+        foreach (string systemIdVal in Readers.SYSTEM_NAMES.Keys)
         {
             current = new ComboBoxItem()
             {
-                Content = Readers.SYSTEM_NAMES[systemIdval],
-                Tag = systemIdval
+                Content = Readers.SYSTEM_NAMES[systemIdVal],
+                Tag = systemIdVal
             };
-            if (systemIdval == Reader.Type)
+            if (systemIdVal == Reader.Type)
             {
                 selected = current;
             }
@@ -247,22 +247,13 @@ public partial class ReaderPart : UserControl
 
     private void ChangeReadingStatus(string status)
     {
-        if (status == TimingSystem.READING_STATUS_STOPPED)
+        ReaderButton.Foreground = status switch
         {
-            ReaderButton.Foreground = new SolidColorBrush(Colors.Red);
-        }
-        else if (status == TimingSystem.READING_STATUS_READING)
-        {
-            ReaderButton.Foreground = new SolidColorBrush(Colors.LimeGreen);
-        }
-        else if (status == TimingSystem.READING_STATUS_PARTIAL)
-        {
-            ReaderButton.Foreground = new SolidColorBrush(Colors.Violet);
-        }
-        else
-        {
-            ReaderButton.Foreground = null;
-        }
+            TimingSystem.READING_STATUS_STOPPED => new SolidColorBrush(Colors.Red),
+            TimingSystem.READING_STATUS_READING => new SolidColorBrush(Colors.LimeGreen),
+            TimingSystem.READING_STATUS_PARTIAL => new SolidColorBrush(Colors.Violet),
+            _ => null
+        };
     }
 
     internal void UpdateSystemType(string type)

@@ -34,53 +34,37 @@ public partial class RfidSettings : ChronokeepWindow
                 IdSlider.Value = settings.UltraId;
                 IdDisplay.Text = settings.UltraId.ToString();
             }
-            switch (settings.ChipType)
+            ChipBox.SelectedIndex = settings.ChipType switch
             {
-                case RfidSettingsHolder.ChipTypeEnum.DEC:
-                    ChipBox.SelectedIndex = 0;
-                    break;
-                case RfidSettingsHolder.ChipTypeEnum.HEX:
-                    ChipBox.SelectedIndex = 1;
-                    break;
-            }
-            switch (settings.GatingMode)
+                RfidSettingsHolder.ChipTypeEnum.DEC => 0,
+                RfidSettingsHolder.ChipTypeEnum.HEX => 1,
+                _ => ChipBox.SelectedIndex
+            };
+            GatingModeBox.SelectedIndex = settings.GatingMode switch
             {
-                case RfidSettingsHolder.GatingModeEnum.PER_READER:
-                    GatingModeBox.SelectedIndex = 0;
-                    break;
-                case RfidSettingsHolder.GatingModeEnum.PER_BOX:
-                    GatingModeBox.SelectedIndex = 1;
-                    break;
-                case RfidSettingsHolder.GatingModeEnum.FIRST_TIME_SEEN:
-                    GatingModeBox.SelectedIndex = 2;
-                    break;
-            }
+                RfidSettingsHolder.GatingModeEnum.PER_READER => 0,
+                RfidSettingsHolder.GatingModeEnum.PER_BOX => 1,
+                RfidSettingsHolder.GatingModeEnum.FIRST_TIME_SEEN => 2,
+                _ => GatingModeBox.SelectedIndex
+            };
             if (settings.GatingInterval is >= 0 and < 21)
             {
                 GatingSlider.Value = settings.GatingInterval;
                 GatingDisplay.Text = settings.GatingInterval.ToString();
             }
-            switch (settings.Beep)
+            WhenBeepBox.SelectedIndex = settings.Beep switch
             {
-                case RfidSettingsHolder.BeepEnum.ALWAYS:
-                    WhenBeepBox.SelectedIndex = 0;
-                    break;
-                case RfidSettingsHolder.BeepEnum.ONLY_FIRST_SEEN:
-                    WhenBeepBox.SelectedIndex = 1;
-                    break;
-            }
-            switch (settings.BeepVolume)
+                RfidSettingsHolder.BeepEnum.ALWAYS => 0,
+                RfidSettingsHolder.BeepEnum.ONLY_FIRST_SEEN => 1,
+                _ => WhenBeepBox.SelectedIndex
+            };
+            VolumeBox.SelectedIndex = settings.BeepVolume switch
             {
-                case RfidSettingsHolder.BeepVolumeEnum.OFF:
-                    VolumeBox.SelectedIndex = 0;
-                    break;
-                case RfidSettingsHolder.BeepVolumeEnum.SOFT:
-                    VolumeBox.SelectedIndex = 1;
-                    break;
-                case RfidSettingsHolder.BeepVolumeEnum.LOUD:
-                    VolumeBox.SelectedIndex = 2;
-                    break;
-            }
+                RfidSettingsHolder.BeepVolumeEnum.OFF => 0,
+                RfidSettingsHolder.BeepVolumeEnum.SOFT => 1,
+                RfidSettingsHolder.BeepVolumeEnum.LOUD => 2,
+                _ => VolumeBox.SelectedIndex
+            };
             SetGpsSwitch.IsChecked = settings.SetFromGps switch
             {
                 RfidSettingsHolder.GpsEnum.SET => true,
@@ -92,15 +76,12 @@ public partial class RfidSettings : ChronokeepWindow
                 TimeZoneSlider.Value = settings.TimeZone;
                 TimeZoneDisplay.Text = settings.TimeZone.ToString();
             }
-            switch (settings.Status)
+            ReadingSwitch.IsChecked = settings.Status switch
             {
-                case RfidSettingsHolder.StatusEnum.STARTED:
-                    ReadingSwitch.IsChecked = true;
-                    break;
-                case RfidSettingsHolder.StatusEnum.STOPPED:
-                    ReadingSwitch.IsChecked = false;
-                    break;
-            }
+                RfidSettingsHolder.StatusEnum.STARTED => true,
+                RfidSettingsHolder.StatusEnum.STOPPED => false,
+                _ => ReadingSwitch.IsChecked
+            };
             SettingsPanel.IsVisible = true;
         });
     }
@@ -141,16 +122,14 @@ public partial class RfidSettings : ChronokeepWindow
     private void SaveChip_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save Chip button clicked.");
-        char byteVal = (char)0x00;
-        switch (ChipBox.SelectedIndex)
+        char byteVal = ChipBox.SelectedIndex switch
         {
-            case 0:     // Decimal
-                byteVal = (char)0x00;
-                break;
-            case 1:     // Hexadecimal
-                byteVal = (char)0x01;
-                break;
-        }
+            0 => // Decimal
+                (char)0x00,
+            1 => // Hexadecimal
+                (char)0x01,
+            _ => (char)0x00
+        };
         reader.SetChipOutputType(byteVal);
     }
 
@@ -166,19 +145,16 @@ public partial class RfidSettings : ChronokeepWindow
     private void SaveGatingMode_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save Gating Mode button clicked.");
-        char byteVal = (char)0x00;
-        switch (GatingModeBox.SelectedIndex)
+        char byteVal = GatingModeBox.SelectedIndex switch
         {
-            case 0:     // Per reader
-                byteVal = (char)0x00;
-                break;
-            case 1:     // Per box
-                byteVal = (char)0x01;
-                break;
-            case 2:     // First time seen
-                byteVal = (char)0x02;
-                break;
-        }
+            0 => // Per reader
+                (char)0x00,
+            1 => // Per box
+                (char)0x01,
+            2 => // First time seen
+                (char)0x02,
+            _ => (char)0x00
+        };
         reader.SetGatingMode(byteVal);
     }
 

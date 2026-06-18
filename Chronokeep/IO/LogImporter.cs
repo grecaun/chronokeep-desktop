@@ -6,7 +6,7 @@ namespace Chronokeep.IO
     public partial class LogImporter(string filePath) : CsvImporter(filePath)
     {
         [GeneratedRegex("^\\d,[0-9A-Fa-f]+,\\d,\"(\\d{4}-\\d{2}-\\d{2} )?\\d{1,2}:\\d{2}:\\d{2}\\.\\d{3}\"$|" + // RFID Timing style?
-                                "^[0-9A-Fa-f]+\\t(\\d{4}-\\d{2}-\\d{2} )?\\d{1,2}:\\d{2}:\\d{2}\\.\\d{3}$")]    // RFID Server style?    
+                                "^[0-9A-Fa-f]+\\t(\\d{4}-\\d{2}-\\d{2} )?\\d{1,2}:\\d{2}:\\d{2}\\.\\d{3}$")]           // RFID Server style?    
         private static partial Regex Rfid();
         [GeneratedRegex(@"aa[0-9a-fA-F]{34,36}")]
         private static partial Regex Ipico();

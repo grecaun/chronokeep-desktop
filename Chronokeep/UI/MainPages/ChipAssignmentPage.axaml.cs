@@ -163,22 +163,17 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        if (bibsChanged)
-        {
-            database.ResetTimingResultsEvent(theEvent!.Identifier);
-            mWindow.NetworkClearResults();
-            mWindow.NotifyTimingWorker();
-        }
+        if (!bibsChanged) return;
+        database.ResetTimingResultsEvent(theEvent!.Identifier);
+        mWindow.NetworkClearResults();
+        mWindow.NotifyTimingWorker();
     }
 
     private void Delete_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Delete clicked.");
         List<BibChipAssociation> items = [];
-        foreach (BibChipAssociation b in BibChipList.SelectedItems)
-        {
-            items.Add(b);
-        }
+        items.AddRange(BibChipList.SelectedItems.Cast<BibChipAssociation>());
         database.RemoveBibChipAssociations(items);
         bibsChanged = true;
         UpdateView();

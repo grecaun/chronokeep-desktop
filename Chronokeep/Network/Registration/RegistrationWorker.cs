@@ -210,7 +210,7 @@ namespace Chronokeep.Network.Registration
                                                             "", // state
                                                             "", // zip
                                                             addReq.Participant.Birthdate,
-                                                            new(
+                                                            new EventSpecific(
                                                                 theEvent.Identifier,
                                                                 oDist.Identifier,
                                                                 addReq.Participant.Distance,
@@ -336,7 +336,7 @@ namespace Chronokeep.Network.Registration
                                                                 "", // state
                                                                 "", // zip
                                                                 part.Birthdate,
-                                                                new(
+                                                                new EventSpecific(
                                                                     theEvent.Identifier,
                                                                     distance.Identifier,
                                                                     part.Distance,
@@ -478,7 +478,7 @@ namespace Chronokeep.Network.Registration
 
         private void SendParticipants(Event theEvent)
         {
-            Log.D("Network.Registration.RegistrationWorker", "Attempting to send participants message. There are " + clients.Count + " clients connected.");
+            Log.D("Network.Registration.RegistrationWorker", $"Attempting to send participants message. There are {clients.Count} clients connected.");
             foreach (Socket sock in clients.Where(sock => sock != server && sock.Connected))
             {
                 SendMessage(sock, JsonSerializer.Serialize(new ParticipantsResponse

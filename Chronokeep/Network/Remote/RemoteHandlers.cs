@@ -44,7 +44,7 @@ namespace Chronokeep.Network.Remote
             catch (Exception ex)
             {
                 Log.D("Network.Remote.RemoteHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException($"Exception thrown getting events: {ex.Message}");
             }
             throw new ApiException(content);
         }
@@ -132,7 +132,7 @@ namespace Chronokeep.Network.Remote
             catch (Exception ex)
             {
                 Log.D("Network.Remote.RemoteHandlers", "Exception thrown.");
-                throw new ApiException("Exception thrown getting events: " + ex.Message);
+                throw new ApiException($"Exception thrown getting events: {ex.Message}");
             }
             throw new ApiException(content);
         }

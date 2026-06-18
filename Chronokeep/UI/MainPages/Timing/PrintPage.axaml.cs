@@ -168,10 +168,10 @@ public partial class PrintPage : UserControl, ISubPage
                 oDistResDict = [];
                 distanceResults[result.DistanceName] = oDistResDict;
             }
-            if (!oDistResDict.TryGetValue(result.Gender, out List<TimeResult>? oDistGendResList))
+            if (!oDistResDict.TryGetValue(result.Gender, out List<TimeResult>? oDistGenderResList))
             {
-                oDistGendResList = [];
-                oDistResDict[result.Gender] = oDistGendResList;
+                oDistGenderResList = [];
+                oDistResDict[result.Gender] = oDistGenderResList;
             }
             if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
             {
@@ -190,7 +190,7 @@ public partial class PrintPage : UserControl, ISubPage
             }
             else
             {
-                oDistGendResList.Add(result);
+                oDistGenderResList.Add(result);
             }
         }
         foreach (string divName in distanceResults.Keys.OrderBy(i => i))
@@ -209,10 +209,10 @@ public partial class PrintPage : UserControl, ISubPage
 
     private string GetAgeGroupPrintableDocument(List<string> distances)
     {
-        // Get all of the age groups for the race
+        // Get all the age groups for the race
         Dictionary<int, AgeGroup> ageGroups = database.GetAgeGroups(theEvent!.Identifier).ToDictionary(x => x.GroupId, x => x);
         // Add an age group for our unknown age people/
-        ageGroups[Constants.Timing.TIMERESULT_DUMMYAGEGROUP] = new(theEvent.Identifier, Constants.Timing.COMMON_AGEGROUPS_DISTANCEID, -1, 3000);
+        ageGroups[Constants.Timing.TIMERESULT_DUMMYAGEGROUP] = new AgeGroup(theEvent.Identifier, Constants.Timing.COMMON_AGEGROUPS_DISTANCEID, -1, 3000);
         // Get all finish results for the race
         List<TimeResult> results = database.GetTimingResults(theEvent.Identifier);
         // Remove all unknown participants
@@ -381,10 +381,12 @@ public partial class PrintPage : UserControl, ISubPage
                     using Process testWeasy = new();
                     testWeasy.StartInfo.FileName = "which";
                     testWeasy.StartInfo.Arguments = weasyName;
+                    testWeasy.StartInfo.UseShellExecute = true;
                     testWeasy.Start();
                     await testWeasy.WaitForExitAsync();
+                    int exitVal = testWeasy.ExitCode;
                     testWeasy.Close();
-                    if (testWeasy.ExitCode != 0)
+                    if (exitVal != 0)
                     {
                         DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
                             "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
@@ -398,16 +400,16 @@ public partial class PrintPage : UserControl, ISubPage
                 }
                 // Write HTML to a temp file.
                 string tmpFile = Path.Combine(Path.GetTempPath(), "print_temp.html");
-                await using StreamWriter streamwriter = new(File.Open(tmpFile, FileMode.Create));
-                await streamwriter.WriteAsync(htmlString);
-                streamwriter.Close();
+                await using StreamWriter streamWriter = new(File.Open(tmpFile, FileMode.Create));
+                await streamWriter.WriteAsync(htmlString);
+                streamWriter.Close();
                 // Delete old file if it exists.
                 string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
-                // Use weasyprint to convert our temp html file to a saved pdf file.
+                // Use weasyprint to convert our temp html file to a saved PDF file.
                 using Process createPdf = new();
                 createPdf.StartInfo.FileName = weasyName;
                 createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
@@ -418,7 +420,13 @@ public partial class PrintPage : UserControl, ISubPage
                 createPdf.Close();
                 // delete old file
                 File.Delete(tmpFile);
-                DialogBox.Show("File saved.");
+                // DialogBox.Show("File saved.");
+                using Process openPdf = new();
+                openPdf.StartInfo.FileName = filePath;
+                openPdf.StartInfo.UseShellExecute = true;
+                openPdf.Start();
+                await openPdf.WaitForExitAsync();
+                openPdf.Close();
             }
             catch
             {

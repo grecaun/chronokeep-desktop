@@ -96,12 +96,12 @@
         public int Identifier { get; set; }
         public int EventIdentifier { get; set; }
         public int DistanceIdentifier { get; set; }
-        public string Bib { get; set; } = "";
+        public string Bib { get; set; }
         public int CheckedIn { get; private set; }
-        public string Comments { get; private set; } = "";
-        public string DistanceName { get; set; } = "";
-        public string Owes { get; private set; } = "";
-        public string Other { get; private set; } = "";
+        public string Comments { get; private set; }
+        public string DistanceName { get; set; }
+        public string Owes { get; private set; }
+        public string Other { get; private set; }
         public int Status { get; set; } = Constants.Timing.EVENTSPECIFIC_UNKNOWN;
         public string StatusStr => Constants.Timing.EVENTSPECIFIC_STATUS_NAMES[Status];
         public string AgeGroupName { get; set; } = "";
@@ -109,10 +109,10 @@
         public bool Anonymous { get; private set; }
 
         public bool SmsEnabled { get; set; }
-        public string Apparel { get; private set; } = "";
-        public string Division { get; private set; } = "";
+        public string Apparel { get; private set; }
+        public string Division { get; private set; }
         public int Version { get; set; }
-        public int UploadedVersion { get; set; } = -1;
+        public int UploadedVersion { get; set; }
 
         public void CopyFrom(EventSpecific other)
         {

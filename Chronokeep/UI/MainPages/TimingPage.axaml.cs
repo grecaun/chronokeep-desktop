@@ -153,8 +153,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             waveTimes[div.Wave] = (div.StartOffsetSeconds, div.StartOffsetMilliseconds);
             waves.Add(div.Wave);
         }
-        EllapsedRelativeToBox.ItemsSource = relativeToWaveList;
-        EllapsedRelativeToBox.SelectedIndex = 0;
+        ElapsedRelativeToBox.ItemsSource = relativeToWaveList;
+        ElapsedRelativeToBox.SelectedIndex = 0;
 
         // Check if we've already started the event.  Show a clock if we have.
         if (theEvent is { StartSeconds: >= 0 })
@@ -469,17 +469,18 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         }
 
         RemoteReadsController.RemoteStatus rStatus = mWindow.IsRemoteRunning();
-        if (rStatus == RemoteReadsController.RemoteStatus.RUNNING)
+        switch (rStatus)
         {
-            RemoteControllerSwitch.IsChecked = true;
-            RemoteControllerSwitch.IsEnabled = true;
-            RemoteErrorsBlock.Text = mWindow.RemoteErrors() > 0 ? mWindow.RemoteErrors().ToString() : "";
-        }
-        else if (rStatus == RemoteReadsController.RemoteStatus.STOPPED)
-        {
-            RemoteControllerSwitch.IsChecked = false;
-            RemoteControllerSwitch.IsEnabled = true;
-            RemoteErrorsBlock.Text = "";
+            case RemoteReadsController.RemoteStatus.RUNNING:
+                RemoteControllerSwitch.IsChecked = true;
+                RemoteControllerSwitch.IsEnabled = true;
+                RemoteErrorsBlock.Text = mWindow.RemoteErrors() > 0 ? mWindow.RemoteErrors().ToString() : "";
+                break;
+            case RemoteReadsController.RemoteStatus.STOPPED:
+                RemoteControllerSwitch.IsChecked = false;
+                RemoteControllerSwitch.IsEnabled = true;
+                RemoteErrorsBlock.Text = "";
+                break;
         }
 
         UpdateDnsButton();
@@ -530,7 +531,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             unixElapsed -= value.seconds * 1000;
             unixElapsed -= value.milliseconds;
         }
-        EllapsedTime.Text = Constants.Timing.SecondsToTime(Math.Abs(unixElapsed / 1000));
+        ElapsedTime.Text = Constants.Timing.SecondsToTime(Math.Abs(unixElapsed / 1000));
     }
 
     public void NotifyTimingWorker()
@@ -563,7 +564,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         }
         string startTimeValue = StartTime.Text!.Replace('_', '0');
         StartRace.IsEnabled = false;
-        EllapsedRelativeToBox.IsVisible = waves.Count > 1;
+        ElapsedRelativeToBox.IsVisible = waves.Count > 1;
         StartTime.Text = startTimeValue;
         Log.D("UI.MainPages.TimingPage", "Start time is " + startTimeValue);
         startTime = DateTime.ParseExact(startTimeValue + DateTime.Parse(theEvent!.Date).ToString("ddMMyyyy"), "HH:mm:ss.fffddMMyyyy", null);
@@ -764,7 +765,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         Log.E("UI.MainPages.TimingPage", "ElapsedRelativeToBox selection changed.");
         selectedWave = -1;
-        if (EllapsedRelativeToBox.SelectedIndex >= 0 && EllapsedRelativeToBox.SelectedItem is TimeRelativeWave wave)
+        if (ElapsedRelativeToBox.SelectedIndex >= 0 && ElapsedRelativeToBox.SelectedItem is TimeRelativeWave wave)
         {
             selectedWave = wave.Wave;
         }
@@ -785,10 +786,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             }
             database.UpdateEvent(theEvent);
             StartTime.Text = "";
-            EllapsedTime.Text = "00:00:00";
+            ElapsedTime.Text = "00:00:00";
             StartRace.IsEnabled = true;
-            EllapsedRelativeToBox.IsEnabled = false;
-            EllapsedRelativeToBox.IsVisible = false;
+            ElapsedRelativeToBox.IsEnabled = false;
+            ElapsedRelativeToBox.IsVisible = false;
             return;
         }
         Log.D("UI.MainPages.TimingPage", "Start Time Box return key found.");
@@ -800,8 +801,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         Log.D("UI.MainPages.TimingPage", "Starting race.");
         StartTime.Text = DateTime.Now.ToString("HH:mm:ss.fff");
         StartRace.IsEnabled = false;
-        EllapsedRelativeToBox.IsEnabled = true;
-        EllapsedRelativeToBox.IsVisible = waves.Count > 1;
+        ElapsedRelativeToBox.IsEnabled = true;
+        ElapsedRelativeToBox.IsVisible = waves.Count > 1;
         foreach (Chronoclock clock in database.GetClocks().Where(clock => clock.Enabled))
         {
             try
@@ -995,7 +996,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Searchbox text has changed");
+        Log.D("UI.MainPages.TimingPage", "Search box text has changed");
         cts?.Cancel();
         cts = null;
         cts = new CancellationTokenSource();
@@ -1073,7 +1074,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             return;
         }
-        Log.D("UI.MainPages.TimingPage", "Stats double cliked. Distance is " + selected.DistanceName);
+        Log.D("UI.MainPages.TimingPage", "Stats double clicked. Distance is " + selected.DistanceName);
         SetRawReadsFinished();
         subPage = new DistanceStatsPage(this, mWindow, database, selected.DistanceId, selected.DistanceName, CondenseSwitch.IsChecked == false);
         TimingFrame.Content = subPage;
@@ -1470,7 +1471,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     private void Export_US_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Export Ultrasignup Clicked.");
+        Log.D("UI.MainPages.TimingPage", "Export UltraSignup Clicked.");
         if (theEvent!.EventType == Constants.Timing.EVENT_TYPE_TIME)
         {
             DialogBox.Show("Exporting time based events not supported.");
@@ -1482,18 +1483,18 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         exportUs.ShowDialog((Window)mWindow);
     }
 
-    private void Export_Runsignup_Click(object? sender, RoutedEventArgs e)
+    private void Export_RunSignup_Click(object? sender, RoutedEventArgs e)
     {
-        Log.D("UI.MainPages.TimingPage", "Export Runsignup Clicked.");
+        Log.D("UI.MainPages.TimingPage", "Export RunSignup Clicked.");
         if (theEvent!.EventType == Constants.Timing.EVENT_TYPE_TIME)
         {
             DialogBox.Show("Exporting time based events not supported.");
             return;
         }
-        ExportDistanceResults exportRunsignup = new(mWindow, database, OutputType.Runsignup);
-        if (exportRunsignup.SetupError()) return;
-        mWindow.AddWindow(exportRunsignup);
-        exportRunsignup.ShowDialog((Window)mWindow);
+        ExportDistanceResults exportRunSignup = new(mWindow, database, OutputType.RunSignup);
+        if (exportRunSignup.SetupError()) return;
+        mWindow.AddWindow(exportRunSignup);
+        exportRunSignup.ShowDialog((Window)mWindow);
     }
 
     private void Expander_Expanded(object? sender, RoutedEventArgs e)

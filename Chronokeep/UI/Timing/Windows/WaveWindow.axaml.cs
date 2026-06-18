@@ -50,10 +50,10 @@ public partial class WaveWindow : ChronokeepWindow
         window.WindowFinalize();
     }
 
-    private void TimeofDayButton_Checked(object sender, RoutedEventArgs e)
+    private void TimeOfDayButton_Checked(object sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.WaveWindow", "Time of day selected.");
-        if (TimeofDayButton.IsChecked == true)
+        if (TimeOfDayButton.IsChecked == true)
         {
             foreach (WavePart? wave in WaveList.Items.Cast<WavePart?>())
             {
@@ -77,7 +77,7 @@ public partial class WaveWindow : ChronokeepWindow
         foreach (WavePart? wave in WaveList.Items.Cast<WavePart?>())
         {
             (int waveNo, long seconds, int milliseconds) = wave!.GetValues();
-            if (TimeofDayButton.IsChecked == true)
+            if (TimeOfDayButton.IsChecked == true)
             {
                 seconds -= theEvent!.StartSeconds;
                 milliseconds -= theEvent.StartMilliseconds;

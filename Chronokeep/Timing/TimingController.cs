@@ -159,11 +159,11 @@ namespace Chronokeep.Timing
                     Log.D("Timing.TimingController", "Reading from socket.");
                     bool chipRead = false;
                     bool updateTiming = false;
-                    byte[] recvd = new byte[4112];
+                    byte[] received = new byte[4112];
                     try
                     {
-                        int numRecvd = sock.Receive(recvd);
-                        if (numRecvd == 0)
+                        int numReceived = sock.Receive(received);
+                        if (numReceived == 0)
                         {
                             Log.D("Timing.TimingController", "No longer connected to Timing System");
                             TimingSystem disconnected = timingSystemDict[sock];
@@ -173,7 +173,7 @@ namespace Chronokeep.Timing
                         }
                         else
                         {
-                            string msg = Encoding.UTF8.GetString(recvd, 0, numRecvd);
+                            string msg = Encoding.UTF8.GetString(received, 0, numReceived);
                             Log.D("Timing.TimingController", "Timing System - Message is :" + msg.Trim());
                             Dictionary<MessageType, List<string>> messageTypes = timingSystemDict[sock].SystemInterface!.ParseMessages(msg, sock);
                             foreach (MessageType type in messageTypes.Keys)
@@ -186,7 +186,7 @@ namespace Chronokeep.Timing
                                         updateTiming = true;
                                         break;
                                     case MessageType.CHIPREAD:
-                                        Log.D("Timing.TimingController", "Chipreads found");
+                                        Log.D("Timing.TimingController", "ChipReads found");
                                         chipRead = true;
                                         break;
                                     case MessageType.SETTINGCHANGE:

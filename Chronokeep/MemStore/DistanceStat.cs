@@ -43,7 +43,7 @@ namespace Chronokeep.MemStore
                             }
                             if (!distStatDict.TryGetValue(distIdent, out DistanceStat? distStats))
                             {
-                                distStats = new()
+                                distStats = new DistanceStat
                                 {
                                     DistanceName = distName,
                                     DistanceId = distIdent,
@@ -54,25 +54,25 @@ namespace Chronokeep.MemStore
                                 };
                                 distStatDict[distIdent] = distStats;
                             }
-                            if (Constants.Timing.EVENTSPECIFIC_DNF == p.Status)
+                            switch (p.Status)
                             {
-                                distStats.Dnf += 1;
-                                allStats.Dnf += 1;
-                            }
-                            else if (Constants.Timing.EVENTSPECIFIC_FINISHED == p.Status)
-                            {
-                                distStats.Finished += 1;
-                                allStats.Finished += 1;
-                            }
-                            else if (Constants.Timing.EVENTSPECIFIC_STARTED == p.Status)
-                            {
-                                distStats.Active += 1;
-                                allStats.Active += 1;
-                            }
-                            else if (Constants.Timing.EVENTSPECIFIC_DNS == p.Status || Constants.Timing.EVENTSPECIFIC_UNKNOWN == p.Status)
-                            {
-                                distStats.Dns += 1;
-                                allStats.Dns += 1;
+                                case Constants.Timing.EVENTSPECIFIC_DNF:
+                                    distStats.Dnf += 1;
+                                    allStats.Dnf += 1;
+                                    break;
+                                case Constants.Timing.EVENTSPECIFIC_FINISHED:
+                                    distStats.Finished += 1;
+                                    allStats.Finished += 1;
+                                    break;
+                                case Constants.Timing.EVENTSPECIFIC_STARTED:
+                                    distStats.Active += 1;
+                                    allStats.Active += 1;
+                                    break;
+                                case Constants.Timing.EVENTSPECIFIC_DNS:
+                                case Constants.Timing.EVENTSPECIFIC_UNKNOWN:
+                                    distStats.Dns += 1;
+                                    allStats.Dns += 1;
+                                    break;
                             }
                         }
                         output.AddRange(distStatDict.Values);

@@ -13,7 +13,7 @@ namespace Chronokeep.UI.UhfRfidReader
         {
             if (comPort == "N/A" || baudRate == 0)
             {
-                return RfidError.BADSETTINGS;
+                return RfidError.BAD_SETTINGS;
             }
             try
             {
@@ -26,9 +26,9 @@ namespace Chronokeep.UI.UhfRfidReader
             catch (IOException exc)
             {
                 Console.WriteLine(exc.StackTrace);
-                return RfidError.UNABLETOCONNECT;
+                return RfidError.UNABLE_TO_CONNECT;
             }
-            return RfidError.NOERR;
+            return RfidError.NO_ERROR;
         }
 
         private RfidError DeviceConnect()
@@ -40,23 +40,23 @@ namespace Chronokeep.UI.UhfRfidReader
                 byte[] inMsg = new byte[56];
                 outMsg[4] = CheckSum(outMsg, 4);
                 port.BaseStream.Write(outMsg, 0, 5);
-                Thread.Sleep(20); // Need to give it time or we won't get the whole message.
-                int recvd = port.Read(inMsg, 0, 56);
-                while (recvd < 6)
+                Thread.Sleep(20); // Need to give it time, or we won't get the whole message.
+                int received = port.Read(inMsg, 0, 56);
+                while (received < 6)
                 {
                     Thread.Sleep(20);
-                    recvd = port.Read(inMsg, recvd, 56 - recvd);
+                    received = port.Read(inMsg, received, 56 - received);
                 }
                 if (inMsg[0] != 0xE4 || inMsg[inMsg[1] + 1] != CheckSum(inMsg, inMsg[1] + 1) || inMsg[1] < 0x04 || inMsg[4] != 0x00)
                 {
-                    return RfidError.UNABLETOCONNECT;
+                    return RfidError.UNABLE_TO_CONNECT;
                 }
             }
             catch
             {
-                return RfidError.UNABLETOCONNECT;
+                return RfidError.UNABLE_TO_CONNECT;
             }
-            return RfidError.NOERR;
+            return RfidError.NO_ERROR;
         }
 
         private void DeviceDisconnect()
@@ -69,7 +69,7 @@ namespace Chronokeep.UI.UhfRfidReader
         public RfidError Connect()
         {
             RfidError err = DeviceInit();
-            return err != RfidError.NOERR ? err : DeviceConnect();
+            return err != RfidError.NO_ERROR ? err : DeviceConnect();
         }
 
         public void Disconnect()
@@ -98,10 +98,10 @@ namespace Chronokeep.UI.UhfRfidReader
             try
             {
                 port.BaseStream.Write(outMsg, 0, 5);
-                Thread.Sleep(50); // Need to give it time or we won't get the whole message.
-                int recvd = port.Read(inMsg, 0, 256);
+                Thread.Sleep(50); // Need to give it time, or we won't get the whole message.
+                int received = port.Read(inMsg, 0, 256);
                 int pos = 0;
-                while (pos < recvd && inMsg[pos] != 0xE4 && inMsg[pos] != 0xE0)
+                while (pos < received && inMsg[pos] != 0xE4 && inMsg[pos] != 0xE0)
                 {
                     pos++;
                 }
@@ -119,7 +119,7 @@ namespace Chronokeep.UI.UhfRfidReader
                     case > 255:
                         return new RfidInfo
                         {
-                            ErrorCode = RfidError.NODATA
+                            ErrorCode = RfidError.NO_DATA
                         };
                 }
                 return new RfidInfo(inMsg);
@@ -128,7 +128,7 @@ namespace Chronokeep.UI.UhfRfidReader
             {
                 return new RfidInfo
                 {
-                    ErrorCode = RfidError.CONERROR
+                    ErrorCode = RfidError.CONNECTION_ERROR
                 };
             }
         }
@@ -149,7 +149,7 @@ namespace Chronokeep.UI.UhfRfidReader
 
         public RfidInfo(byte[] inData)
         {
-            ErrorCode = RfidError.NOERR;
+            ErrorCode = RfidError.NO_ERROR;
             Data = new byte[inData[1] + 2];
             for (int i = 0; i < this.Data.Length; i++)
             {
@@ -157,33 +157,35 @@ namespace Chronokeep.UI.UhfRfidReader
             }
             if (Data[^1] != RfidSerial.CheckSum(Data, Data.Length - 1))
             {
-                ErrorCode = RfidError.BADDATA;
+                ErrorCode = RfidError.BAD_DATA;
             }
-            if (Data.Length == 18)
+            switch (Data.Length)
             {
-                HexNumber = BitConverter.ToString(Data, 5, 12);
-                byte[] epc = new byte[8];
-                for (int i = 0; i < 8; i++)
+                case 18:
                 {
-                    epc[i] = inData[16 - i];
+                    HexNumber = BitConverter.ToString(Data, 5, 12);
+                    byte[] epc = new byte[8];
+                    for (int i = 0; i < 8; i++)
+                    {
+                        epc[i] = inData[16 - i];
+                    }
+                    DecNumber = BitConverter.ToInt64(epc, 0);
+                    DeviceNumber = inData[3];
+                    AntennaNumber = inData[4];
+                    break;
                 }
-                DecNumber = BitConverter.ToInt64(epc, 0);
-                DeviceNumber = inData[3];
-                AntennaNumber = inData[4];
-            }
-            else if (Data.Length == 6)
-            {
-                ErrorCode = RfidError.NODATA;
-            }
-            else
-            {
-                ErrorCode = RfidError.BADDATA;
+                case 6:
+                    ErrorCode = RfidError.NO_DATA;
+                    break;
+                default:
+                    ErrorCode = RfidError.BAD_DATA;
+                    break;
             }
         }
     }
 
     public enum RfidError
     {
-        UNABLETOCONNECT, NOERR, UNKNOWNERR, BADSETTINGS, NODATA, BADDATA, CONERROR
+        UNABLE_TO_CONNECT, NO_ERROR, UNKNOWN_ERROR, BAD_SETTINGS, NO_DATA, BAD_DATA, CONNECTION_ERROR
     };
 }

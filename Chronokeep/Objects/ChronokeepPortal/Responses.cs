@@ -21,59 +21,59 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public const string NOTIFICATION          = "notification";
 
         [JsonPropertyName("command")]
-        public string Command { get; set; } = "";
+        public string Command { get; init; } = "";
     }
 
     public class ReadersResponse : Response
     {
         [JsonPropertyName("readers")]
-        public List<PortalReader> List { get; set; } = [];
+        public List<PortalReader> List { get; init; } = [];
     }
 
     public class ReaderAntennasResponse : Response
     {
         [JsonPropertyName("reader_name")]
-        public string ReaderName { get; set; } = "";
+        public string ReaderName { get; init; } = "";
         [JsonPropertyName("antennas")]
-        public int[] Antennas { get; set; } = [];
+        public int[] Antennas { get; init; } = [];
     }
 
     public class ErrorResponse : Response
     {
         [JsonPropertyName("error")]
-        public PortalError Value { get; set; } = new();
+        public PortalError Value { get; init; } = new();
     }
 
     public class SettingsResponse : Response
     {
         [JsonPropertyName("settings")]
-        public List<PortalSetting> List { get; set; } = [];
+        public List<PortalSetting> List { get; init; } = [];
     }
 
     public class SettingsAllResponse : Response
     {
         [JsonPropertyName("settings")]
-        public List<PortalSetting> Settings { get; set; } = [];
+        public List<PortalSetting> Settings { get; init; } = [];
         [JsonPropertyName("readers")]
-        public List<PortalReader> Readers { get; set; } = [];
+        public List<PortalReader> Readers { get; init; } = [];
         [JsonPropertyName("apis")]
-        public List<PortalApi> ApIs { get; set; } = [];
+        public List<PortalApi> ApIs { get; init; } = [];
         [JsonPropertyName("auto_upload")]
-        public PortalStatus AutoUpload { get; set; }
+        public PortalStatus AutoUpload { get; init; }
         [JsonPropertyName("portal_version")]
-        public string PortalVersion { get; set; } = "";
+        public string PortalVersion { get; init; } = "";
     }
 
     public class ApiListResponse : Response
     {
         [JsonPropertyName("apis")]
-        public List<PortalApi> List { get; set; } = [];
+        public List<PortalApi> List { get; init; } = [];
     }
 
     public class ReadsResponse : Response
     {
         [JsonPropertyName("list")]
-        public List<PortalRead> List { get; set; } = [];
+        public List<PortalRead> List { get; init; } = [];
     }
 
     public class SuccessResponse : Response
@@ -85,9 +85,9 @@ namespace Chronokeep.Objects.ChronokeepPortal
     public class TimeResponse : Response
     {
         [JsonPropertyName("local")]
-        public string Local { get; set; } = "";
+        public string Local { get; init; } = "";
         [JsonPropertyName("utc")]
-        public string Utc { get; set; } = "";
+        public string Utc { get; init; } = "";
     }
 
     public class EventsResponse : Response
@@ -105,34 +105,34 @@ namespace Chronokeep.Objects.ChronokeepPortal
     public class ReadAutoUploadResponse : Response
     {
         [JsonPropertyName("status")]
-        public PortalStatus Status { get; set; }
+        public PortalStatus Status { get; init; }
     }
 
     public class ConnectionSuccessfulResponse : Response
     {
         [JsonPropertyName("name")]
-        public string Name { get; set; } = "";
+        public string Name { get; init; } = "";
         [JsonPropertyName("kind")]
-        public string Type { get; set; } = "";
+        public string Type { get; init; } = "";
         [JsonPropertyName("version")]
-        public ulong Version { get; set; }
+        public ulong Version { get; init; }
         [JsonPropertyName("reads_subscribed")]
-        public bool ReadsSubscribed { get; set; }
+        public bool ReadsSubscribed { get; init; }
         [JsonPropertyName("readers")]
-        public List<PortalReader> Readers { get; set; } = [];
+        public List<PortalReader> Readers { get; init; } = [];
         [JsonPropertyName("updatable")]
-        public bool Updateable { get; set; }
+        public bool Updateable { get; init; }
         [JsonPropertyName("auto_upload")]
-        public PortalStatus AutoUpload { get; set; }
+        public PortalStatus AutoUpload { get; init; }
         [JsonPropertyName("portal_version")]
-        public string PortalVersion { get; set; } = "";
+        public string PortalVersion { get; init; } = "";
     }
 
     public class NotificationResponse : Response
     {
         [JsonPropertyName("kind")]
-        public string Type { get; set; } = "";
+        public string Type { get; init; } = "";
         [JsonPropertyName("time")]
-        public string Time { get; set; } = "";
+        public string Time { get; init; } = "";
     }
 }

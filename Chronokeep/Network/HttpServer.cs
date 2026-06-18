@@ -114,7 +114,7 @@ namespace Chronokeep.Network
                 }
                 catch (Exception ex)
                 {
-                    Log.E("Network.HttpServer", "Exception caught trying to serve something.\n" + ex.Message);
+                    Log.E("Network.HttpServer", $"Exception caught trying to serve something.\n{ex.Message}");
                 }
             }
         }
@@ -122,7 +122,7 @@ namespace Chronokeep.Network
         private void Process(HttpListenerContext context)
         {
             string filename = context.Request.Url!.AbsolutePath;
-            Log.D("Network.HttpServer", "'" + filename + "' requested.");
+            Log.D("Network.HttpServer", $"'{filename}' requested.");
             filename = filename[1..];
             string partBib = "";
             if (filename.StartsWith("part/", StringComparison.OrdinalIgnoreCase))
@@ -178,7 +178,7 @@ namespace Chronokeep.Network
                 // Serve up the file requested.
                 string newName = filename.Replace('/', '.');
                 Log.D("Network.HttpServer", "Newname is " + newName);
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.IO.HtmlTemplates." + newName)!)
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Chronokeep.IO.HtmlTemplates.{newName}")!)
                 {
                     message = new byte[stream.Length];
                     stream.ReadExactly(message);
@@ -286,7 +286,7 @@ namespace Chronokeep.Network
             }
             catch (Exception ex)
             {
-                Log.E("Network.HttpServer", "Error attempting to write response.\n" + ex.Message);
+                Log.E("Network.HttpServer", $"Error attempting to write response.\n{ex.Message}");
             }
         }
 

@@ -250,16 +250,14 @@ namespace Chronokeep.MemStore
             database.HardResetDatabase();
             try
             {
-                if (memStoreLock.TryEnter(LockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        ResetVariables();
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    ResetVariables();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)
@@ -358,16 +356,14 @@ namespace Chronokeep.MemStore
             database.ResetDatabase();
             try
             {
-                if (memStoreLock.TryEnter(LockTimeout))
+                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                try
                 {
-                    try
-                    {
-                        ResetVariables();
-                    }
-                    finally
-                    {
-                        memStoreLock.Exit();
-                    }
+                    ResetVariables();
+                }
+                finally
+                {
+                    memStoreLock.Exit();
                 }
             }
             catch (Exception e)

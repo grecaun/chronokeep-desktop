@@ -16,7 +16,7 @@ public partial class ReaderNotificationWindow : ChronokeepWindow
         InitializeComponent();
         ChronokeepInitialize();
         this.window = window;
-        UpdateNotificatonsBox();
+        UpdateNotificationsBox();
     }
 
     public static ReaderNotificationWindow NewWindow(IWindowCallback window)
@@ -24,7 +24,7 @@ public partial class ReaderNotificationWindow : ChronokeepWindow
         return new ReaderNotificationWindow(window);
     }
 
-    private void UpdateNotificatonsBox()
+    private void UpdateNotificationsBox()
     {
         List<ReaderMessage> messages = GetReaderMessages();
         messages.Sort();

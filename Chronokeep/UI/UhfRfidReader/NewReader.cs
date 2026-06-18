@@ -22,7 +22,7 @@ namespace Chronokeep.UI.UhfRfidReader
             {
                 counter++;
                 RfidInfo read = serial!.ReadData();
-                if (read.ErrorCode == RfidError.NOERR)
+                if (read.ErrorCode == RfidError.NO_ERROR)
                 {
                     chipReaderWindow.AddRfidItem(read);
                 }

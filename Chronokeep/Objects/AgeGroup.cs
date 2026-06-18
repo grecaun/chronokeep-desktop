@@ -54,11 +54,7 @@ namespace Chronokeep.Objects
             {
                 return $"Under {EndAge + 1}";
             }
-            else if (EndAge >= 99)
-            {
-                return $"Over {StartAge}";
-            }
-            return Name;
+            return EndAge >= 99 ? $"Over {StartAge}" : Name;
         }
 
         public int CompareTo(AgeGroup? other)

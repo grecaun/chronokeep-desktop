@@ -54,7 +54,7 @@ public partial class LocationsPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        if (location.Identifier == Constants.Timing.LOCATION_FINISH || location.Identifier == Constants.Timing.LOCATION_START)
+        if (location.Identifier is Constants.Timing.LOCATION_FINISH or Constants.Timing.LOCATION_START)
         {
             Log.E("UI.MainPages.LocationsPage", "Somehow they told us to delete the start/finish location.");
         }
@@ -71,26 +71,30 @@ public partial class LocationsPage : UserControl, IMainPage
         foreach (LocationPart? locItem in LocationsBox.Items.Cast<LocationPart?>())
         {
             locItem!.UpdateLocation();
-            if (locItem.MyLocation.Identifier == Constants.Timing.LOCATION_FINISH)
+            switch (locItem.MyLocation.Identifier)
             {
-                if (theEvent!.FinishMaxOccurrences == locItem.MyLocation.MaxOccurrences
-                    && theEvent.FinishIgnoreWithin == locItem.MyLocation.IgnoreWithin) continue;
-                theEvent.FinishMaxOccurrences = locItem.MyLocation.MaxOccurrences;
-                theEvent.FinishIgnoreWithin = locItem.MyLocation.IgnoreWithin;
-                database.SetFinishOptions(theEvent);
-            }
-            else if (locItem.MyLocation.Identifier == Constants.Timing.LOCATION_START)
-            {
-                if (theEvent!.StartWindow == locItem.MyLocation.IgnoreWithin
-                    && theEvent.StartMaxOccurrences == locItem.MyLocation.MaxOccurrences) continue;
-                theEvent.StartWindow = locItem.MyLocation.IgnoreWithin;
-                theEvent.StartMaxOccurrences = locItem.MyLocation.MaxOccurrences;
-                database.SetStartOptions(theEvent);
-            }
-            else
-            {
-                if (!locItem.IsUpdated()) continue;
-                database.UpdateTimingLocation(locItem.MyLocation);
+                case Constants.Timing.LOCATION_FINISH when theEvent!.FinishMaxOccurrences == locItem.MyLocation.MaxOccurrences
+                                                           && theEvent.FinishIgnoreWithin == locItem.MyLocation.IgnoreWithin:
+                    continue;
+                case Constants.Timing.LOCATION_FINISH:
+                    theEvent.FinishMaxOccurrences = locItem.MyLocation.MaxOccurrences;
+                    theEvent.FinishIgnoreWithin = locItem.MyLocation.IgnoreWithin;
+                    database.SetFinishOptions(theEvent);
+                    break;
+                case Constants.Timing.LOCATION_START when theEvent!.StartWindow == locItem.MyLocation.IgnoreWithin
+                                                          && theEvent.StartMaxOccurrences == locItem.MyLocation.MaxOccurrences:
+                    continue;
+                case Constants.Timing.LOCATION_START:
+                    theEvent.StartWindow = locItem.MyLocation.IgnoreWithin;
+                    theEvent.StartMaxOccurrences = locItem.MyLocation.MaxOccurrences;
+                    database.SetStartOptions(theEvent);
+                    break;
+                default:
+                {
+                    if (!locItem.IsUpdated()) continue;
+                    database.UpdateTimingLocation(locItem.MyLocation);
+                    break;
+                }
             }
 
             updateTimingWorker = true;

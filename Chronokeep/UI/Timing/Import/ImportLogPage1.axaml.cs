@@ -90,11 +90,9 @@ public partial class ImportLogPage1 : UserControl
         }
         foreach (LogImporter.Type type in Enum.GetValues<LogImporter.Type>())
         {
-            if (((ComboBoxItem)TypeHolder.SelectedItem).Tag!.ToString() == type.ToString())
-            {
-                parent.Import(type, locationId, 0, 0);
-                return;
-            }
+            if (((ComboBoxItem)TypeHolder.SelectedItem).Tag!.ToString() != type.ToString()) continue;
+            parent.Import(type, locationId, 0, 0);
+            return;
         }
     }
 

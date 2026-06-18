@@ -62,8 +62,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 Title = "Export UltraSignup Results";
                 supported = true;
                 break;
-            case OutputType.Runsignup:
-                Title = "Export Runsignup Results";
+            case OutputType.RunSignup:
+                Title = "Export RunSignup Results";
                 break;
             case OutputType.Abbott:
                 Title = "Export AbbottWMM Results";
@@ -73,67 +73,68 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 Title = "Export Boston Results";
                 break;
         }
-        if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType && !supported)
+        switch (theEvent.EventType)
         {
-            DialogBox.Show("Exporting for a Time based event is not supported.");
-            noOpen = true;
-            return;
-        }
-        if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && !supported)
-        {
-            DialogBox.Show("Exporting for a Backyard Ultra event is not supported.");
-            noOpen = true;
-            return;
-        }
-        switch (DistanceBox.Items.Count)
-        {
-            case < 1:
-                DialogBox.Show("Oops, you don't appear to have any distances set up.");
+            case Constants.Timing.EVENT_TYPE_TIME when !supported:
+                DialogBox.Show("Exporting for a Time based event is not supported.");
                 noOpen = true;
                 return;
-            // don't open the window if we've only got one to output
-            case 1:
-            {
-                DistanceBox.SelectedIndex = 0;
-                Distance selected;
-                if (DistanceBox.SelectedItem != null && distanceDictionary.TryGetValue((string)((ComboBoxItem)DistanceBox.SelectedItem).Tag!, out Distance? oDist))
-                {
-                    selected = oDist;
-                }
-                else
-                {
-                    DialogBox.Show("Something went wrong with the distance. Exiting.");
-                    noOpen = true;
-                    return;
-                }
-                switch (type)
-                {
-                    case OutputType.Boston:
-                        SaveBoston(selected.Name);
-                        break;
-                    case OutputType.UltraSignup:
-                        SaveUltraSignup(selected.Name);
-                        break;
-                    case OutputType.Runsignup:
-                        SaveRunsignup(selected.Name);
-                        break;
-                    case OutputType.Abbott:
-                        SaveAbbot(selected.Name);
-                        break;
-                    default:
-                        DialogBox.Show("Something went wrong. No known output type specified.");
-                        break;
-                }
+            case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA when !supported:
+                DialogBox.Show("Exporting for a Backyard Ultra event is not supported.");
                 noOpen = true;
-                break;
-            }
-        }
+                return;
+            default:
+                switch (DistanceBox.Items.Count)
+                {
+                    case < 1:
+                        DialogBox.Show("Oops, you don't appear to have any distances set up.");
+                        noOpen = true;
+                        return;
+                    // don't open the window if we've only got one to output
+                    case 1:
+                    {
+                        DistanceBox.SelectedIndex = 0;
+                        Distance selected;
+                        if (DistanceBox.SelectedItem != null && distanceDictionary.TryGetValue((string)((ComboBoxItem)DistanceBox.SelectedItem).Tag!, out Distance? oDist))
+                        {
+                            selected = oDist;
+                        }
+                        else
+                        {
+                            DialogBox.Show("Something went wrong with the distance. Exiting.");
+                            noOpen = true;
+                            return;
+                        }
+                        switch (type)
+                        {
+                            case OutputType.Boston:
+                                SaveBoston(selected.Name);
+                                break;
+                            case OutputType.UltraSignup:
+                                SaveUltraSignup(selected.Name);
+                                break;
+                            case OutputType.RunSignup:
+                                SaveRunSignup(selected.Name);
+                                break;
+                            case OutputType.Abbott:
+                                SaveAbbot(selected.Name);
+                                break;
+                            default:
+                                DialogBox.Show("Something went wrong. No known output type specified.");
+                                break;
+                        }
+                        noOpen = true;
+                        break;
+                    }
+                }
 
-        DistanceBox.Items.Insert(0, new ComboBoxItem()
-        {
-            Content = "All",
-            Tag = "ALL_DISTANCES",
-        });
+                DistanceBox.Items.Insert(0, new ComboBoxItem()
+                {
+                    Content = "All",
+                    Tag = "ALL_DISTANCES",
+                });
+                break;
+        }
     }
 
     public bool SetupError()
@@ -200,7 +201,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CsvType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Ultrasignup.csv",
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} UltraSignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -218,11 +219,11 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         catch (Exception)
         {
-            Log.D("ExportDistanceResults", "Error saving all ultrasignup.");
+            Log.D("ExportDistanceResults", "Error saving all UltraSignup.");
         }
     }
 
-    private async void SaveAllRunsignup()
+    private async void SaveAllRunSignup()
     {
         try
         {
@@ -240,7 +241,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CsvType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Runsignup.csv",
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} RunSignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -249,7 +250,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string filePath = file.TryGetLocalPath()!;
             foreach (Distance distance in distanceDictionary!.Values)
             {
-                SaveRunsignupInternal(
+                SaveRunSignupInternal(
                     distance.Name,
                     Path.Combine(filePath, $"{fileName} {distance.Name}{extension}")
                 );
@@ -258,7 +259,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         catch (Exception)
         {
-            Log.D("ExportDistanceResults", "Error saving all runsignup.");
+            Log.D("ExportDistanceResults", "Error saving all RunSignup.");
         }
     }
 
@@ -494,15 +495,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
 
     private void SaveBostonInternal(string distance, string fileName, string extension)
     {
-        Distance? dist = null;
-        foreach (Distance d in database.GetDistances(theEvent!.Identifier))
-        {
-            if (d.Name == distance)
-            {
-                dist = d;
-                break;
-            }
-        }
+        Distance? dist = database.GetDistances(theEvent!.Identifier).FirstOrDefault(d => d.Name == distance);
         List<string> headers =
         [
             theEvent.Name,         // event name
@@ -587,12 +580,9 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
                 ""
             ];
-            foreach (Segment seg in segments)
-            {
-                values.Add(segmentResults.TryGetValue((result.Bib, seg.Identifier), out TimeResult? res)
-                    ? res.ChipTime[..(res.ChipTime.Length > 4 ? res.ChipTime.Length - 4 : 0)]
-                    : "");
-            }
+            values.AddRange(segments.Select(seg => segmentResults.TryGetValue((result.Bib, seg.Identifier), out TimeResult? res)
+                ? res.ChipTime[..(res.ChipTime.Length > 4 ? res.ChipTime.Length - 4 : 0)]
+                : ""));
             data.Add([.. values]);
         }
         IDataExporter exporter;
@@ -636,7 +626,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CsvType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Ultrasignup.csv",
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} UltraSignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -656,11 +646,11 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         catch (Exception)
         {
-            Log.D("ExportDistanceResults", "Error saving ultrasignup.");
+            Log.D("ExportDistanceResults", "Error saving UltraSignup.");
         }
     }
 
-    private async void SaveRunsignup(string distance)
+    private async void SaveRunSignup(string distance)
     {
         try
         {
@@ -678,7 +668,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 FileTypeChoices = [Utils.CsvType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Runsignup.csv",
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} RunSignup.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -693,12 +683,12 @@ public partial class ExportDistanceResults : ChronokeepWindow
             {
                 filename = $"{fileSplit[0]}.csv";
             }
-            SaveRunsignupInternal(distance, filename);
+            SaveRunSignupInternal(distance, filename);
             DialogBox.Show("File saved.");
         }
         catch (Exception)
         {
-            Log.D("ExportDistanceResults", "Error saving runsignup.");
+            Log.D("ExportDistanceResults", "Error saving RunSignup.");
         }
     }
 
@@ -725,7 +715,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         List<object[]> data = [];
         List<TimeResult> results = database.GetTimingResults(theEvent.Identifier);
-        if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType || Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
+        if (theEvent.EventType is Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA or Constants.Timing.EVENT_TYPE_TIME)
         {
             headers[1] = "distance";
             Dictionary<string, TimeResult> finalResult = [];
@@ -771,7 +761,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 yPart.State,
                 status
             ];
-            if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType || Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
+            if (theEvent.EventType is Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA or Constants.Timing.EVENT_TYPE_TIME)
             {
                 Dictionary<string, Distance> distances = [];
                 foreach (Distance dist in database.GetDistances(theEvent.Identifier))
@@ -812,7 +802,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         exporter.ExportData(fileName);
     }
 
-    private void SaveRunsignupInternal(string distance, string fileName)
+    private void SaveRunSignupInternal(string distance, string fileName)
     {
         string[] headers =
         [
@@ -886,8 +876,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 case OutputType.UltraSignup:
                     SaveUltraSignup(tDist.Name);
                     break;
-                case OutputType.Runsignup:
-                    SaveRunsignup(tDist.Name);
+                case OutputType.RunSignup:
+                    SaveRunSignup(tDist.Name);
                     break;
                 case OutputType.Abbott:
                     SaveAbbot(tDist.Name);
@@ -908,8 +898,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 case OutputType.UltraSignup:
                     SaveAllUltraSignup();
                     break;
-                case OutputType.Runsignup:
-                    SaveAllRunsignup();
+                case OutputType.RunSignup:
+                    SaveAllRunSignup();
                     break;
                 case OutputType.Abbott:
                     DialogBox.Show("Exporting all for Abbott is not supported.");
@@ -941,6 +931,6 @@ public enum OutputType
 {
     Boston,
     UltraSignup,
-    Runsignup,
+    RunSignup,
     Abbott
 }

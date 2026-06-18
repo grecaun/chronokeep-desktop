@@ -120,7 +120,7 @@ public partial class RemoteReadersWindow : ChronokeepWindow
         deleteReaders.AddRange(otherReaders.Where(reader => readerNames.Contains((reader.ApiiDentifier, reader.Name))));
         database.DeleteRemoteReaders(theEvent.Identifier, deleteReaders);
         database.AddRemoteReaders(theEvent.Identifier, readersToSave);
-        // notify mainwindow to update/start remote reader thread
+        // notify main window to update/start remote reader thread
         RemoteReadersNotifier.GetRemoteReadersNotifier().Notify();
         Close();
     }

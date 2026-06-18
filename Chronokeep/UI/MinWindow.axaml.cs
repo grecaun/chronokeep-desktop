@@ -59,7 +59,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         string dirPath = App.IsWindows ?
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Settings.PROGRAM_DIR)
             : Path.Combine(Directory.GetCurrentDirectory(), "data");
-        string path = Path.Combine(dirPath, MainWindow.DatabaseFileName);
+        string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);
         Log.D("UI.MinWindow", "Looking for database file.");
         if (!Directory.Exists(dirPath))
         {
@@ -394,7 +394,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         }
         Thread newThread = new(() =>
         {
-            // show any dialogboxes that need to be shown due to importance
+            // show any dialog boxes that need to be shown due to importance
             foreach (ReaderMessage message in toShow)
             {
                 Application.Current!.Dispatcher.Invoke(delegate

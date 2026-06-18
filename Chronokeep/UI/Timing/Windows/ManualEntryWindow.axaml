@@ -103,7 +103,7 @@
                          IsChecked="True"
                          Margin="95,0,0,0"
                          VerticalContentAlignment="Center"/>
-            <RadioButton Name="TimeofDayButton"
+            <RadioButton Name="TimeOfDayButton"
                          Content="Time of Day"
                          GroupName="TimeGroup"
                          FontSize="14"

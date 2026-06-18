@@ -404,7 +404,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         newPart.EventSpecific.Version = person!.EventSpecific.Version;
         newPart.EventSpecific.UploadedVersion = person.EventSpecific.UploadedVersion;
         Participant? offendingBib = null;
-        // If bib isn't empty and isn't the dummybib, offer to swap bibs.
+        // If bib isn't empty and isn't the dummy bib, offer to swap bibs.
         if (newPart.Bib.Length > 0 && newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
         {
             offendingBib = database.GetParticipantBib(theEvent!.Identifier, newPart.Bib);
@@ -466,7 +466,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         Participant? newPart = FromFields();
         if (newPart == null) return;
         Participant? offendingBib = null;
-        // If bib isn't empty and isn't the dummybib, offer to remove bib from old participant.
+        // If bib isn't empty and isn't the dummy bib, offer to remove bib from old participant.
         if (newPart.Bib.Length > 0 && newPart.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
         {
             offendingBib = database.GetParticipantBib(theEvent!.Identifier, newPart.Bib);

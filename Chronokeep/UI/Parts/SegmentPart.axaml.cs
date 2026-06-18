@@ -17,7 +17,7 @@ public partial class SegmentPart : UserControl
     private readonly SegmentsPage page;
     public readonly Segment MySegment;
     private readonly Dictionary<string, int> locationDictionary;
-    public readonly Event TheEvent;
+    private readonly Event theEvent;
 
     [GeneratedRegex("[^0-9.]+")]
     private static partial Regex AllowedChars();
@@ -26,7 +26,7 @@ public partial class SegmentPart : UserControl
     {
         InitializeComponent();
         this.page = page;
-        TheEvent = theEvent;
+        this.theEvent = theEvent;
         MySegment = segment;
         locationDictionary = [];
 
@@ -148,7 +148,7 @@ public partial class SegmentPart : UserControl
             maxOccurrences = 1;
         }
         int start = 1;
-        if ((TheEvent.CommonStartFinish && MySegment.LocationId == Constants.Timing.LOCATION_FINISH)
+        if ((theEvent.CommonStartFinish && MySegment.LocationId == Constants.Timing.LOCATION_FINISH)
             || MySegment.LocationId == Constants.Timing.LOCATION_START)
         {
             start = 0;

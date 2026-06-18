@@ -36,8 +36,12 @@ namespace Chronokeep.UI
         private static bool forceClose;
 
         private readonly MemStore.MemStore? database;
-        internal static string DatabaseFileName = "Chronokeep.sqlite";
-
+#if DEBUG
+        internal const string DATABASE_FILE_NAME = "Chronokeep_test.sqlite";
+#else
+        internal const string DATABASE_FILE_NAME = "Chronokeep.sqlite";
+#endif
+        
         // Network objects
         private HttpServer? httpServer;
         private const int HttpServerPort = 6933;
@@ -98,10 +102,7 @@ namespace Chronokeep.UI
             string dirPath = App.IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
                 : Path.Combine(Directory.GetCurrentDirectory(), "data");
-#if DEBUG
-            DatabaseFileName = "Chronokeep_test.sqlite";
-#endif
-            string path = Path.Combine(dirPath, DatabaseFileName);
+            string path = Path.Combine(dirPath, DATABASE_FILE_NAME);
             Log.D("UI.MainWindow", "Looking for database file.");
             if (!Directory.Exists(dirPath))
             {
@@ -315,9 +316,9 @@ namespace Chronokeep.UI
                 gitVersion = gitVersion.Split('-')[0];
             }
             Log.D("UI.MainWindow", "Version.txt read.");
-            AppSetting? programVers = database.GetAppSetting(Constants.Settings.PROGRAM_VERSION);
+            AppSetting? programVersion = database.GetAppSetting(Constants.Settings.PROGRAM_VERSION);
             AppSetting? showChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG);
-            if (programVers == null && showChangelog is { Value: Constants.Settings.SETTING_TRUE })
+            if (programVersion == null && showChangelog is { Value: Constants.Settings.SETTING_TRUE })
             {
                 Log.D("UI.MainWindow", "AppSetting not set.");
                 // Program version was not set, thus this is an upgraded program.
@@ -328,10 +329,10 @@ namespace Chronokeep.UI
             {
                 Log.D("UI.MainWindow", "Splitting defined values, parsing them, then checking if newer version.");
                 string[] gitSplit = gitVersion.Replace("v", "").Split('.');
-                string[] dbSplit = programVers!.Value.Replace("v", "").Split('.');
+                string[] dbSplit = programVersion!.Value.Replace("v", "").Split('.');
                 if (dbSplit.Length != 3 || gitSplit.Length != 3)
                 {
-                    DialogBox.Show($"Expected 3 values when checking the program version. DB ${programVers.Value} - P ${gitVersion}");
+                    DialogBox.Show($"Expected 3 values when checking the program version. DB ${programVersion.Value} - P ${gitVersion}");
                 }
                 else if (int.TryParse(gitSplit[0], out int newMajor) &&
                         int.TryParse(gitSplit[1], out int newMinor) &&
@@ -529,8 +530,8 @@ namespace Chronokeep.UI
             try
             {
                 Log.D("UI.MainWindow", "Starting zero conf.");
-                AppSetting? zconfName = database!.GetAppSetting(Constants.Settings.SERVER_NAME);
-                zConfServer = new ZeroConf(zconfName?.Value);
+                AppSetting? zConfName = database!.GetAppSetting(Constants.Settings.SERVER_NAME);
+                zConfServer = new ZeroConf(zConfName?.Value);
                 zConfThread = new Thread(zConfServer.Run);
                 zConfThread.Start();
             }
@@ -723,7 +724,7 @@ namespace Chronokeep.UI
             }
             Thread newThread = new(() =>
             {
-                // show any dialogboxes that need to be shown due to importance
+                // show any dialog boxes that need to be shown due to importance
                 foreach (ReaderMessage message in toShow)
                 {
                     Application.Current!.Dispatcher.Invoke(delegate
@@ -919,7 +920,7 @@ namespace Chronokeep.UI
 
         private void Announcer_Click(object sender, RoutedEventArgs e)
         {
-            Log.D("UI.MainWindow", "Announer window button clicked.");
+            Log.D("UI.MainWindow", "Announcer window button clicked.");
             Log.E("UI.MainWindow", $"announcerWindow is null? {announcerWindow == null}");
             if (announcerWindow != null)
             {
@@ -1146,7 +1147,7 @@ namespace Chronokeep.UI
                 Address = address,
                 Severity = notification.Type switch
                 {
-                    // All the portal errors should display a dialogbox
+                    // All the portal errors should display a dialog box
                     // with information about what happened
                     PortalError.TOO_MANY_REMOTE_API or
                     PortalError.TOO_MANY_CONNECTIONS or

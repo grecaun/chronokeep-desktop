@@ -37,16 +37,14 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
                 PrivateUpdateView();
                 break;
             case MinTimingPage:
-                SafemodeUpdateView();
+                SafeModeUpdateView();
                 break;
         }
         Log.D("UI.Timing.TimingRawReadsPage", "View updated.");
         this.mWindow = mWindow;
-        if (parent is MinTimingPage)
-        {
-            DoneButton.IsEnabled = false;
-            DoneButton.IsVisible = false;
-        }
+        if (parent is not MinTimingPage) return;
+        DoneButton.IsEnabled = false;
+        DoneButton.IsVisible = false;
     }
 
     public void UpdateView()
@@ -90,7 +88,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         }
     }
 
-    internal void SafemodeUpdateView()
+    internal void SafeModeUpdateView()
     {
         if (theEvent == null)
         {
@@ -336,7 +334,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
                         PrivateUpdateView();
                         break;
                     case MinTimingPage:
-                        SafemodeUpdateView();
+                        SafeModeUpdateView();
                         break;
                 }
                 parent.NotifyTimingWorker();
@@ -349,36 +347,40 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
-            // Check what the previous status was. If it was FORCEIGNORE, then we can set to NONE
-            if (read.Status == Constants.Timing.CHIPREAD_STATUS_IGNORE)
+            switch (read.Status)
             {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_NONE;
+                // Check what the previous status was. If it was FORCE_IGNORE, then we can set to NONE
+                case Constants.Timing.CHIPREAD_STATUS_IGNORE:
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_NONE;
+                    break;
+                // Else if it's DNF, we need to use the special status of DNF ignore
+                // so we can restore it to DNF status if we want to un-ignore the read.
+                case Constants.Timing.CHIPREAD_STATUS_DNF:
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE;
+                    break;
+                case Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE:
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_DNF;
+                    break;
+                // Treat DNS the same as DNF.
+                case Constants.Timing.CHIPREAD_STATUS_DNS:
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE;
+                    break;
+                case Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE:
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_DNS;
+                    break;
+                // These reads are not DNF or DNS. Don't modify announcer reads.
+                default:
+                {
+                    if (read.Status != Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_SEEN &&
+                        read.Status != Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED)
+                    {
+                        read.Status = Constants.Timing.CHIPREAD_STATUS_IGNORE;
+                    }
+
+                    break;
+                }
             }
-            // Else if it's DNF, we need to use the special status of DNF ignore
-            // so we can restore it to DNF status if we want to un-ignore the read.
-            else if (read.Status == Constants.Timing.CHIPREAD_STATUS_DNF)
-            {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE;
-            }
-            else if (read.Status == Constants.Timing.CHIPREAD_STATUS_DNF_IGNORE)
-            {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_DNF;
-            }
-            // Treat DNS the same as DNF.
-            else if (read.Status == Constants.Timing.CHIPREAD_STATUS_DNS)
-            {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE;
-            }
-            else if (read.Status == Constants.Timing.CHIPREAD_STATUS_DNS_IGNORE)
-            {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_DNS;
-            }
-            // These reads are not DNF or DNS. Don't modify announcer reads.
-            else if (read.Status != Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_SEEN &&
-                read.Status != Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED)
-            {
-                read.Status = Constants.Timing.CHIPREAD_STATUS_IGNORE;
-            }
+
             newChipReads.Add(read);
         }
         database.SetChipReadStatuses(newChipReads);
@@ -389,7 +391,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
                 PrivateUpdateView();
                 break;
             case MinTimingPage:
-                SafemodeUpdateView();
+                SafeModeUpdateView();
                 break;
         }
         parent.NotifyTimingWorker();
@@ -401,7 +403,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
-            // Check what the previous status was. If it was CHIPREAD_STATUS_DNS we change it to NONE
+            // Check what the previous status was. If it was STATUS_DNS we change it to NONE
             read.Status = read.Status == Constants.Timing.CHIPREAD_STATUS_DNS ? Constants.Timing.CHIPREAD_STATUS_NONE :
                 // Else set it to DNS
                 Constants.Timing.CHIPREAD_STATUS_DNS;
@@ -415,7 +417,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
                 PrivateUpdateView();
                 break;
             case MinTimingPage:
-                SafemodeUpdateView();
+                SafeModeUpdateView();
                 break;
         }
         parent.NotifyTimingWorker();
@@ -427,7 +429,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
-            // Check what the previous status was. If it was CHIPREAD_STATUS_DNF we change it to NONE
+            // Check what the previous status was. If it was STATUS_DNF we change it to NONE
             read.Status = read.Status == Constants.Timing.CHIPREAD_STATUS_DNF ? Constants.Timing.CHIPREAD_STATUS_NONE :
                 // Else set it to DNF
                 Constants.Timing.CHIPREAD_STATUS_DNF;
@@ -441,7 +443,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
                 PrivateUpdateView();
                 break;
             case MinTimingPage:
-                SafemodeUpdateView();
+                SafeModeUpdateView();
                 break;
         }
         parent.NotifyTimingWorker();

@@ -31,7 +31,7 @@ namespace Chronokeep.Network
             for (int i = start; i <= end; i++)
             {
                 if (portArray.Contains(i)) continue;
-                Log.D("Network.NetCore", "TCP Port is: " + i);
+                Log.D("Network.NetCore", $"TCP Port is: {i}");
                 return i;
             }
             return 0;

@@ -353,7 +353,7 @@ namespace Chronokeep.MemStore
 
         // Reset Timing Results clears all timing results
         // But it also changes ChipReads statuses to None except where
-        // statuses were set to IGNORE/DNF/DNS/DNF_IGNORE/DNS_IGNORE
+        // statuses were set to IGNORE/DNF/DNS/DNF_IGNORE/DNS_IGNORE,
         // and it also sets Participant EVENTSPECIFIC_STATUS to UNKNOWN
         public void ResetTimingResultsEvent(int eventId)
         {

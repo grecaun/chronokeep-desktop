@@ -81,13 +81,11 @@ public partial class DistancesPage : UserControl, IMainPage
             DistancesBox.Items.Add(parent);
             distanceCount = div.Identifier > distanceCount - 1 ? div.Identifier + 1 : distanceCount;
             // Add linked distances
-            if (subDistanceDictionary.TryGetValue(div.Identifier, out List<Distance>? tSubDistList))
+            if (!subDistanceDictionary.TryGetValue(div.Identifier, out List<Distance>? tSubDistList)) continue;
+            foreach (Distance sub in tSubDistList)
             {
-                foreach (Distance sub in tSubDistList)
-                {
-                    DistancesBox.Items.Add(new DistancePart(this, sub, theEvent.FinishMaxOccurrences, distances, distanceDictionary, theEvent, parent));
-                    distanceCount = sub.Identifier > distanceCount - 1 ? sub.Identifier + 1 : distanceCount;
-                }
+                DistancesBox.Items.Add(new DistancePart(this, sub, theEvent.FinishMaxOccurrences, distances, distanceDictionary, theEvent, parent));
+                distanceCount = sub.Identifier > distanceCount - 1 ? sub.Identifier + 1 : distanceCount;
             }
         }
         if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA && distances.Count > 0)
@@ -116,27 +114,25 @@ public partial class DistancesPage : UserControl, IMainPage
             {
                 return;
             }
-            if (d.LinkedDistance >= 0 && d.LinkedDistance == distance.Identifier)
+            if (d.LinkedDistance < 0 || d.LinkedDistance != distance.Identifier) continue;
+            if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, d.Identifier).Count > 0)
             {
-                if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, d.Identifier).Count > 0)
-                {
-                    keepDeleting = false;
-                    DialogBox.Show(
-                        "Distance has participants, continue?",
-                        "Yes",
-                        "No",
-                        () =>
-                        {
-                            keepDeleting = true;
-                            ignoreParticipantCheck = true;
-                            database.RemoveDistance(d);
-                        }
-                    );
-                }
-                else
-                {
-                    database.RemoveDistance(d);
-                }
+                keepDeleting = false;
+                DialogBox.Show(
+                    "Distance has participants, continue?",
+                    "Yes",
+                    "No",
+                    () =>
+                    {
+                        keepDeleting = true;
+                        ignoreParticipantCheck = true;
+                        database.RemoveDistance(d);
+                    }
+                );
+            }
+            else
+            {
+                database.RemoveDistance(d);
             }
         }
         if (!keepDeleting)
@@ -243,7 +239,7 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        database.AddDistance(new(theDistance.Name + " Linked " + distanceCount, theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
+        database.AddDistance(new Distance(theDistance.Name + " Linked " + distanceCount, theDistance.EventIdentifier, theDistance.Identifier, Constants.Timing.DISTANCE_TYPE_EARLY, 1, theDistance.Wave, theDistance.StartOffsetSeconds, theDistance.StartOffsetMilliseconds));
         updateTimingWorker = true;
         UpdateView();
     }
@@ -267,34 +263,32 @@ public partial class DistancesPage : UserControl, IMainPage
         try
         {
             Log.D("UI.MainPages.DistancesPage", "Deleting uploaded distances.");
-            if (DeleteButton.Content!.ToString() == "Delete Uploaded")
+            if (DeleteButton.Content!.ToString() != "Delete Uploaded") return;
+            DeleteButton.IsEnabled = false;
+            DeleteButton.Content = "Working...";
+            if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1)
             {
-                DeleteButton.IsEnabled = false;
-                DeleteButton.Content = "Working...";
-                if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1)
-                {
-                    DeleteButton.Content = "Error";
-                    return;
-                }
-                ApiObject api = database.GetApi(theEvent.ApiId)!;
-                string[] eventIds = theEvent.ApiEventId.Split(',');
-                if (eventIds.Length != 2)
-                {
-                    DeleteButton.Content = "Error";
-                    return;
-                }
-                // Delete old information from the API
-                try
-                {
-                    await ApiHandlers.DeleteDistances(api, eventIds[0], eventIds[1]);
-                }
-                catch (ApiException ex)
-                {
-                    DialogBox.Show(ex.Message);
-                }
-                DeleteButton.IsEnabled = true;
-                DeleteButton.Content = "Delete Uploaded";
+                DeleteButton.Content = "Error";
+                return;
             }
+            ApiObject api = database.GetApi(theEvent.ApiId)!;
+            string[] eventIds = theEvent.ApiEventId.Split(',');
+            if (eventIds.Length != 2)
+            {
+                DeleteButton.Content = "Error";
+                return;
+            }
+            // Delete old information from the API
+            try
+            {
+                await ApiHandlers.DeleteDistances(api, eventIds[0], eventIds[1]);
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.Show(ex.Message);
+            }
+            DeleteButton.IsEnabled = true;
+            DeleteButton.Content = "Delete Uploaded";
         }
         catch (Exception)
         {

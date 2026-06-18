@@ -138,7 +138,7 @@ namespace Chronokeep.Timing.Remote
                         if (lastReaderTime.TryGetValue(reader, out DateTime lastTime))
                         {
                             // query 1 second before just in case the reader didn't send us everything they had
-                            // due to really good timing on our part
+                            // due to great timing on our part
                             start = lastTime.AddSeconds(-1);
                         }
                         List<ChipRead> reads = [];

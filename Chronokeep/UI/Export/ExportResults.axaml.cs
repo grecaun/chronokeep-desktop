@@ -39,7 +39,7 @@ public partial class ExportResults : ChronokeepWindow
     ];
     private readonly List<string> timeHeaders =
     [
-        "Laps Completed", "Ellapsed Time (Clock)", "Ellapsed Time (Chip)"
+        "Laps Completed", "Elapsed Time (Clock)", "Elapsed Time (Chip)"
     ];
 
     public ExportResults(IMainWindow window, IdbInterface database)
@@ -304,56 +304,68 @@ public partial class ExportResults : ChronokeepWindow
                                 int segmentNum = 1;
                                 foreach (TimeResult result in oResList)
                                 {
-                                    if (Constants.Timing.SEGMENT_START == result.SegmentId)
+                                    switch (result.SegmentId)
                                     {
-                                        if (headerIndex.TryGetValue("Start", out int startIx))
+                                        case Constants.Timing.SEGMENT_START:
                                         {
-                                            line[startIx] = result.Time;
+                                            if (headerIndex.TryGetValue("Start", out int startIx))
+                                            {
+                                                line[startIx] = result.Time;
+                                            }
+
+                                            break;
                                         }
-                                    }
-                                    else if (Constants.Timing.SEGMENT_FINISH == result.SegmentId)
-                                    {
-                                        if (headerIndex.TryGetValue("Place", out int placeIx))
+                                        case Constants.Timing.SEGMENT_FINISH:
                                         {
-                                            line[placeIx] = result.Place == -1 ? "" : result.Place;
+                                            if (headerIndex.TryGetValue("Place", out int placeIx))
+                                            {
+                                                line[placeIx] = result.Place == -1 ? "" : result.Place;
+                                            }
+                                            if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                            {
+                                                line[agPlIx] = result.AgePlace == -1 ? "" : result.AgePlace;
+                                            }
+                                            if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
+                                            {
+                                                line[gndPlIx] = result.GenderPlace == -1 ? "" : result.GenderPlace;
+                                            }
+                                            if (headerIndex.TryGetValue("Chip Finish", out int chipFinIx))
+                                            {
+                                                line[chipFinIx] = result.ChipTime;
+                                            }
+                                            if (headerIndex.TryGetValue("Clock Finish", out int clockFinIx))
+                                            {
+                                                line[clockFinIx] = result.Time;
+                                            }
+
+                                            break;
                                         }
-                                        if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                        default:
                                         {
-                                            line[agPlIx] = result.AgePlace == -1 ? "" : result.AgePlace;
-                                        }
-                                        if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
-                                        {
-                                            line[gndPlIx] = result.GenderPlace == -1 ? "" : result.GenderPlace;
-                                        }
-                                        if (headerIndex.TryGetValue("Chip Finish", out int chipFinIx))
-                                        {
-                                            line[chipFinIx] = result.ChipTime;
-                                        }
-                                        if (headerIndex.TryGetValue("Clock Finish", out int clockFinIx))
-                                        {
-                                            line[clockFinIx] = result.Time;
-                                        }
-                                    }
-                                    else if (Constants.Timing.SEGMENT_NONE != result.SegmentId)
-                                    {
-                                        if (segmentNumberDict.TryGetValue(result.SegmentId, out int segNumber))
-                                        {
-                                            segmentNum = segNumber;
-                                        }
-                                        string key = $"Segment {segmentNum} Chip Time";
-                                        if (headerIndex.TryGetValue(key, out int segChipTimeIx))
-                                        {
-                                            line[segChipTimeIx] = result.ChipTime;
-                                        }
-                                        key = $"Segment {segmentNum} Clock Time";
-                                        if (headerIndex.TryGetValue(key, out int segTimeIx))
-                                        {
-                                            line[segTimeIx] = result.Time;
-                                        }
-                                        key = $"Segment {segmentNum++} Name";
-                                        if (headerIndex.TryGetValue(key, out int segNameIx))
-                                        {
-                                            line[segNameIx] = result.SegmentName;
+                                            if (Constants.Timing.SEGMENT_NONE != result.SegmentId)
+                                            {
+                                                if (segmentNumberDict.TryGetValue(result.SegmentId, out int segNumber))
+                                                {
+                                                    segmentNum = segNumber;
+                                                }
+                                                string key = $"Segment {segmentNum} Chip Time";
+                                                if (headerIndex.TryGetValue(key, out int segChipTimeIx))
+                                                {
+                                                    line[segChipTimeIx] = result.ChipTime;
+                                                }
+                                                key = $"Segment {segmentNum} Clock Time";
+                                                if (headerIndex.TryGetValue(key, out int segTimeIx))
+                                                {
+                                                    line[segTimeIx] = result.Time;
+                                                }
+                                                key = $"Segment {segmentNum++} Name";
+                                                if (headerIndex.TryGetValue(key, out int segNameIx))
+                                                {
+                                                    line[segNameIx] = result.SegmentName;
+                                                }
+                                            }
+
+                                            break;
                                         }
                                     }
                                 }
@@ -383,25 +395,25 @@ public partial class ExportResults : ChronokeepWindow
                                 {
                                     line[placeIx] = finalLapRes.Place;
                                 }
-                                if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                if (headerIndex.TryGetValue("Age Group Place", out int agePlaceIx))
                                 {
-                                    line[agPlIx] = finalLapRes.AgePlace;
+                                    line[agePlaceIx] = finalLapRes.AgePlace;
                                 }
-                                if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
+                                if (headerIndex.TryGetValue("Gender Place", out int genderPlaceIx))
                                 {
-                                    line[gndPlIx] = finalLapRes.GenderPlace;
+                                    line[genderPlaceIx] = finalLapRes.GenderPlace;
                                 }
-                                if (headerIndex.TryGetValue("Laps Completed", out int lapsComplIx))
+                                if (headerIndex.TryGetValue("Laps Completed", out int lapsCompletedIx))
                                 {
-                                    line[lapsComplIx] = finalLapRes.Occurrence;
+                                    line[lapsCompletedIx] = finalLapRes.Occurrence;
                                 }
-                                if (headerIndex.TryGetValue("Ellapsed Time (Clock)", out int clockEllapIx))
+                                if (headerIndex.TryGetValue("Elapsed Time (Clock)", out int clockElapsedIx))
                                 {
-                                    line[clockEllapIx] = finalLapRes.Time;
+                                    line[clockElapsedIx] = finalLapRes.Time;
                                 }
-                                if (headerIndex.TryGetValue("Ellapsed Time (Chip)", out int chipEllapIx))
+                                if (headerIndex.TryGetValue("Elapsed Time (Chip)", out int chipElapsedIx))
                                 {
-                                    line[chipEllapIx] = finalLapRes.ChipTime;
+                                    line[chipElapsedIx] = finalLapRes.ChipTime;
                                 }
                             }
                         }
@@ -423,52 +435,64 @@ public partial class ExportResults : ChronokeepWindow
                                 int segmentNum = 1;
                                 foreach (TimeResult result in resList)
                                 {
-                                    if (Constants.Timing.SEGMENT_START == result.SegmentId)
+                                    switch (result.SegmentId)
                                     {
-                                        if (headerIndex.TryGetValue("Start", out int startIx))
+                                        case Constants.Timing.SEGMENT_START:
                                         {
-                                            line[startIx] = result.Time;
+                                            if (headerIndex.TryGetValue("Start", out int startIx))
+                                            {
+                                                line[startIx] = result.Time;
+                                            }
+
+                                            break;
                                         }
-                                    }
-                                    else if (Constants.Timing.SEGMENT_FINISH == result.SegmentId)
-                                    {
-                                        if (headerIndex.TryGetValue("Place", out int plIx))
+                                        case Constants.Timing.SEGMENT_FINISH:
                                         {
-                                            line[plIx] = result.Place == -1 ? "" : result.Place;
+                                            if (headerIndex.TryGetValue("Place", out int plIx))
+                                            {
+                                                line[plIx] = result.Place == -1 ? "" : result.Place;
+                                            }
+                                            if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                            {
+                                                line[agPlIx] = result.AgePlace == -1 ? "" : result.AgePlace;
+                                            }
+                                            if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
+                                            {
+                                                line[gndPlIx] = result.GenderPlace == -1 ? "" : result.GenderPlace;
+                                            }
+                                            if (headerIndex.TryGetValue("Chip Finish", out int chipFinIx))
+                                            {
+                                                line[chipFinIx] = result.ChipTime;
+                                            }
+                                            if (headerIndex.TryGetValue("Clock Finish", out int clockFinIx))
+                                            {
+                                                line[clockFinIx] = result.Time;
+                                            }
+
+                                            break;
                                         }
-                                        if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                        default:
                                         {
-                                            line[agPlIx] = result.AgePlace == -1 ? "" : result.AgePlace;
-                                        }
-                                        if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
-                                        {
-                                            line[gndPlIx] = result.GenderPlace == -1 ? "" : result.GenderPlace;
-                                        }
-                                        if (headerIndex.TryGetValue("Chip Finish", out int chipFinIx))
-                                        {
-                                            line[chipFinIx] = result.ChipTime;
-                                        }
-                                        if (headerIndex.TryGetValue("Clock Finish", out int clockFinIx))
-                                        {
-                                            line[clockFinIx] = result.Time;
-                                        }
-                                    }
-                                    else if (Constants.Timing.SEGMENT_NONE != result.SegmentId)
-                                    {
-                                        string key = $"Segment {segmentNum} Chip Time";
-                                        if (headerIndex.TryGetValue(key, out int segChipTimeIx))
-                                        {
-                                            line[segChipTimeIx] = result.ChipTime;
-                                        }
-                                        key = $"Segment {segmentNum} Clock Time";
-                                        if (headerIndex.TryGetValue(key, out int segTimeIx))
-                                        {
-                                            line[segTimeIx] = result.Time;
-                                        }
-                                        key = $"Segment {segmentNum++} Name";
-                                        if (headerIndex.TryGetValue(key, out int segNameIx))
-                                        {
-                                            line[segNameIx] = result.SegmentName;
+                                            if (Constants.Timing.SEGMENT_NONE != result.SegmentId)
+                                            {
+                                                string key = $"Segment {segmentNum} Chip Time";
+                                                if (headerIndex.TryGetValue(key, out int segChipTimeIx))
+                                                {
+                                                    line[segChipTimeIx] = result.ChipTime;
+                                                }
+                                                key = $"Segment {segmentNum} Clock Time";
+                                                if (headerIndex.TryGetValue(key, out int segTimeIx))
+                                                {
+                                                    line[segTimeIx] = result.Time;
+                                                }
+                                                key = $"Segment {segmentNum++} Name";
+                                                if (headerIndex.TryGetValue(key, out int segNameIx))
+                                                {
+                                                    line[segNameIx] = result.SegmentName;
+                                                }
+                                            }
+
+                                            break;
                                         }
                                     }
                                 }
@@ -498,25 +522,25 @@ public partial class ExportResults : ChronokeepWindow
                                 {
                                     line[plIx] = finRes.Place;
                                 }
-                                if (headerIndex.TryGetValue("Age Group Place", out int agPlIx))
+                                if (headerIndex.TryGetValue("Age Group Place", out int agePlaceIx))
                                 {
-                                    line[agPlIx] = finRes.AgePlace;
+                                    line[agePlaceIx] = finRes.AgePlace;
                                 }
-                                if (headerIndex.TryGetValue("Gender Place", out int gndPlIx))
+                                if (headerIndex.TryGetValue("Gender Place", out int genderPlaceIx))
                                 {
-                                    line[gndPlIx] = finRes.GenderPlace;
+                                    line[genderPlaceIx] = finRes.GenderPlace;
                                 }
-                                if (headerIndex.TryGetValue("Laps Completed", out int lapsComplIx))
+                                if (headerIndex.TryGetValue("Laps Completed", out int lapsCompletedIx))
                                 {
-                                    line[lapsComplIx] = finRes.Occurrence;
+                                    line[lapsCompletedIx] = finRes.Occurrence;
                                 }
-                                if (headerIndex.TryGetValue("Ellapsed Time (Clock)", out int clockEllapIx))
+                                if (headerIndex.TryGetValue("Elapsed Time (Clock)", out int clockElapsedIx))
                                 {
-                                    line[clockEllapIx] = finRes.Time;
+                                    line[clockElapsedIx] = finRes.Time;
                                 }
-                                if (headerIndex.TryGetValue("Ellapsed Time (Chip)", out int chipEllapIx))
+                                if (headerIndex.TryGetValue("Elapsed Time (Chip)", out int chipElapsedIx))
                                 {
-                                    line[chipEllapIx] = finRes.ChipTime;
+                                    line[chipElapsedIx] = finRes.ChipTime;
                                 }
                             }
                         }

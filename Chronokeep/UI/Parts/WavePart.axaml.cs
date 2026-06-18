@@ -51,14 +51,14 @@ public partial class WavePart : UserControl
 
     public (int, long, int) GetValues()
     {
-        string[] firstparts = StartOffset.Text!.Replace('_', '0').Split(':');
-        string[] secondparts = firstparts[2].Split('.');
+        string[] firstParts = StartOffset.Text!.Replace('_', '0').Split(':');
+        string[] secondParts = firstParts[2].Split('.');
         try
         {
-            int hours = Convert.ToInt32(firstparts[0]),
-                minutes = Convert.ToInt32(firstparts[1]),
-                seconds = Convert.ToInt32(secondparts[0]),
-                milliseconds = Convert.ToInt32(secondparts[1]);
+            int hours = Convert.ToInt32(firstParts[0]),
+                minutes = Convert.ToInt32(firstParts[1]),
+                seconds = Convert.ToInt32(secondParts[0]),
+                milliseconds = Convert.ToInt32(secondParts[1]);
             seconds = (hours * 3600) + (minutes * 60) + seconds;
             if (PlusWave) return (Wave, seconds, milliseconds);
             Log.D("UI.Timing.WaveWindow", "Negative wave, setting values to match.");

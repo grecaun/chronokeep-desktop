@@ -45,13 +45,11 @@ namespace Chronokeep.MemStore
                         {
                             cr.ChipBib = Constants.Timing.CHIPREAD_DUMMYBIB;
                             cr.Name = "";
-                            if (chipToBibAssociations.TryGetValue(cr.ChipNumber, out BibChipAssociation? bc))
+                            if (!chipToBibAssociations.TryGetValue(cr.ChipNumber, out BibChipAssociation? bc)) continue;
+                            cr.ChipBib = bc.Bib;
+                            if (bibPartDict.TryGetValue(bc.Bib, out Participant? p))
                             {
-                                cr.ChipBib = bc.Bib;
-                                if (bibPartDict.TryGetValue(bc.Bib, out Participant? p))
-                                {
-                                    cr.Name = string.Format("{0} {1}", p.FirstName, p.LastName).Trim();
-                                }
+                                cr.Name = $"{p.FirstName} {p.LastName}".Trim();
                             }
                         }
                     }

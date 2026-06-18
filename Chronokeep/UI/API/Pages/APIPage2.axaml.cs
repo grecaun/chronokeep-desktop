@@ -117,20 +117,14 @@ public partial class ApiPage2 : UserControl
             {
                 try
                 {
-                    string type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN;
-                    if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType)
+                    string type = theEvent.EventType switch
                     {
-                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA;
-                    }
-                    else if (Constants.Timing.EVENT_TYPE_TIME == theEvent.EventType)
-                    {
-                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_TIME;
-                    }
-                    else if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType)
-                    {
-                        type = Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE;
-                    }
-
+                        Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA => Constants.ApiConstants
+                            .CHRONOKEEP_EVENT_TYPE_BACKYARD_ULTRA,
+                        Constants.Timing.EVENT_TYPE_TIME => Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_TIME,
+                        Constants.Timing.EVENT_TYPE_DISTANCE => Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_DISTANCE,
+                        _ => Constants.ApiConstants.CHRONOKEEP_EVENT_TYPE_UNKNOWN
+                    };
                     ModifyEventResponse addResponse = await ApiHandlers.AddEvent(api, new ApiEvent
                     {
                         Name = NameBox.Text!,

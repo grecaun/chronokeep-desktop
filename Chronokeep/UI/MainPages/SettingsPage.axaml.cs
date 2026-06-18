@@ -24,25 +24,25 @@ public partial class SettingsPage : UserControl, IMainPage
     public SettingsPage(IMainWindow mainWindow, IdbInterface database)
     {
         InitializeComponent();
-        this.mWindow = mainWindow;
+        mWindow = mainWindow;
         this.database = database;
         DefaultTimingBox.Items.Clear();
-        DefaultTimingBox.Items.Add(new ComboBoxItem()
+        DefaultTimingBox.Items.Add(new ComboBoxItem
         {
             Content = Constants.Readers.SYSTEM_NAMES[Constants.Readers.SYSTEM_RFID],
             Tag = Constants.Readers.SYSTEM_RFID
         });
-        DefaultTimingBox.Items.Add(new ComboBoxItem()
+        DefaultTimingBox.Items.Add(new ComboBoxItem
         {
             Content = Constants.Readers.SYSTEM_NAMES[Constants.Readers.SYSTEM_CHRONOKEEP_PORTAL],
             Tag = Constants.Readers.SYSTEM_CHRONOKEEP_PORTAL
         });
-        DefaultTimingBox.Items.Add(new ComboBoxItem()
+        DefaultTimingBox.Items.Add(new ComboBoxItem
         {
             Content = Constants.Readers.SYSTEM_NAMES[Constants.Readers.SYSTEM_IPICO],
             Tag = Constants.Readers.SYSTEM_IPICO
         });
-        DefaultTimingBox.Items.Add(new ComboBoxItem()
+        DefaultTimingBox.Items.Add(new ComboBoxItem
         {
             Content = Constants.Readers.SYSTEM_NAMES[Constants.Readers.SYSTEM_IPICO_LITE],
             Tag = Constants.Readers.SYSTEM_IPICO_LITE
@@ -51,18 +51,18 @@ public partial class SettingsPage : UserControl, IMainPage
         if (systemTheme != -1)
         {
             themeOffset = 0;
-            ThemeColorBox.Items.Add(new ComboBoxItem()
+            ThemeColorBox.Items.Add(new ComboBoxItem
             {
                 Content = "System",
                 Tag = Constants.Settings.THEME_SYSTEM
             });
         }
-        ThemeColorBox.Items.Add(new ComboBoxItem()
+        ThemeColorBox.Items.Add(new ComboBoxItem
         {
             Content = "Light",
             Tag = Constants.Settings.THEME_LIGHT
         });
-        ThemeColorBox.Items.Add(new ComboBoxItem()
+        ThemeColorBox.Items.Add(new ComboBoxItem
         {
             Content = "Dark",
             Tag = Constants.Settings.THEME_DARK

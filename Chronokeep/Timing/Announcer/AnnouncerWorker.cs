@@ -113,7 +113,7 @@ namespace Chronokeep.Timing.Announcer
                     {
                         newParticipants = true;
                         BibSeen.Add(read.Bib, timeRightNow);
-                        Participants.Add(new(part, read.Seconds));
+                        Participants.Add(new AnnouncerParticipant(part, read.Seconds));
                         // Mark this chipread as USED
                         read.Status = Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED;
                     }

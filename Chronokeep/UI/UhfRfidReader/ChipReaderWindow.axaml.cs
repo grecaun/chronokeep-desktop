@@ -128,7 +128,7 @@ public partial class ChipReaderWindow : ChronokeepWindow
                 DialogBox.Show("No serial port selected.");
                 return;
             }
-            if (serial.Connect() != RfidError.NOERR)
+            if (serial.Connect() != RfidError.NO_ERROR)
             {
                 DialogBox.Show("Unable to connect to device.");
                 return;

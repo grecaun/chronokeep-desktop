@@ -131,7 +131,7 @@ public partial class DistanceStatsPage : UserControl, ISubPage
         {
             DnsPanel.IsVisible = false;
         }
-        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_UNKNOWN, out List<Participant>? oUnknownList)) // UNKOWN
+        if (partDict.TryGetValue(Constants.Timing.EVENTSPECIFIC_UNKNOWN, out List<Participant>? oUnknownList)) // UNKNOWN
         {
             UnknownPanel.IsVisible = true;
             foreach (Participant p in oUnknownList)

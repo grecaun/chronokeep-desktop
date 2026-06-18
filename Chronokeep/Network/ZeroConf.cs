@@ -26,7 +26,7 @@ namespace Chronokeep.Network
             }
             servername = name ?? Constants.Network.DEFAULT_CHRONOKEEP_SERVER_NAME;
             serverid = new string(serveridChars);
-            Log.D("Network.ZeroConf", "Server name is " + servername + " and has an id of " + serverid + ".");
+            Log.D("Network.ZeroConf", $"Server name is {servername} and has an id of {serverid}.");
         }
 
         public void Run()
