@@ -418,7 +418,7 @@ namespace Chronokeep.Objects
         public static int CompareByBib(ChipRead one, ChipRead two)
         {
             // Check if they're the same bib
-            // Make sure they're not the dummy bib numer, then compare them.
+            // Make sure they're not the dummy bib number, then compare them.
             if (Constants.Timing.CHIPREAD_DUMMYBIB != one.ReadBib && (one.ReadBib == two.ReadBib || one.ReadBib == two.ChipBib) ||
                  Constants.Timing.CHIPREAD_DUMMYBIB != one.ChipBib && (one.ChipBib == two.ChipBib || one.ChipBib == two.ReadBib))
             {

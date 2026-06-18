@@ -27,10 +27,6 @@
                             Height="35"
                            Width="200"
                            Margin="5"/>
-        <CalendarDatePicker Name="EndDatePicker"
-                            Height="35"
-                            Width="200"
-                            Margin="5"/>
         <MaskedTextBox Name="StartTimeBox"
                        Text="00:00:00"
                        Mask="00:00:00"
@@ -40,6 +36,10 @@
                        VerticalContentAlignment="Center"
                        TextAlignment="Center"
                        Margin="5"/>
+        <CalendarDatePicker Name="EndDatePicker"
+                            Height="35"
+                            Width="200"
+                            Margin="5"/>
         <MaskedTextBox Name="EndTimeBox"
                        Text="23:59:59"
                        Mask="00:00:00"
