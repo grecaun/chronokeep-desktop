@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Chronokeep.UI.Announcer;
 using Chronokeep.UI.UhfRfidReader;
 
@@ -32,6 +33,10 @@ public class ChronokeepWindow : Window
             TitleBar()?.IsVisible = true;
         }
         if (this is MainWindow or MinWindow or AnnouncerWindow or ChipReaderWindow) return;
+        if (this.TryFindResource("PrimaryBackground", this.ActualThemeVariant, out var bgBrush))
+        {
+            Background = (IBrush?)bgBrush;
+        }
         CanResize = false;
         Topmost = true;
     }

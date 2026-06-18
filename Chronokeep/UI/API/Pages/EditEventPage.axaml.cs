@@ -45,6 +45,7 @@ public partial class EditEventPage : UserControl
             }
             NameBox.Text = apiEvent.Event.Name;
             SlugBox.Text = apiEvent.Event.Slug;
+            CertNameBox.Text = apiEvent.Event.CertificateName;
             ContactBox.Text = apiEvent.Event.ContactEmail;
             WebsiteBox.Text = apiEvent.Event.Website;
             ImageBox.Text = apiEvent.Event.Image;
@@ -99,7 +100,7 @@ public partial class EditEventPage : UserControl
             await ApiHandlers.UpdateEvent(api, new ApiEvent
             {
                 Name = NameBox.Text!,
-                CertificateName = CertNameBox.Text!,
+                CertificateName = CertNameBox.Text ?? "",
                 Slug = SlugBox.Text!,
                 Website = WebsiteBox.Text!,
                 Image = ImageBox.Text!,

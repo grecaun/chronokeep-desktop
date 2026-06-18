@@ -79,6 +79,7 @@ namespace Chronokeep
             base.OnFrameworkInitializationCompleted();
         }
 
+        [STAThread]
         static void Main(string[] args)
             => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 

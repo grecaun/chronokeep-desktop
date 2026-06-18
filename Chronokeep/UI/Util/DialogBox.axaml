@@ -4,7 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
         x:Class="Chronokeep.UI.Util.DialogBox"
-        Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
         Width="400"
         CanResize="False"
