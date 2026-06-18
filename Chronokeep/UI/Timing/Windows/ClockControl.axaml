@@ -7,8 +7,6 @@
         Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
         Title="Remote Readers"
-        MinHeight="200"
-        MinWidth="1090"
         CanResize="False"
         Topmost="True"
         SizeToContent="WidthAndHeight"

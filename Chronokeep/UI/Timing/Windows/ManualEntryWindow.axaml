@@ -7,8 +7,7 @@
         Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
         Title="Manual Entry"
-        Width="300"
-        SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
         Topmost="True"
         Closing="Window_Closing"
         >
@@ -35,7 +34,7 @@
                </StackPanel> 
             </DockPanel>
         </Border>
-        <StackPanel VerticalAlignment="Center" Margin="0,0,0,15" Grid.Row="1">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,10,0" Grid.Row="1" HorizontalAlignment="Center">
             <DockPanel>
                 <TextBlock Text="Bib"
                            Width="80"

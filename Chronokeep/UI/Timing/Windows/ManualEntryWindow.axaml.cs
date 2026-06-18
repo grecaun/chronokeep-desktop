@@ -41,6 +41,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
     private ManualEntryWindow(IMainWindow window, IdbInterface database)
     {
         InitializeComponent();
+        ChronokeepInitialize();
         Topmost = true;
         this.window = window;
         this.database = database;

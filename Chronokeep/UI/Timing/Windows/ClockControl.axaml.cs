@@ -53,7 +53,10 @@ public partial class ClockControl : ChronokeepWindow
         {
             if (clItem is not ClockPart clPart) continue;
             Chronoclock clock = clPart.GetUpdatedClock();
-            clockDict[clock.Identifier] = clock;
+            if (clockDict.ContainsKey(clock.Identifier))
+            {
+                clockDict[clock.Identifier] = clock;
+            }
         }
         ClockListView.Items.Clear();
         Event? theEvent = database.GetCurrentEvent();
