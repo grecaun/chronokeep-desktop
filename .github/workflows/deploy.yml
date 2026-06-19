@@ -11,36 +11,52 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      # Continue running other matrix jobs even if one fails.
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            architecture: ['Any CPU', 'x64']
+            app_packages_archive: chronokeep-setup.exe
+            app_zip_archive: chronokeep.zip
+          - os: ubuntu-latest
+            architecture: ['Any CPU', 'x64']
+            app_packages_archive: chronokeep.tar.gz
+            app_zip_archive: chronokeep.tar
+    runs-on: ${{ matrix.os }}
 
     env:
       SigningCertificate: Chronokeep\Chronokeep.pfx
       Solution_Path: Chronokeep.sln
-      App_Packages_Archive: chronokeep-setup.exe
-      App_Zip_Archive: chronokeep.zip
-      Compile_Path: Chronokeep\bin\Release\net9.0-windows8.0
+      Compile_Path: Chronokeep\bin\Release\net10.0
       Version_Path: ChronoKeep\version.txt
       Actions_Allow_Unsecure_Commands: true # Allows AddPAth and SetEnv commands
 
     steps:
+    - name: Display build info
+      run: |
+        echo "OS: ${{ matrix.os }}"
+        echo "Arch: ${{ matrix.architecture }}"
+
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
-        fetch-depth: 0
+        fetch-tags: true
 
     # Install the .NET Core workload
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5.3.0
       with:
-        dotnet-version: '7.x'
+        dotnet-version: '10.x'
 
     # Add  MsBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v3
 
     # Setup Nuget to restore packages
     - name: Setup Nuget
-      uses: Nuget/setup-nuget@v1
+      uses: Nuget/setup-nuget@v3
 
     # Restore Nuget Packages
     - name: Restore Nuget Packages
@@ -82,7 +98,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ env.App_Packages_Archive }}
+        file: ${{ env.Compile_Path }}\${{ matrix.app_packages_archive }}
 
       
     # Upload archive
@@ -91,4 +107,4 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ env.App_Zip_Archive }}
+        file: ${{ env.Compile_Path }}\${{ matrix.app_zip_archive }}
