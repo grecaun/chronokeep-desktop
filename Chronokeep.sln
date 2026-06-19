@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.6.11819.183
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chronokeep", "ChronoKeep\Chronokeep.csproj", "{19A9995C-79B6-4A3C-9906-F391FB1BA33D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chronokeep", "Chronokeep\Chronokeep.csproj", "{19A9995C-79B6-4A3C-9906-F391FB1BA33D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{B49F5EE8-B1C9-4549-815E-C1B1F3B9B325}"
 EndProject

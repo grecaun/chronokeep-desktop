@@ -30,7 +30,7 @@ jobs:
       SigningCertificate: Chronokeep\Chronokeep.pfx
       Solution_Path: Chronokeep.sln
       Compile_Path: Chronokeep\bin\Release\net10.0
-      Version_Path: ChronoKeep\version.txt
+      Version_Path: Chronokeep\version.txt
       Actions_Allow_Unsecure_Commands: true # Allows AddPAth and SetEnv commands
 
     steps:
