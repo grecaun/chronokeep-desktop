@@ -436,7 +436,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             case Constants.Settings.CHIP_TYPE_HEX when !long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip):
                 return;
         }
-        long endChip = endBib - startBib + startChip;
+        long endChip = Math.Abs(endBib - startBib) + startChip;
         if (startBib <= -1 || endBib <= -1 || startChip <= -1) return;
         RangeEndChipLabel.Text = chipType.Value switch
         {
@@ -471,20 +471,38 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             return;
         }
         List<BibChipAssociation> bibChips = [];
-        for (long bib = startBib, tag = startChip; bib <= endBib && tag <= endChip; bib++, tag++)
+        if (startBib > endBib)
         {
-            bibChips.Add(new BibChipAssociation
+            // Normal save range -- both increase
+            for (long bib = startBib, tag = startChip; bib <= endBib && tag <= endChip; bib++, tag++)
             {
-                EventId = theEvent!.Identifier,
-                Bib = bib.ToString(),
-                Chip = Constants.Settings.CHIP_TYPE_HEX == chipType.Value ? tag.ToString("X") : tag.ToString()
-            });
+                bibChips.Add(new BibChipAssociation
+                {
+                    EventId = theEvent!.Identifier,
+                    Bib = bib.ToString(),
+                    Chip = Constants.Settings.CHIP_TYPE_HEX == chipType.Value ? tag.ToString("X") : tag.ToString()
+                });
+            }
+        }
+        else
+        {
+            // Reverse save range -- bib decreases but chip increases
+            for (long bib = startBib, tag=startChip; bib >= endBib && tag <= endChip; bib--, tag++)
+            {
+                bibChips.Add(new BibChipAssociation
+                {
+                    EventId = theEvent!.Identifier,
+                    Bib = bib.ToString(),
+                    Chip = Constants.Settings.CHIP_TYPE_HEX == chipType.Value ? tag.ToString("X") : tag.ToString()
+                });
+            }
         }
         database.AddBibChipAssociation(theEvent!.Identifier, bibChips);
         bibsChanged = true;
         UpdateView();
-        RangeStartBibBox.Text = (endBib + 1).ToString();
-        RangeEndBibBox.Text = (endBib + 1).ToString();
+        long newBib = endBib > startBib ? endBib + 1 : startBib + 1;
+        RangeStartBibBox.Text = $"{newBib}";
+        RangeEndBibBox.Text = $"{newBib}";
         RangeStartBibBox.Focus();
     }
 

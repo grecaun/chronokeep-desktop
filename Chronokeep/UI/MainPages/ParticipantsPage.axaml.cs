@@ -102,8 +102,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 {
                     if (outer.Equals(inner)) continue;
                     // Check for bib conflicts
-                    if ((outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase) && !outer.Matches(inner))
-                        || (outer.Matches(inner) && !(outer.Distance.Equals(inner.Distance, StringComparison.OrdinalIgnoreCase) && outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase))))
+                    if ((outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase) && !outer.IsBasicMatch(inner))
+                        || (outer.IsBasicMatch(inner) && !(outer.Distance.Equals(inner.Distance, StringComparison.OrdinalIgnoreCase) && outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase))))
                     {
                         if (!conflictParticipantIdentifiers.Contains((outer.Identifier, inner.Identifier))) {
                             conflicts.Add(outer);

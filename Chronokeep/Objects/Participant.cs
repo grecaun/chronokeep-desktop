@@ -706,7 +706,7 @@ namespace Chronokeep.Objects
                 && birthdate.Equals(other.birthdate, StringComparison.OrdinalIgnoreCase));
         }
 
-        public bool Matches(Participant other)
+        public bool IsBasicMatch(Participant other)
         {
             return FirstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase)
                 && LastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase)
