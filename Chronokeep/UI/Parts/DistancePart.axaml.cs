@@ -248,6 +248,13 @@ public partial class DistancePart : UserControl
         IntervalBlock.IsVisible = Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType;
         MaxTimePanel.IsVisible = Constants.Timing.EVENT_TYPE_DISTANCE != theEvent.EventType;
         OccurrencePanel.IsVisible = Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType;
+        if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
+        {
+            AddSubButton.IsEnabled = false;
+            AddSubButton.IsVisible = false;
+            RemoveButton.IsEnabled = false;
+            RemoveButton.IsVisible = false;
+        }
         if (parent == null) return;
         MainPanel.Margin = new Thickness(50, 0);
         MainPanel.MaxWidth = 500;

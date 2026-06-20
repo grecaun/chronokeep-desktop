@@ -101,6 +101,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         List<string> divisions = database.GetDivisions(theEvent.Identifier);
         divisions.RemoveAll(x => x.Trim().Length < 1);
         divisions.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
+        GenderBox.SelectedIndex = 0;
         DivisionBox.ItemsSource = divisions;
     }
 
@@ -138,7 +139,8 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         foreach (object? item in GenderBox.Items)
         {
             if (item is not ComboBoxItem cbi) continue;
-            if (person.Gender.Equals(cbi.Content!.ToString()))
+            if (cbi.Content == null) continue;
+            if (person.Gender.Equals(cbi.Content.ToString()))
             {
                 GenderBox.SelectedItem = cbi;
                 genderFound = true;
@@ -153,7 +155,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                     break;
             }
         }
-        if (person.Gender.Equals("NS", StringComparison.OrdinalIgnoreCase))
+        if (person.Gender.Length < 1 || person.Gender.Equals("NS", StringComparison.OrdinalIgnoreCase))
         {
             GenderBox.SelectedItem = notSpecifiedBoxItem;
             genderFound = true;
@@ -246,13 +248,13 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
             participantId = person.Identifier;
         }
         string gender = "Not Specified";
-        if (GenderBox.SelectedItem != null)
+        if (GenderBox.SelectedItem != null && GenderBox.SelectedItem is ComboBoxItem selectedGender)
         {
-            gender = ((ComboBoxItem)GenderBox.SelectedItem).Content!.ToString()!;
+            gender = selectedGender.Content!.ToString()!;
         }
         if (gender.Equals("Other", StringComparison.OrdinalIgnoreCase))
         {
-            gender = OtherGenderBox.Text!;
+            gender = OtherGenderBox.Text ?? "";
             if (gender.Length < 1)
             {
                 gender = "Not Specified";
@@ -275,21 +277,21 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         Log.D("UI.Participants.ModifyParticipantWindow", $"----- Birthdate ----- {birthdate}");
         Participant output = new(
             participantId,
-            FirstBox.Text!,
-            LastBox.Text!,
-            StreetBox.Text!,
-            CityBox.Text!,
-            StateBox.Text!,
-            ZipBox.Text!,
+            FirstBox.Text ?? "",
+            LastBox.Text ?? "",
+            StreetBox.Text ?? "",
+            CityBox.Text ?? "",
+            StateBox.Text ?? "",
+            ZipBox.Text ?? "",
             birthdate,
             new EventSpecific(
                 eventSpecificId,
                 theEvent.Identifier,
                 Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem!).Tag),
                 "",
-                BibBox.Text!,
+                BibBox.Text ?? "",
                 0,
-                CommentsBox.Text!,
+                CommentsBox.Text ?? "",
                 "",
                 "",
                 Constants.Timing.EVENTSPECIFIC_UNKNOWN,
@@ -297,20 +299,20 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 Constants.Timing.TIMERESULT_DUMMYAGEGROUP,
                 AnonymousBox.IsChecked == true,
                 false,
-                ApparelBox.Text!,
-                DivisionBox.Text!,
+                ApparelBox.Text ?? "",
+                DivisionBox.Text ?? "",
                 Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION,
                 Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION
                 ),
-            EmailBox.Text!,
-            PhoneBox.Text!,
-            MobileBox.Text!,
-            ParentBox.Text!,
-            CountryBox.Text!,
-            Street2Box.Text!,
+            EmailBox.Text ?? "",
+            PhoneBox.Text ?? "",
+            MobileBox.Text ?? "",
+            ParentBox.Text ?? "",
+            CountryBox.Text ?? "",
+            Street2Box.Text ?? "",
             gender,
-            EcNameBox.Text!,
-            EcPhoneBox.Text!
+            EcNameBox.Text ?? "",
+            EcPhoneBox.Text ?? ""
             );
         age = output.GetAge(theEvent.Date);
         Dictionary<(int, int), AgeGroup> ageGroups = [];

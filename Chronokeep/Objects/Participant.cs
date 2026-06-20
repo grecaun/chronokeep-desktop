@@ -706,6 +706,14 @@ namespace Chronokeep.Objects
                 && birthdate.Equals(other.birthdate, StringComparison.OrdinalIgnoreCase));
         }
 
+        public bool Matches(Participant other)
+        {
+            return FirstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase)
+                && LastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase)
+                && Gender.Equals(other.Gender, StringComparison.OrdinalIgnoreCase)
+                && birthdate.Equals(other.birthdate, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string CurrentAge => Age(currentEventDate);
 
         public static void SetCurrentEventDate(string date)

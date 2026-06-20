@@ -219,7 +219,8 @@
                        VerticalAlignment="Center"
                        VerticalContentAlignment="Center"/>
             </DockPanel>
-            <Button Content="Add Linked"
+            <Button Name="AddSubButton"
+					Content="Add Linked"
                     Click="AddSub_Click"
                     Width="100"
                     Height="30"
@@ -227,7 +228,8 @@
                     Margin="5,5,5,5"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"/>
-            <Button Content="Remove"
+            <Button Name="RemoveButton"
+					Content="Remove"
                     Click="Remove_Click"
                     Width="100"
                     Height="30"

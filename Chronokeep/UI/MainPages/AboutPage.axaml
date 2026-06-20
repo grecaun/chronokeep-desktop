@@ -208,12 +208,18 @@
             Text="Application Folders"
             />
         <StackPanel Orientation="Horizontal">
-            <Button Click="OpenDataFolder_Click" Classes="link" Margin="0,0,5,0">
-                <StackPanel Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource folder_regular}" />
-                    <TextBlock Classes="link">Data</TextBlock>
-                </StackPanel>
-            </Button>
+			<Button Click="OpenDataFolder_Click" Classes="link" Margin="0,0,5,0">
+				<StackPanel Orientation="Horizontal">
+					<PathIcon Data="{StaticResource folder_regular}" />
+					<TextBlock Classes="link">Data</TextBlock>
+				</StackPanel>
+			</Button>
+			<Button Click="OpenLogsFolder_Click" Classes="link" Margin="0,0,5,0">
+				<StackPanel Orientation="Horizontal">
+					<PathIcon Data="{StaticResource folder_regular}" />
+					<TextBlock Classes="link">Logs</TextBlock>
+				</StackPanel>
+			</Button>
             <HyperlinkButton Name="HelpDocsButton" Classes="link" Margin="5,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <PathIcon Data="{StaticResource folder_regular}" />

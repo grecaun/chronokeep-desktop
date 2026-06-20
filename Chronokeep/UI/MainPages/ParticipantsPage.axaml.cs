@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -93,7 +94,26 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 ApiPanel.IsVisible = false;
             }
-            // Make conflict check HERE
+            conflicts.Clear();
+            HashSet<(int, int)> conflictParticipantIdentifiers = [];
+            foreach (Participant outer in newList)
+            {
+                foreach (Participant inner in newList)
+                {
+                    if (outer.Equals(inner)) continue;
+                    // Check for bib conflicts
+                    if ((outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase) && !outer.Matches(inner))
+                        || (outer.Matches(inner) && !(outer.Distance.Equals(inner.Distance, StringComparison.OrdinalIgnoreCase) && outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        if (!conflictParticipantIdentifiers.Contains((outer.Identifier, inner.Identifier))) {
+                            conflicts.Add(outer);
+                            conflicts.Add(inner);
+                        }
+                        conflictParticipantIdentifiers.Add((outer.Identifier, inner.Identifier));
+                        conflictParticipantIdentifiers.Add((inner.Identifier, outer.Identifier));
+                    }
+                }
+            }
             if (conflicts.Count > 0)
             {
                 ConflictsBtn.Content = $"Conflicts - {conflicts.Count}";
@@ -194,7 +214,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Dictionary<string, Participant> partEsDictionary = [];
                 Dictionary<string, Distance> distDictionary = [];
                 string uniqueId = "";
-                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER)! is { } programId)
+                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER) is { } programId)
                 {
                     uniqueId = $"{programId.Value}-";
                 }
@@ -216,14 +236,18 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 {
                     distDictionary[d.Name.ToLower()] = d;
                 }
-                conflicts.Clear();
                 List<Participant> partsToUpdate = [];
                 List<Participant> partsToAdd = [];
                 foreach (ApiPerson person in newPersons)
                 {
                     person.Trim();
                     person.FormatData();
-                    if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _)) continue;
+                    if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _))
+                    {
+                        Distance newDist = new(person.Distance, theEvent.Identifier);
+                        newDist.Identifier = database.AddDistance(newDist);
+                        distDictionary.Add(newDist.Name.ToLower(), newDist);
+                    };
                     if (partEsDictionary.TryGetValue(person.Identifier, out Participant? old) && old.IsSimilar(person))
                     {
                         // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
@@ -269,11 +293,12 @@ public partial class ParticipantsPage : UserControl, IMainPage
                             old.EcName,
                             old.EcPhone
                         );
-                        // Check if we've updated the Bib
+                        // Check if the bib has changed
                         if (old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
-                            conflicts.Add(old);
-                            conflicts.Add(newPart);
+                            // Add the old value so we can track it.
+                            old.Identifier = -1;
+                            partsToAdd.Add(old);
                         }
                         partsToUpdate.Add(newPart);
                     }
@@ -322,11 +347,12 @@ public partial class ParticipantsPage : UserControl, IMainPage
                             oldTwo.EcName,
                             oldTwo.EcPhone
                         );
-                        // Check if we've updated the Bib.
+                        // Check if the bib has changed
                         if (old!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
-                            conflicts.Add(oldTwo);
-                            conflicts.Add(newPart);
+                            // Add the old value so we can track it.
+                            old.Identifier = -1;
+                            partsToAdd.Add(old);
                         }
                         partsToUpdate.Add(newPart);
                     }
@@ -375,47 +401,6 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 if (partsToAdd.Count > 0)
                 {
                     database.AddParticipants(partsToAdd);
-                }
-                Dictionary<string, Participant> knownBibs = [];
-                // This checks for doubles of bibs in existing information.
-                foreach (Participant part in partEsDictionary.Values.Where(part => part.Bib.Length > 0))
-                {
-                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
-                    {
-                        if (part.IsSimilar(known)) continue;
-                        conflicts.Add(part);
-                        conflicts.Add(known);
-                    }
-                    else
-                    {
-                        knownBibs.Add(part.Bib, part);
-                    }
-                }
-                foreach (Participant part in partsToUpdate.Where(part => part.Bib.Length > 0))
-                {
-                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
-                    {
-                        if (part.IsSimilar(known)) continue;
-                        conflicts.Add(part);
-                        conflicts.Add(known);
-                    }
-                    else
-                    {
-                        knownBibs.Add(part.Bib, part);
-                    }
-                }
-                foreach (Participant part in partsToAdd.Where(part => part.Bib.Length > 0))
-                {
-                    if (knownBibs.TryGetValue(part.Bib, out Participant? known))
-                    {
-                        if (part.IsSimilar(known)) continue;
-                        conflicts.Add(part);
-                        conflicts.Add(known);
-                    }
-                    else
-                    {
-                        knownBibs.Add(part.Bib, part);
-                    }
                 }
             }
             catch (ApiException ex)
@@ -735,34 +720,44 @@ public partial class ParticipantsPage : UserControl, IMainPage
             if (Delete.Content!.ToString() != "Working")
             {
                 Log.D("UI.MainPages.ParticipantsPage", "Deleting uploaded participants data.");
-                Delete.Content = "Working";
-                ApiObject? api = null;
-                try
-                {
-                    api = database.GetApi(theEvent!.ApiId);
-                    Log.D("UI.MainPages.ParticipantsPage", "API found.");
-                }
-                catch
-                {
-                    Log.D("UI.MainPages.ParticipantsPage", "Error finding API.");
-                }
-                // Get the event id values. Exit if not valid.
-                string[] eventIds = theEvent!.ApiEventId.Split(',');
-                // Create a bool for checking if we've grabbed the APIController's lock so we release it later
-                if (eventIds.Length == 2)
-                {
-                    try
+                DialogBox.Show("This will delete all participants loaded to the API and may cause issues. Proceed?",
+                    "Yes",
+                    "No",
+                    async () =>
                     {
-                        Log.D("UI.MainPages.ParticipantsPage", "Deleting participants from API.");
-                        await ApiHandlers.DeleteParticipants(api!, eventIds[0], eventIds[1]);
-                        await ApiHandlers.DeleteBibChips(api!, eventIds[0], eventIds[1]);
-                    }
-                    catch (ApiException ex)
-                    {
-                        DialogBox.Show(ex.Message);
-                    }
-                }
-                Delete.Content = "Delete Uploaded";
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => {
+                            Delete.Content = "Working";
+                        });
+                        ApiObject? api = null;
+                        try
+                        {
+                            api = database.GetApi(theEvent!.ApiId);
+                            Log.D("UI.MainPages.ParticipantsPage", "API found.");
+                        }
+                        catch
+                        {
+                            Log.D("UI.MainPages.ParticipantsPage", "Error finding API.");
+                        }
+                        // Get the event id values. Exit if not valid.
+                        string[] eventIds = theEvent!.ApiEventId.Split(',');
+                        // Create a bool for checking if we've grabbed the APIController's lock so we release it later
+                        if (eventIds.Length == 2)
+                        {
+                            try
+                            {
+                                Log.D("UI.MainPages.ParticipantsPage", "Deleting participants from API.");
+                                await ApiHandlers.DeleteParticipants(api!, eventIds[0], eventIds[1]);
+                                await ApiHandlers.DeleteBibChips(api!, eventIds[0], eventIds[1]);
+                            }
+                            catch (ApiException ex)
+                            {
+                                DialogBox.Show(ex.Message);
+                            }
+                        }
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => {
+                            Delete.Content = "Delete Uploaded";
+                        });
+                    });
                 return;
             }
             Log.D("UI.MainPages.ParticipantsPage", "Already deleting.");

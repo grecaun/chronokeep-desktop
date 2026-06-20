@@ -99,4 +99,42 @@ public partial class AboutPage : UserControl, IMainPage
             Log.E("UI.MainPages.AboutPage", "Error opening data directory.");
         }
     }
+
+    private async void OpenLogsFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string dirPath = App.IsWindows ?
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
+                : Path.Combine(Directory.GetCurrentDirectory(), "logs/");
+            if (!Directory.Exists(dirPath))
+            {
+                return;
+            }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Process.Start("explorer", dirPath);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                using Process dbusShowItemsProcess = new();
+                dbusShowItemsProcess.StartInfo = new ProcessStartInfo
+                {
+                    FileName = "dbus-send",
+                    Arguments = $"--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://{dirPath}\" string:\"\"",
+                    UseShellExecute = true
+                };
+                dbusShowItemsProcess.Start();
+                await dbusShowItemsProcess.WaitForExitAsync();
+                if (dbusShowItemsProcess.ExitCode != 0)
+                {
+                    Log.E("UI.MainPages.AboutPage", "Unable to open data directory.");
+                }
+            }
+        }
+        catch (Exception)
+        {
+            Log.E("UI.MainPages.AboutPage", "Error opening data directory.");
+        }
+    }
 }

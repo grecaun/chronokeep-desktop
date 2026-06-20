@@ -93,7 +93,6 @@ public partial class ImportFileWindow : ChronokeepWindow
     private List<Participant> existingParticipants = [];
     private List<Participant> importParticipants = [];
     private readonly List<Participant> updatedParticipants = [];
-    private readonly List<Participant> existingToRemoveParticipants = [];
 
     private ImportFileWindow(IMainWindow? window, IDataImporter importer, IdbInterface database)
     {
@@ -180,7 +179,6 @@ public partial class ImportFileWindow : ChronokeepWindow
                 lastAgeGroup[g.DistanceId] = group;
             }
 
-            HashSet<Participant> multiples = [];
             await Task.Run(() =>
             {
                 ImportData data = importer.Data!;
@@ -333,7 +331,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                 }
                 // Check import participants for multiples.
                 existingParticipants = database.GetParticipants(theEvent.Identifier);
-                HashSet<Participant> duplicatesImport = [];
+                HashSet<Participant> duplicates = [];
                 for (int inner = 0; inner < importParticipants.Count; inner++)
                 {
                     // Check against others imported
@@ -345,12 +343,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                         if (importParticipants[inner].Bib == importParticipants[outer].Bib
                             && importParticipants[inner].Distance.Equals(importParticipants[outer].Distance, StringComparison.OrdinalIgnoreCase))
                         {
-                            duplicatesImport.Add(importParticipants[inner]);
-                        }
-                        else
-                        {
-                            multiples.Add(importParticipants[inner]);
-                            multiples.Add(importParticipants[outer]);
+                            duplicates.Add(importParticipants[inner]);
                         }
                     }
                     // Check against everyone currently in the database.
@@ -362,166 +355,54 @@ public partial class ImportFileWindow : ChronokeepWindow
                             && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
                         {
                             // bib remains the same or isn't set in new import
-                            duplicatesImport.Add(importParticipants[inner]);
+                            duplicates.Add(importParticipants[inner]);
                         }
                         else if (importParticipants[inner].Bib.Length > 0 && part.Bib.Length < 1
                             && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
                         {
                             // bib is an update, add to duplicates so we don't add it again,
                             // then add to list of participants to update
-                            duplicatesImport.Add(importParticipants[inner]);
+                            duplicates.Add(importParticipants[inner]);
                             updatedParticipants.Add(importParticipants[inner]);
-                        }
-                        else
-                        {
-                            multiples.Add(importParticipants[inner]);
-                            multiples.Add(part);
                         }
                     }
                 }
-                // Remove anyone that was deemed a duplicate
-                // This can happen if there was an X, Y, and Z in the import where X and Y are duplicates
-                // but Z is the same person with diff bib/distance.
-                // This can also happen if there are X and Z in the import but Y in the database,
-                // where the situation is as above
-                foreach (Participant dup in duplicatesImport)
-                {
-                    multiples.Remove(dup);
-                }
                 // remove all duplicates from the import
-                importParticipants.RemoveAll(duplicatesImport.Contains);
+                importParticipants.RemoveAll(duplicates.Contains);
             });
-            // if we have multiples to mess around with display the page
-            if (multiples.Count > 0)
+            try
             {
-                page = new ImportFilePageConflicts([.. multiples], theEvent);
-                Frame.Content = page;
-                Done.IsEnabled = true;
-                Cancel.IsEnabled = true;
+                await Task.Run(() =>
+                {
+                    Log.D("ImportFileWindow", "Updating participants.");
+                    foreach (Participant p in updatedParticipants)
+                    {
+                        p.Trim();
+                        p.FormatData();
+                    }
+                    database.UpdateParticipants(updatedParticipants);
+                    Log.D("ImportFileWindow", "Adding new participants.");
+                    foreach (Participant p in importParticipants)
+                    {
+                        p.Trim();
+                        p.FormatData();
+                    }
+                    database.AddParticipants(importParticipants);
+                });
+                Log.D("ImportFileWindow", "All done with the import.");
+                database.ResetTimingResultsEvent(theEvent!.Identifier);
+                window?.NetworkClearResults();
+                window?.NotifyTimingWorker();
+                Close();
             }
-            // otherwise process the multiples (none)
-            else
+            catch (Exception)
             {
-                ProcessMultiplesToRemove([]);
+                Log.E("IO.ImportFileWindow", "Error processing bib conflicts.");
             }
         }
         catch (Exception)
         {
             Log.E("IO.ImportFileWindow", "Error importing.");
-        }
-    }
-
-    private async void ProcessMultiplesToRemove(List<Participant> toRemove)
-    {
-        try
-        {
-            List<Participant> conflicts = [];
-            await Task.Run(() =>
-            {
-                Dictionary<string, HashSet<Participant>> bibConflictsDict = [];
-                Dictionary<string, Participant> existingParticipantsDict = [];
-                // keep track of who we need to tell the database to remove
-                existingToRemoveParticipants.AddRange(toRemove);
-                existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
-                // Remove those we didn't select to keep from our lists.
-                existingParticipants.RemoveAll(toRemove.Contains);
-                importParticipants.RemoveAll(toRemove.Contains);
-                foreach (Participant existing in existingParticipants)
-                {
-                    existingParticipantsDict[existing.Bib] = existing;
-                }
-                foreach (Participant import in importParticipants)
-                {
-                    import.FormatData();
-                    // this is checking for bib repeats, so check if we're actually checking a specified bib
-                    if (import.Bib.Length <= 0 || !existingParticipantsDict.TryGetValue(import.Bib, out Participant? part)) continue;
-                    part.FormatData();
-                    if (part.Is(import)) continue;
-                    Log.D("ImportFileWindow",
-                        string.Format("We've found \n'{0}' '{1}' '{5}' '{7}' '{9}'\n'{2}' '{3}' '{6}' '{8}' '{10}'\nfor bib '{4}'",
-                            import.FirstName,
-                            import.LastName,
-                            existingParticipantsDict[import.Bib].FirstName,
-                            existingParticipantsDict[import.Bib].LastName,
-                            import.Bib,
-                            import.Street,
-                            existingParticipantsDict[import.Bib].Street,
-                            import.Zip,
-                            existingParticipantsDict[import.Bib].Zip,
-                            import.Birthdate,
-                            existingParticipantsDict[import.Bib].Birthdate
-                        ));
-                    if (!bibConflictsDict.TryGetValue(import.Bib, out HashSet<Participant>? bibConflictSet))
-                    {
-                        bibConflictSet = [];
-                        bibConflictsDict[import.Bib] = bibConflictSet;
-                    }
-                    bibConflictSet.Add(import);
-                    bibConflictSet.Add(existingParticipantsDict[import.Bib]);
-                }
-                foreach (string bib in bibConflictsDict.Keys)
-                {
-                    conflicts.AddRange(bibConflictsDict[bib]);
-                }
-            });
-            // if we have multiples to mess around with display the page
-            if (conflicts.Count > 0)
-            {
-                page = new ImportFilePageConflicts(conflicts, theEvent!);
-                Frame.Content = page;
-                Done.IsEnabled = true;
-                Cancel.IsEnabled = true;
-            }
-            // otherwise process the multiples (none)
-            else
-            {
-                ProcessBibConflicts([]);
-            }
-        }
-        catch (Exception)
-        {
-            Log.E("IO.ImportFileWindow", "Error processing multiples.");
-        }
-    }
-
-    private async void ProcessBibConflicts(List<Participant> toRemove)
-    {
-        try
-        {
-            await Task.Run(() =>
-            {
-                // keep track of who we need to tell the database to get rid of
-                existingToRemoveParticipants.AddRange(toRemove);
-                existingToRemoveParticipants.RemoveAll(x => importParticipants.Contains(x));
-                // Remove those we didn't select to keep from our import list
-                // no need to remove from the existing because we're not re-adding those
-                importParticipants.RemoveAll(toRemove.Contains);
-                Log.D("ImportFileWindow", "Removing old participants we were told to.");
-                database.RemoveParticipantEntries(existingToRemoveParticipants);
-                Log.D("ImportFileWindow", "Updating participants.");
-                foreach (Participant p in updatedParticipants)
-                {
-                    p.Trim();
-                    p.FormatData();
-                }
-                database.UpdateParticipants(updatedParticipants);
-                Log.D("ImportFileWindow", "Adding new participants.");
-                foreach (Participant p in importParticipants)
-                {
-                    p.Trim();
-                    p.FormatData();
-                }
-                database.AddParticipants(importParticipants);
-            });
-            Log.D("ImportFileWindow", "All done with the import.");
-            database.ResetTimingResultsEvent(theEvent!.Identifier);
-            window?.NetworkClearResults();
-            window?.NotifyTimingWorker();
-            Close();
-        }
-        catch (Exception)
-        {
-            Log.E("IO.ImportFileWindow", "Error processing bib conflicts.");
         }
     }
 
@@ -715,7 +596,6 @@ public partial class ImportFileWindow : ChronokeepWindow
         switch (page)
         {
             case ImportFilePage1 page1:
-            {
                 List<string> repeats = page1.RepeatHeaders();
                 List<string> requiredNotFound = page1.RequiredNotFound();
                 if (repeats.Count > 0)
@@ -751,31 +631,14 @@ public partial class ImportFileWindow : ChronokeepWindow
                         Close();
                     }
                 }
-
                 break;
-            }
             case ImportFilePage2Alt page2:
                 Log.D("ImportFileWindow", "Importing participants.");
                 ImportWork(page2.GetDistances());
                 break;
-            case ImportFilePageConflicts multiplesPage:
-                Log.D("ImportFileWindow", "Processing multiples to keep/remove.");
-                ProcessMultiplesToRemove(multiplesPage.GetParticipantsToRemove());
-                break;
             default:
-            {
-                if (page is ImportFilePageConflicts bibConflictsPage)
-                {
-                    Log.D("ImportFileWindow", "Processing bib conflicts to remove.");
-                    ProcessBibConflicts(bibConflictsPage.GetParticipantsToRemove());
-                }
-                else
-                {
-                    Log.D("ImportFileWindow", "Abort! Abort! Something went terribly wrong.");
-                }
-
+                Log.D("ImportFileWindow", "Abort! Abort! Something went terribly wrong.");
                 break;
-            }
         }
         Done.IsEnabled = true;
         Cancel.IsEnabled = true;
