@@ -59,17 +59,11 @@ public partial class DistanceStatsPage : UserControl, ISubPage
 
     public void Closing() { }
 
-    public void EditSelected() { }
-
     public void KeyboardCtrlA() { }
 
     public void KeyboardCtrlS() { }
 
     public void KeyboardCtrlZ() { }
-
-    public void Show(PeopleType type) { }
-
-    public void SortBy(SortType type) { }
 
     public void UpdateView()
     {
@@ -168,10 +162,6 @@ public partial class DistanceStatsPage : UserControl, ISubPage
             FinishedPanel.IsVisible = false;
         }
     }
-
-    public void Location(string location) { }
-
-    public void Reader() { }
 
     private void ListView_MouseDoubleClick(object? sender, TappedEventArgs e)
     {

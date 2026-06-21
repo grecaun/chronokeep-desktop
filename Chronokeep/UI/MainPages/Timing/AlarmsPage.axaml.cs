@@ -36,14 +36,6 @@ public partial class AlarmsPage : UserControl, ISubPage
 
     public void Search(CancellationToken token) { }
 
-    public void Show(PeopleType type) { }
-
-    public void SortBy(SortType type) { }
-
-    public void Location(string location) { }
-
-    public void EditSelected() { }
-
     public void UpdateView() { }
 
     public void UpdateAlarms()
@@ -155,8 +147,6 @@ public partial class AlarmsPage : UserControl, ISubPage
         }
         return false;
     }
-
-    public void Reader() { }
 
     private void DoneButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {

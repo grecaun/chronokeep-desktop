@@ -6,11 +6,6 @@ namespace Chronokeep.Interfaces.UI
     {
         void CancelableUpdateView(CancellationToken token);
         void Search(CancellationToken token);
-        void Show(PeopleType type);
-        void SortBy(SortType type);
-        void Location(string location);
-        void Reader();
-        void EditSelected();
     }
 
     public enum PeopleType { KNOWN, ALL, STARTS, FINISHES, DEFAULT, UNKNOWN, UNKNOWN_FINISHES, UNKNOWN_STARTS }

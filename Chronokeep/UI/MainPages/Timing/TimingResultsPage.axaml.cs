@@ -3,8 +3,10 @@ using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
+using Chronokeep.UI.Participants;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +19,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
     private readonly IdbInterface database;
     private readonly Event? theEvent;
 
-    private readonly List<TimeResult> results = [];
+    private readonly ObservableCollection<TimeResult> results = [];
 
     public TimingResultsPage(TimingPage parent, IdbInterface database)
     {
@@ -29,16 +31,23 @@ public partial class TimingResultsPage : UserControl, ISubPage
         {
             Database.SQLite.Results.GetStaticVariables(database);
         }
-        if (theEvent is { EventType: Constants.Timing.EVENT_TYPE_TIME })
+        if (theEvent is { EventType: Constants.Timing.EVENT_TYPE_TIME or Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA })
         {
-            UpdateListView.Columns[4].Header = "Lap Time";
+            ChipTimeHeader.Text = "Lap Time";
         }
+        if (theEvent!.DisplayPlacements)
+        {
+            DisplayPlacements();
+        }
+        else
+        {
+            HidePlacements();
+        }
+        UpdateListView.ItemsSource = results;
         UpdateView();
     }
 
     public void Closing() { }
-
-    public void EditSelected() { }
 
     public void KeyboardCtrlA() { }
 
@@ -65,16 +74,16 @@ public partial class TimingResultsPage : UserControl, ISubPage
                 newResults.RemoveAll(TimeResult.IsKnown);
                 break;
             case PeopleType.UNKNOWN_FINISHES when Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType:
-            {
-                Log.D("UI.Timing.TimingResultsPage", "Time based event.");
-                Dictionary<int, TimeResult> validResults = [];
-                foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
                 {
-                    validResults[result.EventSpecificId] = result;
+                    Log.D("UI.Timing.TimingResultsPage", "Time based event.");
+                    Dictionary<int, TimeResult> validResults = [];
+                    foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
+                    {
+                        validResults[result.EventSpecificId] = result;
+                    }
+                    newResults.RemoveAll(x => !validResults.ContainsValue(x) && TimeResult.IsKnown(x));
+                    break;
                 }
-                newResults.RemoveAll(x => !validResults.ContainsValue(x) && TimeResult.IsKnown(x));
-                break;
-            }
             case PeopleType.UNKNOWN_FINISHES:
                 newResults.RemoveAll(TimeResult.IsNotFinishOrKnown);
                 break;
@@ -82,16 +91,16 @@ public partial class TimingResultsPage : UserControl, ISubPage
                 newResults.RemoveAll(TimeResult.IsNotStartOrKnown);
                 break;
             case PeopleType.FINISHES when Constants.Timing.EVENT_TYPE_TIME == theEvent!.EventType:
-            {
-                Log.D("UI.Timing.TimingResultsPage", "Time based event.");
-                Dictionary<int, TimeResult> validResults = [];
-                foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
                 {
-                    validResults[result.EventSpecificId] = result;
+                    Log.D("UI.Timing.TimingResultsPage", "Time based event.");
+                    Dictionary<int, TimeResult> validResults = [];
+                    foreach (TimeResult result in newResults.Where(result => Constants.Timing.TIMERESULT_DUMMYPERSON != result.EventSpecificId))
+                    {
+                        validResults[result.EventSpecificId] = result;
+                    }
+                    newResults.RemoveAll(x => !validResults.ContainsValue(x));
+                    break;
                 }
-                newResults.RemoveAll(x => !validResults.ContainsValue(x));
-                break;
-            }
             case PeopleType.FINISHES:
                 newResults.RemoveAll(TimeResult.IsNotFinish);
                 break;
@@ -135,60 +144,6 @@ public partial class TimingResultsPage : UserControl, ISubPage
         }
     }
 
-    public async void SortBy(SortType sortType)
-    {
-        try
-        {
-            List<TimeResult> newResults = [.. results];
-            PeopleType peopleType = parent.GetPeopleType();
-            string search = parent.GetSearchValue();
-            string location = parent.GetLocation();
-            await Task.Run(() =>
-            {
-                Customize(sortType, peopleType, newResults, search, location);
-            });
-            UpdateListView.ItemsSource = newResults;
-            if (newResults.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    UpdateListView.ScrollIntoView(newResults[^1], null);
-                });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingResultsPage", "Error sorting.");
-        }
-    }
-
-    public async void Location(string location)
-    {
-        try
-        {
-            List<TimeResult> newResults = [.. results];
-            PeopleType peopleType = parent.GetPeopleType();
-            SortType sortType = parent.GetSortType();
-            string search = parent.GetSearchValue();
-            await Task.Run(() =>
-            {
-                Customize(sortType, peopleType, newResults, search, location);
-            });
-            UpdateListView.ItemsSource = newResults;
-            if (newResults.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    UpdateListView.ScrollIntoView(newResults[^1], null);
-                });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingResultsPage", "Error customizing based on location.");
-        }
-    }
-
     public async void UpdateView()
     {
         try
@@ -202,27 +157,21 @@ public partial class TimingResultsPage : UserControl, ISubPage
             {
                 newResults = database.GetTimingResults(theEvent!.Identifier);
             });
-            results.Clear();
-            results.AddRange(newResults);
             await Task.Run(() =>
             {
                 Customize(sortType, peopleType, newResults, search, location);
             });
-            UpdateListView.ItemsSource = newResults;
+            results.Clear();
+            foreach (TimeResult timeResult in newResults)
+            {
+                results.Add(timeResult);
+            }
             if (newResults.Count > 0)
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    UpdateListView.ScrollIntoView(newResults[^1], null);
+                    UpdateListView.ScrollIntoView(results.Count - 1);
                 });
-            }
-            if (theEvent!.DisplayPlacements)
-            {
-                DisplayPlacements();
-            }
-            else
-            {
-                HidePlacements();
             }
         }
         catch (Exception)
@@ -233,18 +182,18 @@ public partial class TimingResultsPage : UserControl, ISubPage
 
     private void DisplayPlacements()
     {
-        UpdateListView.Columns[7].IsVisible = true;
-        UpdateListView.Columns[9].IsVisible = true;
-        UpdateListView.Columns[11].IsVisible = true;
-        UpdateListView.Columns[13].IsVisible = true;
+        //UpdateListView.Columns[7].IsVisible = true;
+        //UpdateListView.Columns[9].IsVisible = true;
+        //UpdateListView.Columns[11].IsVisible = true;
+        //UpdateListView.Columns[13].IsVisible = true;
     }
 
     private void HidePlacements()
     {
-        UpdateListView.Columns[7].IsVisible = false;
-        UpdateListView.Columns[9].IsVisible = false;
-        UpdateListView.Columns[11].IsVisible = false;
-        UpdateListView.Columns[13].IsVisible = false;
+        //UpdateListView.Columns[7].IsVisible = false;
+        //UpdateListView.Columns[9].IsVisible = false;
+        //UpdateListView.Columns[11].IsVisible = false;
+        //UpdateListView.Columns[13].IsVisible = false;
     }
 
     public void CancelableUpdateView(CancellationToken token)
@@ -259,32 +208,11 @@ public partial class TimingResultsPage : UserControl, ISubPage
         UpdateView();
     }
 
-    public async void Show(PeopleType peopleType)
+    private void UpdateListView_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
-        try
-        {
-            List<TimeResult> newResults = [.. results];
-            SortType sortType = parent.GetSortType();
-            string search = parent.GetSearchValue();
-            string location = parent.GetLocation();
-            await Task.Run(() =>
-            {
-                Customize(sortType, peopleType, newResults, search, location);
-            });
-            UpdateListView.ItemsSource = newResults;
-            if (newResults.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    UpdateListView.ScrollIntoView(newResults[^1], null);
-                });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingResultsPage", "Error limiting view.");
-        }
+        if (UpdateListView.SelectedItem == null) return;
+        TimeResult selected = (TimeResult)UpdateListView.SelectedItem;
+        ModifyParticipantWindow modifyParticipant = new(parent, database, selected.EventSpecificId, selected.Bib);
+        modifyParticipant.Show();
     }
-
-    public void Reader() { }
 }

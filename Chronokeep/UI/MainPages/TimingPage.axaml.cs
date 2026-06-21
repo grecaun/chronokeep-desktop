@@ -1018,36 +1018,33 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             return;
         }
-        switch (((ComboBoxItem)ViewOnlyBox.SelectedItem!).Content)
+        cts = null;
+        cts = new CancellationTokenSource();
+        try
         {
-            case "Show Only Unknown":
-                subPage.Show(PeopleType.UNKNOWN);
-                break;
-            case "Show All":
-                subPage.Show(PeopleType.ALL);
-                break;
-            case "Show Only Starts":
-                subPage.Show(PeopleType.STARTS);
-                break;
-            case "Show Only Finishes":
-                subPage.Show(PeopleType.FINISHES);
-                break;
-            case "Show Only Unknown Finishes":
-                subPage.Show(PeopleType.UNKNOWN_FINISHES);
-                break;
-            case "Show Only Unknown Starts":
-                subPage.Show(PeopleType.UNKNOWN_STARTS);
-                break;
-            default:
-                subPage.Show(PeopleType.KNOWN);
-                break;
+            subPage!.Search(cts.Token);
+            cts = null;
+        }
+        catch
+        {
+            Log.D("UI.MainPages.TimingPage", "Update cancelled.");
         }
     }
 
     private void ReaderSelectionBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (!loaded) { return; }
-        subPage?.Reader();
+        cts = null;
+        cts = new CancellationTokenSource();
+        try
+        {
+            subPage!.Search(cts.Token);
+            cts = null;
+        }
+        catch
+        {
+            Log.D("UI.MainPages.TimingPage", "Update cancelled.");
+        }
     }
 
     private void LocationBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -1057,14 +1054,33 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             return;
         }
-        ComboBoxItem locItem = (ComboBoxItem)LocationBox.SelectedItem!;
-        subPage.Location(locItem.Content!.ToString()!);
+        cts = null;
+        cts = new CancellationTokenSource();
+        try
+        {
+            subPage!.Search(cts.Token);
+            cts = null;
+        }
+        catch
+        {
+            Log.D("UI.MainPages.TimingPage", "Update cancelled.");
+        }
     }
 
     private void SortBy_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (!loaded) { return; }
-        subPage?.SortBy(GetSortType());
+        cts = null;
+        cts = new CancellationTokenSource();
+        try
+        {
+            subPage!.Search(cts.Token);
+            cts = null;
+        }
+        catch
+        {
+            Log.D("UI.MainPages.TimingPage", "Update cancelled.");
+        }
     }
 
     private void StatsListView_MouseDoubleClick(object? sender, TappedEventArgs e)

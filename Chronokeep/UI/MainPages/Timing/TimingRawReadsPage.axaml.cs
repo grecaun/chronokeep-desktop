@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Chronokeep.UI.MainPages.Timing;
 
@@ -80,11 +79,11 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         bool manualOnly = OnlyManualBox.IsChecked == true;
         bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
         SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-        UpdateListView.SelectedItems.Clear();
+        UpdateListView.SelectedItems?.Clear();
         UpdateListView.ItemsSource = reads;
         if (reads.Count > 0)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads.Count - 1); });
         }
     }
 
@@ -106,11 +105,11 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         bool manualOnly = OnlyManualBox.IsChecked == true;
         bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
         SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-        UpdateListView.SelectedItems.Clear();
+        UpdateListView.SelectedItems?.Clear();
         UpdateListView.ItemsSource = reads;
         if (reads.Count > 0)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads.Count - 1); });
         }
     }
 
@@ -123,8 +122,6 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     public void KeyboardCtrlS() { }
 
     public void KeyboardCtrlZ() { }
-
-    public void EditSelected() { }
 
     private static void SortWorker(
         List<ChipRead> reads,
@@ -172,146 +169,31 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
         }
     }
 
-    public async void Show(PeopleType peopleType)
-    {
-        try
-        {
-            List<ChipRead> reads = [.. chipReads];
-            string search = parent.GetSearchValue();
-            string location = parent.GetLocation();
-            string readerName = parent.GetReader();
-            SortType sortType = parent.GetSortType();
-            bool manualOnly = OnlyManualBox.IsChecked == true;
-            bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-            await Task.Run(() =>
-            {
-                SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-            });
-            UpdateListView.SelectedItems.Clear();
-            UpdateListView.ItemsSource = reads;
-            if (reads.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingRawReadsPage", "Error limiting view.");
-        }
-    }
-
-    public async void SortBy(SortType sortType)
-    {
-        try
-        {
-            List<ChipRead> reads = [.. chipReads];
-            string search = parent.GetSearchValue();
-            string location = parent.GetLocation();
-            string readerName = parent.GetReader();
-            PeopleType peopleType = parent.GetPeopleType();
-            bool manualOnly = OnlyManualBox.IsChecked == true;
-            bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-            await Task.Run(() =>
-            {
-                SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-            });
-            UpdateListView.SelectedItems.Clear();
-            UpdateListView.ItemsSource = reads;
-            if (reads.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingRawReadsPage", "Error sorting.");
-        }
-    }
-
-    public async void Location(string location)
-    {
-        try
-        {
-            List<ChipRead> reads = [.. chipReads];
-            PeopleType peopleType = parent.GetPeopleType();
-            SortType sortType = parent.GetSortType();
-            string search = parent.GetSearchValue();
-            string readerName = parent.GetReader();
-            bool manualOnly = OnlyManualBox.IsChecked == true;
-            bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-            await Task.Run(() =>
-            {
-                SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-            });
-            UpdateListView.SelectedItems.Clear();
-            UpdateListView.ItemsSource = reads;
-            if (reads.Count > 0)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
-            }
-        }
-        catch (Exception)
-        {
-            Log.D("UI.Timing.TimingRawReadsPage", "Error .");
-        }
-    }
-
-    public void Reader()
-    {
-        List<ChipRead> reads = [.. chipReads];
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        string readerName = parent.GetReader();
-        SortType sortType = parent.GetSortType();
-        PeopleType peopleType = parent.GetPeopleType();
-        bool manualOnly = OnlyManualBox.IsChecked == true;
-        bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-        SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-        UpdateListView.SelectedItems.Clear();
-        UpdateListView.ItemsSource = reads;
-        if (reads.Count > 0)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
-        }
-    }
-
     private void OnlyIgnoreBox_Unchecked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Manual entries only box checked status changed.");
-        List<ChipRead> reads = [.. chipReads];
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        string readerName = parent.GetReader();
-        SortType sortType = parent.GetSortType();
-        PeopleType peopleType = parent.GetPeopleType();
-        bool manualOnly = OnlyManualBox.IsChecked == true;
-        bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-        SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-        UpdateListView.SelectedItems.Clear();
-        UpdateListView.ItemsSource = reads;
-        if (reads.Count > 0)
+        switch (parent)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
+            case TimingPage:
+                PrivateUpdateView();
+                break;
+            case MinTimingPage:
+                SafeModeUpdateView();
+                break;
         }
     }
 
     private void OnlyManualBox_Unchecked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Manual entries only box checked status changed.");
-        List<ChipRead> reads = [.. chipReads];
-        string search = parent.GetSearchValue();
-        string location = parent.GetLocation();
-        string readerName = parent.GetReader();
-        SortType sortType = parent.GetSortType();
-        PeopleType peopleType = parent.GetPeopleType();
-        bool manualOnly = OnlyManualBox.IsChecked == true;
-        bool ignoredOnly = OnlyIgnoreBox.IsChecked == true;
-        SortWorker(reads, sortType, peopleType, search, manualOnly, location, ignoredOnly, readerName);
-        UpdateListView.SelectedItems.Clear();
-        UpdateListView.ItemsSource = reads;
-        if (reads.Count > 0)
+        switch (parent)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { UpdateListView.ScrollIntoView(reads[^1], null); });
+            case TimingPage:
+                PrivateUpdateView();
+                break;
+            case MinTimingPage:
+                SafeModeUpdateView();
+                break;
         }
     }
 
@@ -325,6 +207,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
             () =>
             {
                 List<ChipRead> readsToDelete = [];
+                if (UpdateListView.SelectedItems == null) return;
                 readsToDelete.AddRange(UpdateListView.SelectedItems.Cast<ChipRead>());
                 database.DeleteChipReads(readsToDelete);
                 database.ResetTimingResultsEvent(theEvent!.Identifier);
@@ -344,6 +227,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void IgnoreButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Ignore Button clicked.");
+        if (UpdateListView.SelectedItems == null) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -400,6 +284,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void ChangeDNS_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "ChangeDNS Button clicked.");
+        if (UpdateListView.SelectedItems == null) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -426,6 +311,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void ChangeDNF_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "ChangeDNF Button clicked.");
+        if (UpdateListView.SelectedItems == null) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -452,6 +338,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void Shift_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Shift button clicked.");
+        if (UpdateListView.SelectedItems == null) return;
         List<ChipRead> localReads = [];
         localReads.AddRange(UpdateListView.SelectedItems.Cast<ChipRead>());
         EditRawReadsWindow editRawReadsWindow = new(parent, database, localReads);
@@ -461,6 +348,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void GlobalIgnore_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Ignore Chip Button clicked.");
+        if (UpdateListView.SelectedItems == null) return;
         List<BibChipAssociation> bibChips = [];
         bibChips.AddRange(from ChipRead read in UpdateListView.SelectedItems select new BibChipAssociation() { Bib = read.ChipNumber, Chip = read.ChipNumber, });
         database.AddBibChipAssociation(-1, bibChips);

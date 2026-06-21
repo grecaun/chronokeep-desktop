@@ -296,14 +296,6 @@ public partial class PrintPage : UserControl, ISubPage
         return output.TransformText();
     }
 
-    public void Show(PeopleType type) { }
-
-    public void SortBy(SortType type) { }
-
-    public void Location(string location) { }
-
-    public void EditSelected() { }
-
     public void Closing() { }
 
     public void KeyboardCtrlA() { }
@@ -311,8 +303,6 @@ public partial class PrintPage : UserControl, ISubPage
     public void KeyboardCtrlS() { }
 
     public void KeyboardCtrlZ() { }
-
-    public void Reader() { }
 
     private async void Save_Click(object? sender, RoutedEventArgs e)
     {

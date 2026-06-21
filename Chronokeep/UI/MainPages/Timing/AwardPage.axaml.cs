@@ -327,14 +327,6 @@ public partial class AwardPage : UserControl, ISubPage
 
     public void Search(CancellationToken token) { }
 
-    public void Show(PeopleType type) { }
-
-    public void SortBy(SortType type) { }
-
-    public void Location(string location) { }
-
-    public void EditSelected() { }
-
     public void UpdateView()
     {
         customAgeGroups.Clear();
@@ -351,8 +343,6 @@ public partial class AwardPage : UserControl, ISubPage
     public void KeyboardCtrlS() { }
 
     public void KeyboardCtrlZ() { }
-
-    public void Reader() { }
 
     private void AddCustom_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
