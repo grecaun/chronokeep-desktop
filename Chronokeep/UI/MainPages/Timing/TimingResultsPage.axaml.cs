@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -35,11 +36,7 @@ public partial class TimingResultsPage : UserControl, ISubPage
         {
             ChipTimeHeader.Text = "Lap Time";
         }
-        if (theEvent!.DisplayPlacements)
-        {
-            DisplayPlacements();
-        }
-        else
+        if (!theEvent!.DisplayPlacements)
         {
             HidePlacements();
         }
@@ -180,20 +177,12 @@ public partial class TimingResultsPage : UserControl, ISubPage
         }
     }
 
-    private void DisplayPlacements()
-    {
-        //UpdateListView.Columns[7].IsVisible = true;
-        //UpdateListView.Columns[9].IsVisible = true;
-        //UpdateListView.Columns[11].IsVisible = true;
-        //UpdateListView.Columns[13].IsVisible = true;
-    }
-
     private void HidePlacements()
     {
-        //UpdateListView.Columns[7].IsVisible = false;
-        //UpdateListView.Columns[9].IsVisible = false;
-        //UpdateListView.Columns[11].IsVisible = false;
-        //UpdateListView.Columns[13].IsVisible = false;
+        PlaceHeader.IsVisible = false;
+        GenderPlaceHeader.IsVisible = false;
+        AgePlaceHeader.IsVisible = false;
+        DivisionPlaceHeader.IsVisible = false;
     }
 
     public void CancelableUpdateView(CancellationToken token)

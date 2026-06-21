@@ -19,7 +19,7 @@
             <Setter Property="Background" Value="{DynamicResource LightPrimaryColor}"/>
         </Style>
     </UserControl.Styles>
-    <ScrollViewer VerticalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
+    <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto">
 	    <Grid RowDefinitions="28,*">
             <ListBox
                 x:Name="UpdateListView"
@@ -28,7 +28,7 @@
                 SelectionMode="Single"
                 FontSize="12"
                 DoubleTapped="UpdateListView_DoubleTapped"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                 Grid.Row="1"
                 Margin="0,0,0,0"
                 >
@@ -75,51 +75,44 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <ScrollViewer
-                Grid.Row="0"
-                Margin="0,0,0,0"
-                HorizontalScrollBarVisibility="Hidden"
-                VerticalScrollBarVisibility="Disabled"
-                >
-                <Grid Margin="7,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="90"/>  <!-- Location -->
-                        <ColumnDefinition Width="32"/>  <!-- Occurence -->
-                        <ColumnDefinition Width="140"/> <!-- System Time -->
-                        <ColumnDefinition Width="90"/>  <!-- Time -->
-                        <ColumnDefinition Width="90"/>  <!-- Chip Time -->
-                        <ColumnDefinition Width="50"/>  <!-- Bib -->
-                        <ColumnDefinition Width="130"/> <!-- Name -->
-                        <ColumnDefinition Width="40"/>  <!-- Place -->
-                        <ColumnDefinition Width="25"/>  <!-- Gender -->
-                        <ColumnDefinition Width="40"/>  <!-- Gender Place -->
-                        <ColumnDefinition Width="60"/>  <!-- Age Group -->
-                        <ColumnDefinition Width="40"/>  <!-- Age Group Place -->
-                        <ColumnDefinition Width="80"/>  <!-- Division -->
-                        <ColumnDefinition Width="40"/>  <!-- Division Place -->
-                        <ColumnDefinition Width="110"/> <!-- Distance -->
-                        <ColumnDefinition Width="20"/>  <!-- Type -->
-                        <ColumnDefinition Width="120"/> <!-- Segment -->
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Margin="4" Text="Loc"/>
-                    <TextBlock Grid.Column="1" Margin="4" Text="Occ"/>
-                    <TextBlock Grid.Column="2" Margin="4" Text="System Time"/>
-                    <TextBlock Grid.Column="3" Margin="4" Text="Time"/>
-                    <TextBlock Grid.Column="4" Margin="4" Text="Chip Time" x:Name="ChipTimeHeader"/>
-                    <TextBlock Grid.Column="5" Margin="4" Text="Bib"/>
-                    <TextBlock Grid.Column="6" Margin="4" Text="Name"/>
-                    <TextBlock Grid.Column="7" Margin="4" Text="Pl" x:Name="placeText"/>
-                    <TextBlock Grid.Column="8" Margin="4" Text="G"/>
-                    <TextBlock Grid.Column="9" Margin="4" Text="GP" x:Name="genderPlaceText"/>
-                    <TextBlock Grid.Column="10" Margin="4" Text="Age Grp"/>
-                    <TextBlock Grid.Column="11" Margin="4" Text="AP" x:Name="agePlaceText"/>
-                    <TextBlock Grid.Column="12" Margin="4" Text="Division" x:Name="divisionText"/>
-                    <TextBlock Grid.Column="13" Margin="4" Text="DP" x:Name="divisionPlaceText"/>
-                    <TextBlock Grid.Column="14" Margin="4" Text="Distance"/>
-                    <TextBlock Grid.Column="15" Margin="4" Text="T"/>
-                    <TextBlock Grid.Column="16" Margin="4" Text="Segment"/>
-                </Grid>
-            </ScrollViewer>
+            <Grid Name="HeaderPanel" Margin="0" Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>  <!-- Location -->
+                    <ColumnDefinition Width="32"/>  <!-- Occurence -->
+                    <ColumnDefinition Width="140"/> <!-- System Time -->
+                    <ColumnDefinition Width="90"/>  <!-- Time -->
+                    <ColumnDefinition Width="90"/>  <!-- Chip Time -->
+                    <ColumnDefinition Width="50"/>  <!-- Bib -->
+                    <ColumnDefinition Width="130"/> <!-- Name -->
+                    <ColumnDefinition Width="40"/>  <!-- Place -->
+                    <ColumnDefinition Width="25"/>  <!-- Gender -->
+                    <ColumnDefinition Width="40"/>  <!-- Gender Place -->
+                    <ColumnDefinition Width="60"/>  <!-- Age Group -->
+                    <ColumnDefinition Width="40"/>  <!-- Age Group Place -->
+                    <ColumnDefinition Width="80"/>  <!-- Division -->
+                    <ColumnDefinition Width="40"/>  <!-- Division Place -->
+                    <ColumnDefinition Width="110"/> <!-- Distance -->
+                    <ColumnDefinition Width="20"/>  <!-- Type -->
+                    <ColumnDefinition Width="120"/> <!-- Segment -->
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Margin="4" Text="Loc"/>
+                <TextBlock Grid.Column="1" Margin="4" Text="Occ"/>
+                <TextBlock Grid.Column="2" Margin="4" Text="System Time"/>
+                <TextBlock Grid.Column="3" Margin="4" Text="Time"/>
+                <TextBlock Grid.Column="4" Margin="4" Text="Chip Time" Name="ChipTimeHeader"/>
+                <TextBlock Grid.Column="5" Margin="4" Text="Bib"/>
+                <TextBlock Grid.Column="6" Margin="4" Text="Name"/>
+                <TextBlock Grid.Column="7" Margin="4" Text="Pl" Name="PlaceHeader"/>
+                <TextBlock Grid.Column="8" Margin="4" Text="G"/>
+                <TextBlock Grid.Column="9" Margin="4" Text="GP" Name="GenderPlaceHeader"/>
+                <TextBlock Grid.Column="10" Margin="4" Text="Age Grp"/>
+                <TextBlock Grid.Column="11" Margin="4" Text="AP" Name="AgePlaceHeader"/>
+                <TextBlock Grid.Column="12" Margin="4" Text="Division"/>
+                <TextBlock Grid.Column="13" Margin="4" Text="DP" Name="DivisionPlaceHeader"/>
+                <TextBlock Grid.Column="14" Margin="4" Text="Distance"/>
+                <TextBlock Grid.Column="15" Margin="4" Text="T"/>
+                <TextBlock Grid.Column="16" Margin="4" Text="Segment"/>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

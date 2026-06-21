@@ -36,13 +36,13 @@
         </Style>
     </UserControl.Styles>
     <Grid RowDefinitions="*,50">
-        <ScrollViewer VerticalScrollBarVisibility="Disabled" VerticalAlignment="Stretch" Grid.Row="0">
+        <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto" Grid.Row="0">
 	        <Grid RowDefinitions="28,*">
                 <ListBox 
                     x:Name="UpdateListView"
                     SelectionMode="Multiple"
                     FontSize="12"
-                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     Grid.Row="1"
                     Margin="0,0,0,0"
@@ -74,7 +74,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Grid Margin="7,0" Grid.Row="0">
+                <Grid Margin="0" Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="80"/>  <!-- Box -->
                         <ColumnDefinition Width="80"/>  <!-- Location Name -->
