@@ -27,10 +27,6 @@
             <Setter Property="SelectionMode" Value="Extended"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
         </Style>
-        <Style Selector="DataGridRow">
-            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"/>
-        </Style>
     </UserControl.Styles>
     <Grid ColumnDefinitions="*,230">
         <Grid Grid.Column="1" RowDefinitions="5*,55,auto,2*,55">

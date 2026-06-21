@@ -123,6 +123,24 @@
             <Setter Property="TextAlignment" Value="Right"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
+		<Style Selector="DataGridRow:nth-child(2n+1)">
+            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+		</Style>
+		<Style Selector="DataGridRow:pointerover Border">
+            <Setter Property="Background" Value="{DynamicResource LightPrimaryColor}"/>
+            <Setter Property="Opacity" Value="1"/>
+		</Style>
+		<Style Selector="DataGridRow:focus Border">
+            <Setter Property="Background" Value="{DynamicResource LightPrimaryColor}"/>
+            <Setter Property="Opacity" Value="1"/>
+		</Style>
+        <Style Selector="DataGridRow:selected Border">
+            <Setter Property="Background" Value="{DynamicResource LightPrimaryColor}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="DataGridCell:selected Rectangle">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
     </Application.Styles>
     <Application.Resources>
         <ResourceDictionary>
