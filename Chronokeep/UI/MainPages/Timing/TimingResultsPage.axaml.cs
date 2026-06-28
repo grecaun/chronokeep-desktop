@@ -158,12 +158,13 @@ public partial class TimingResultsPage : UserControl, ISubPage
             {
                 Customize(sortType, peopleType, newResults, search, location);
             });
+            int oldCount = results.Count;
             results.Clear();
             foreach (TimeResult timeResult in newResults)
             {
                 results.Add(timeResult);
             }
-            if (newResults.Count > 0)
+            if (newResults.Count > 0 && newResults.Count > oldCount)
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
