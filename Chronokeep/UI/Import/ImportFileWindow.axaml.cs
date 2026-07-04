@@ -257,16 +257,9 @@ public partial class ImportFileWindow : ChronokeepWindow
                     int age;
                     if (keys[BIRTHDAY] == 0 && keys[AGE] != 0) // birthday not set but age is
                     {
-                        try
+                        if (int.TryParse(data.Data[counter][keys[AGE]], out age))
                         {
-                            if (int.TryParse(data.Data[counter][keys[AGE]], out age))
-                            {
-                                birthday = $"{thisYear - age,4}/01/01";
-                            }
-                        }
-                        catch
-                        {
-                            Log.E("IO.ImportFileWindow", "Error parsing age.");
+                            birthday = $"{thisYear - age,4}/01/01";
                         }
                     }
                     else if (keys[BIRTHDAY] != 0)
@@ -274,36 +267,36 @@ public partial class ImportFileWindow : ChronokeepWindow
                         birthday = data.Data[counter][keys[BIRTHDAY]]; // birthday
                     }
                     Participant output = new(
-                        data.Data[counter][keys[FIRST]], // First Name
-                        data.Data[counter][keys[LAST]], // Last Name
-                        data.Data[counter][keys[STREET]], // Street
-                        data.Data[counter][keys[CITY]], // City
-                        data.Data[counter][keys[STATE]], // State
-                        data.Data[counter][keys[ZIP]], // Zip
+                        data.Data[counter][keys[FIRST]] ?? "", // First Name
+                        data.Data[counter][keys[LAST]] ?? "", // Last Name
+                        data.Data[counter][keys[STREET]] ?? "", // Street
+                        data.Data[counter][keys[CITY]] ?? "", // City
+                        data.Data[counter][keys[STATE]] ?? ""   , // State
+                        data.Data[counter][keys[ZIP]] ?? "", // Zip
                         birthday, // Birthday
                         new EventSpecific(
                             theEvent.Identifier,
                             thisDiv.Identifier,
                             thisDiv.Name,
-                            data.Data[counter][keys[BIB]], // Bib number
+                            data.Data[counter][keys[BIB]] ?? "", // Bib number
                             0,                            // checked in
-                            data.Data[counter][keys[COMMENTS]], // comments
-                            data.Data[counter][keys[OWES]], // owes
-                            data.Data[counter][keys[OTHER]], // other
-                            data.Data[counter][keys[ANONYMOUS]].Trim().Length > 0, // Set Anonymous if anything is in the field
+                            data.Data[counter][keys[COMMENTS]] ?? "", // comments
+                            data.Data[counter][keys[OWES]] ?? "", // owes
+                            data.Data[counter][keys[OTHER]] ?? "", // other
+                            (data.Data[counter][keys[ANONYMOUS]] ?? "").Length > 0, // Set Anonymous if anything is in the field
                             false, // always false, this field is no longer used
-                            data.Data[counter][keys[APPAREL_ITEM]],
-                            data.Data[counter][keys[DIVISION]]
+                            data.Data[counter][keys[APPAREL_ITEM]] ?? "",
+                            data.Data[counter][keys[DIVISION]] ?? ""
                         ),
-                        data.Data[counter][keys[EMAIL]], // email
-                        data.Data[counter][keys[PHONE]], // phone
-                        data.Data[counter][keys[MOBILE]], // mobile
-                        data.Data[counter][keys[PARENT]], // parent
-                        data.Data[counter][keys[COUNTRY]], // country
-                        data.Data[counter][keys[STREET2]],  // street2
-                        data.Data[counter][keys[GENDER]],  // gender
-                        data.Data[counter][keys[EMERGENCY_NAME]], // Emergency Name
-                        data.Data[counter][keys[EMERGENCY_PHONE]]  // Emergency Phone
+                        data.Data[counter][keys[EMAIL]] ?? "", // email
+                        data.Data[counter][keys[PHONE]] ?? "", // phone
+                        data.Data[counter][keys[MOBILE]] ?? "", // mobile
+                        data.Data[counter][keys[PARENT]] ?? "", // parent
+                        data.Data[counter][keys[COUNTRY]] ?? "", // country
+                        data.Data[counter][keys[STREET2]] ?? "",  // street2
+                        data.Data[counter][keys[GENDER]] ?? "",  // gender
+                        data.Data[counter][keys[EMERGENCY_NAME]] ?? "", // Emergency Name
+                        data.Data[counter][keys[EMERGENCY_PHONE]] ?? ""  // Emergency Phone
                     );
                     int agDivId = theEvent.CommonAgeGroups ? Constants.Timing.COMMON_AGEGROUPS_DISTANCEID : output.EventSpecific.DistanceIdentifier;
                     age = output.GetAge(theEvent.Date);
@@ -334,18 +327,6 @@ public partial class ImportFileWindow : ChronokeepWindow
                 HashSet<Participant> duplicates = [];
                 for (int inner = 0; inner < importParticipants.Count; inner++)
                 {
-                    // Check against others imported
-                    for (int outer = inner + 1; outer < importParticipants.Count; outer++)
-                    {
-                        //Log.D("ImportFileWindow", string.Format("inner {1} outer {0}", outer, inner));
-                        if (!importParticipants[inner].Is(importParticipants[outer])) continue;
-                        // if they're a duplicate and not just a multiple
-                        if (importParticipants[inner].Bib == importParticipants[outer].Bib
-                            && importParticipants[inner].Distance.Equals(importParticipants[outer].Distance, StringComparison.OrdinalIgnoreCase))
-                        {
-                            duplicates.Add(importParticipants[inner]);
-                        }
-                    }
                     // Check against everyone currently in the database.
                     foreach (Participant part in existingParticipants.Where(part => importParticipants[inner].Is(part)))
                     {
@@ -395,14 +376,14 @@ public partial class ImportFileWindow : ChronokeepWindow
                 window?.NotifyTimingWorker();
                 Close();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log.E("IO.ImportFileWindow", "Error processing bib conflicts.");
+                Log.E("IO.ImportFileWindow", $"Error processing bib conflicts. ${e}");
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Log.E("IO.ImportFileWindow", "Error importing.");
+            Log.E("IO.ImportFileWindow", $"Error importing. ${e}");
         }
     }
 

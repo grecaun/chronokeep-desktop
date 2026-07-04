@@ -56,6 +56,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             int distanceId = DistanceBox.SelectedItem != null ? Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem).Tag) : -1;
             Log.D("PartPage", $"Distance ID is {distanceId}");
             List<Participant> newList = [];
+            List<Participant> allParts = [];
             await Task.Run(() =>
             {
                 allParticipants = database.GetParticipants(theEvent.Identifier);
@@ -96,9 +97,9 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             conflicts.Clear();
             HashSet<(int, int)> conflictParticipantIdentifiers = [];
-            foreach (Participant outer in newList)
+            foreach (Participant outer in allParticipants)
             {
-                foreach (Participant inner in newList)
+                foreach (Participant inner in allParticipants)
                 {
                     if (outer.Equals(inner)) continue;
                     // Check for bib conflicts

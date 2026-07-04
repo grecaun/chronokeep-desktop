@@ -1,5 +1,6 @@
 ﻿using Chronokeep.Helpers;
 using Chronokeep.Objects;
+using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -1616,8 +1617,38 @@ namespace Chronokeep.Database.SQLite
                             "name VARCHAR(100) NOT NULL DEFAULT '', " +
                             "url VARCHAR(100) NOT NULL DEFAULT '', " +
                             "enabled INTEGER NOT NULL DEFAULT 0, " +
-                            "UNIQUE(name) ON CONFLICT IGNORE, UNIQUE(url) ON CONFLICT IGNORE" +
+                            "UNIQUE(name) ON CONFLICT IGNORE, UNIQUE(url) ON CONFLICT IGNORE;" +
                             $"UPDATE settings SET value='72' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
+                        command.ExecuteNonQuery();
+                        goto case 72;
+                    case 72:
+                        Log.D("Database.SQLite.Update", "Upgrading from version 72.");
+                        command.CommandText = "ALTER TABLE eventspecific RENAME TO eventspecific_old;" +
+                            "CREATE TABLE IF NOT EXISTS eventspecific (" +
+                                "eventspecific_id INTEGER PRIMARY KEY," +
+                                "participant_id INTEGER NOT NULL REFERENCES participants(participant_id)," +
+                                "event_id INTEGER NOT NULL REFERENCES events(event_id)," +
+                                "distance_id INTEGER NOT NULL REFERENCES distances(distance_id)," +
+                                "eventspecific_bib VARCHAR," +
+                                "eventspecific_checkedin INTEGER DEFAULT 0," +
+                                "eventspecific_comments VARCHAR," +
+                                "eventspecific_owes VARCHAR(50)," +
+                                "eventspecific_other VARCHAR," +
+                                "eventspecific_registration_date VARCHAR NOT NULL DEFAULT ''," +
+                                $"eventspecific_status INT NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_UNKNOWN}," +
+                                $"eventspecific_age_group_id INT NOT NULL DEFAULT {Constants.Timing.TIMERESULT_DUMMYAGEGROUP}," +
+                                "eventspecific_age_group_name VARCHAR NOT NULL DEFAULT ''," +
+                                "eventspecific_anonymous SMALLINT NOT NULL DEFAULT 0," +
+                                "eventspecific_sms_enabled SMALLINT NOT NULL DEFAULT 0, " +
+                                "eventspecific_apparel VARCHAR NOT NULL DEFAULT '', " +
+                                "eventspecific_division VARCHAR NOT NULL DEFAULT '', " +
+                                $"eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
+                                $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION}, " +
+                                "UNIQUE (participant_id, event_id, distance_id, eventspecific_bib) ON CONFLICT REPLACE" +
+                                ");" +
+                            "INSERT INTO eventspecific SELECT * FROM eventspecific_old;" +
+                            "DROP TABLE eventspecific_old;" +
+                            $"UPDATE settings SET value='73' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         break;
                 }

@@ -168,7 +168,7 @@ namespace Chronokeep.Database.SQLite
                     "eventspecific_division VARCHAR NOT NULL DEFAULT '', " +
                     $"eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
                     $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION}, " +
-                    "UNIQUE (participant_id, event_id, distance_id) ON CONFLICT REPLACE" +
+                    "UNIQUE (participant_id, event_id, distance_id, eventspecific_bib) ON CONFLICT REPLACE" +
                     ");");
                 queries.Add("CREATE TABLE IF NOT EXISTS segments (" +
                     "segment_id INTEGER PRIMARY KEY," +
