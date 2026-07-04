@@ -8,7 +8,6 @@
         Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
         Title="AnnouncerWindow"
-        Topmost="True"
         Closing="Window_Closing"
         PropertyChanged="Window_PropertyChanged"
         Width="800"

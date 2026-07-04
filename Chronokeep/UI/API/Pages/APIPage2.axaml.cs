@@ -60,6 +60,10 @@ public partial class ApiPage2 : UserControl
                 EventList.SelectedItem = maybeEvent;
                 EventList.ScrollIntoView(maybeEvent);
             });
+            if (EventList.SelectedItem == null)
+            {
+                EventList.SelectedIndex = 0;
+            }
             NameBox.Text = theEvent.Name;
             SlugBox.Text = theEvent.Name.Replace(' ', '-').Replace("'", "").Replace("/", "").Replace("\\", "").ToLower();
             ContactBox.Text = database.GetAppSetting(Constants.Settings.CONTACT_EMAIL)!.Value;
@@ -113,6 +117,11 @@ public partial class ApiPage2 : UserControl
                 return;
             }
             string slug;
+            if (EventList.SelectedItem == null)
+            {
+                DialogBox.Show("Please select an event.");
+                return;
+            }
             if (((ApiEvent?)EventList.SelectedItem)?.Slug == null || ((ApiEvent)EventList.SelectedItem).Slug.Length < 1)
             {
                 try
