@@ -52,7 +52,6 @@ public partial class ManualEntryWindow : ChronokeepWindow
         }
         dnf = true;
         List<TimingLocation> locations = database.GetTimingLocations(theEvent.Identifier);
-        if (locations.Count <= 0) return;
         locations.Insert(0, new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin));
         UpdateLocations(locations);
     }
