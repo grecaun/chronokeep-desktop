@@ -21,6 +21,7 @@ using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -90,15 +91,33 @@ namespace Chronokeep.UI
             ChronokeepInitialize();
             MWindow = this;
 
-            // Check that no other instance of this program are running.
-            if (!OneWindow.WaitOne(TimeSpan.Zero, true))
-            {
-                DialogBox.Show("Chronokeep is already running.");
-                Close();
-                return;
-            }
-            OneWindow.ReleaseMutex();
 
+            // Check that no other instance of this program are running.
+            if (App.IsWindows)
+            {
+                if (!OneWindow.WaitOne(TimeSpan.Zero, true))
+                {
+                    DialogBox.Show("Chronokeep is already running.");
+                    Close();
+                    return;
+                }
+                OneWindow.ReleaseMutex();
+            }
+            else
+            {
+                Process[] processes = Process.GetProcesses();
+                Process currentProcess = Process.GetCurrentProcess();
+
+                foreach (Process proc in processes)
+                {
+                    if (currentProcess.ProcessName == proc.ProcessName && currentProcess.Id != proc.Id)
+                    {
+                        DialogBox.Show("Chronokeep is already running.");
+                        Close();
+                        return;
+                    }
+                }
+            }
             string dirPath = App.IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
                 : Path.Combine(Directory.GetCurrentDirectory(), "data");
