@@ -1651,6 +1651,15 @@ namespace Chronokeep.Database.SQLite
                             $"UPDATE settings SET value='73' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         break;
+                    case 73:
+                        Log.D("Database.SQLite.Update", "Upgrading from version 72.");
+                        command.CommandText = "UPDATE eventspecific SET eventspecific_bib='' WHERE eventspecific_bib='-1';" +
+                            "UPDATE chipreads SET read_chipnumber='' WHERE read_chipnumber='-1';" +
+                            "UPDATE chipreads SET read_bib='' WHERE read_bib='-1';" +
+                            $"UPDATE settings SET value='74' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
+                        command.ExecuteNonQuery();
+                        break;
+
                 }
                 transaction.Commit();
             }

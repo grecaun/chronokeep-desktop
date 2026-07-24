@@ -85,6 +85,8 @@ namespace Chronokeep.UI
         private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
 #endif
 
+        private readonly bool DoStart = true;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -113,7 +115,7 @@ namespace Chronokeep.UI
                     if (currentProcess.ProcessName == proc.ProcessName && currentProcess.Id != proc.Id)
                     {
                         DialogBox.Show("Chronokeep is already running.");
-                        Close();
+                        DoStart = false;
                         return;
                     }
                 }
@@ -309,6 +311,11 @@ namespace Chronokeep.UI
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            if (!DoStart)
+            {
+                Close();
+                return;
+            }
             TimingWorker.Notify();
             // Check for current theme color and apply it.
             AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);

@@ -44,8 +44,8 @@ namespace Chronokeep.Constants
         public const int CHIPREAD_TYPE_MANUAL = 1;
         public const int CHIPREAD_TYPE_CHIP = 0;  // If this value changes, SQLiteInterface version must be updated to reflect said change.
 
-        public const string CHIPREAD_DUMMYCHIP = "-1";
-        public const string CHIPREAD_DUMMYBIB = "-1";  // If this value changes, SQLiteInterface version must be updated to reflect said change.
+        public const string CHIPREAD_DUMMYCHIP = "";
+        public const string CHIPREAD_DUMMYBIB = "";  // If this value changes, SQLiteInterface version must be updated to reflect said change.
 
         public const int TIMERESULT_DUMMYPERSON = -1;
         public const int TIMERESULT_DUMMYPLACE = -1;

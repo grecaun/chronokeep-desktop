@@ -17,7 +17,7 @@ namespace Chronokeep.Database
          * HIGHEST LOCK ID = 175
          * NEXT AVAILABLE   = 176
          */
-        private const int Version = 73;
+        private const int Version = 74;
         public const int MINIMUM_COMPATIBLE_VERSION = 63;
         private readonly Lock dbLock = new();
 
