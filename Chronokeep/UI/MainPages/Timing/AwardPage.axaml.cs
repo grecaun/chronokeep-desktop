@@ -369,13 +369,13 @@ public partial class AwardPage : UserControl, ISubPage
             }
             else
             {
-                DialogBox.Show("Ages are not in the range of 0 to 100.");
+                DialogBox.AsyncShow("Ages are not in the range of 0 to 100.");
             }
         }
         catch (Exception ex)
         {
             Log.E("UI.Timing.AwardPage", ex.Message);
-            DialogBox.Show("Start or end age not specified.");
+            DialogBox.AsyncShow("Start or end age not specified.");
         }
     }
 
@@ -432,7 +432,7 @@ public partial class AwardPage : UserControl, ISubPage
             }
             if (options is { PrintCustom: false, PrintAgeGroups: false, PrintOverall: false })
             {
-                DialogBox.Show("No awards group selected to print/save.");
+                DialogBox.AsyncShow("No awards group selected to print/save.");
                 return;
             }
 
@@ -457,14 +457,14 @@ public partial class AwardPage : UserControl, ISubPage
                     testWeasy.Close();
                     if (exitVal != 0)
                     {
-                        DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
+                        DialogBox.AsyncShow("This function requires Weasyprint to function. Please install it and try again.",
                             "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
                         return;
                     }
                 }
                 else
                 {
-                    DialogBox.Show("Operating System detected does not support this function currently.");
+                    DialogBox.AsyncShow("Operating System detected does not support this function currently.");
                     return;
                 }
                 // Write HTML to a temp file.
@@ -499,7 +499,7 @@ public partial class AwardPage : UserControl, ISubPage
             }
             catch
             {
-                DialogBox.Show("Unable to save file.");
+                DialogBox.AsyncShow("Unable to save file.");
             }
         }
         catch (Exception)

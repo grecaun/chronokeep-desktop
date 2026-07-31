@@ -69,7 +69,7 @@ public partial class ApiWindow : ChronokeepWindow
         }
         else
         {
-            DialogBox.Show("One or more values retrieved is invalid.");
+            DialogBox.AsyncShow("One or more values retrieved is invalid.");
             return;
         }
         Close();

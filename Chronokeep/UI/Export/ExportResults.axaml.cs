@@ -570,12 +570,12 @@ public partial class ExportResults : ChronokeepWindow
                     try
                     {
                         exporter.ExportData(file.TryGetLocalPath()!);
-                        DialogBox.Show("File saved.");
+                        DialogBox.AsyncShow("File saved.");
                     }
                     catch (Exception ex)
                     {
                         Log.E("UI.Export.ExportResults.Error", ex.ToString());
-                        DialogBox.Show("Error saving file.");
+                        DialogBox.AsyncShow("Error saving file.");
                         return;
                     }
                 }

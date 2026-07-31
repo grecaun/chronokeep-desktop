@@ -243,7 +243,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void DeleteReadsButton_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "User requests deletion of reader chip reads.");
-        DialogBox.Show("This will delete all of the chip reads from the reader.  This action is not reversible. Continue?", "Yes", "No", () =>
+        DialogBox.AsyncShow("This will delete all of the chip reads from the reader.  This action is not reversible. Continue?", "Yes", "No", () =>
         {
             Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Clearing chip reads from reader.");
             reader.SendDeleteAllReads();
@@ -253,7 +253,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void UpdateServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Update button clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "This will update the portal software. Do you want to proceed?",
             "Yes",
             "No",
@@ -269,7 +269,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void RestartServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Restart button clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "This will restart the portal software. Do you want to proceed?",
             "Yes",
             "No",
@@ -285,7 +285,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void StopServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Stop button clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "This will stop the portal software. Do you want to proceed?",
             "Yes",
             "No",
@@ -301,7 +301,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void ShutdownServerButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Shutdown button clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "This will shutdown the entire computer the portal software is running on. Do you want to proceed?",
             "Yes",
             "No",
@@ -345,7 +345,7 @@ public partial class ChronokeepSettings : ChronokeepWindow
         catch (Exception ex)
         {
             Log.E("UI.Timing.ReaderSettings.ChronokeepSettings", $"Error saving settings: {ex.Message}");
-            DialogBox.Show("Error saving settings.");
+            DialogBox.AsyncShow("Error saving settings.");
         }
     }
 

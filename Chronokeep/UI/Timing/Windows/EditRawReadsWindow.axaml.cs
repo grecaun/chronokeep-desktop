@@ -67,7 +67,7 @@ public partial class EditRawReadsWindow : ChronokeepWindow
         catch
         {
             Log.D("UI.Timing.EditRawReadsWindow", "Somehow the time value wasn't valid.");
-            DialogBox.Show("Something went wrong trying to figure out that time value.");
+            DialogBox.AsyncShow("Something went wrong trying to figure out that time value.");
             return;
         }
         if (!add)

@@ -69,7 +69,7 @@ namespace Chronokeep.Helpers
                     Log.D("Helpers.HardwareChecker", "Hardware identifier appears to have changed.");
                     Application.Current!.Dispatcher.Invoke(delegate
                     {
-                        DialogBox.Show(
+                        DialogBox.AsyncShow(
                             "We've detected that our database file may have been transferred from a different computer. Would you like to change the program's unique identifier to ensure there are no conflicts between devices?",
                             "Yes",
                             "No",

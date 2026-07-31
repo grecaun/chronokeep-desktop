@@ -319,7 +319,7 @@ public partial class DistancePart : UserControl
         }
         catch
         {
-            DialogBox.Show("Error with values given.");
+            DialogBox.AsyncShow("Error with values given.");
         }
         if (!plusWave)
         {

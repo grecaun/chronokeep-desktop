@@ -200,7 +200,7 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void DeleteButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Delete clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "Are you sure you wish to delete these records? They cannot be recovered if you have no other record of them.",
             "Yes",
             "No",

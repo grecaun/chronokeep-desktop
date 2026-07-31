@@ -406,7 +406,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
                 Download.Content = "Download";
                 return;
             }
@@ -466,7 +466,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     Upload.Content = "Upload";
                     return;
                 }
@@ -482,7 +482,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     Upload.Content = "Upload";
                     return;
                 }
@@ -507,7 +507,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     Upload.Content = "Upload";
                     return;
                 }
@@ -523,7 +523,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     Upload.Content = "Upload";
                     return;
                 }
@@ -582,7 +582,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             catch (Exception ex)
             {
-                DialogBox.Show("There was a problem importing the file.");
+                DialogBox.AsyncShow("There was a problem importing the file.");
                 Log.E("UI.MainPages.ParticipantsPage", $"Something went wrong when trying to read the Excel file. {ex.StackTrace}");
             }
         }
@@ -679,7 +679,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 exporter.SetData(headers, data);
                 exporter.ExportData(file.TryGetLocalPath()!);
             });
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -721,7 +721,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             if (Delete.Content!.ToString() != "Working")
             {
                 Log.D("UI.MainPages.ParticipantsPage", "Deleting uploaded participants data.");
-                DialogBox.Show("This will delete all participants loaded to the API and may cause issues. Proceed?",
+                DialogBox.AsyncShow("This will delete all participants loaded to the API and may cause issues. Proceed?",
                     "Yes",
                     "No",
                     async () =>
@@ -752,7 +752,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                             }
                             catch (ApiException ex)
                             {
-                                DialogBox.Show(ex.Message);
+                                DialogBox.AsyncShow(ex.Message);
                             }
                         }
                         Avalonia.Threading.Dispatcher.UIThread.Post(() => {

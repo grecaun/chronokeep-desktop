@@ -29,7 +29,7 @@ public partial class ChangeLogWindow : ChronokeepWindow
         if (!Path.Exists(changelogPath))
         {
             Close();
-            DialogBox.Show("Unable to find changelog folder.");
+            DialogBox.AsyncShow("Unable to find changelog folder.");
             return;
         }
         string[] changelogFiles = Directory.GetFiles(changelogPath);

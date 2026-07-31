@@ -50,7 +50,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         // Check that no other instance of this program are running.
         if (!OneWindow.WaitOne(TimeSpan.Zero, true))
         {
-            DialogBox.Show("Chronokeep is already running.");
+            DialogBox.AsyncShow("Chronokeep is already running.");
             Close();
             return;
         }
@@ -78,7 +78,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         }
         catch (InvalidDatabaseVersion db)
         {
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 $"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
             Close();
             return;
@@ -125,7 +125,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     {
         Log.D("UI.DashboardPage", "Checking if we need to cancel the change.");
         if (!BackgroundProcessesRunning()) return false;
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "There are processes running in the background. Do you wish to stop these and continue?",
             "Yes",
             "No",
@@ -182,7 +182,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             (BackgroundProcessesRunning()))
         {
             bool allowClose = false;
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "Are you sure you wish to exit?",
                 "Yes",
                 "No",
@@ -324,7 +324,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         {
             if (!system.SystemInterface!.WasShutdown())
             {
-                DialogBox.Show(
+                DialogBox.AsyncShow(
                     $"Reader at {system.LocationName} has unexpectedly disconnected. IP Address was {system.IpAddress}.");
             }
             system.Status = SYSTEM_STATUS.DISCONNECTED;
@@ -399,7 +399,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             {
                 Application.Current!.Dispatcher.Invoke(delegate
                 {
-                    DialogBox.Show(message.DialogBoxString);
+                    DialogBox.AsyncShow(message.DialogBoxString);
                 });
             }
             // Let the announcer window know that it has new information.

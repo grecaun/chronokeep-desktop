@@ -986,7 +986,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     exporter.ExportData(outFileName);
                 }
             }
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -1143,7 +1143,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     });
                     RecalculateButton.Content = "Recalculate";
                     alreadyRecalculating = false;
-                    DialogBox.Show("Unable to recalculate results.");
+                    DialogBox.AsyncShow("Unable to recalculate results.");
                     return;
                 }
             }
@@ -1186,7 +1186,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 catch (ApiException ex)
                 {
 
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                 }
             }
             // We do this because we want to ensure we've reset all the results before we allow
@@ -1321,7 +1321,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 Log.D("UI.MainPages.TimingPage", "Async operation to send emails finished.");
             });
             Log.D("UI.MainPages.TimingPage", "Changing button back and sending dialog box.");
-            DialogBox.Show("Emails sent.");
+            DialogBox.AsyncShow("Emails sent.");
             SendEmailsButton.Content = "Send Emails";
         }
         catch (Exception)
@@ -1352,7 +1352,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         }
         if (!worked)
         {
-            DialogBox.Show("An error occurred entering DNS mode.");
+            DialogBox.AsyncShow("An error occurred entering DNS mode.");
         }
         UpdateDnsButton();
     }
@@ -1391,7 +1391,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 mWindow.StopHttpServer();
                 HttpServerButton.Content = "Start Web";
-                DialogBox.Show("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
+                DialogBox.AsyncShow("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
                 WebButton.IsVisible = false;
             }
         }
@@ -1445,7 +1445,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             List<TimeResult> finishResults = database.GetFinishTimes(theEvent!.Identifier);
             HtmlResultsTemplate template = new(theEvent, finishResults);
             await File.WriteAllTextAsync(file.TryGetLocalPath()!, template.TransformText());
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -1467,7 +1467,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         Log.D("UI.MainPages.TimingPage", "Export BAA Clicked.");
         if (theEvent!.EventType == Constants.Timing.EVENT_TYPE_TIME)
         {
-            DialogBox.Show("Exporting time based events not supported.");
+            DialogBox.AsyncShow("Exporting time based events not supported.");
             return;
         }
         ExportDistanceResults exportBaa = new(mWindow, database);
@@ -1490,7 +1490,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         Log.D("UI.MainPages.TimingPage", "Export UltraSignup Clicked.");
         if (theEvent!.EventType == Constants.Timing.EVENT_TYPE_TIME)
         {
-            DialogBox.Show("Exporting time based events not supported.");
+            DialogBox.AsyncShow("Exporting time based events not supported.");
             return;
         }
         ExportDistanceResults exportUs = new(mWindow, database, OutputType.UltraSignup);
@@ -1504,7 +1504,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         Log.D("UI.MainPages.TimingPage", "Export RunSignup Clicked.");
         if (theEvent!.EventType == Constants.Timing.EVENT_TYPE_TIME)
         {
-            DialogBox.Show("Exporting time based events not supported.");
+            DialogBox.AsyncShow("Exporting time based events not supported.");
             return;
         }
         ExportDistanceResults exportRunSignup = new(mWindow, database, OutputType.RunSignup);

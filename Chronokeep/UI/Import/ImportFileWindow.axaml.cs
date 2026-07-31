@@ -587,7 +587,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                         sb.Append('\n');
                         sb.Append(s);
                     }
-                    DialogBox.Show(sb.ToString());
+                    DialogBox.AsyncShow(sb.ToString());
                 }
                 else if (requiredNotFound.Count > 0)
                 {
@@ -597,7 +597,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                         sb.Append('\n');
                         sb.Append(s);
                     }
-                    DialogBox.Show(sb.ToString());
+                    DialogBox.AsyncShow(sb.ToString());
                 }
                 else
                 {
@@ -608,7 +608,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                     }
                     catch
                     {
-                        DialogBox.Show("Error importing participant data. Please check the file.");
+                        DialogBox.AsyncShow("Error importing participant data. Please check the file.");
                         Close();
                     }
                 }

@@ -162,7 +162,7 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
                         {
                             error.Append($"\nChip {assoc.Chip} - Bib {assoc.Bib}");
                         }
-                        DialogBox.Show(
+                        DialogBox.AsyncShow(
                             error.ToString(),
                             "Yes",
                             "No",
@@ -181,7 +181,7 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
             else
             {
                 string val = headers.Aggregate("", (current, str) => $"{current} {str}");
-                DialogBox.Show($"Multiple values given for: {val}");
+                DialogBox.AsyncShow($"Multiple values given for: {val}");
             }
         }
         catch (Exception)

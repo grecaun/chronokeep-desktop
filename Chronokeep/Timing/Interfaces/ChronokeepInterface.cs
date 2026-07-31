@@ -593,7 +593,7 @@ namespace Chronokeep.Timing.Interfaces
                                 };
                                 Application.Current!.Dispatcher.Invoke(() =>
                                 {
-                                    DialogBox.Show(msg);
+                                    DialogBox.AsyncShow(msg);
                                 });
                             }
                             catch (Exception e)
@@ -888,7 +888,7 @@ namespace Chronokeep.Timing.Interfaces
         {
             if (settingsWindow != null)
             {
-                DialogBox.Show("Settings window already open.");
+                DialogBox.AsyncShow("Settings window already open.");
                 return;
             }
             settingsWindow = new ChronokeepSettings(this);

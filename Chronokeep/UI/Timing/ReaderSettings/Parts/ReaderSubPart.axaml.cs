@@ -175,7 +175,7 @@ public partial class ReaderSubPart : UserControl
                 reader.Kind = PortalReader.READER_KIND_RFID;
                 break;//*/
             default:
-                DialogBox.Show("Unknown kind specified. Unable to save.");
+                DialogBox.AsyncShow("Unknown kind specified. Unable to save.");
                 return;
         }
         reader.IpAddress = !IpPattern().IsMatch(IpBox.Text!.Trim()) ? "" : IpBox.Text.Trim();

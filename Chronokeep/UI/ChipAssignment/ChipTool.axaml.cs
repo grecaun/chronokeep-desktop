@@ -63,7 +63,7 @@ public partial class ChipTool : ChronokeepWindow
             }
             if (conflicts)
             {
-                DialogBox.Show("One or more values is in conflict. Please fix the error and try again.");
+                DialogBox.AsyncShow("One or more values is in conflict. Please fix the error and try again.");
                 return;
             }
             ranges.Add(curRange);

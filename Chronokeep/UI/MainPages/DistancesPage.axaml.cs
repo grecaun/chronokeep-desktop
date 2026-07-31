@@ -118,7 +118,7 @@ public partial class DistancesPage : UserControl, IMainPage
             if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, d.Identifier).Count > 0)
             {
                 keepDeleting = false;
-                DialogBox.Show(
+                DialogBox.AsyncShow(
                     "Distance has participants, continue?",
                     "Yes",
                     "No",
@@ -141,7 +141,7 @@ public partial class DistancesPage : UserControl, IMainPage
         }
         if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, distance.Identifier).Count > 0)
         {
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "Distance has participants, continue?",
                 "Yes",
                 "No",
@@ -285,7 +285,7 @@ public partial class DistancesPage : UserControl, IMainPage
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
             DeleteButton.IsEnabled = true;
             DeleteButton.Content = "Delete Uploaded";
@@ -330,12 +330,12 @@ public partial class DistancesPage : UserControl, IMainPage
                     GetDistancesResponse response = await ApiHandlers.AddDistances(api, eventIds[0], eventIds[1], apiDistances);
                     if (response.Distances.Count != apiDistances.Count)
                     {
-                        DialogBox.Show("Error uploading distances. Uploaded count doesn't match.");
+                        DialogBox.AsyncShow("Error uploading distances. Uploaded count doesn't match.");
                     }
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                 }
             }
             UploadButton.IsEnabled = true;

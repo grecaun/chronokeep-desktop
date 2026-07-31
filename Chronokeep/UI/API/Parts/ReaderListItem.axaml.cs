@@ -118,11 +118,11 @@ public partial class ReaderListItem : UserControl
                 (List<ChipRead> reads, RemoteNotification _) = await api.GetReads(reader, startDate, endDate);
                 database.AddChipReads(reads);
                 mWindow.UpdateTimingFromController();
-                DialogBox.Show("Rewind complete.");
+                DialogBox.AsyncShow("Rewind complete.");
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -134,7 +134,7 @@ public partial class ReaderListItem : UserControl
     private void Delete_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Delete clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "Warning!\n\nThis will delete every read uploaded to the remote api. That data cannot be recoverred once deleted.",
             "Delete",
             "Cancel",
@@ -155,11 +155,11 @@ public partial class ReaderListItem : UserControl
                     {
                         long count = await api.DeleteReads(reader, startDate, endDate);
                         mWindow.UpdateTimingFromController();
-                        DialogBox.Show($"Successfully deleted\n\n{count}\n\nreads.");
+                        DialogBox.AsyncShow($"Successfully deleted\n\n{count}\n\nreads.");
                     }
                     catch (ApiException ex)
                     {
-                        DialogBox.Show(ex.Message);
+                        DialogBox.AsyncShow(ex.Message);
                     }
                 }
                 catch (Exception)

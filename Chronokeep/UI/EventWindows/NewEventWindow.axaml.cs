@@ -54,7 +54,7 @@ public partial class NewEventWindow : ChronokeepWindow
         Log.D("NewEventWindow", $"Name given for event: '{nameString}' Date Given: {dateVal} Date Value: {dateVal}");
         if (nameString == "")
         {
-            DialogBox.Show("Please input a value in the name box.");
+            DialogBox.AsyncShow("Please input a value in the name box.");
             return;
         }
         int oldEventId = -1;

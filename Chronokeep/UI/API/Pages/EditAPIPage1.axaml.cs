@@ -31,7 +31,7 @@ public partial class EditApiPage1 : UserControl
         }
         else
         {
-            DialogBox.Show("Unable to Link Event");
+            DialogBox.AsyncShow("Unable to Link Event");
         }
         window.Close();
     }

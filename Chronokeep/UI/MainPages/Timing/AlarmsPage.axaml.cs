@@ -120,7 +120,7 @@ public partial class AlarmsPage : UserControl, ISubPage
             {
                 if (!silent)
                 {
-                    DialogBox.Show("Unable to continue, multiples of the same bib found.");
+                    DialogBox.AsyncShow("Unable to continue, multiples of the same bib found.");
                 }
                 return true;
             }
@@ -129,7 +129,7 @@ public partial class AlarmsPage : UserControl, ISubPage
             {
                 if (!silent)
                 {
-                    DialogBox.Show("Unable to continue, multiples of the same chip found.");
+                    DialogBox.AsyncShow("Unable to continue, multiples of the same chip found.");
                 }
                 return true;
             }
@@ -139,7 +139,7 @@ public partial class AlarmsPage : UserControl, ISubPage
             {
                 if (!silent)
                 {
-                    DialogBox.Show("Only one alarm without a bib & chip allowed at a time.");
+                    DialogBox.AsyncShow("Only one alarm without a bib & chip allowed at a time.");
                 }
                 return true;
             }

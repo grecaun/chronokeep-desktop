@@ -164,7 +164,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -189,7 +189,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -215,7 +215,7 @@ public partial class ClockPart : UserControl
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                 }
             }
             else
@@ -231,7 +231,7 @@ public partial class ClockPart : UserControl
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                 }
             }
         }
@@ -254,7 +254,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -276,7 +276,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -298,7 +298,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)
@@ -326,7 +326,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
             }
         }
         catch (Exception)

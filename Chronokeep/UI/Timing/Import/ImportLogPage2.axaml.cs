@@ -74,7 +74,7 @@ public partial class ImportLogPage2 : UserControl
                 message.Append(s);
                 message.Append('\n');
             }
-            DialogBox.Show(message.ToString());
+            DialogBox.AsyncShow(message.ToString());
             return;
         }
         int chip = 0, time = 0;
@@ -91,7 +91,7 @@ public partial class ImportLogPage2 : UserControl
         }
         if (chip == 0 || time == 0)
         {
-            DialogBox.Show("Both Chip and Time must be chosen.");
+            DialogBox.AsyncShow("Both Chip and Time must be chosen.");
             return;
         }
         parent.Import(LogImporter.Type.CUSTOM, Constants.Timing.LOCATION_DUMMY, chip, time);

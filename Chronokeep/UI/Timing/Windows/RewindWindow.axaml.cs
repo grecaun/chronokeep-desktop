@@ -81,7 +81,7 @@ public partial class RewindWindow : ChronokeepWindow
         }
         if (system.Type is Readers.SYSTEM_IPICO or Readers.SYSTEM_IPICO_LITE)
         {
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "This process can take up to 3 minutes to complete. There is no guarantee that other processes will work properly while this is occuring. Are you sure you wish to proceed?",
                 "Yes",
                 "No",

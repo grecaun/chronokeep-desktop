@@ -195,7 +195,7 @@ public partial class SettingsPage : UserControl, IMainPage
         {
             Log.D("UI.MainPages.SettingsPage", "Reset button clicked.");
             bool yesClicked = false;
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "This deletes all of the data stored in the database.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
                 "Yes",
                 "No",
@@ -226,7 +226,7 @@ public partial class SettingsPage : UserControl, IMainPage
         {
             Log.D("UI.MainPages.SettingsPage", "Rebuild button clicked.");
             bool yesClicked = false;
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "This deletes all of the tables and values in the database, then rebuilds all of the tables.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
                 "Yes",
                 "No",
@@ -332,7 +332,7 @@ public partial class SettingsPage : UserControl, IMainPage
         catch (ArgumentException) { }
         catch (Exception ex)
         {
-            DialogBox.Show($"Error trying to play sound. {ex.Message}{ex.GetType()}");
+            DialogBox.AsyncShow($"Error trying to play sound. {ex.Message}{ex.GetType()}");
         }
     }
 

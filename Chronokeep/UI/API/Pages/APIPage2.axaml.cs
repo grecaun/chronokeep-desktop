@@ -42,7 +42,7 @@ public partial class ApiPage2 : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
                 window.Close();
                 return;
             }
@@ -119,7 +119,7 @@ public partial class ApiPage2 : UserControl
             string slug;
             if (EventList.SelectedItem == null)
             {
-                DialogBox.Show("Please select an event.");
+                DialogBox.AsyncShow("Please select an event.");
                 return;
             }
             if (((ApiEvent?)EventList.SelectedItem)?.Slug == null || ((ApiEvent)EventList.SelectedItem).Slug.Length < 1)
@@ -149,7 +149,7 @@ public partial class ApiPage2 : UserControl
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     return;
                 }
             }

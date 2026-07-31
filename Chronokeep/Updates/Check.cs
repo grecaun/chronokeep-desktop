@@ -75,7 +75,7 @@ namespace Chronokeep.Updates
                 catch (Exception ex)
                 {
                     Log.E("Updates.Check", ex.Message);
-                    DialogBox.Show("Unable to check for update.");
+                    DialogBox.AsyncShow("Unable to check for update.");
                     return;
                 }
                 GithubRelease? latestRelease = null;
@@ -106,7 +106,7 @@ namespace Chronokeep.Updates
                 }
                 else if (messageOnNoUpdate)
                 {
-                    DialogBox.Show("No updates found.");
+                    DialogBox.AsyncShow("No updates found.");
                 }
             }
             catch (Exception)

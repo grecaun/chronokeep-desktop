@@ -181,7 +181,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     private void Clear_Click(object? sender, RoutedEventArgs? e)
     {
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "Are you sure you want to delete everything? This cannot be undone.",
             "Yes",
             "No",
@@ -206,7 +206,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
 
     private void ClearIgnored_Click(object? sender, RoutedEventArgs? e)
     {
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "Are you sure you want to delete everything? This cannot be undone.",
             "Yes",
             "No",
@@ -263,7 +263,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         Log.D("UI.MainPages.ChipAssignmentPage", $"Bib {bib} Chip {chip}");
         if (chip == -1)
         {
-            DialogBox.Show("The chip is not valid.");
+            DialogBox.AsyncShow("The chip is not valid.");
             return;
         }
         List<BibChipAssociation> bibChips =
@@ -334,7 +334,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             catch (Exception ex)
             {
                 Log.E("UI.MainPages.ChipAssignmentPage", $"Something went wrong when trying to read the CSV file. {ex.StackTrace}");
-                DialogBox.Show("Unable to open file.");
+                DialogBox.AsyncShow("Unable to open file.");
             }
         }
         catch (Exception)
@@ -409,7 +409,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             }
             exporter.SetData(headers, data);
             exporter.ExportData(file.TryGetLocalPath()!);
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -452,7 +452,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         long startChip = -1, endChip = -1;
         if (!long.TryParse(RangeStartBibBox.Text, out long startBib) || !long.TryParse(RangeEndBibBox.Text, out long endBib))
         {
-            DialogBox.Show("Invalid bibs for range based assignment.");
+            DialogBox.AsyncShow("Invalid bibs for range based assignment.");
             return;
         }
         switch (chipType.Value)
@@ -461,13 +461,13 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
                                                        !long.TryParse(RangeEndChipLabel.Text!, out endChip):
             case Constants.Settings.CHIP_TYPE_HEX when !long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip) ||
                                                        !long.TryParse(RangeEndChipLabel.Text!, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out endChip):
-                DialogBox.Show("Invalid chip values.");
+                DialogBox.AsyncShow("Invalid chip values.");
                 return;
         }
         Log.D("UI.MainPages.ChipAssignmentPage", $"StartBib {startBib} EndBib {endBib} StartChip {startChip} EndChip {endChip}");
         if (startChip == -1 || endChip == -1 || startBib == -1 || endBib == -1)
         {
-            DialogBox.Show("One or more values is not valid.");
+            DialogBox.AsyncShow("One or more values is not valid.");
             return;
         }
         List<BibChipAssociation> bibChips = [];
@@ -546,7 +546,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         Log.D("UI.MainPages.ChipAssignmentPage", $" Chip {chip}");
         if (chip == -1)
         {
-            DialogBox.Show("The chip is not valid.");
+            DialogBox.AsyncShow("The chip is not valid.");
             return;
         }
         List<BibChipAssociation> bibChips =

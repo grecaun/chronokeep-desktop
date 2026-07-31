@@ -41,7 +41,7 @@ public partial class ApiPage3 : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
                 window.Close();
                 return;
             }
@@ -140,7 +140,7 @@ public partial class ApiPage3 : UserControl
                 }
                 catch (ApiException ex)
                 {
-                    DialogBox.Show(ex.Message);
+                    DialogBox.AsyncShow(ex.Message);
                     return;
                 }
             }

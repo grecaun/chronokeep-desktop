@@ -110,7 +110,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         string bib = BibBox.Text!.Trim();
         if (string.IsNullOrEmpty(bib))
         {
-            DialogBox.Show("Invalid bib value given.");
+            DialogBox.AsyncShow("Invalid bib value given.");
             return;
         }
         string timeVal = TimeBox.Text!.Replace('_', '0');
@@ -187,7 +187,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         }
         catch
         {
-            DialogBox.Show("Invalid bib value given.");
+            DialogBox.AsyncShow("Invalid bib value given.");
             return;
         }
         string timeVal = TimeBox.Text!.Replace('_', '0');
@@ -199,7 +199,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         long milliseconds = Convert.ToInt32(timeVal.Substring(9, 3));
         if (hours == minutes && minutes == seconds && seconds == milliseconds && milliseconds == 0)
         {
-            DialogBox.Show("No time value specified.");
+            DialogBox.AsyncShow("No time value specified.");
             return;
         }
         if (NetTimeButton.IsChecked == true)

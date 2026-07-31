@@ -125,12 +125,12 @@ public partial class ChipReaderWindow : ChronokeepWindow
             }
             else
             {
-                DialogBox.Show("No serial port selected.");
+                DialogBox.AsyncShow("No serial port selected.");
                 return;
             }
             if (serial.Connect() != RfidError.NO_ERROR)
             {
-                DialogBox.Show("Unable to connect to device.");
+                DialogBox.AsyncShow("Unable to connect to device.");
                 return;
             }
             ConnectBtn.Content = "Disconnect";
@@ -151,7 +151,7 @@ public partial class ChipReaderWindow : ChronokeepWindow
             }
             catch
             {
-                DialogBox.Show("Something went wrong during disconnect.");
+                DialogBox.AsyncShow("Something went wrong during disconnect.");
             }
             personWindow?.Close();
         }

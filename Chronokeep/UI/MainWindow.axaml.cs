@@ -85,8 +85,6 @@ namespace Chronokeep.UI
         private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
 #endif
 
-        private readonly bool DoStart = true;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -100,7 +98,14 @@ namespace Chronokeep.UI
                 if (!OneWindow.WaitOne(TimeSpan.Zero, true))
                 {
                     DialogBox.Show("Chronokeep is already running.");
-                    Close();
+                    try
+                    {
+                        Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
+                    }
                     return;
                 }
                 OneWindow.ReleaseMutex();
@@ -115,7 +120,14 @@ namespace Chronokeep.UI
                     if (currentProcess.ProcessName == proc.ProcessName && currentProcess.Id != proc.Id)
                     {
                         DialogBox.Show("Chronokeep is already running.");
-                        DoStart = false;
+                        try
+                        {
+                            Close();
+                        }
+                        catch (Exception e)
+                        {
+                            Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
+                        }
                         return;
                     }
                 }
@@ -143,7 +155,14 @@ namespace Chronokeep.UI
             catch (InvalidDatabaseVersion db)
             {
                 DialogBox.Show($"Database version greater than the max known by this client. Please update the client. Database version {db.FoundVersion}. Max version for this client {db.MaxVersion}");
-                Close();
+                try
+                {
+                    Close();
+                }
+                catch (Exception e)
+                {
+                    Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
+                }
                 return;
             }
             Constants.Settings.SetupSettings(database);
@@ -175,13 +194,13 @@ namespace Chronokeep.UI
             // Set the global upload interval.
             if (!int.TryParse(database.GetAppSetting(Constants.Settings.UPLOAD_INTERVAL)!.Value, out Globals.UploadInterval))
             {
-                DialogBox.Show("Something went wrong trying to update the upload interval.");
+                DialogBox.AsyncShow("Something went wrong trying to update the upload interval.");
             }
 
             // Set the global download interval.
             if (!int.TryParse(database.GetAppSetting(Constants.Settings.DOWNLOAD_INTERVAL)!.Value, out Globals.DownloadInterval))
             {
-                DialogBox.Show("Something went wrong trying to update the download interval.");
+                DialogBox.AsyncShow("Something went wrong trying to update the download interval.");
             }
 
             // Pull alarms from the database.
@@ -218,7 +237,7 @@ namespace Chronokeep.UI
             if (!forceClose && database.GetAppSetting(Constants.Settings.EXIT_NO_PROMPT)!.Value == Constants.Settings.SETTING_FALSE &&
                 (BackgroundProcessesRunning()))
             {
-                DialogBox.Show(
+                DialogBox.AsyncShow(
                     "Are you sure you wish to exit?",
                     "Yes",
                     "No",
@@ -311,11 +330,6 @@ namespace Chronokeep.UI
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!DoStart)
-            {
-                Close();
-                return;
-            }
             TimingWorker.Notify();
             // Check for current theme color and apply it.
             AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);
@@ -358,7 +372,7 @@ namespace Chronokeep.UI
                 string[] dbSplit = programVersion!.Value.Replace("v", "").Split('.');
                 if (dbSplit.Length != 3 || gitSplit.Length != 3)
                 {
-                    DialogBox.Show($"Expected 3 values when checking the program version. DB ${programVersion.Value} - P ${gitVersion}");
+                    DialogBox.AsyncShow($"Expected 3 values when checking the program version. DB ${programVersion.Value} - P ${gitVersion}");
                 }
                 else if (int.TryParse(gitSplit[0], out int newMajor) &&
                         int.TryParse(gitSplit[1], out int newMinor) &&
@@ -380,7 +394,7 @@ namespace Chronokeep.UI
                 }
                 else
                 {
-                    DialogBox.Show($"Invalid version values found. DB${dbSplit.Length} - P${gitSplit.Length}");
+                    DialogBox.AsyncShow($"Invalid version values found. DB${dbSplit.Length} - P${gitSplit.Length}");
                 }
             }
             database.SetAppSetting(Constants.Settings.PROGRAM_VERSION, gitVersion);
@@ -755,7 +769,7 @@ namespace Chronokeep.UI
                 {
                     Application.Current!.Dispatcher.Invoke(delegate
                     {
-                        DialogBox.Show(message.DialogBoxString);
+                        DialogBox.AsyncShow(message.DialogBoxString);
                     });
                 }
                 // Let the announcer window know that it has new information.
@@ -919,7 +933,7 @@ namespace Chronokeep.UI
                     {
                         if (!system.SystemInterface.WasShutdown())
                         {
-                            DialogBox.Show(
+                            DialogBox.AsyncShow(
                                 $"Reader at {system.LocationName} has unexpectedly disconnected. IP Address was {system.IpAddress}.");
                         }
                     }

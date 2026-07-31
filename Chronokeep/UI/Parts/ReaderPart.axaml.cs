@@ -312,7 +312,7 @@ public partial class ReaderPart : UserControl
         }
         else
         {
-            DialogBox.Show("Settings not yet implemented.");
+            DialogBox.AsyncShow("Settings not yet implemented.");
         }
     }
 
@@ -351,7 +351,7 @@ public partial class ReaderPart : UserControl
         // Check if IP is a valid IP address
         if (!IpPattern().IsMatch(ReaderIp.Text!.Trim()))
         {
-            DialogBox.Show("IP address given not valid.");
+            DialogBox.AsyncShow("IP address given not valid.");
             return;
         }
         Reader.IpAddress = ReaderIp.Text.Trim();
@@ -359,7 +359,7 @@ public partial class ReaderPart : UserControl
         _ = int.TryParse(ReaderPort.Text!.Trim(), out int portNo);
         if (portNo is < 0 or > 65535)
         {
-            DialogBox.Show("Port given not valid.");
+            DialogBox.AsyncShow("Port given not valid.");
             return;
         }
         Reader.Port = portNo;

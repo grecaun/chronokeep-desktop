@@ -43,7 +43,7 @@ namespace Chronokeep.UI.Util
                 downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-{version}.tar.gz";
                 uri = "";
                 Close();
-                DialogBox.Show("Linux downloads not yet implemented.");
+                DialogBox.AsyncShow("Linux downloads not yet implemented.");
                 return;
             }
             Log.D("Updates.Check", $"Download URL - {r.Assets[0].BrowserDownloadUrl}");
@@ -130,7 +130,7 @@ namespace Chronokeep.UI.Util
                         catch (Exception ex)
                         {
                             Log.E("Updates.Check", $"Error downloading update. {ex.Message}");
-                            DialogBox.Show("Unable to download update.");
+                            DialogBox.AsyncShow("Unable to download update.");
                             Close();
                         }
                     }

@@ -40,7 +40,7 @@ public partial class RemoteReadersWindow : ChronokeepWindow
         theEvent = database.GetCurrentEvent();
         if (theEvent == null || theEvent.Identifier < 0)
         {
-            DialogBox.Show("Unable to get event information.");
+            DialogBox.AsyncShow("Unable to get event information.");
             Close();
             return;
         }
@@ -69,7 +69,7 @@ public partial class RemoteReadersWindow : ChronokeepWindow
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
                 Close();
                 return;
             }

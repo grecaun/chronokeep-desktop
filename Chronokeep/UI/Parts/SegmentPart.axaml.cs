@@ -130,7 +130,7 @@ public partial class SegmentPart : UserControl
         }
         catch
         {
-            DialogBox.Show("Error with values given.");
+            DialogBox.AsyncShow("Error with values given.");
         }
     }
 

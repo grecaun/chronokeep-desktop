@@ -100,7 +100,7 @@ public partial class RfidSettings : ChronokeepWindow
     private void SaveID_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save ID button clicked.");
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "Saving ID will reboot the reader and forcibly close the connection. Proceed?",
             "Yes",
             "No",

@@ -39,7 +39,7 @@ public partial class EditEventPage : UserControl
             }
             catch (ApiException ex)
             {
-                DialogBox.Show(ex.Message);
+                DialogBox.AsyncShow(ex.Message);
                 window.Close();
                 return;
             }
@@ -112,7 +112,7 @@ public partial class EditEventPage : UserControl
         }
         catch (ApiException ex)
         {
-            DialogBox.Show(ex.Message);
+            DialogBox.AsyncShow(ex.Message);
         }
         catch (Exception)
         {

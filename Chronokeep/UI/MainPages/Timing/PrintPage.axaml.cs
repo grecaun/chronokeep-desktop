@@ -355,7 +355,7 @@ public partial class PrintPage : UserControl, ISubPage
                     htmlString = GetAgeGroupPrintableDocument(divsToPrint);
                     break;
                 default:
-                    DialogBox.Show("Please select a type.");
+                    DialogBox.AsyncShow("Please select a type.");
                     return;
             }
             try
@@ -378,14 +378,14 @@ public partial class PrintPage : UserControl, ISubPage
                     testWeasy.Close();
                     if (exitVal != 0)
                     {
-                        DialogBox.Show("This function requires Weasyprint to function. Please install it and try again.",
+                        DialogBox.AsyncShow("This function requires Weasyprint to function. Please install it and try again.",
                             "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html");
                         return;
                     }
                 }
                 else
                 {
-                    DialogBox.Show("Operating System detected does not support this function currently.");
+                    DialogBox.AsyncShow("Operating System detected does not support this function currently.");
                     return;
                 }
                 // Write HTML to a temp file.
@@ -420,7 +420,7 @@ public partial class PrintPage : UserControl, ISubPage
             }
             catch
             {
-                DialogBox.Show($"Unable to save file.");
+                DialogBox.AsyncShow($"Unable to save file.");
             }
         }
         catch (Exception)

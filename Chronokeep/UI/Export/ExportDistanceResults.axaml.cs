@@ -76,18 +76,18 @@ public partial class ExportDistanceResults : ChronokeepWindow
         switch (theEvent.EventType)
         {
             case Constants.Timing.EVENT_TYPE_TIME when !supported:
-                DialogBox.Show("Exporting for a Time based event is not supported.");
+                DialogBox.AsyncShow("Exporting for a Time based event is not supported.");
                 noOpen = true;
                 return;
             case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA when !supported:
-                DialogBox.Show("Exporting for a Backyard Ultra event is not supported.");
+                DialogBox.AsyncShow("Exporting for a Backyard Ultra event is not supported.");
                 noOpen = true;
                 return;
             default:
                 switch (DistanceBox.Items.Count)
                 {
                     case < 1:
-                        DialogBox.Show("Oops, you don't appear to have any distances set up.");
+                        DialogBox.AsyncShow("Oops, you don't appear to have any distances set up.");
                         noOpen = true;
                         return;
                     // don't open the window if we've only got one to output
@@ -101,7 +101,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                         }
                         else
                         {
-                            DialogBox.Show("Something went wrong with the distance. Exiting.");
+                            DialogBox.AsyncShow("Something went wrong with the distance. Exiting.");
                             noOpen = true;
                             return;
                         }
@@ -120,7 +120,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                                 SaveAbbot(selected.Name);
                                 break;
                             default:
-                                DialogBox.Show("Something went wrong. No known output type specified.");
+                                DialogBox.AsyncShow("Something went wrong. No known output type specified.");
                                 break;
                         }
                         noOpen = true;
@@ -175,7 +175,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                     extension
                 );
             }
-            DialogBox.Show("Files saved.");
+            DialogBox.AsyncShow("Files saved.");
         }
         catch (Exception)
         {
@@ -215,7 +215,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                     Path.Combine(filePath, $"{fileName} {distance.Name}{extension}")
                 );
             }
-            DialogBox.Show("Files saved.");
+            DialogBox.AsyncShow("Files saved.");
         }
         catch (Exception)
         {
@@ -255,7 +255,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                     Path.Combine(filePath, $"{fileName} {distance.Name}{extension}")
                 );
             }
-            DialogBox.Show("Files saved.");
+            DialogBox.AsyncShow("Files saved.");
         }
         catch (Exception)
         {
@@ -286,7 +286,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             });
             if (file is null) return;
             SaveAbbotInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -485,7 +485,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             });
             if (file is null) return;
             SaveBostonInternal(distance, file.TryGetLocalPath()!, Path.GetExtension(file.Name));
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -634,7 +634,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string[] fileSplit = filename.Split('.');
             if (fileSplit.Length != 2)
             {
-                DialogBox.Show("Filename appears to be invalid.");
+                DialogBox.AsyncShow("Filename appears to be invalid.");
                 return;
             }
             if (!fileSplit[1].Equals("csv"))
@@ -642,7 +642,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 filename = $"{fileSplit[0]}.csv";
             }
             SaveUltraSignupInternal(distance, filename);
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -676,7 +676,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string[] fileSplit = filename.Split('.');
             if (fileSplit.Length != 2)
             {
-                DialogBox.Show("Filename appears to be invalid.");
+                DialogBox.AsyncShow("Filename appears to be invalid.");
                 return;
             }
             if (!fileSplit[1].Equals("csv"))
@@ -684,7 +684,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 filename = $"{fileSplit[0]}.csv";
             }
             SaveRunSignupInternal(distance, filename);
-            DialogBox.Show("File saved.");
+            DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
@@ -883,7 +883,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                     SaveAbbot(tDist.Name);
                     break;
                 default:
-                    DialogBox.Show("Something went wrong. No known output type specified.");
+                    DialogBox.AsyncShow("Something went wrong. No known output type specified.");
                     break;
             }
         }
@@ -902,16 +902,16 @@ public partial class ExportDistanceResults : ChronokeepWindow
                     SaveAllRunSignup();
                     break;
                 case OutputType.Abbott:
-                    DialogBox.Show("Exporting all for Abbott is not supported.");
+                    DialogBox.AsyncShow("Exporting all for Abbott is not supported.");
                     return;
                 default:
-                    DialogBox.Show("Something went wrong. No known output type specified.");
+                    DialogBox.AsyncShow("Something went wrong. No known output type specified.");
                     break;
             }
         }
         else
         {
-            DialogBox.Show("Something went wrong with the distance. Exiting.");
+            DialogBox.AsyncShow("Something went wrong with the distance. Exiting.");
         }
         Close();
     }

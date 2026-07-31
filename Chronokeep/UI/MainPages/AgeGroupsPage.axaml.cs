@@ -220,7 +220,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         previous?.LastGroup = true;
         if (conflict)
         {
-            DialogBox.Show("There is a conflict in the age groups. Unable to save.");
+            DialogBox.AsyncShow("There is a conflict in the age groups. Unable to save.");
             return;
         }
         ageGroups.AddRange(toAdd);

@@ -148,7 +148,7 @@ public partial class DashboardPage : UserControl, IMainPage
     {
         Log.D("UI.DashboardPage", "Checking if we need to cancel the change.");
         if (!mWindow.BackgroundProcessesRunning()) return false;
-        DialogBox.Show(
+        DialogBox.AsyncShow(
             "There are processes running in the background. Do you wish to stop these and continue?",
             "Yes",
             "No",
@@ -208,7 +208,7 @@ public partial class DashboardPage : UserControl, IMainPage
                             try
                             {
                                 Log.D("UI.DashboardPage", "Attempting to delete.");
-                                DialogBox.Show(
+                                DialogBox.AsyncShow(
                                     "Are you sure you want to delete this event? This cannot be undone.",
                                     "Yes",
                                     "No",
@@ -223,7 +223,7 @@ public partial class DashboardPage : UserControl, IMainPage
                             catch
                             {
                                 Log.D("UI.DashboardPage", "Unable to remove the event.");
-                                DialogBox.Show("Unable to remove the event.");
+                                DialogBox.AsyncShow("Unable to remove the event.");
                             }
                             UpdateView();
                             mWindow.UpdateStatus();
@@ -539,7 +539,7 @@ public partial class DashboardPage : UserControl, IMainPage
             }
             catch
             {
-                DialogBox.Show("Unable to save to file");
+                DialogBox.AsyncShow("Unable to save to file");
                 return;
             }
             if (filePath == null)
@@ -551,7 +551,7 @@ public partial class DashboardPage : UserControl, IMainPage
             Event currentEvent = database.GetCurrentEvent()!;
             Save_Event(currentEvent, database, savedDatabase);
             Log.D("UI.DashboardPage", "Done saving file.");
-            DialogBox.Show("Event saved successfully.");
+            DialogBox.AsyncShow("Event saved successfully.");
         }
         catch (Exception)
         {
@@ -614,7 +614,7 @@ public partial class DashboardPage : UserControl, IMainPage
         try
         {
             Log.D("UI.DashboardPage", "Attempting to delete.");
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "Are you sure you want to delete this event? This cannot be undone.",
                 "Yes",
                 "No",
@@ -629,7 +629,7 @@ public partial class DashboardPage : UserControl, IMainPage
         catch
         {
             Log.D("UI.DashboardPage", "Unable to remove the event.");
-            DialogBox.Show("Unable to remove the event.");
+            DialogBox.AsyncShow("Unable to remove the event.");
         }
         UpdateView();
         mWindow.UpdateStatus();

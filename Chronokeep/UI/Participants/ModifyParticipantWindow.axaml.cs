@@ -33,7 +33,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         theEvent = database.GetCurrentEvent();
         if (theEvent == null)
         {
-            DialogBox.Show("Unable to get event.");
+            DialogBox.AsyncShow("Unable to get event.");
             this.Close();
         }
         if (person == null)
@@ -59,7 +59,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         theEvent = database.GetCurrentEvent();
         if (theEvent == null)
         {
-            DialogBox.Show("Unable to get event.");
+            DialogBox.AsyncShow("Unable to get event.");
             Close();
         }
         person = database.GetParticipantEventSpecific(theEvent!.Identifier, eventSpecificId);
@@ -415,7 +415,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         {
             // bib is taken - person object holds old bib #
             bool modifyBibs = false;
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "This bib is already taken. Swap bibs?",
                 "Yes",
                 "No",
@@ -476,7 +476,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         if (offendingBib != null)
         {
             // bib is taken
-            DialogBox.Show(
+            DialogBox.AsyncShow(
                 "This bib is already taken. Assign no bib to the previous bib owner?",
                 "Yes",
                 "No",
@@ -484,7 +484,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 {
                     if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
                     {
-                        DialogBox.Show("Invalid name given.");
+                        DialogBox.AsyncShow("Invalid name given.");
                         return;
                     }
                     // only update the participant with the old bib if we're actually adding the person
@@ -505,7 +505,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         {
             if (newPart.FirstName.Trim().Length < 1 && newPart.LastName.Trim().Length < 1)
             {
-                DialogBox.Show("Invalid name given.");
+                DialogBox.AsyncShow("Invalid name given.");
                 return;
             }
             database.AddParticipant(newPart);

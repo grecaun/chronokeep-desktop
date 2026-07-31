@@ -6,10 +6,10 @@ namespace Chronokeep.UI.Util;
 
 public partial class DialogBox : ChronokeepWindow
 {
-    public delegate void LeftClickDelegate();
+    public delegate void ClickDelegate();
     private string copyText = "";
 
-    public DialogBox(string message, string leftButtonContent, string rightButtonContent, bool showLeftButton, LeftClickDelegate leftClick)
+    public DialogBox(string message, string leftButtonContent, string rightButtonContent, bool showLeftButton, ClickDelegate leftClick)
     {
         InitializeComponent();
         ChronokeepInitialize();
@@ -29,7 +29,58 @@ public partial class DialogBox : ChronokeepWindow
         Topmost = true;
     }
 
-    public static async void Show(string message)
+    public DialogBox(string message, string rightButtonContent, ClickDelegate rightClick)
+    {
+        InitializeComponent();
+        ChronokeepInitialize();
+        MessageBox.Text = message;
+        RightButton.Content = rightButtonContent;
+        LeftButton.IsVisible = false;
+        RightButton.Click += (_, _) =>
+        {
+            Close();
+            rightClick();
+        };
+        Topmost = true;
+    }
+
+    public static void Show(string message)
+    {
+        try
+        {
+            DialogBox output = new(
+                message,
+                "",
+                "OK",
+                false,
+                () => { }
+            );
+            output.ShowDialog(MainWindow.MWindow!);
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Util.DialogBox", "Error trying to show dialog box.");
+        }
+    }
+
+    public static void Show(string message, string rightButtonContent, ClickDelegate rightClick)
+    {
+        try
+        {
+            DialogBox output = new(
+                message,
+                rightButtonContent,
+                rightClick
+            );
+            output.ShowDialog(MainWindow.MWindow!);
+        }
+        catch (Exception)
+        {
+            Log.D("UI.Util.DialogBox", "Error trying to show dialog box.");
+        }
+    }
+
+    public static async void AsyncShow(string message)
     {
         try
         {
@@ -44,11 +95,11 @@ public partial class DialogBox : ChronokeepWindow
         }
         catch (Exception)
         {
-            Log.D("UI.Util.DialogBox","Error trying to show dialog box.");
+            Log.D("UI.Util.DialogBox", "Error trying to show dialog box.");
         }
     }
 
-    public static async void Show(string message, string leftButtonContent, string rightButtonContent, LeftClickDelegate leftClick)
+    public static async void AsyncShow(string message, string leftButtonContent, string rightButtonContent, ClickDelegate leftClick)
     {
         try
         {
@@ -67,7 +118,7 @@ public partial class DialogBox : ChronokeepWindow
         }
     }
 
-    public static async void Show(string message, string copyText)
+    public static async void AsyncShow(string message, string copyText)
     {
         try
         {
