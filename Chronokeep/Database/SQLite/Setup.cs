@@ -204,8 +204,8 @@ namespace Chronokeep.Database.SQLite
                     "read_time_milliseconds INTEGER NOT NULL," +
                     "read_split_seconds INTEGER NOT NULL DEFAULT 0," +
                     "read_split_milliseconds INTEGER NOT NULL DEFAULT 0," +
-                    $"read_bib VARCHAR NOT NULL DEFAULT {Constants.Timing.CHIPREAD_DUMMYBIB}," +
-                    $"read_type INTEGER NOT NULL DEFAULT {Constants.Timing.CHIPREAD_TYPE_CHIP}," +
+                    $"read_bib VARCHAR NOT NULL DEFAULT '{Constants.Timing.CHIPREAD_DUMMYBIB}'," +
+                    $"read_type INTEGER NOT NULL DEFAULT '{Constants.Timing.CHIPREAD_TYPE_CHIP}'," +
                     "UNIQUE (event_id, read_chipnumber, read_bib, read_seconds, read_milliseconds) ON CONFLICT IGNORE" +
                     ");");
                 queries.Add("CREATE TABLE IF NOT EXISTS time_results (" +
