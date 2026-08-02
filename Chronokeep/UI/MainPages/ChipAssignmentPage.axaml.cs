@@ -476,7 +476,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         }
         Log.D("UI.MainPages.ChipAssignmentPage", $"StartBib {startBib} EndBib {endBib} StartChip {startChip} EndChip {endChip}");
         List<BibChipAssociation> bibChips = [];
-        if (startBib > endBib)
+        if (startBib < endBib)
         {
             // Normal save range -- both increase
             for (long bib = startBib, tag = startChip; bib <= endBib; bib++, tag++)
