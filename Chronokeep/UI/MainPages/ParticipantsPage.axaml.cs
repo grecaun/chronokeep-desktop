@@ -103,13 +103,17 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 {
                     if (outer.Equals(inner)) continue;
                     // Check for bib conflicts
-                    if ((outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase) && !outer.IsBasicMatch(inner))
+                    // Check if the bib matches (and isn't empty string) and they don't have the same Basic (FirstName, LastName, Gender, and Birthday) values.
+                    if ((outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase) && outer.Bib.Length > 0 && !outer.IsBasicMatch(inner))
+                        // Or they do have the same Basic Values but their Distance or Bib has changed.
                         || (outer.IsBasicMatch(inner) && !(outer.Distance.Equals(inner.Distance, StringComparison.OrdinalIgnoreCase) && outer.Bib.Equals(inner.Bib, StringComparison.OrdinalIgnoreCase))))
                     {
+                        // 
                         if (!conflictParticipantIdentifiers.Contains((outer.Identifier, inner.Identifier))) {
                             conflicts.Add(outer);
                             conflicts.Add(inner);
                         }
+                        // Add both values to the list of conflicts so it always matches the previous line when checked later.
                         conflictParticipantIdentifiers.Add((outer.Identifier, inner.Identifier));
                         conflictParticipantIdentifiers.Add((inner.Identifier, outer.Identifier));
                     }
@@ -215,7 +219,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Dictionary<string, Participant> partEsDictionary = [];
                 Dictionary<string, Distance> distDictionary = [];
                 string uniqueId = "";
-                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER) is { } programId)
+                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER) is AppSetting programId)
                 {
                     uniqueId = $"{programId.Value}-";
                 }
@@ -228,33 +232,32 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 {
                     distDictionary[d.Name.ToLower()] = d;
                 }
-                foreach (ApiPerson person in newPersons.Where(person => !distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _)))
-                {
-                    distDictionary[person.Distance.ToLower()] = new Distance(person.Distance, theEvent.Identifier);
-                    database.AddDistance(new Distance(person.Distance, theEvent.Identifier));
-                }
-                foreach (Distance d in database.GetDistances(theEvent.Identifier))
-                {
-                    distDictionary[d.Name.ToLower()] = d;
-                }
                 List<Participant> partsToUpdate = [];
                 List<Participant> partsToAdd = [];
                 foreach (ApiPerson person in newPersons)
                 {
                     person.Trim();
                     person.FormatData();
+                    // A person must have a distance and they must have a first or last name.
+                    // All other values are optional.
+                    if (person.Distance.Length < 1 || (person.First.Length < 1 && person.Last.Length < 1))
+                    {
+                        continue;
+                    }
                     if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _))
                     {
-                        Distance newDist = new(person.Distance, theEvent.Identifier);
-                        newDist.Identifier = database.AddDistance(newDist);
-                        distDictionary.Add(newDist.Name.ToLower(), newDist);
+                        Distance newDistance = new(person.Distance, theEvent.Identifier);
+                        newDistance.Identifier = database.AddDistance(newDistance);
+                        distDictionary.Add(newDistance.Name.ToLower(), newDistance);
                     };
                     if (partEsDictionary.TryGetValue(person.Identifier, out Participant? old) && old.IsSimilar(person))
                     {
                         // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
                         // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length <= 0 || old.EventSpecific.UploadedVersion < old.EventSpecific.Version)
+                        if (person.Bib.Length < 1 || old.EventSpecific.UploadedVersion < old.EventSpecific.Version)
+                        {
                             continue;
+                        }
                         Participant newPart = new(
                             old.Identifier,
                             person.First.Length > 0 ? person.First : old.FirstName,
@@ -307,8 +310,10 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     {
                         // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
                         // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length <= 0 ||
-                            oldTwo.EventSpecific.UploadedVersion < oldTwo.EventSpecific.Version) continue;
+                        if (person.Bib.Length <= 0 || oldTwo.EventSpecific.UploadedVersion < oldTwo.EventSpecific.Version)
+                        {
+                            continue;
+                        }
                         Participant newPart = new(
                             oldTwo.Identifier,
                             person.First.Length > 0 ? person.First : oldTwo.FirstName,
@@ -357,7 +362,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                         }
                         partsToUpdate.Add(newPart);
                     }
-                    else if (person.First.Length > 0 || person.Last.Length > 0)
+                    else
                     {
                         partsToAdd.Add(
                             new Participant(
