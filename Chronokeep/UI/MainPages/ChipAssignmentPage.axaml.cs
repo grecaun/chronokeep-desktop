@@ -246,26 +246,25 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     private void SaveSingleButton_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Save Single clicked.");
-        long chip = -1;
-        if (!long.TryParse(SingleBibBox.Text, out long bib))
-        {
-            bib = -1;
-        }
+        long chip;
         switch (chipType.Value)
         {
-            case Constants.Settings.CHIP_TYPE_DEC:
-                _ = long.TryParse(SingleChipBox.Text, out chip);
+            default:
+                if (!long.TryParse(SingleChipBox.Text, out chip))
+                {
+                    DialogBox.AsyncShow("The chip is not valid.");
+                    return;
+                }
                 break;
             case Constants.Settings.CHIP_TYPE_HEX:
-                long.TryParse(SingleChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip);
+                if (!long.TryParse(SingleChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out chip))
+                {
+                    DialogBox.AsyncShow("The chip is not valid.");
+                    return;
+                }
                 break;
         }
-        Log.D("UI.MainPages.ChipAssignmentPage", $"Bib {bib} Chip {chip}");
-        if (chip == -1)
-        {
-            DialogBox.AsyncShow("The chip is not valid.");
-            return;
-        }
+        Log.D("UI.MainPages.ChipAssignmentPage", $"Bib {SingleChipBox.Text} Chip {chip}");
         List<BibChipAssociation> bibChips =
         [
             new()
@@ -278,7 +277,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         database.AddBibChipAssociation(theEvent!.Identifier, bibChips);
         bibsChanged = true;
         UpdateView();
-        SingleBibBox.Text = bib > -1 ? (bib + 1).ToString() : "";
+        SingleBibBox.Text = long.TryParse(SingleBibBox.Text, out long bib) ? (bib + 1).ToString() : "";
         SingleBibBox.Focus();
     }
 
@@ -449,32 +448,38 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     private void SaveRangeButton_Click(object? sender, RoutedEventArgs? e)
     {
         Log.D("UI.MainPages.ChipAssignmentPage", "Save Range clicked.");
-        long startChip = -1, endChip = -1;
-        if (!long.TryParse(RangeStartBibBox.Text, out long startBib) || !long.TryParse(RangeEndBibBox.Text, out long endBib))
+        long startChip, endChip;
+        if (!long.TryParse(RangeStartBibBox.Text, out long startBib) ||
+            !long.TryParse(RangeEndBibBox.Text, out long endBib))
         {
             DialogBox.AsyncShow("Invalid bibs for range based assignment.");
             return;
         }
         switch (chipType.Value)
         {
-            case Constants.Settings.CHIP_TYPE_DEC when !long.TryParse(RangeStartChipBox.Text, out startChip) ||
-                                                       !long.TryParse(RangeEndChipLabel.Text!, out endChip):
-            case Constants.Settings.CHIP_TYPE_HEX when !long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip) ||
-                                                       !long.TryParse(RangeEndChipLabel.Text!, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out endChip):
-                DialogBox.AsyncShow("Invalid chip values.");
-                return;
+            case Constants.Settings.CHIP_TYPE_HEX:
+                if (!long.TryParse(RangeStartChipBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out startChip) ||
+                    !long.TryParse(RangeEndChipLabel.Text!, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out endChip))
+                {
+                    DialogBox.AsyncShow("Invalid chip values.");
+                    return;
+                }
+                break;
+            default:
+                if (!long.TryParse(RangeStartChipBox.Text, out startChip) ||
+                    !long.TryParse(RangeEndChipLabel.Text!, out endChip))
+                {
+                    DialogBox.AsyncShow("Invalid chip values.");
+                    return;
+                }
+                break;
         }
         Log.D("UI.MainPages.ChipAssignmentPage", $"StartBib {startBib} EndBib {endBib} StartChip {startChip} EndChip {endChip}");
-        if (startChip == -1 || endChip == -1 || startBib == -1 || endBib == -1)
-        {
-            DialogBox.AsyncShow("One or more values is not valid.");
-            return;
-        }
         List<BibChipAssociation> bibChips = [];
         if (startBib > endBib)
         {
             // Normal save range -- both increase
-            for (long bib = startBib, tag = startChip; bib <= endBib && tag <= endChip; bib++, tag++)
+            for (long bib = startBib, tag = startChip; bib <= endBib; bib++, tag++)
             {
                 bibChips.Add(new BibChipAssociation
                 {
@@ -487,7 +492,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         else
         {
             // Reverse save range -- bib decreases but chip increases
-            for (long bib = startBib, tag=startChip; bib >= endBib && tag <= endChip; bib--, tag++)
+            for (long bib = startBib, tag=startChip; bib >= endBib; bib--, tag++)
             {
                 bibChips.Add(new BibChipAssociation
                 {
