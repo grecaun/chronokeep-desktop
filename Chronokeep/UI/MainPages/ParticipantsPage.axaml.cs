@@ -121,7 +121,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             if (conflicts.Count > 0)
             {
-                ConflictsBtn.Content = $"Conflicts - {conflicts.Count}";
+                ConflictsBtn.Content = $"Conflicts - {conflicts.Count / 2}";
                 ConflictsBtn.IsVisible = true;
             }
             else

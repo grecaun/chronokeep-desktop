@@ -16,6 +16,7 @@ public partial class ParticipantConflicts : ChronokeepWindow
         this.window = window;
 
         ParticipantsList.ItemsSource = participants;
+        CanResize = true;
     }
 
     public static ParticipantConflicts NewWindow(IMainWindow window, List<Participant> participants)

@@ -56,14 +56,10 @@
                     <DataGridTextColumn Header="Last" Binding="{Binding LastName}" MinWidth="175"/>
                     <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" MinWidth="75"/>
                     <DataGridTextColumn Header="Birthday" Binding="{Binding Birthdate}" MinWidth="100"/>
-                    <DataGridTextColumn Header="Goodies" Binding="{Binding Apparel}" MinWidth="150"/>
                     <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" MinWidth="120"/>
                     <DataGridTextColumn Header="Mobile" Binding="{Binding Mobile}" MinWidth="120"/>
                     <DataGridTextColumn Header="EC Name" Binding="{Binding EcName}" MinWidth="150"/>
                     <DataGridTextColumn Header="EC Phone" Binding="{Binding EcPhone}" MinWidth="150"/>
-                    <DataGridTextColumn Header="Anon" Binding="{Binding PrettyAnonymous}" MinWidth="35"/>
-                    <DataGridTextColumn Header="Comments" Binding="{Binding Comments}" MinWidth="200"/>
-                    <DataGridTextColumn Header="Other" Binding="{Binding Other}" MinWidth="150"/>
                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" MinWidth="200"/>
                     <DataGridTextColumn Header="Street" Binding="{Binding Street}" MinWidth="175"/>
                     <DataGridTextColumn Header="Apt" Binding="{Binding Street2}" MinWidth="50"/>
