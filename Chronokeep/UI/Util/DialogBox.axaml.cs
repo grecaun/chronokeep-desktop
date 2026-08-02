@@ -55,7 +55,7 @@ public partial class DialogBox : ChronokeepWindow
                 false,
                 () => { }
             );
-            output.ShowDialog(MainWindow.MWindow!);
+            output.Show(MainWindow.MWindow!);
         }
         catch (Exception)
         {
@@ -72,7 +72,7 @@ public partial class DialogBox : ChronokeepWindow
                 rightButtonContent,
                 rightClick
             );
-            output.ShowDialog(MainWindow.MWindow!);
+            output.Show(MainWindow.MWindow!);
         }
         catch (Exception)
         {
