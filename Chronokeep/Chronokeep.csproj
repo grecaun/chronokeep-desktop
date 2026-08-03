@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <TargetCulture>en-US</TargetCulture>
     <PublisherName>James Sentinella</PublisherName>
@@ -14,6 +14,7 @@
     <AssemblyName>Chronokeep</AssemblyName>
     <RootNamespace>Chronokeep</RootNamespace>
     <IsPackable>false</IsPackable>
+    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Chronokeep.App</StartupObject>

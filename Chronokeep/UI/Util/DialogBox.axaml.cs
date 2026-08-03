@@ -9,6 +9,8 @@ public partial class DialogBox : ChronokeepWindow
     public delegate void ClickDelegate();
     private string copyText = "";
 
+    private bool Exiting = false;
+
     public DialogBox(string message, string leftButtonContent, string rightButtonContent, bool showLeftButton, ClickDelegate leftClick)
     {
         InitializeComponent();
@@ -39,9 +41,16 @@ public partial class DialogBox : ChronokeepWindow
         RightButton.Click += (_, _) =>
         {
             Close();
-            rightClick();
         };
         Topmost = true;
+        Closing += (object? _, WindowClosingEventArgs e) => {
+            if (!Exiting) {
+                e.Cancel = true;
+                Exiting = true;
+                Close();
+                rightClick();
+            }
+        };
     }
 
     public static void Show(string message)

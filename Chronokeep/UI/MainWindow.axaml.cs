@@ -84,6 +84,7 @@ namespace Chronokeep.UI
 #else
         private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
 #endif
+        private static bool WindowIsLoaded = false;
 
         public MainWindow()
         {
@@ -119,15 +120,29 @@ namespace Chronokeep.UI
                 {
                     if (currentProcess.ProcessName == proc.ProcessName && currentProcess.Id != proc.Id)
                     {
-                        DialogBox.Show("Chronokeep is already running.");
-                        try
-                        {
-                            Close();
-                        }
-                        catch (Exception e)
-                        {
-                            Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
-                        }
+                        ParticipantsButton.IsEnabled = false;
+                        ChipsButton.IsEnabled = false;
+                        DistancesButton.IsEnabled = false;
+                        LocationsButton.IsEnabled = false;
+                        SegmentsButton.IsEnabled = false;
+                        AgeGroupsButton.IsEnabled = false;
+                        TimingButton.IsEnabled = false;
+                        AnnouncerButton.IsEnabled = false;
+                        AboutButton.IsEnabled = false;
+                        SettingsButton.IsEnabled = false;
+                        DashboardButton.IsEnabled = false;
+
+                        ParticipantsButton.Opacity = 0.2;
+                        ChipsButton.Opacity = 0.2;
+                        DistancesButton.Opacity = 0.2;
+                        LocationsButton.Opacity = 0.2;
+                        SegmentsButton.Opacity = 0.2;
+                        AgeGroupsButton.Opacity = 0.2;
+                        TimingButton.Opacity = 0.2;
+                        AnnouncerButton.Opacity = 0.2;
+                        AboutButton.Opacity = 0.2;
+                        SettingsButton.Opacity = 0.2;
+                        DashboardButton.Opacity = 0.2;
                         return;
                     }
                 }
@@ -216,6 +231,7 @@ namespace Chronokeep.UI
             TimingWorker timingWorker1 = TimingWorker.NewWorker(this, database);
             Thread timingWorkerThread1 = new(timingWorker1.Run);
             timingWorkerThread1.Start();
+            WindowIsLoaded = true;
         }
 
         public void UpdateTheme(string theme)
@@ -230,6 +246,10 @@ namespace Chronokeep.UI
 
         private void Window_Closing(object sender, WindowClosingEventArgs e)
         {
+            if (!WindowIsLoaded)
+            {
+                return;
+            }
             if (database == null)
             {
                 return;
@@ -330,6 +350,20 @@ namespace Chronokeep.UI
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            if (!WindowIsLoaded)
+            {
+                DialogBox.Show("Chronokeep is already running.", "OK", () => {
+                    try
+                    {
+                        MWindow?.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
+                    }
+                });
+                return;
+            }
             TimingWorker.Notify();
             // Check for current theme color and apply it.
             AppSetting? themeColor = database!.GetAppSetting(Constants.Settings.CURRENT_THEME);

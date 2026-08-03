@@ -61,11 +61,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             : Path.Combine(Directory.GetCurrentDirectory(), "data");
         string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);
         Log.D("UI.MinWindow", "Looking for database file.");
-        if (!Directory.Exists(dirPath))
-        {
-            Log.D("UI.MinWindow", "Creating directory.");
-            Directory.CreateDirectory(dirPath);
-        }
+        Directory.CreateDirectory(dirPath);
         if (!File.Exists(path))
         {
             Log.D("UI.MinWindow", "Creating database file.");

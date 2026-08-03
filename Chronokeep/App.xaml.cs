@@ -44,11 +44,7 @@ namespace Chronokeep
             string logDirPath = IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
                 : Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            if (!Directory.Exists(logDirPath))
-            {
-                Log.D("UI.MainWindow", "Creating log directory.");
-                Directory.CreateDirectory(logDirPath);
-            }
+            Directory.CreateDirectory(logDirPath);
             Globals.ErrorLogPath = Path.Combine(logDirPath, $"{DateTime.Now:yyyyMMdd}_error_log.txt");
             AvaloniaXamlLoader.Load(this);
         }
@@ -97,11 +93,7 @@ namespace Chronokeep
             string logDirPath = IsWindows ?
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
                 : Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            if (!Directory.Exists(logDirPath))
-            {
-                Log.D("UI.MainWindow", "Creating log directory.");
-                Directory.CreateDirectory(logDirPath);
-            }
+            Directory.CreateDirectory(logDirPath);
             string date = DateTime.Now.ToString("yyyyMMdd");
             string logPath = Path.Combine(logDirPath, $"{date}_crash_0.txt");
             int ix = 0;
