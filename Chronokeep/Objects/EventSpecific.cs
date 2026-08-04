@@ -31,7 +31,7 @@
             Apparel = apparel;
             Division = division;
             Version = Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION;
-            UploadedVersion = Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION;
+            UploadedVersion = Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION;
         }
 
         // Constructor the database uses
@@ -90,7 +90,7 @@
 
         internal static EventSpecific Blank()
         {
-            return new EventSpecific(-1, -1, -1, "None", "", 0, "", "", "", 0, "", Constants.Timing.TIMERESULT_DUMMYAGEGROUP, false, false, "", "", Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION, Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION);
+            return new EventSpecific(-1, -1, -1, "None", "", 0, "", "", "", 0, "", Constants.Timing.TIMERESULT_DUMMYAGEGROUP, false, false, "", "", Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION, Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION);
         }
 
         public int Identifier { get; set; }

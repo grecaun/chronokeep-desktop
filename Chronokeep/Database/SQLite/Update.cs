@@ -1135,7 +1135,7 @@ namespace Chronokeep.Database.SQLite
                                     "",
                                     "",
                                     Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION,
-                                    Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION
+                                    Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION
                                     ),
                                 reader["participant_email"].ToString()!,
                                 "",
@@ -1598,7 +1598,7 @@ namespace Chronokeep.Database.SQLite
                         Log.D("Database.SQLite.Update", "Upgrading from version 69.");
                         command = connection.CreateCommand();
                         command.CommandText = $"ALTER TABLE eventspecific ADD COLUMN eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}; " +
-                            $"ALTER TABLE eventspecific ADD COLUMN eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION}; " +
+                            $"ALTER TABLE eventspecific ADD COLUMN eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}; " +
                             $"UPDATE settings SET value='70' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         goto case 70;
@@ -1643,7 +1643,7 @@ namespace Chronokeep.Database.SQLite
                                 "eventspecific_apparel VARCHAR NOT NULL DEFAULT '', " +
                                 "eventspecific_division VARCHAR NOT NULL DEFAULT '', " +
                                 $"eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
-                                $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION}, " +
+                                $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
                                 "UNIQUE (participant_id, event_id, distance_id, eventspecific_bib) ON CONFLICT REPLACE" +
                                 ");" +
                             "INSERT INTO eventspecific SELECT * FROM eventspecific_old;" +

@@ -302,7 +302,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
                 ApparelBox.Text ?? "",
                 DivisionBox.Text ?? "",
                 Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION,
-                Constants.Timing.EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION
+                Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION
                 ),
             EmailBox.Text ?? "",
             PhoneBox.Text ?? "",

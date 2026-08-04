@@ -63,7 +63,6 @@ namespace Chronokeep.Constants
         public const int EVENTSPECIFIC_DNS = 4;
 
         public const int EVENTSPECIFIC_DEFAULT_VERSION = 0;
-        public const int EVENTSPECIFIC_DEFAULT_UPLOADED_VERSION = -1;
 
         public const int COMMON_SEGMENTS_DISTANCEID = -1;
         public const int COMMON_AGEGROUPS_DISTANCEID = -1;
