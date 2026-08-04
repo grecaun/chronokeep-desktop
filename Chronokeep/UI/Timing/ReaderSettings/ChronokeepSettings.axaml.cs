@@ -28,6 +28,14 @@ public partial class ChronokeepSettings : ChronokeepWindow
         InitializeComponent();
         ChronokeepInitialize();
         this.reader = reader;
+        if (!App.IsWindows)
+        {
+            MainGrid.RowDefinitions =
+            [
+                new RowDefinition(new GridLength(15)),
+                new RowDefinition(new GridLength(1, GridUnitType.Star))
+            ];
+        }
         reader.SendGetSettings();
     }
 

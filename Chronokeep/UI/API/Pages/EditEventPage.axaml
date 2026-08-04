@@ -6,7 +6,7 @@
              x:Class="Chronokeep.UI.API.Pages.EditEventPage">
     <StackPanel HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Margin="0,5,0,10">
+                Margin="0,10,0,10">
         <TextBlock Name="HoldingLabel"
                    Text="Retrieving Event, Please Hold."
                    FontSize="18"

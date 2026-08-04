@@ -95,6 +95,9 @@
     <None Remove="IO\HtmlTemplates\Printables\AwardsPrintable.tt" />
     <None Remove="IO\HtmlTemplates\Printables\ResultsPrintableGender.tt" />
     <None Remove="IO\HtmlTemplates\Printables\ResultsPrintableOverall.tt" />
+    <None Update="changelog\2.0.0.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CustomMarshalers" />

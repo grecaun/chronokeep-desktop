@@ -19,7 +19,7 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style> 
     </Window.Styles>
-    <Grid RowDefinitions="auto,*">
+    <Grid Name="MainGrid" RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"

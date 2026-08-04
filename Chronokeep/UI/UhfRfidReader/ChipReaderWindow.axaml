@@ -25,7 +25,7 @@
             <Setter Property="CanUserResizeColumns" Value="True"/>
         </Style>
     </Window.Styles>
-    <Grid RowDefinitions="32,*,auto" Margin="0">
+    <Grid Name="MainGrid" RowDefinitions="auto,*,auto" Margin="0">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"

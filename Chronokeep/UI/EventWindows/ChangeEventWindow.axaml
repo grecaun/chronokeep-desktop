@@ -58,7 +58,7 @@
                      Name="SearchBox"
                      TextChanged="SearchBox_TextChanged"
                      PlaceholderText="Search..."
-                     Margin="35,0,35,15"
+                     Margin="35,5,35,15"
                      VerticalAlignment="Center"
                      VerticalContentAlignment="Center">
                     <TextBox.InnerLeftContent>

@@ -341,10 +341,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         List<TimingSystem> removedSystems = database.GetTimingSystems();
         List<TimingSystem> ourSystems = [];
-        foreach (ReaderPart? box in ReadersBox.Items.Cast<ReaderPart?>())
+        foreach (ReaderPart? box in ReadersBox.Items)
         {
-            box!.UpdateReader();
-            if (box.Reader.IpAddress != "0.0.0.0" && box.Reader.IpAddress.Length > 7 &&
+            box?.UpdateReader();
+            if (box != null && box.Reader.IpAddress != "0.0.0.0" && box.Reader.IpAddress.Length > 7 &&
                 box.Reader.IpAddress != string.Format(IpFormat, baseIp[0], baseIp[1], baseIp[2], baseIp[3]))
             {
                 ourSystems.Add(box.Reader);

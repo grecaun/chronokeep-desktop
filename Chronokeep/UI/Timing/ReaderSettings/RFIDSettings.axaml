@@ -11,7 +11,7 @@
         Topmost="True"
         Closed="Window_Closed"
         >
-    <Grid RowDefinitions="auto,*">
+    <Grid Name="MainGrid" RowDefinitions="auto,*">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"

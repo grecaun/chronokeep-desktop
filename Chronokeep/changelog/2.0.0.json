@@ -1,0 +1,24 @@
+{
+  "version": "v2.0.0",
+  "changes": [
+    "UI framework changed from WPF-UI to Avalonia to enable cross platform compatibility.",
+    "Changed when the program checks for conflicting participant information. It now happens whenever a participant change is detected while on the participants page, or when the participant page is loaded.",
+    "Added a link to the help documents folder to the about page.",
+    "Updated the links on the about page removing the links to no longer used packages and adding the new packages that are used.",
+    "Added the ability to link chips in reverse order, that is bibs can count down while chips count up.",
+    "DNF entries can now be listed as having a location attached to keep track of where a runner dropped.",
+    "There is now a switch to show every linked distance or just the main distances for bib pickup numbers on the participants page and the finished/active/dns stats on the timing page.",
+    "Downloading participants from the API has a minor overhaul. It now adds duplicates when a bib conflict on a single person is detected instead of clobbering information and it will add a distance if it doesn't recognize the distance.",
+    "Added a prompt confirming the user wants to delete participants from the API to ensure it wasn't an accidental button click.",
+    "Importing participants should no longer prompt when there are conflicts, it should just import them and the conflicts button should appear allowing the user to deal with it in the main UI."
+  ],
+  "fixes": [
+    "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",
+    "Fixed the issues with the 'base the running clock on this distance/wave' combobox.",
+    "Reader notification windows are no longer synchronous and should not cause reader disconnects.",
+    "Awards and Print pages have been fixed/updated to work properly and across platforms.",
+    "Fixed an issue where a secondary program would never overwrite participant information originally downloaded from the API with newer information from the API.",
+    "Changed the default dummy bib/chip from a value of '-1' to an empty string to ensure a person isn't accidentally assigned to an unknown chip read.",
+    "Fixed a silent error where the program would stop the download of participants from the api if it matched via participant information and not participant ID."
+  ]
+}

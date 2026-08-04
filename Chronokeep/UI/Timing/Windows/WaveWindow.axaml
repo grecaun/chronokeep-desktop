@@ -13,7 +13,7 @@
         Topmost="True"
         Closing="Window_Closing"
         >
-    <Grid RowDefinitions="32,*,auto,auto">
+    <Grid Name="MainGrid" RowDefinitions="32,*,auto,auto">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"
@@ -21,7 +21,7 @@
                 DoubleTapped="OnTitleBarDoubleTapped"
                 Name="ChronokeepToolBar"
                 >
-            <DockPanel Margin="0">
+            <DockPanel Margin="0,0,0,10">
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
                            HorizontalAlignment="Right">
@@ -64,7 +64,8 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                    Margin="0,0,0,10">
             <Button Name="SetButton"
                     Content="Set"
                     Click="SetButton_Click"

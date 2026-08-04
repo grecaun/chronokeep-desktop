@@ -112,6 +112,15 @@ public partial class ImportFileWindow : ChronokeepWindow
         }
         page = new ImportFilePage1(importer);
         Frame.Content = page;
+        if (!App.IsWindows)
+        {
+            MainGrid.RowDefinitions =
+            [
+                new RowDefinition(new GridLength(10)),
+                new RowDefinition(new GridLength(1, GridUnitType.Auto)),
+                new RowDefinition(new GridLength(1, GridUnitType.Star))
+            ];
+        }
     }
 
     public static ImportFileWindow NewWindow(IMainWindow window, IDataImporter importer, IdbInterface database)

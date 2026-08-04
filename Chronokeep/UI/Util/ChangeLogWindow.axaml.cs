@@ -46,6 +46,15 @@ public partial class ChangeLogWindow : ChronokeepWindow
         LogList.ItemsSource = changelogEntries;
         AppSetting? autoChangelog = database.GetAppSetting(Constants.Settings.AUTO_SHOW_CHANGELOG);
         AutoChangelogToggleSwitch.IsChecked = autoChangelog is { Value: Constants.Settings.SETTING_TRUE };
+        if (!App.IsWindows)
+        {
+            MainGrid.RowDefinitions =
+            [
+                new RowDefinition(new GridLength(10)),
+                new RowDefinition(new GridLength(1, GridUnitType.Star)),
+                new RowDefinition(new GridLength(55))
+            ];
+        }
     }
 
     public static ChangeLogWindow NewWindow(IWindowCallback window, IdbInterface database)

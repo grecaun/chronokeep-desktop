@@ -13,7 +13,7 @@
         Topmost="True"
         Closing="Window_Closing"
         >
-    <Grid RowDefinitions="32,*,auto">
+    <Grid Name="MainGrid" RowDefinitions="auto,*,auto">
         <Border Grid.Row="0"
                 Background="Transparent"
                 WindowDecorationProperties.ElementRole="TitleBar"

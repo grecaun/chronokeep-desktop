@@ -43,6 +43,16 @@ public partial class WaveWindow : ChronokeepWindow
             WaveList.Items.Add(new WavePart(waveNum, waveTimes[waveNum].seconds, waveTimes[waveNum].milliseconds));
         }
         NetTimeButton.IsChecked = true;
+        if (!App.IsWindows)
+        {
+            MainGrid.RowDefinitions =
+            [
+                new RowDefinition(new GridLength(15)),
+                new RowDefinition(new GridLength(1, GridUnitType.Star)),
+                new RowDefinition(new GridLength(1, GridUnitType.Auto)),
+                new RowDefinition(new GridLength(1, GridUnitType.Auto))
+            ];
+        }
     }
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
