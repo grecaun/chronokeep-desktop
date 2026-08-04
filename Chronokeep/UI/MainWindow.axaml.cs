@@ -143,6 +143,10 @@ namespace Chronokeep.UI
                         AboutButton.Opacity = 0.2;
                         SettingsButton.Opacity = 0.2;
                         DashboardButton.Opacity = 0.2;
+                        MinWidth = 0;
+                        MinHeight = 0;
+                        Height = 0;
+                        Width = 0;
                         return;
                     }
                 }
