@@ -354,10 +354,10 @@ public partial class ParticipantsPage : UserControl, IMainPage
                             oldTwo.EcPhone
                         );
                         // Check if the bib has changed
-                        if (old!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
+                        if (oldTwo!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
                             // Add the old value so we can track it.
-                            old.Identifier = -1;
+                            oldTwo.Identifier = -1;
                             partsToAdd.Add(old);
                         }
                         partsToUpdate.Add(newPart);
@@ -418,9 +418,9 @@ public partial class ParticipantsPage : UserControl, IMainPage
             Download.Content = "Download";
             UpdateView();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Log.D("UI.MainPages.ParticipantsPage", "Error downloading participants.");
+            Log.D("UI.MainPages.ParticipantsPage", $"Error downloading participants. {e}");
         }
     }
 
