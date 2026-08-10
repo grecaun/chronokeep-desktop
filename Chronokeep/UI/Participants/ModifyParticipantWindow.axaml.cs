@@ -134,6 +134,27 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         LastBox.Text = person.LastName;
         BirthdayBox.SelectedDate = DateTime.Parse(person.Birthdate);
         AgeBox.Text = person.Age(theEvent.Date);
+        GenderBox.Items.Clear();
+        GenderBox.Items.Add(new ComboBoxItem
+        {
+            Content = "Not Specified",
+        });
+        GenderBox.Items.Add(new ComboBoxItem
+        {
+            Content = theEvent.UseMaleFemale ? "Male" : "Man",
+        });
+        GenderBox.Items.Add(new ComboBoxItem
+        {
+            Content = theEvent.UseMaleFemale ? "Female" : "Woman",
+        });
+        GenderBox.Items.Add(new ComboBoxItem
+        {
+            Content = "Non-Binary",
+        });
+        GenderBox.Items.Add(new ComboBoxItem
+        {
+            Content = "Other",
+        });
         bool genderFound = false;
         ComboBoxItem? otherBoxItem = null, notSpecifiedBoxItem = null;
         foreach (object? item in GenderBox.Items)

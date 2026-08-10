@@ -105,6 +105,7 @@ public partial class DashboardPage : UserControl, IMainPage
             ApiLinkButton.Content = "Link to API Event";
         }
         RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
+        GenderBox.SelectedIndex = theEvent.UseMaleFemale ? 1 : 0;
     }
 
     private void DisableEditableFields()
@@ -119,6 +120,7 @@ public partial class DashboardPage : UserControl, IMainPage
         PlacementsCheckBox.IsEnabled = false;
         UploadSpecificDistanceResults.IsEnabled = false;
         TypeBox.IsEnabled = false;
+        GenderBox.IsEnabled = false;
     }
 
     private void EnableEditableFields()
@@ -142,6 +144,7 @@ public partial class DashboardPage : UserControl, IMainPage
         TypeBox.IsEnabled = true;
         PlacementsCheckBox.IsEnabled = true;
         UploadSpecificDistanceResults.IsEnabled = true;
+        GenderBox.IsEnabled = true;
     }
 
     private bool CancelEventChangeAsync(EventClickType clickType)
@@ -704,6 +707,17 @@ public partial class DashboardPage : UserControl, IMainPage
             theEvent.DistanceSpecificSegments = SegmentCheckBox.IsChecked ?? false;
             theEvent.DisplayPlacements = PlacementsCheckBox.IsChecked ?? true;
             theEvent.UploadSpecific = UploadSpecificDistanceResults.IsChecked ?? false;
+            bool useMaleFemale = GenderBox.SelectedIndex == 1;
+            if (theEvent.UseMaleFemale != useMaleFemale)
+            {
+                List<Participant> participants = database.GetParticipants(theEvent.Identifier);
+                foreach (Participant part in participants)
+                {
+                    part.FormatData(useMaleFemale);
+                }
+                database.UpdateParticipants(participants);
+            }
+            theEvent.UseMaleFemale = useMaleFemale;
             try
             {
                 theEvent.EventType = (int)((ComboBoxItem)TypeBox.SelectedItem!).Tag!;

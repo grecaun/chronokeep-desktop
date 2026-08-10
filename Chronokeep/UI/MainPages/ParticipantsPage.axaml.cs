@@ -358,7 +358,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                         {
                             // Add the old value so we can track it.
                             oldTwo.Identifier = -1;
-                            partsToAdd.Add(old);
+                            partsToAdd.Add(oldTwo);
                         }
                         partsToUpdate.Add(newPart);
                     }

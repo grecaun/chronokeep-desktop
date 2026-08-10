@@ -34,7 +34,7 @@ namespace Chronokeep.Objects
             EcName = ecName;
             EcPhone = ecPhone;
             Trim();
-            FormatData();
+            //FormatData();
         }
 
         public Participant(
@@ -97,7 +97,7 @@ namespace Chronokeep.Objects
             EcPhone = EcPhone.Trim();
         }
 
-        internal void FormatData()
+        internal void FormatData(bool UseMaleFemale)
         {
             if (!string.IsNullOrEmpty(FirstName))
             {
@@ -433,15 +433,17 @@ namespace Chronokeep.Objects
             {
                 Gender = CapitalizeFirstAll(Gender.Trim());
                 if (Gender.Equals("M", StringComparison.OrdinalIgnoreCase)
-                    || Gender.Equals("Male", StringComparison.OrdinalIgnoreCase))
+                    || Gender.Equals("Male", StringComparison.OrdinalIgnoreCase)
+                    || Gender.Equals("Man", StringComparison.OrdinalIgnoreCase))
                 {
-                    Gender = "Man";
+                    Gender = UseMaleFemale ? "Male" : "Man";
                 }
                 else if (Gender.Equals("F", StringComparison.OrdinalIgnoreCase)
                     || Gender.Equals("Female", StringComparison.OrdinalIgnoreCase)
-                    || Gender.Equals("W", StringComparison.OrdinalIgnoreCase))
+                    || Gender.Equals("W", StringComparison.OrdinalIgnoreCase)
+                    || Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase))
                 {
-                    Gender = "Woman";
+                    Gender = UseMaleFemale ? "Female" : "Woman";
                 }
                 else if (Gender.Equals("NB", StringComparison.OrdinalIgnoreCase) ||
                     Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ||
@@ -656,7 +658,7 @@ namespace Chronokeep.Objects
             EventSpecific.SmsEnabled = smsEnabled;
             Mobile = mobile;
             Trim();
-            FormatData();
+            //FormatData();
         }
 
         public void CopyFrom(Participant other)
@@ -679,7 +681,7 @@ namespace Chronokeep.Objects
             EcPhone = other.EcPhone;
             EcName = other.EcName;
             Trim();
-            FormatData();
+            //FormatData();
         }
 
         public bool IsSimilar(ApiPerson other)

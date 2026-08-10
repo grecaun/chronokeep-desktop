@@ -6,16 +6,16 @@ namespace Chronokeep.Objects
     public class Event : IEquatable<Event>, IComparable<Event>
     {
         private int commonAgeGroups = 1, commonStartFinish = 1, distanceSpecificSegments, rankByGun = 1;
-        private int displayPlacements = 1, divisionsEnabled, uploadSpecific;
+        private int displayPlacements = 1, divisionsEnabled, uploadSpecific, useMaleFemale = 0;
 
         public Event() { }
 
-        public Event(string n, long d, string yearcode)
+        public Event(string n, long d, string yearCode)
         {
             DateTime time = new(d);
             Date = time.ToShortDateString();
             Name = n;
-            YearCode = yearcode;
+            YearCode = yearCode;
             StartWindow = 600;
             FinishIgnoreWithin = 600;
         }
@@ -58,10 +58,10 @@ namespace Chronokeep.Objects
         }
 
         public Event(int id, string n, string d, int age, int start, int seg,
-            int gun, string yearcode, int maxOcc, int ignWith, int window,
-            long startsec, int startmill, int type, int apiId,
-            string apiEventId, int dispPlacements, int ageGroupsAsDivisions,
-            int daysAllowed, int upSpecific, int startMaxOccurrences)
+            int gun, string yearCode, int maxOcc, int ignWith, int window,
+            long startSec, int startMill, int type, int apiId,
+            string apiEventId, int displayPlacements, int ageGroupsAsDivisions,
+            int daysAllowed, int upSpecific, int startMaxOccurrences, bool useMaleFemale)
         {
             Identifier = id;
             Name = n;
@@ -71,20 +71,21 @@ namespace Chronokeep.Objects
             commonStartFinish = start;
             distanceSpecificSegments = seg;
             rankByGun = gun;
-            YearCode = yearcode;
+            YearCode = yearCode;
             FinishMaxOccurrences = maxOcc;
             FinishIgnoreWithin = ignWith;
             StartWindow = window;
-            StartSeconds = startsec;
-            StartMilliseconds = startmill;
+            StartSeconds = startSec;
+            StartMilliseconds = startMill;
             EventType = type;
             ApiId = apiId;
             ApiEventId = apiEventId;
-            displayPlacements = dispPlacements;
+            this.displayPlacements = displayPlacements;
             divisionsEnabled = ageGroupsAsDivisions;
             DaysAllowed = daysAllowed;
             uploadSpecific = upSpecific;
             StartMaxOccurrences = startMaxOccurrences;
+            UseMaleFemale = useMaleFemale;
         }
 
         public int Identifier { get; set; }
@@ -111,6 +112,7 @@ namespace Chronokeep.Objects
             private set => divisionsEnabled = value ? 1 : 0; }
         public int DaysAllowed { get; private set; } = 1;
         public bool UploadSpecific { get => uploadSpecific != 0; set => uploadSpecific = value ? 1 : 0; }
+        public bool UseMaleFemale { get => useMaleFemale != 0; set => useMaleFemale = value ? 1 : 0; }
 
         public string EventTypeString
         {
@@ -152,6 +154,7 @@ namespace Chronokeep.Objects
             DivisionsEnabled = other.DivisionsEnabled;
             DaysAllowed = other.DaysAllowed;
             RankByGun = other.RankByGun;
+            UseMaleFemale = other.UseMaleFemale;
         }
 
         public void CopyAll(Event other)
@@ -176,6 +179,7 @@ namespace Chronokeep.Objects
             DivisionsEnabled = other.DivisionsEnabled;
             DaysAllowed = other.DaysAllowed;
             UploadSpecific = other.UploadSpecific;
+            UseMaleFemale = other.UseMaleFemale;
         }
     }
 }

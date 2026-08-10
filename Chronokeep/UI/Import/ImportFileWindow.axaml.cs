@@ -368,19 +368,19 @@ public partial class ImportFileWindow : ChronokeepWindow
                     foreach (Participant p in updatedParticipants)
                     {
                         p.Trim();
-                        p.FormatData();
+                        p.FormatData(theEvent.UseMaleFemale);
                     }
                     database.UpdateParticipants(updatedParticipants);
                     Log.D("ImportFileWindow", "Adding new participants.");
                     foreach (Participant p in importParticipants)
                     {
                         p.Trim();
-                        p.FormatData();
+                        p.FormatData(theEvent.UseMaleFemale);
                     }
                     database.AddParticipants(importParticipants);
                 });
                 Log.D("ImportFileWindow", "All done with the import.");
-                database.ResetTimingResultsEvent(theEvent!.Identifier);
+                database.ResetTimingResultsEvent(theEvent.Identifier);
                 window?.NetworkClearResults();
                 window?.NotifyTimingWorker();
                 Close();

@@ -235,7 +235,7 @@ namespace Chronokeep.Network.Registration
                                                             ""  // emergency phone
                                                             );
                                                         newPart.Trim();
-                                                        newPart.FormatData();
+                                                        newPart.FormatData(theEvent.UseMaleFemale);
                                                         database.AddParticipant(newPart);
                                                         SendParticipants(theEvent);
                                                         mWindow.UpdateParticipantsFromRegistration();
@@ -361,7 +361,7 @@ namespace Chronokeep.Network.Registration
                                                                 ""  // emergency phone
                                                             );
                                                             newPart.Trim();
-                                                            newPart.FormatData();
+                                                            newPart.FormatData(theEvent.UseMaleFemale);
                                                             newParts.Add(newPart);
                                                         }
                                                         else if (part.Bib.Length > 0)

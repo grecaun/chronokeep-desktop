@@ -10,7 +10,7 @@ namespace Chronokeep.Database.SQLite
     {
         internal static Participant AddParticipant(Participant person, SQLiteConnection connection)
         {
-            person.FormatData();
+            //person.FormatData();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "INSERT INTO participants " +

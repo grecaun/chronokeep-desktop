@@ -15,9 +15,9 @@ namespace Chronokeep.Database.SQLite
                 "event_common_age_groups, event_common_start_finish, event_distance_specific_segments, " +
                 "event_start_time_seconds, event_start_time_milliseconds, event_finish_max_occurances, event_finish_ignore_within, " +
                 "event_start_window, event_type, event_display_placements, event_age_groups_as_divisions, event_days_allowed, event_upload_specific_distance_results, " +
-                "event_start_max_occurrences)" +
+                "event_start_max_occurrences, event_use_male_female)" +
                 " VALUES(@name,@date,@yearcode,@gun,@age,@start,@sepseg,@startsec,@startmill,@occ,@ign,@window," +
-                "@type,@display,@agDiv,@daysAllowed,@uploadSpecific,@startOcc)";
+                "@type,@display,@agDiv,@daysAllowed,@uploadSpecific,@startOcc,@useMaleFemale)";
             command.Parameters.AddRange([
                 new SQLiteParameter("@name", anEvent.Name),
                 new SQLiteParameter("@date", anEvent.Date),
@@ -37,6 +37,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@daysAllowed", anEvent.DaysAllowed),
                 new SQLiteParameter("@uploadSpecific", anEvent.UploadSpecific ? 1 : 0),
                 new SQLiteParameter("@startOcc", anEvent.StartMaxOccurrences),
+                new SQLiteParameter("@useMaleFemale", anEvent.UseMaleFemale ? 1 : 0),
             ]);
             command.ExecuteNonQuery();
             long outVal = connection.LastInsertRowId;
@@ -92,7 +93,8 @@ namespace Chronokeep.Database.SQLite
                 "event_age_groups_as_divisions=@agDiv," +
                 "event_days_allowed=@daysAllowed," +
                 "event_upload_specific_distance_results=@uploadSpecific," +
-                "event_start_max_occurrences=@startOcc" +
+                "event_start_max_occurrences=@startOcc," +
+                "event_use_male_female=@useMaleFemale" +
                 " WHERE event_id=@id";
             command.Parameters.AddRange([
                 new SQLiteParameter("@id", anEvent.Identifier),
@@ -116,6 +118,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@daysAllowed", anEvent.DaysAllowed),
                 new SQLiteParameter("@uploadSpecific", anEvent.UploadSpecific ? 1 : 0),
                 new SQLiteParameter("@startOcc", anEvent.StartMaxOccurrences),
+                new SQLiteParameter("@useMaleFemale", anEvent.UseMaleFemale ? 1 : 0),
             ]);
             command.ExecuteNonQuery();
         }
@@ -149,7 +152,8 @@ namespace Chronokeep.Database.SQLite
                     Convert.ToInt32(reader["event_age_groups_as_divisions"]),
                     Convert.ToInt32(reader["event_days_allowed"]),
                     Convert.ToInt32(reader["event_upload_specific_distance_results"]),
-                    Convert.ToInt32(reader["event_start_max_occurrences"])
+                    Convert.ToInt32(reader["event_start_max_occurrences"]),
+                    Convert.ToInt32(reader["event_use_male_female"]) != 0
                     ));
             }
             reader.Close();
@@ -208,7 +212,8 @@ namespace Chronokeep.Database.SQLite
                     Convert.ToInt32(reader["event_age_groups_as_divisions"]),
                     Convert.ToInt32(reader["event_days_allowed"]),
                     Convert.ToInt32(reader["event_upload_specific_distance_results"]),
-                    Convert.ToInt32(reader["event_start_max_occurrences"])
+                    Convert.ToInt32(reader["event_start_max_occurrences"]),
+                    Convert.ToInt32(reader["event_use_male_female"]) != 0
                     );
             }
             reader.Close();

@@ -17,7 +17,7 @@ namespace Chronokeep.Database
          * HIGHEST LOCK ID = 175
          * NEXT AVAILABLE   = 176
          */
-        private const int Version = 74;
+        private const int Version = 75;
         public const int MINIMUM_COMPATIBLE_VERSION = 63;
         private readonly Lock dbLock = new();
 
@@ -621,7 +621,7 @@ namespace Chronokeep.Database
             }
             try
             {
-                person.FormatData();
+                //person.FormatData();
                 SQLiteConnection connection = new($"Data Source={info};Version=3");
                 connection.Open();
                 using (SQLiteTransaction? transaction = connection.BeginTransaction())
@@ -653,7 +653,7 @@ namespace Chronokeep.Database
                 {
                     foreach (Participant person in participants)
                     {
-                        person.FormatData();
+                        //person.FormatData();
                         Participants.UpdateParticipant(person, connection);
                     }
                     transaction.Commit();

@@ -93,6 +93,7 @@ namespace Chronokeep.Database.SQLite
                     $"event_type INTEGER NOT NULL DEFAULT {Constants.Timing.EVENT_TYPE_DISTANCE}," +
                     "event_days_allowed INTEGER NOT NULL DEFAULT 1," +
                     "event_upload_specific_distance_results INTEGER NOT NULL DEFAULT 0," +
+                    "event_use_male_female INTEGER NOT NULL DEFAULT 0," +
                     "api_id INTEGER REFERENCES results_api(api_id) NOT NULL DEFAULT -1," +
                     "api_event_id VARCHAR(200) NOT NULL DEFAULT ''," +
                     "event_display_placements INTEGER NOT NULL DEFAULT 1," +
