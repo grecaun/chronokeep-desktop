@@ -1000,46 +1000,14 @@ namespace Chronokeep.Timing.Routines
             {
                 segmentResults.Sort((x1, x2) =>
                 {
-                    Distance? distance1 = null, distance2 = null;
-                    int rank1 = 0, rank2 = 0;
-                    // Get *linked* distances. (Could be that specific distance)
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oLinkedDistances))
-                    {
-                        (distance1, rank1) = oLinkedDistances;
-                    }
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tLinkedDistances))
-                    {
-                        (distance2, rank2) = tLinkedDistances;
-                    }
-                    // Check if they're in the same distance or a linked distance.
-                    if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                        return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                    // Sort based on rank.  This is the linked distance sorting item.
-                    if (rank1 != rank2) return rank1.CompareTo(rank2);
-                    return x1.CompareClock(x2);
+                    return CompareByClockTime(x1, x2, dictionary);
                 });
             }
             else
             {
                 segmentResults.Sort((x1, x2) =>
                 {
-                    Distance? distance1 = null, distance2 = null;
-                    int rank1 = 0, rank2 = 0;
-                    // Get *linked* distances. (Could be that specific distance)
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
-                    {
-                        (distance1, rank1) = oDist;
-                    }
-                    if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
-                    {
-                        (distance2, rank2) = tDist;
-                    }
-                    // Check if they're in the same distance or a linked distance.
-                    if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                        return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                    // Sort based on rank.  This is the linked distance sorting item.
-                    if (rank1 != rank2) return rank1.CompareTo(rank2);
-                    return x1.CompareChip(x2);
+                    return CompareByChipTime(x1, x2, dictionary);
                 });
             }
             List<TimeResult> dnfResults = segmentResults.FindAll(x => x.IsDnf());
@@ -1127,23 +1095,7 @@ namespace Chronokeep.Timing.Routines
                     results.RemoveRange(0, 3);
                     results.Sort((x1, x2) =>
                     {
-                        Distance? distance1 = null, distance2 = null;
-                        int rank1 = 0, rank2 = 0;
-                        // Get *linked* distances. (Could be that specific distance)
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
-                        {
-                            (distance1, rank1) = oDist;
-                        }
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
-                        {
-                            (distance2, rank2) = tDist;
-                        }
-                        // Check if they're in the same distance or a linked distance.
-                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                        // Sort based on rank.  This is the linked distance new sorting item.
-                        if (rank1 != rank2) return rank1.CompareTo(rank2);
-                        return x1.CompareChip(x2);
+                        return CompareByChipTime(x1, x2, dictionary);
                     });
                     int place = 4;
                     foreach (TimeResult res in results)
@@ -1159,23 +1111,7 @@ namespace Chronokeep.Timing.Routines
                     results.RemoveRange(0, 3);
                     results.Sort((x1, x2) =>
                     {
-                        Distance? distance1 = null, distance2 = null;
-                        int rank1 = 0, rank2 = 0;
-                        // Get *linked* distances. (Could be that specific distance)
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
-                        {
-                            (distance1, rank1) = oDist;
-                        }
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
-                        {
-                            (distance2, rank2) = tDist;
-                        }
-                        // Check if they're in the same distance or a linked distance.
-                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                        // Sort based on rank.  This is the linked distance new sorting item.
-                        if (rank1 != rank2) return rank1.CompareTo(rank2);
-                        return x1.CompareChip(x2);
+                        return CompareByChipTime(x1, x2, dictionary);
                     });
                     int place = 4;
                     foreach (TimeResult res in results)
@@ -1191,23 +1127,7 @@ namespace Chronokeep.Timing.Routines
                     results.RemoveRange(0, 3);
                     results.Sort((x1, x2) =>
                     {
-                        Distance? distance1 = null, distance2 = null;
-                        int rank1 = 0, rank2 = 0;
-                        // Get *linked* distances. (Could be that specific distance)
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
-                        {
-                            (distance1, rank1) = oDist;
-                        }
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
-                        {
-                            (distance2, rank2) = tDist;
-                        }
-                        // Check if they're in the same distance or a linked distance.
-                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                        // Sort based on rank.  This is the linked distance new sorting item.
-                        if (rank1 != rank2) return rank1.CompareTo(rank2);
-                        return x1.CompareChip(x2);
+                        return CompareByChipTime(x1, x2, dictionary);
                     });
                     int place = 4;
                     foreach (TimeResult res in results)
@@ -1223,23 +1143,7 @@ namespace Chronokeep.Timing.Routines
                     results.RemoveRange(0, 3);
                     results.Sort((x1, x2) =>
                     {
-                        Distance? distance1 = null, distance2 = null;
-                        int rank1 = 0, rank2 = 0;
-                        // Get *linked* distances. (Could be that specific distance)
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
-                        {
-                            (distance1, rank1) = oDist;
-                        }
-                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
-                        {
-                            (distance2, rank2) = tDist;
-                        }
-                        // Check if they're in the same distance or a linked distance.
-                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
-                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                        // Sort based on rank.  This is the linked distance new sorting item.
-                        if (rank1 != rank2) return rank1.CompareTo(rank2);
-                        return x1.CompareChip(x2);
+                        return CompareByChipTime(x1, x2, dictionary);
                     });
                     int place = 4;
                     foreach (TimeResult res in results)
@@ -1251,6 +1155,48 @@ namespace Chronokeep.Timing.Routines
             }
             segmentResults.AddRange(dnfResults);
             return segmentResults;
+        }
+
+        public static int CompareByChipTime(TimeResult one, TimeResult two, TimingDictionary dictionary)
+        {
+            Distance? distance1 = null, distance2 = null;
+            int rank1 = 0, rank2 = 0;
+            // Get *linked* distances. (Could be that specific distance)
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) oneDistance))
+            {
+                (distance1, rank1) = oneDistance;
+            }
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) twoDistance))
+            {
+                (distance2, rank2) = twoDistance;
+            }
+            // Check if they're in the same distance or a linked distance.
+            if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            // Sort based on rank.  This is the linked distance new sorting item.
+            if (rank1 != rank2) return rank1.CompareTo(rank2);
+            return one.CompareChip(two);
+        }
+
+        public static int CompareByClockTime(TimeResult one, TimeResult two, TimingDictionary dictionary)
+        {
+            Distance? distance1 = null, distance2 = null;
+            int rank1 = 0, rank2 = 0;
+            // Get *linked* distances. (Could be that specific distance)
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) oneDistance))
+            {
+                (distance1, rank1) = oneDistance;
+            }
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) twoDistance))
+            {
+                (distance2, rank2) = twoDistance;
+            }
+            // Check if they're in the same distance or a linked distance.
+            if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);
+            // Sort based on rank.  This is the linked distance new sorting item.
+            if (rank1 != rank2) return rank1.CompareTo(rank2);
+            return one.CompareClock(two);
         }
     }
 }

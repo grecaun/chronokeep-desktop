@@ -288,7 +288,7 @@ namespace Chronokeep.Objects
         public int Type { get; private set; }
         public string Identifier => UnknownId;
         public string PrettyType => PrettyTypeStr();
-        public string PrettyGender => Gender == "Man" ? "M" : Gender == "Woman" ? "W" : Gender == "Non-Binary" ? "X" : Gender == "Not Specified" || Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : Gender.Length <= 2 ? Gender : Gender[..2];
+        public string PrettyGender => Gender == "Man" || Gender == "Male" ? "M" : Gender == "Woman" ? "W" : Gender == "Non-Binary" ? "X" : Gender == "Female" ? "F" : Gender == "Not Specified" || Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : Gender.Length <= 2 ? Gender : Gender[..2];
 
         private string PrettyTypeStr()
         {
