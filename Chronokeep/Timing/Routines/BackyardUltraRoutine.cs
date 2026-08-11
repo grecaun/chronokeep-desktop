@@ -1198,9 +1198,9 @@ namespace Chronokeep.Timing.Routines
                 lastResult[res.Identifier] = res;
             }
             List<TimeResult> lastResultList = [.. lastResult.Values];
-            // Rank By Gun (Clock) is assumed to be rank by elapsed time
-            // !Rank By Gun is rank by cumulative
-            if (!theEvent.RankByGun)
+            // RankedBy.Clock is assumed to be rank by elapsed time
+            // !RankedBy.Clock is rank by cumulative
+            if (theEvent.RankedBy != RankingType.Clock)
             {
                 lastResultList.Sort(TimeResult.CompareForBackyardCumulative);
             }

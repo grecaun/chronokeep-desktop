@@ -573,6 +573,11 @@ namespace Chronokeep.Objects
             return ChipSeconds == other.ChipSeconds ? ChipMilliseconds.CompareTo(other.ChipMilliseconds) : ChipSeconds.CompareTo(other.ChipSeconds);
         }
 
+        public int CompareClock(TimeResult other)
+        {
+            return Seconds == other.Seconds ? Milliseconds.CompareTo(other.Milliseconds) : Seconds.CompareTo(other.Seconds);
+        }
+
         public static int CompareByDistanceChip(TimeResult one, TimeResult two)
         {
             if (!one.DistanceName.Equals(two.DistanceName)) return string.Compare(one.DistanceName, two.DistanceName, StringComparison.Ordinal);

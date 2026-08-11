@@ -94,8 +94,18 @@ public partial class ApiPage3 : UserControl
                     Content = "Chip",
                     Tag = "Chip"
                 });
+                RankBox.Items.Add(new ComboBoxItem
+                {
+                    Content = "Mixed",
+                    Tag = "Mixed"
+                });
             }
-            RankBox.SelectedIndex = theEvent.RankByGun ? 0 : 1;
+            RankBox.SelectedIndex = theEvent.RankedBy switch
+            {
+                RankingType.Chip => 1,
+                RankingType.Mixed => 2,
+                _ => 0,
+            };
             YearPanel.IsVisible = true;
             HoldingLabel.IsVisible = false;
         }

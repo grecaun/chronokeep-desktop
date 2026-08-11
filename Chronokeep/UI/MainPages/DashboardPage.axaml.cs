@@ -22,6 +22,8 @@ public partial class DashboardPage : UserControl, IMainPage
     private readonly IdbInterface database;
     private Event? theEvent;
 
+    private bool loaded = false;
+
     public DashboardPage(IMainWindow mainWindow, IdbInterface db)
     {
         InitializeComponent();
@@ -50,8 +52,47 @@ public partial class DashboardPage : UserControl, IMainPage
         EventNameTextBox.Text = theEvent.Name;
         EventYearCodeTextBox.Text = theEvent.YearCode;
         EventDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
-        RankByGunCheckBox.IsChecked = theEvent.RankByGun;
-        RankByGunLabel.Content = theEvent is { EventType: Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA } ? "Rank by Elapsed Time" : "Rank by Clock Time";
+        RankBox.Items.Clear();
+        if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
+        {
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Elapsed"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Cumulative"
+            });
+            if (theEvent.RankedBy == RankingType.Clock)
+            {
+                RankBox.SelectedIndex = 0;
+            }
+            else
+            {
+                RankBox.SelectedIndex = 1;
+            }
+        }
+        else
+        {
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Clock"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Chip"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Mixed"
+            });
+            RankBox.SelectedIndex = theEvent.RankedBy switch
+            {
+                RankingType.Chip => 1,
+                RankingType.Mixed => 2,
+                _ => 0
+            };
+        }
         CommonAgeCheckBox.IsChecked = theEvent.CommonAgeGroups;
         CommonStartCheckBox.IsChecked = theEvent.CommonStartFinish;
         SegmentCheckBox.IsChecked = theEvent.DistanceSpecificSegments;
@@ -106,6 +147,7 @@ public partial class DashboardPage : UserControl, IMainPage
         }
         RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
         GenderBox.SelectedIndex = theEvent.UseMaleFemale ? 1 : 0;
+        loaded = true;
     }
 
     private void DisableEditableFields()
@@ -113,7 +155,7 @@ public partial class DashboardPage : UserControl, IMainPage
         EventNameTextBox.IsEnabled = false;
         EventYearCodeTextBox.IsEnabled = false;
         EventDatePicker.IsEnabled = false;
-        RankByGunCheckBox.IsEnabled = false;
+        RankBox.IsEnabled = false;
         CommonAgeCheckBox.IsEnabled = false;
         CommonStartCheckBox.IsEnabled = false;
         SegmentCheckBox.IsEnabled = false;
@@ -128,7 +170,7 @@ public partial class DashboardPage : UserControl, IMainPage
         EventNameTextBox.IsEnabled = true;
         EventYearCodeTextBox.IsEnabled = true;
         EventDatePicker.IsEnabled = true;
-        RankByGunCheckBox.IsEnabled = true;
+        RankBox.IsEnabled = true;
         if (TypeBox.SelectedItem != null && (int)((ComboBoxItem)TypeBox.SelectedItem).Tag! == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
         {
             CommonAgeCheckBox.IsEnabled = false;
@@ -641,6 +683,8 @@ public partial class DashboardPage : UserControl, IMainPage
     private void TypeBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.DashboardPage", "TypeBox selection changed.");
+        if (theEvent == null) { return; }
+        if (!loaded) { return; }
         int eventType = 0;
         try
         {
@@ -653,6 +697,7 @@ public partial class DashboardPage : UserControl, IMainPage
             CommonStartCheckBox.IsEnabled = true;
         }
         // Common age groups when backyard ultra is the event type.
+        RankBox.Items.Clear();
         if (eventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
         {
             CommonAgeCheckBox.IsEnabled = false;
@@ -661,18 +706,67 @@ public partial class DashboardPage : UserControl, IMainPage
             SegmentCheckBox.IsChecked = false;
             CommonStartCheckBox.IsEnabled = false;
             CommonStartCheckBox.IsChecked = true;
-            RankByGunLabel.Content = "Rank by Elapsed Time";
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Elapsed"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Cumulative"
+            });
+            if (theEvent.RankedBy == RankingType.Clock)
+            {
+                RankBox.SelectedIndex = 0;
+            }
+            else
+            {
+                RankBox.SelectedIndex = 1;
+            }
         }
         else if (EditButton != null && EditButton.Content!.ToString() == Constants.DashboardLabels.SAVE)
         {
             CommonAgeCheckBox.IsEnabled = true;
             SegmentCheckBox.IsEnabled = true;
             CommonStartCheckBox.IsEnabled = true;
-            RankByGunLabel.Content = "Rank by Clock Time";
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Clock"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Chip"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Mixed"
+            });
+            RankBox.SelectedIndex = theEvent.RankedBy switch
+            {
+                RankingType.Chip => 1,
+                RankingType.Mixed => 2,
+                _ => 0
+            };
         }
         else
         {
-            RankByGunLabel.Content = "Rank by Clock Time";
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Clock"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Chip"
+            });
+            RankBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Mixed"
+            });
+            RankBox.SelectedIndex = theEvent.RankedBy switch
+            {
+                RankingType.Chip => 1,
+                RankingType.Mixed => 2,
+                _ => 0
+            };
         }
     }
 
@@ -701,7 +795,12 @@ public partial class DashboardPage : UserControl, IMainPage
             theEvent.Name = EventNameTextBox.Text!;
             theEvent.YearCode = EventYearCodeTextBox.Text!;
             theEvent.Date = EventDatePicker.SelectedDate?.ToString("M/d/yyyy") ?? DateTime.Now.ToString("M/d/yyyy");
-            theEvent.RankByGun = RankByGunCheckBox.IsChecked ?? false;
+            theEvent.RankedBy = RankBox.SelectedIndex switch
+            {
+                1 => RankingType.Chip,
+                2 => RankingType.Mixed,
+                _ => RankingType.Clock
+            };
             theEvent.CommonAgeGroups = CommonAgeCheckBox.IsChecked ?? false;
             theEvent.CommonStartFinish = CommonStartCheckBox.IsChecked ?? false;
             theEvent.DistanceSpecificSegments = SegmentCheckBox.IsChecked ?? false;

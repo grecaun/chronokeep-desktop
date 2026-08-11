@@ -82,6 +82,7 @@ namespace Chronokeep.Timing
         {
             try
             {
+                Log.D("Timing.TimingWorker", "Releasing semaphore.");
                 Semaphore.Release();
             }
             catch
@@ -622,9 +623,9 @@ namespace Chronokeep.Timing
                     window.UpdateTiming();
                 } while (true);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log.D("Timing.TimingWorker", "Error with run function.");
+                Log.D("Timing.TimingWorker", $"Error with run function. {e}");
             }
         }
     }

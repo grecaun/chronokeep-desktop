@@ -10,6 +10,12 @@ namespace Chronokeep.Database.SQLite
         internal static int AddEvent(Event anEvent, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
+            var rankingType = anEvent.RankedBy switch
+            {
+                RankingType.Chip => 0,
+                RankingType.Mixed => 2,
+                _ => 1,
+            };
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "INSERT INTO events(event_name, event_date, event_yearcode, event_rank_by_gun, " +
                 "event_common_age_groups, event_common_start_finish, event_distance_specific_segments, " +
@@ -22,7 +28,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@name", anEvent.Name),
                 new SQLiteParameter("@date", anEvent.Date),
                 new SQLiteParameter("@yearcode", anEvent.YearCode),
-                new SQLiteParameter("@gun", anEvent.RankByGun),
+                new SQLiteParameter("@gun", rankingType),
                 new SQLiteParameter("@age", anEvent.CommonAgeGroups),
                 new SQLiteParameter("@start", anEvent.CommonStartFinish),
                 new SQLiteParameter("@sepseg", anEvent.DistanceSpecificSegments),
@@ -72,6 +78,12 @@ namespace Chronokeep.Database.SQLite
         internal static void UpdateEvent(Event anEvent, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
+            var rankingType = anEvent.RankedBy switch
+            {
+                RankingType.Chip => 0,
+                RankingType.Mixed => 2,
+                _ => 1,
+            };
             command.CommandType = System.Data.CommandType.Text;
             command.CommandText = "UPDATE events SET " +
                 "event_name=@name," +
@@ -103,7 +115,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@yearcode", anEvent.YearCode),
                 new SQLiteParameter("@age", anEvent.CommonAgeGroups),
                 new SQLiteParameter("@start", anEvent.CommonStartFinish),
-                new SQLiteParameter("@gun", anEvent.RankByGun),
+                new SQLiteParameter("@gun", rankingType),
                 new SQLiteParameter("@seg", anEvent.DistanceSpecificSegments),
                 new SQLiteParameter("@startsec", anEvent.StartSeconds),
                 new SQLiteParameter("@startmill", anEvent.StartMilliseconds),

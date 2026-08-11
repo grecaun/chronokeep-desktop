@@ -812,7 +812,7 @@ namespace Chronokeep.Timing.Routines
                 {
                     if (x1.Occurrence == x2.Occurrence)
                     {
-                        if (theEvent.RankByGun)
+                        if (theEvent.RankedBy == RankingType.Clock)
                         {
                             if (x1.Seconds == x2.Seconds)
                             {

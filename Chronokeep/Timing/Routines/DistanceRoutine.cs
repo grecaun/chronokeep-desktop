@@ -995,13 +995,13 @@ namespace Chronokeep.Timing.Routines
             List<TimeResult> segmentResults,
             TimingDictionary dictionary)
         {
-            if (theEvent.RankByGun)
+            // Clock and Mixed share the top three in each category but chip and mixed (sort of) share all the other rankings.
+            if (theEvent.RankedBy != RankingType.Chip)
             {
                 segmentResults.Sort((x1, x2) =>
                 {
                     Distance? distance1 = null, distance2 = null;
                     int rank1 = 0, rank2 = 0;
-                    Log.D("Timing.Routines.DistanceRoutine", $"x1 distance name: {x1.RealDistanceName} -- x2 distance name: {x2.RealDistanceName}");
                     // Get *linked* distances. (Could be that specific distance)
                     if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oLinkedDistances))
                     {
@@ -1011,36 +1011,12 @@ namespace Chronokeep.Timing.Routines
                     {
                         (distance2, rank2) = tLinkedDistances;
                     }
-                    Log.D("Timing.Routines.DistanceRoutine", (distance1 == null || distance2 == null) ? "One of the distances not found." : $"Rank 1: {rank1} -- Rank 2: {rank2}");
                     // Check if they're in the same distance or a linked distance.
                     if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
                         return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                    // Sort based on rank.  This is the linked distance new sorting item.
-                    if (rank1 == rank2)
-                    {
-                        Log.D("Timing.Routines.DistanceRoutine", "Ranks the same.");
-                        if (theEvent.RankByGun)
-                        {
-                            if (x1.Seconds == x2.Seconds)
-                            {
-                                return x1.Milliseconds.CompareTo(x2.Milliseconds);
-                            }
-                            Log.D("Timing.Routines.DistanceRoutine", "By Clock");
-                            return x1.Seconds.CompareTo(x2.Seconds);
-                        }
-                        else
-                        {
-                            if (x1.ChipSeconds == x2.ChipSeconds)
-                            {
-                                return x1.ChipMilliseconds.CompareTo(x2.ChipMilliseconds);
-                            }
-                            Log.D("Timing.Routines.DistanceRoutine", "By Chip");
-                            return x1.ChipSeconds.CompareTo(x2.ChipSeconds);
-                        }
-                    }
-                    Log.D("Timing.Routines.DistanceRoutine", "Ranks not the same.");
-                    // Ranks not the same
-                    return rank1.CompareTo(rank2);
+                    // Sort based on rank.  This is the linked distance sorting item.
+                    if (rank1 != rank2) return rank1.CompareTo(rank2);
+                    return x1.CompareClock(x2);
                 });
             }
             else
@@ -1061,18 +1037,9 @@ namespace Chronokeep.Timing.Routines
                     // Check if they're in the same distance or a linked distance.
                     if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
                         return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
-                    // Sort based on rank.  This is the linked distance new sorting item.
+                    // Sort based on rank.  This is the linked distance sorting item.
                     if (rank1 != rank2) return rank1.CompareTo(rank2);
-                    // These are the old ways to sort before we've added linked distances.
-                    // Check if we know the participants we're comparing
-                    if (dictionary.ParticipantEventSpecificDictionary.ContainsKey(x1.EventSpecificId) && dictionary.ParticipantEventSpecificDictionary.ContainsKey(x2.EventSpecificId))
-                    {
-                        // Check if they're both either EARLY START or not EARLY START. (DEPRECATED METHOD)
-                        return x1.CompareChip(x2);
-                    }
-                    // Ranks not the same
-                    return rank1.CompareTo(rank2);
-                    // Default to sorting by distance name.
+                    return x1.CompareChip(x2);
                 });
             }
             List<TimeResult> dnfResults = segmentResults.FindAll(x => x.IsDnf());
@@ -1084,15 +1051,15 @@ namespace Chronokeep.Timing.Routines
             }
             int removed = segmentResults.RemoveAll(x => x.IsDnf());
             Log.D("Timing.Routines.DistanceRoutine", $"{dnfResults.Count} Result(s) in DNFResults - {removed} Result(s) removed from segmentResults");
-            // Get Dictionaries for storing the last known place (division, age group, gender, overall)
+            // Get Dictionaries for storing ranked results (division, age group, gender, overall)
             // The key is as follows: (Distance ID, Division)
-            Dictionary<(int, string), int> divisionPlaceDictionary = [];
+            Dictionary<(int, string), List<TimeResult>> divisionPlaceDictionary = [];
             // The key is as follows: (Distance ID, Age Group ID, Gender)
-            Dictionary<(int, int, string), int> ageGroupPlaceDictionary = [];
+            Dictionary<(int, int, string), List<TimeResult>> ageGroupPlaceDictionary = [];
             // The key is as follows: (Distance ID, Gender)
-            Dictionary<(int, string), int> genderPlaceDictionary = [];
+            Dictionary<(int, string), List<TimeResult>> genderPlaceDictionary = [];
             // The key is as follows: (Distance ID)
-            Dictionary<int, int> placeDictionary = [];
+            Dictionary<int, List<TimeResult>> placeDictionary = [];
             foreach (TimeResult result in segmentResults)
             {
                 // Check if we know who the person is. Can't rank them if we don't know
@@ -1110,29 +1077,177 @@ namespace Chronokeep.Timing.Routines
                         gender = "not specified";
                     }
                     int ageGroupId = person.EventSpecific.AgeGroupId;
-                    // Since Results were sorted before we started, let's assume that the first item
-                    // is the fastest and if we can't find the key, add one starting at 0
-                    int oPl = placeDictionary.GetValueOrDefault(distanceId, 0);
-                    result.Place = ++oPl;
-                    placeDictionary[distanceId] = oPl;
-                    int genderPl = genderPlaceDictionary.GetValueOrDefault((distanceId, gender), 0);
-                    result.GenderPlace = ++genderPl;
-                    genderPlaceDictionary[(distanceId, gender)] = genderPl;
+                    // Results are sorted before the start. If no value found in the dictionary then none exist.
+                    if (!placeDictionary.TryGetValue(distanceId, out List<TimeResult>? overallRankingList))
+                    {
+                        overallRankingList = [];
+                    }
+                    result.Place = overallRankingList.Count + 1;
+                    overallRankingList.Add(result);
+                    placeDictionary[distanceId] = overallRankingList;
+                    if (!genderPlaceDictionary.TryGetValue((distanceId, gender), out List<TimeResult>? genderRankingList))
+                    {
+                        genderRankingList = [];
+                    }
+                    result.GenderPlace = genderRankingList.Count + 1;
+                    genderRankingList.Add(result);
+                    genderPlaceDictionary[(distanceId, gender)] = genderRankingList;
+                    result.AgePlace = -1;
                     if (ageGroupId != Constants.Timing.TIMERESULT_DUMMYAGEGROUP)
                     {
-                        int agPl = ageGroupPlaceDictionary.GetValueOrDefault((distanceId, ageGroupId, gender), 0);
-                        result.AgePlace = ++agPl;
-                        ageGroupPlaceDictionary[(distanceId, ageGroupId, gender)] = agPl;
+                        if (!ageGroupPlaceDictionary.TryGetValue((distanceId, ageGroupId, gender), out List<TimeResult>? ageRankingList))
+                        {
+                            ageRankingList = [];
+                        }
+                        result.AgePlace = ageRankingList.Count + 1;
+                        ageRankingList.Add(result);
+                        ageGroupPlaceDictionary[(distanceId, ageGroupId, gender)] = ageRankingList;
                     }
                     string division = person.EventSpecific.Division.ToLower();
                     if (division.Length > 0)
                     {
-                        int divPl = divisionPlaceDictionary.GetValueOrDefault((distanceId, division), 0);
-                        result.DivisionPlace = ++divPl;
-                        divisionPlaceDictionary[(distanceId, division)] = divPl;
+                        if (!divisionPlaceDictionary.TryGetValue((distanceId, division), out List<TimeResult>? divisionRankingList))
+                        {
+                            divisionRankingList = [];
+                        }
+                        result.DivisionPlace = divisionRankingList.Count + 1;
+                        divisionRankingList.Add(result);
+                        divisionPlaceDictionary[(distanceId, division)] = divisionRankingList;
                     }
                 }
                 result.Status = Constants.Timing.TIMERESULT_STATUS_PROCESSED;
+            }
+            // Check if mixed type ranking -- if so shove the top three down as long as they're not the fastest by clock time
+            if (theEvent.RankedBy == RankingType.Mixed)
+            {
+                foreach (List<TimeResult> results in placeDictionary.Values)
+                {
+                    // Remove top three - rankings don't change there.
+                    if (results.Count <= 3) continue;
+                    results.RemoveRange(0, 3);
+                    results.Sort((x1, x2) =>
+                    {
+                        Distance? distance1 = null, distance2 = null;
+                        int rank1 = 0, rank2 = 0;
+                        // Get *linked* distances. (Could be that specific distance)
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
+                        {
+                            (distance1, rank1) = oDist;
+                        }
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
+                        {
+                            (distance2, rank2) = tDist;
+                        }
+                        // Check if they're in the same distance or a linked distance.
+                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                        // Sort based on rank.  This is the linked distance new sorting item.
+                        if (rank1 != rank2) return rank1.CompareTo(rank2);
+                        return x1.CompareChip(x2);
+                    });
+                    int place = 4;
+                    foreach (TimeResult res in results)
+                    {
+                        res.Place = place;
+                        place++;
+                    }
+                }
+                foreach (List<TimeResult> results in genderPlaceDictionary.Values)
+                {
+                    // Remove top three - rankings don't change there.
+                    if (results.Count <= 3) continue;
+                    results.RemoveRange(0, 3);
+                    results.Sort((x1, x2) =>
+                    {
+                        Distance? distance1 = null, distance2 = null;
+                        int rank1 = 0, rank2 = 0;
+                        // Get *linked* distances. (Could be that specific distance)
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
+                        {
+                            (distance1, rank1) = oDist;
+                        }
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
+                        {
+                            (distance2, rank2) = tDist;
+                        }
+                        // Check if they're in the same distance or a linked distance.
+                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                        // Sort based on rank.  This is the linked distance new sorting item.
+                        if (rank1 != rank2) return rank1.CompareTo(rank2);
+                        return x1.CompareChip(x2);
+                    });
+                    int place = 4;
+                    foreach (TimeResult res in results)
+                    {
+                        res.GenderPlace = place;
+                        place++;
+                    }
+                }
+                foreach (List<TimeResult> results in ageGroupPlaceDictionary.Values)
+                {
+                    // Remove top three - rankings don't change there.
+                    if (results.Count <= 3) continue;
+                    results.RemoveRange(0, 3);
+                    results.Sort((x1, x2) =>
+                    {
+                        Distance? distance1 = null, distance2 = null;
+                        int rank1 = 0, rank2 = 0;
+                        // Get *linked* distances. (Could be that specific distance)
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
+                        {
+                            (distance1, rank1) = oDist;
+                        }
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
+                        {
+                            (distance2, rank2) = tDist;
+                        }
+                        // Check if they're in the same distance or a linked distance.
+                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                        // Sort based on rank.  This is the linked distance new sorting item.
+                        if (rank1 != rank2) return rank1.CompareTo(rank2);
+                        return x1.CompareChip(x2);
+                    });
+                    int place = 4;
+                    foreach (TimeResult res in results)
+                    {
+                        res.AgePlace = place;
+                        place++;
+                    }
+                }
+                foreach (List<TimeResult> results in divisionPlaceDictionary.Values)
+                {
+                    // Remove top three - rankings don't change there.
+                    if (results.Count <= 3) continue;
+                    results.RemoveRange(0, 3);
+                    results.Sort((x1, x2) =>
+                    {
+                        Distance? distance1 = null, distance2 = null;
+                        int rank1 = 0, rank2 = 0;
+                        // Get *linked* distances. (Could be that specific distance)
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x1.RealDistanceName, out (Distance, int) oDist))
+                        {
+                            (distance1, rank1) = oDist;
+                        }
+                        if (dictionary.LinkedDistanceDictionary.TryGetValue(x2.RealDistanceName, out (Distance, int) tDist))
+                        {
+                            (distance2, rank2) = tDist;
+                        }
+                        // Check if they're in the same distance or a linked distance.
+                        if (distance1 == null || distance2 == null || distance1.Identifier != distance2.Identifier)
+                            return string.Compare(x1.DistanceName, x2.DistanceName, StringComparison.Ordinal);
+                        // Sort based on rank.  This is the linked distance new sorting item.
+                        if (rank1 != rank2) return rank1.CompareTo(rank2);
+                        return x1.CompareChip(x2);
+                    });
+                    int place = 4;
+                    foreach (TimeResult res in results)
+                    {
+                        res.DivisionPlace = place;
+                        place++;
+                    }
+                }
             }
             segmentResults.AddRange(dnfResults);
             return segmentResults;

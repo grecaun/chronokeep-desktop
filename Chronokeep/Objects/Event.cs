@@ -3,9 +3,16 @@ using Chronokeep.Constants;
 
 namespace Chronokeep.Objects
 {
+    public enum RankingType
+    {
+        Clock,
+        Chip,
+        Mixed
+    }
+
     public class Event : IEquatable<Event>, IComparable<Event>
     {
-        private int commonAgeGroups = 1, commonStartFinish = 1, distanceSpecificSegments, rankByGun = 1;
+        private int commonAgeGroups = 1, commonStartFinish = 1, distanceSpecificSegments;
         private int displayPlacements = 1, divisionsEnabled, uploadSpecific, useMaleFemale = 0;
 
         public Event() { }
@@ -38,7 +45,12 @@ namespace Chronokeep.Objects
             commonAgeGroups = age;
             commonStartFinish = start;
             distanceSpecificSegments = seg;
-            rankByGun = gun;
+            RankedBy = gun switch
+            {
+                0 => RankingType.Chip,
+                2 => RankingType.Mixed,
+                _ => RankingType.Clock
+            };
             StartWindow = 600;
             FinishIgnoreWithin = 600;
         }
@@ -52,7 +64,12 @@ namespace Chronokeep.Objects
             commonAgeGroups = age;
             commonStartFinish = start;
             distanceSpecificSegments = seg;
-            rankByGun = gun;
+            RankedBy = gun switch
+            {
+                0 => RankingType.Chip,
+                2 => RankingType.Mixed,
+                _ => RankingType.Clock
+            };
             StartWindow = 600;
             FinishIgnoreWithin = 600;
         }
@@ -70,7 +87,12 @@ namespace Chronokeep.Objects
             commonAgeGroups = age;
             commonStartFinish = start;
             distanceSpecificSegments = seg;
-            rankByGun = gun;
+            RankedBy = gun switch
+            {
+                0 => RankingType.Chip,
+                2 => RankingType.Mixed,
+                _ => RankingType.Clock
+            };
             YearCode = yearCode;
             FinishMaxOccurrences = maxOcc;
             FinishIgnoreWithin = ignWith;
@@ -88,6 +110,7 @@ namespace Chronokeep.Objects
             UseMaleFemale = useMaleFemale;
         }
 
+        public RankingType RankedBy { get; set; } = RankingType.Clock;
         public int Identifier { get; set; }
         public string Name { get; set; } = "";
         public string Date { get; set; } = "";
@@ -95,7 +118,6 @@ namespace Chronokeep.Objects
         public bool CommonAgeGroups { get => commonAgeGroups != 0; set => commonAgeGroups = value ? 1 : 0; }
         public bool CommonStartFinish { get => commonStartFinish != 0; set => commonStartFinish = value ? 1 : 0; }
         public bool DistanceSpecificSegments { get => distanceSpecificSegments != 0; set => distanceSpecificSegments = value ? 1 : 0; }
-        public bool RankByGun { get => rankByGun != 0; set => rankByGun = value ? 1 : 0; }
         public string YearCode { get; set; } = "";
         public string Year => Date.Split('/').Length == 3 ? Date.Split('/')[2] : "";
         public int StartWindow { get; set; } = -1;
@@ -153,7 +175,7 @@ namespace Chronokeep.Objects
             DisplayPlacements = other.DisplayPlacements;
             DivisionsEnabled = other.DivisionsEnabled;
             DaysAllowed = other.DaysAllowed;
-            RankByGun = other.RankByGun;
+            RankedBy = other.RankedBy;
             UseMaleFemale = other.UseMaleFemale;
         }
 
@@ -164,7 +186,7 @@ namespace Chronokeep.Objects
             CommonAgeGroups = other.CommonAgeGroups;
             CommonStartFinish = other.CommonStartFinish;
             DistanceSpecificSegments = other.DistanceSpecificSegments;
-            RankByGun = other.RankByGun;
+            RankedBy = other.RankedBy;
             YearCode = other.YearCode;
             StartWindow = other.StartWindow;
             FinishMaxOccurrences = other.FinishMaxOccurrences;
