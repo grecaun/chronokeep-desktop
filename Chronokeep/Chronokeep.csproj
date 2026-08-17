@@ -35,6 +35,7 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="agpl-3.0.txt" />
     <None Remove="App.xaml" />
     <None Remove="help\images\bootstrap-icons.css" />
     <None Remove="help\images\bootstrap-icons.json" />
@@ -144,6 +145,9 @@
     <Compile Update="UI\API\Parts\APIExpanderPart.axaml.cs">
       <DependentUpon>APIExpanderPart.axaml</DependentUpon>
     </Compile>
+    <Compile Update="UI\Util\LicenseWindow.axaml.cs">
+      <DependentUpon>LicenseWindow.axaml</DependentUpon>
+    </Compile>
     <Compile Update="UI\Util\DownloadWindow.axaml.cs">
       <DependentUpon>DownloadWindow.axaml</DependentUpon>
     </Compile>
@@ -205,6 +209,9 @@
     <EmbeddedResource Include="IO\HtmlTemplates\js\*" />
     <EmbeddedResource Include="IO\HtmlTemplates\css\*" />
     <AvaloniaXaml Include="App.xaml" />
+    <EmbeddedResource Include="agpl-3.0.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="version.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>

@@ -22,14 +22,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Chronokeep.UI.API.Windows.ApiWindow"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="Chronokeep.UI.Util.LicenseWindow"
         WindowStartupLocation="CenterScreen"
-        SizeToContent="Height"
-        Title="Link Event"
+        CanResize="False"
         Topmost="True"
-        Closing="Window_Closing"
-        Width="330"
+        SizeToContent="WidthAndHeight"
         >
     <Grid RowDefinitions="auto,*">
         <Border Grid.Row="0"
@@ -54,7 +52,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                </StackPanel> 
             </DockPanel>
         </Border>
-        <UserControl Name="ApiFrame" IsTabStop="False" Grid.Row="1"/>
+        <StackPanel VerticalAlignment="Center" Margin="0" Grid.Row="1">
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+				<ScrollViewer MaxHeight="600">
+                    <TextBlock Name="MessageBox"
+                               Text="This is some random text for testing purposes."
+                               Margin="15,15,15,0"
+                               FontSize="16"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"/>
+				</ScrollViewer>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="RightButton"
+                        Content="Close"
+                        Width="150"
+                        Height="35"
+                        Margin="5,15,15,15"
+                        HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Window>
 

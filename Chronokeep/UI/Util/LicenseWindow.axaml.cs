@@ -16,13 +16,33 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Chronokeep.Interfaces.Timing
+using Avalonia.Controls;
+using System.IO;
+using System.Reflection;
+
+namespace Chronokeep.UI.Util;
+
+public partial class LicenseWindow : ChronokeepWindow
 {
-    internal interface IRemoteReadersChangeNotifier
+    public LicenseWindow()
     {
-        public bool Subscribe(IRemoteReadersChangeSubscriber sub);
-        public bool Unsubscribe(IRemoteReadersChangeSubscriber sub);
-        public void Notify();
+        InitializeComponent();
+        ChronokeepInitialize();
+        string licenseText;
+        using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.agpl-3.0.txt")!)
+        {
+            using StreamReader reader = new(stream);
+            licenseText = reader.ReadToEnd();
+        }
+        MessageBox.Text = licenseText;
+        RightButton.Click += (_, _) =>
+        {
+            Close();
+        };
+    }
+
+    protected override Border? TitleBar()
+    {
+        return ChronokeepToolBar;
     }
 }
-

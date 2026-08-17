@@ -1,3 +1,23 @@
+<!--
+/*
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+-->
+
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -83,11 +103,25 @@
             Margin="0,0,0,5"
             Name="VersionLabel"
             />
-        <TextBlock
-            Margin="0,0,0,20"
+		<TextBlock
+            Margin="0,0,0,5"
             Text="Created by James Sentinella"
             />
-        <Button
+		<TextBlock
+            Margin="0,0,0,15"
+            Text="This software is licensed under the AGPLv3 and is provided as is with no warranty as to its features, functionality, performance, or integrity."
+            />
+		<Button
+            Name="License"
+            Content="License"
+            Padding="20,10"
+            VerticalAlignment="Top"
+            Margin="0,5,0,5"
+            Width="160"
+            Click="License_Click"
+            Classes="up"
+            />
+		<Button
             Name="Update"
             Content="Check for Updates"
             Padding="20,10"
@@ -229,3 +263,4 @@
         </StackPanel>
     </StackPanel>
 </UserControl>
+

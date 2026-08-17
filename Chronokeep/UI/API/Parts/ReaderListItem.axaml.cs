@@ -1,3 +1,21 @@
+/*
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 using Avalonia.Controls;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
@@ -51,19 +69,20 @@ public partial class ReaderListItem : UserControl
         }
         AutoFetch.IsChecked = savedReaders.ContainsKey((reader.ApiiDentifier, reader.Name));
         NameBlock.Text = reader.Name;
-        foreach (TimingLocation loc in locations)
+        int selectedIndex = 0;
+        for (int i=0; i<locations.Count; i++)
         {
+            if (reader.LocationId == locations[i].Identifier)
+            {
+                selectedIndex = i;
+            }
             LocationBox.Items.Add(new ComboBoxItem()
             {
-                Content = loc.Name,
-                Tag = loc.Identifier.ToString(),
-                IsSelected = reader.LocationId == loc.Identifier,
+                Content = locations[i].Name,
+                Tag = locations[i].Identifier.ToString()
             });
         }
-        if (LocationBox.SelectedItem == null)
-        {
-            LocationBox.SelectedIndex = 0;
-        }
+        LocationBox.SelectedIndex = selectedIndex;
         DateTime date = DateTime.Now;
         StartDatePicker.SelectedDate = date;
         EndDatePicker.SelectedDate = date;
