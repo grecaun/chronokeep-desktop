@@ -26,9 +26,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         x:Class="Chronokeep.UI.Timing.Windows.EditRawReadsWindow"
         Background="{DynamicResource PrimaryBackground}"
         WindowStartupLocation="CenterScreen"
-        Width="250"
         CanResize="False"
-        SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
         Topmost="True"
         Closed="Window_Closed"
         >
@@ -55,7 +54,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                </StackPanel> 
             </DockPanel>
         </Border>
-        <Grid Margin="0" HorizontalAlignment="Center" Grid.Row="1" RowDefinitions="0,35,45,95,*"
+        <Grid Margin="15,0,15,15"
+			  HorizontalAlignment="Center"
+			  Grid.Row="1"
+			  RowDefinitions="0,35,45,95,*"
               ColumnDefinitions="100,140">
             <TextBlock Grid.Column="0"
                        Grid.Row="1"

@@ -24,7 +24,7 @@ namespace Chronokeep.Helpers
 {
     internal static class Log
     {
-        private const bool OutputDebug = true;
+        private const bool OutputDebug = false;
 
         [Conditional("DEBUG")]
         public static void D(string ns, string msg)
