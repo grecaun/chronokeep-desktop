@@ -1,0 +1,93 @@
+﻿<#
+/*
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+#>
+<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="Chronokeep" #>
+<#@ import namespace="Chronokeep.Objects" #>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<link rel='stylesheet' href='css/bootstrap.min.css'>
+		<link rel='stylesheet' href='css/style.min.css'>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title><#= result.PrettyParticipantName #></title>
+		<style>
+			@font-face {
+				font-family: "Roboto";
+				src: url('fonts/Roboto_Condensed-Regular.ttf');
+			}
+			.roboto {
+				font-family: "Roboto";
+			}
+		</style>
+	</head>
+	<body>
+		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
+			<div class="col-lg-2 p-4">
+				<img src="">
+			</div>
+			<div class="col-lg-6 p-4">
+				<div class="roboto text-center text-important display-8 m-0"><#= result.DistanceName #></div>
+				<div class="roboto text-center text-important display-4 m-0"><#= result.PrettyParticipantName #></div>
+			</div>
+			<div class="col-lg-2 p-4">
+				<img src="">
+			</div>
+		</div>
+		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0"><#= result.ChipTime[..(result.ChipTime.Length > 3 ? result.ChipTime.Length -2 : result.ChipTime.Length)] #></div>
+				<div class="roboto text-center text-important display-8 m-0">Time</div>
+			</div>
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0">13.1</div>
+				<div class="roboto text-center text-important display-8 m-0">miles</div>
+			</div>
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0">5:30</div>
+				<div class="roboto text-center text-important display-8 m-0">min/mile</div>
+			</div>
+		</div>
+		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0"><#= result.Place #></div>
+				<div class="divider"></div>
+				<div class="roboto text-center text-important display-8 m-0"><#= numOverall #></div>
+				<div class="roboto text-center text-important display-8 m-0">Overall</div>
+			</div>
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0"><#= result.GenderPlace #></div>
+				<div class="divider"></div>
+				<div class="roboto text-center text-important display-8 m-0"><#= numGender #></div>
+				<div class="roboto text-center text-important display-8 m-0"><#= GenderStr #></div>
+			</div>
+			<div class="col-lg-4 p-4">
+				<div class="roboto text-center text-important display-8 m-0"><#= result.AgePlace #></div>
+				<div class="divider"></div>
+				<div class="roboto text-center text-important display-8 m-0"><#= numAgeGroup #></div>
+				<div class="roboto text-center text-important display-8 m-0"><#= AgeGroupStr #></div>
+			</div>
+		</div>
+	</body>
+</html>

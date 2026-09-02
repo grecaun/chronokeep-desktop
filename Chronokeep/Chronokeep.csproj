@@ -104,6 +104,16 @@
     <Reference Include="CustomMarshalers" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="IO\HtmlTemplates\HtmlPrintableSelectionTemplate.cs">
+      <DependentUpon>HtmlPrintableSelectionTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="IO\HtmlTemplates\HtmlPrintableTemplate.cs">
+      <DependentUpon>HtmlPrintableTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="IO\HtmlTemplates\HtmlParticipantTemplate.cs">
       <DependentUpon>HtmlParticipantTemplate.tt</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -221,6 +231,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
+    <Content Include="IO\HtmlTemplates\HtmlPrintableSelectionTemplate.tt">
+      <LastGenOutput>HtmlPrintableSelectionTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </Content>
+    <Content Include="IO\HtmlTemplates\HtmlPrintableTemplate.tt">
+      <LastGenOutput>HtmlPrintableTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </Content>
     <Content Include="IO\HtmlTemplates\HtmlParticipantTemplate.tt">
       <LastGenOutput>HtmlParticipantTemplate.cs</LastGenOutput>
       <Generator>TextTemplatingFilePreprocessor</Generator>
@@ -252,6 +270,9 @@
   </ItemGroup>
   <ItemGroup>
 	<AvaloniaResource Include="fonts\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="IO\HtmlTemplates\fonts\Roboto_Condensed-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
 	<None Update="help\*">

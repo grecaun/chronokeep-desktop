@@ -43,7 +43,9 @@ namespace Chronokeep.Network
         private readonly Dictionary<string, List<TimeResult>> participantResults = [];
 
         private byte[]? resultsCache;
+        private byte[]? printSelectCache;
         private readonly Dictionary<string, byte[]> participantCache = [];
+        private readonly Dictionary<string, byte[]> printableCache = [];
         private readonly Dictionary<string, byte[]> emailCache = [];
 
         private readonly Dictionary<string, Participant> participantDictionary = [];
@@ -154,6 +156,12 @@ namespace Chronokeep.Network
                 filename = filename[6..];
                 emailBib = filename;
             }
+            string printable = "";
+            if (filename.StartsWith("print/", StringComparison.OrdinalIgnoreCase))
+            {
+                printable = filename;
+                filename = filename[6..];
+            }
 
             byte[] message = Encoding.Default.GetBytes("");
             bool answer = false;
@@ -189,7 +197,7 @@ namespace Chronokeep.Network
                     }
                 }
             }
-            else if (filename.StartsWith("css/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("js/", StringComparison.OrdinalIgnoreCase))
+            else if (filename.StartsWith("css/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("js/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("font/", StringComparison.OrdinalIgnoreCase))
             {
                 Log.D("Network.HttpServer", $"Fetching {filename}");
                 answer = true;
@@ -212,6 +220,60 @@ namespace Chronokeep.Network
                 else if (filename.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || filename.EndsWith(".html"))
                 {
                     context.Response.ContentType = "text/html";
+                }
+                else if (filename.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.ContentType = "font/ttf";
+                }
+            }
+            else if (printable.Length > 0)
+            {
+                answer = true;
+                printable = printable[6..];
+                // Check if serving up HtmlPrintableTemplate (individual) or HtmlPrintableSelectionTemplate (find anyone)
+                if (printable.Length > 0)
+                {
+                    if (!infoLock.TryEnter(3000))
+                    {
+                        Log.D("Network.HttpServer", $"Unable to get lock for outputting participant page for bib {partBib}.");
+                        message = Encoding.Default.GetBytes("");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (!participantResults.TryGetValue(printable, out List<TimeResult>? resList))
+                            {
+                                resList = [];
+                                participantResults[printable] = resList;
+                            }
+                            if (!printableCache.TryGetValue(printable, out byte[]? partCache))
+                            {
+                                partCache = [];
+                                foreach (TimeResult res in resList)
+                                {
+                                    if (res.Finish)
+                                    {
+                                        HtmlPrintableTemplate print = new(res, 0, 0, 0);
+                                        partCache = Encoding.Default.GetBytes(print.TransformText());
+                                        break;
+                                    }
+                                }
+                                participantCache[printable] = partCache;
+                            }
+                            message = partCache;
+                            context.Response.ContentType = "text/html";
+                            Log.D("Network.HttpServer", $"Print html -- bib {printable}");
+                        }
+                        finally
+                        {
+                            infoLock.Exit();
+                        }
+                    }
+                }
+                else
+                {
+
                 }
             }
             else if (partBib.Length > 0)

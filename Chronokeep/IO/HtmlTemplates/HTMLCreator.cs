@@ -18,10 +18,38 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Chronokeep.Helpers;
 using Chronokeep.Objects;
+using System;
 using System.Collections.Generic;
 
 namespace Chronokeep.IO.HtmlTemplates
 {
+    public partial class HtmlPrintableSelectionTemplate
+    {
+        private readonly Event theEvent;
+        private readonly Dictionary<string, TimeResult> finishResults = [];
+    }
+
+    public partial class HtmlPrintableTemplate
+    {
+        private readonly TimeResult result;
+        private readonly int numOverall, numGender, numAgeGroup;
+        private string GenderStr, AgeGroupStr;
+
+        public HtmlPrintableTemplate(
+            TimeResult result,
+            int numOverall,
+            int numGender,
+            int numAgeGroup)
+        {
+            this.result = result;
+            this.numOverall = numOverall;
+            this.numGender = numGender;
+            this.numAgeGroup = numAgeGroup;
+            GenderStr = result.Gender == "Man" ? "Men" : result.Gender == "Woman" ? "Women" : result.Gender == "Not Specified" || result.Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : result.Gender;
+            AgeGroupStr = $"{GenderStr} {result.PrettyAgeGroupName()}".Trim();
+        }
+    }
+
     public partial class HtmlResultsTemplate
     {
         private readonly Event theEvent;
