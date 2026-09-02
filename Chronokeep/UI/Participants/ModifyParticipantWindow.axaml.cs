@@ -303,7 +303,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         {
             age = 0;
         }
-        string birthdate = BirthdayBox.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d");
+        string birthdate = BirthdayBox.SelectedDate?.ToString("yyyy/M/d") ?? "";
         if (age != 0 && birthdate.Length < 1)
         {
             if (!int.TryParse(theEvent.Date.Split('/')[2], out int year))

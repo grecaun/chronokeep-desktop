@@ -509,7 +509,14 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             ReaderMessageButton.IsVisible = true;
             int count = readerMsgs.FindAll(x => !x.Notified).Count;
             ReaderMessageButton.Content = count.ToString();
-            ReaderMessageButton.Background = Brush.Parse(count > 0 ? "orange" : "#479ef5");
+            if (count > 0)
+            {
+                ReaderMessageButton.Background = (SolidColorBrush?)Resources["AlertColor"] ?? Brush.Parse("Orange");
+            }
+            else
+            {
+                ReaderMessageButton.Background = (SolidColorBrush?)Resources["LightPrimaryColor"] ?? Brush.Parse("LightBlue");
+            }
         }
         else
         {

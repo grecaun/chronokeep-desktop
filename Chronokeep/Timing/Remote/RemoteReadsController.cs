@@ -162,12 +162,12 @@ namespace Chronokeep.Timing.Remote
                         List<ChipRead> reads = [];
                         try
                         {
-                            (reads, RemoteNotification note) = await api.GetReads(reader, start, end);
-                            if (!(remoteNotificationDictionary.TryGetValue(reader, out long noteId)
-                                  && noteId == note.Id))
+                            (reads, RemoteNotification? note) = await api.GetReads(reader, start, end);
+                            if (note != null && !(remoteNotificationDictionary.TryGetValue(reader, out long noteId)
+                                  && noteId == note?.Id))
                             {
-                                mainWindow.ShowNotificationDialog(reader.Name, "Remote", note);
-                                remoteNotificationDictionary[reader] = note.Id;
+                                mainWindow.ShowNotificationDialog(reader.Name, "Remote", note!);
+                                remoteNotificationDictionary[reader] = note!.Id;
                             }
                         }
                         catch (Exception ex)
@@ -194,7 +194,7 @@ namespace Chronokeep.Timing.Remote
                     {
                         Errors += 1;
                     }
-                    else if (Errors > 0)
+                    else
                     {
                         Errors = 0;
                     }
