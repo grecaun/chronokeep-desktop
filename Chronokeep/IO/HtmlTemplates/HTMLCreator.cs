@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Chronokeep.Helpers;
 using Chronokeep.Objects;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 
@@ -35,6 +36,10 @@ namespace Chronokeep.IO.HtmlTemplates
         private readonly int numOverall, numGender, numAgeGroup;
         private readonly string GenderStr, AgeGroupStr, pace, paceStr, distanceValueStr;
         private readonly double distanceValue;
+
+        public static int TopMargin = 0;
+        public static int LeftMargin = 0;
+        public static double Scale = 1.0;
 
         public HtmlPrintableTemplate(
             TimeResult result,
@@ -70,6 +75,36 @@ namespace Chronokeep.IO.HtmlTemplates
                 _ => "min/??",
             };
 
+        }
+
+        private static string ScaledTextOne()
+        {
+            return $"{(Scale * 2):F1}";
+        }
+
+        private static string ScaledTextTwo()
+        {
+            return $"{Scale:F1}";
+        }
+
+        private static int ScaledImageHeight()
+        {
+            return (int)(Scale * 100);
+        }
+
+        private static int ScaledColumnWidth()
+        {
+            return (int)(Scale * 125);
+        }
+
+        private static int ScaledDividerWidth()
+        {
+            return (int)(Scale * 35);
+        }
+
+        private static int ScaledTotalWidth()
+        {
+            return (int)(Scale * 500);
         }
     }
 

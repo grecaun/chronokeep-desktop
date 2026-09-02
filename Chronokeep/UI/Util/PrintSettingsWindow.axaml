@@ -1,0 +1,112 @@
+<!--
+/*
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="Chronokeep.UI.Util.PrintSettingsWindow"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Topmost="True"
+        SizeToContent="WidthAndHeight"
+        >
+    <Grid RowDefinitions="auto,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                Name="ChronokeepToolBar"
+                >
+            <DockPanel Margin="0">
+               <StackPanel DockPanel.Dock="Right"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                    <PathIcon Classes="title"
+                              Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                              />
+                   </Button>
+               </StackPanel> 
+            </DockPanel>
+        </Border>
+        <StackPanel VerticalAlignment="Center" Margin="0" Grid.Row="1">
+			<DockPanel HorizontalAlignment="Center">
+				<TextBlock Text="Top Margin"
+						   Width="80"
+						   HorizontalAlignment="Right"
+						   TextAlignment="Right"
+						   VerticalAlignment="Center"/>
+			    <TextBox Name="TopMarginBox"
+					     Width="80"
+					     FontSize="16"
+					     Margin="0,5"
+					     TextAlignment="Center"
+					     VerticalAlignment="Center"/>
+			</DockPanel>
+			<DockPanel HorizontalAlignment="Center">
+				<TextBlock Text="Left Margin"
+						   Width="80"
+						   HorizontalAlignment="Right"
+						   TextAlignment="Right"
+						   VerticalAlignment="Center"/>
+				<TextBox Name="LeftMarginBox"
+					     Width="80"
+					     FontSize="16"
+					     Margin="0,5"
+					     TextAlignment="Center"
+					     VerticalAlignment="Center"/>
+			</DockPanel>
+			<DockPanel HorizontalAlignment="Center">
+				<TextBlock Text="Scale"
+						   Width="80"
+						   HorizontalAlignment="Right"
+						   TextAlignment="Right"
+						   VerticalAlignment="Center"/>
+			    <TextBox Name="ScalingBox"
+					     Width="80"
+					     FontSize="16"
+					     Margin="0,5"
+					     TextAlignment="Center"
+					     VerticalAlignment="Center"/>
+			</DockPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+				<Button Content="Save"
+                        Width="150"
+                        Height="35"
+                        Margin="15,15,5,15"
+						Click="Save_Click"
+                        HorizontalAlignment="Stretch"/>
+				<Button Content="Close"
+                        Width="150"
+                        Height="35"
+                        Margin="5,15,15,15"
+						Click="Close_Click"
+                        HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>
+

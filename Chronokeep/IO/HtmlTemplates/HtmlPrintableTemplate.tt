@@ -43,23 +43,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			.divider {
 				height: 2px;
 				background-color: black;
-				max-width: 35px;
+				max-width: <#= ScaledDividerWidth() #>px;
 			}
 			.min-col {
-				width: 125px;
+				width: <#= ScaledColumnWidth() #>px;
 			}
 			.d-1 {
-				font-size: 2rem;
+				font-size: <#= ScaledTextOne() #>rem;
 			}
 			.d-2 {
-				font-size: 1rem;
+				font-size: <#= ScaledTextTwo() #>rem;
 			}
 			.main {
-				margin-left: 0px;
-				margin-top: 0px;
+				margin-left: <#= LeftMargin #>px;
+				margin-top: <#= TopMargin #>px;
+				max-width: <#= ScaledTotalWidth() #>px;
 			}
 			.img {
-				height:100px;
+				height:<#= ScaledImageHeight() #>px;
 			}
 		</style>
 	</head>

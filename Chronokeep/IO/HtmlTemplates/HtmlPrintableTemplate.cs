@@ -71,35 +71,65 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             
             #line default
             #line hidden
-            this.Write(@"</title>
-		<style>
-			@font-face {
-				font-family: ""Roboto"";
-				src: url('fonts/Roboto_Condensed-Regular.ttf');
-			}
-			.roboto {
-				font-family: ""Roboto"";
-			}
-			.divider {
-				height: 2px;
-				background-color: black;
-				max-width: 35px;
-			}
-			.min-col {
-				width: 125px;
-			}
-			.d-1 {
-				font-size: 2rem;
-			}
-			.d-2 {
-				font-size: 1rem;
-			}
-			.main {
-				margin-left: 0px;
-				margin-top: 0px;
-			}
-			.img {
-				height:100px;
+            this.Write("</title>\n\t\t<style>\n\t\t\t@font-face {\n\t\t\t\tfont-family: \"Roboto\";\n\t\t\t\tsrc: url(\'fonts" +
+                    "/Roboto_Condensed-Regular.ttf\');\n\t\t\t}\n\t\t\t.roboto {\n\t\t\t\tfont-family: \"Roboto\";\n\t\t" +
+                    "\t}\n\t\t\t.divider {\n\t\t\t\theight: 2px;\n\t\t\t\tbackground-color: black;\n\t\t\t\tmax-width: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledDividerWidth()));
+            
+            #line default
+            #line hidden
+            this.Write("px;\n\t\t\t}\n\t\t\t.min-col {\n\t\t\t\twidth: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledColumnWidth()));
+            
+            #line default
+            #line hidden
+            this.Write("px;\n\t\t\t}\n\t\t\t.d-1 {\n\t\t\t\tfont-size: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledTextOne()));
+            
+            #line default
+            #line hidden
+            this.Write("rem;\n\t\t\t}\n\t\t\t.d-2 {\n\t\t\t\tfont-size: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledTextTwo()));
+            
+            #line default
+            #line hidden
+            this.Write("rem;\n\t\t\t}\n\t\t\t.main {\n\t\t\t\tmargin-left: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(LeftMargin));
+            
+            #line default
+            #line hidden
+            this.Write("px;\n\t\t\t\tmargin-top: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(TopMargin));
+            
+            #line default
+            #line hidden
+            this.Write("px;\n\t\t\t\twidth: ");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledTotalWidth()));
+            
+            #line default
+            #line hidden
+            this.Write("px;\n\t\t\t}\n\t\t\t.img {\n\t\t\t\theight:");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(ScaledImageHeight()));
+            
+            #line default
+            #line hidden
+            this.Write(@"px;
 			}
 		</style>
 	</head>

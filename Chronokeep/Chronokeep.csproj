@@ -157,6 +157,9 @@
     <Compile Update="UI\API\Parts\APIExpanderPart.axaml.cs">
       <DependentUpon>APIExpanderPart.axaml</DependentUpon>
     </Compile>
+    <Compile Update="UI\Util\PrintSettingsWindow.axaml.cs">
+      <DependentUpon>PrintSettingsWindow.axaml</DependentUpon>
+    </Compile>
     <Compile Update="UI\Util\LicenseWindow.axaml.cs">
       <DependentUpon>LicenseWindow.axaml</DependentUpon>
     </Compile>

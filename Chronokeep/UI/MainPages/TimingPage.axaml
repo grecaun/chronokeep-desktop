@@ -399,12 +399,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                         />
                                 </StackPanel>
                             </Grid>
-                            <HyperlinkButton Name="WebButton" Classes="link" IsVisible="False">
-                                <StackPanel Orientation="Horizontal">
-                                    <PathIcon Data="{StaticResource link_regular}" />
-                                    <TextBlock Name="WebBlock" Classes="link"></TextBlock>
-                                </StackPanel>
-                            </HyperlinkButton>
+							<StackPanel Name="WebPanel" Orientation="Horizontal" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <HyperlinkButton Name="WebButton" Classes="link" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <PathIcon Data="{StaticResource link_regular}" />
+                                        <TextBlock Name="WebBlock" Classes="link"></TextBlock>
+                                    </StackPanel>
+                                </HyperlinkButton>
+								<Button Name="WebSettingsButton" Click="WebSettings_Click" Margin="5" Height="40">
+									<PathIcon Data="{StaticResource settings_regular}"/>
+								</Button>
+							</StackPanel>
                         </StackPanel>
                     </Expander>
                     <Expander

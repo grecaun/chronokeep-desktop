@@ -270,12 +270,12 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         if (mWindow.HttpServerActive())
         {
             HttpServerButton.Content = "Stop Web";
-            WebButton.IsVisible = true;
+            WebPanel.IsVisible = true;
         }
         else
         {
             HttpServerButton.Content = "Start Web";
-            WebButton.IsVisible = false;
+            WebPanel.IsVisible = false;
         }
         if (theEvent.ApiId > 0 && theEvent.ApiEventId.Length > 1)
         {
@@ -460,12 +460,12 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         if (mWindow.HttpServerActive())
         {
             HttpServerButton.Content = "Stop Web";
-            WebButton.IsVisible = true;
+            WebPanel.IsVisible = true;
         }
         else
         {
             HttpServerButton.Content = "Start Web";
-            WebButton.IsVisible = false;
+            WebPanel.IsVisible = false;
         }
         if (theEvent.ApiId > 0 && theEvent.ApiEventId.Length > 1)
         {
@@ -1404,28 +1404,36 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
     private void HTMLServerButton_Click(object? sender, RoutedEventArgs e)
     {
+        Log.D("UI.MainPages.TimingPage", "HTMLServerButton_Click");
         if (HttpServerButton.Content!.ToString()!.Equals("Start Web", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
                 mWindow.StartHttpServer();
                 HttpServerButton.Content = "Stop Web";
-                WebButton.IsVisible = true;
+                WebPanel.IsVisible = true;
             }
             catch
             {
                 mWindow.StopHttpServer();
                 HttpServerButton.Content = "Start Web";
                 DialogBox.AsyncShow("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
-                WebButton.IsVisible = false;
+                WebPanel.IsVisible = false;
             }
         }
         else
         {
             mWindow.StopHttpServer();
             HttpServerButton.Content = "Start Web";
-            WebButton.IsVisible = false;
+            WebPanel.IsVisible = false;
         }
+    }
+
+    private void WebSettings_Click(object? sender, RoutedEventArgs e)
+    {
+        Log.D("UI.MainPages.TimingPage", "HTMLServerButton_Click");
+        PrintSettingsWindow printWin = new();
+        printWin.Show();
     }
 
     private void Print_Click(object? sender, RoutedEventArgs e)
