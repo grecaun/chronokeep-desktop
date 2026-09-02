@@ -81,6 +81,8 @@
     <None Remove="IO\HtmlTemplates\HtmlCertificateEmailTemplate.tt" />
     <None Remove="IO\HtmlTemplates\HtmlParticipantTemplate.tt" />
     <None Remove="IO\HtmlTemplates\HtmlResultsPrint.tt" />
+    <None Remove="IO\HtmlTemplates\images\boston.png" />
+    <None Remove="IO\HtmlTemplates\images\personal.png" />
     <None Remove="IO\HtmlTemplates\js\bootstrap.bundle.js" />
     <None Remove="IO\HtmlTemplates\js\bootstrap.bundle.js.map" />
     <None Remove="IO\HtmlTemplates\js\bootstrap.bundle.min.js" />
@@ -222,6 +224,8 @@
     <EmbeddedResource Include="agpl-3.0.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="IO\HtmlTemplates\images\boston.png" />
+    <EmbeddedResource Include="IO\HtmlTemplates\images\personal.png" />
     <EmbeddedResource Include="version.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>

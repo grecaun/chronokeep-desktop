@@ -80,22 +80,44 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			.roboto {
 				font-family: ""Roboto"";
 			}
+			.divider {
+				height: 2px;
+				background-color: black;
+				max-width: 35px;
+			}
+			.min-col {
+				width: 125px;
+			}
+			.d-1 {
+				font-size: 2rem;
+			}
+			.d-2 {
+				font-size: 1rem;
+			}
+			.main {
+				margin-left: 0px;
+				margin-top: 0px;
+			}
+			.img {
+				height:100px;
+			}
 		</style>
 	</head>
 	<body>
-		<div class=""row container-lg lg-max-width mx-auto justify-content-center align-items-center"">
-			<div class=""col-lg-2 p-4"">
-				<img src="""">
-			</div>
-			<div class=""col-lg-6 p-4"">
-				<div class=""roboto text-center text-important display-8 m-0"">");
+		<div class=""main"">
+			<div class=""row p-1 justify-content-center align-content-center"">
+				<div class=""col-auto img"">
+					<img class=""img"" src=""images/boston.png"" style=""display:block;margin-left:auto;"">
+				</div>
+				<div class=""col-auto"">
+					<div class=""roboto text-center d-2 m-0 mt-3"">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.DistanceName));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"roboto text-center text-important display-4 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-1 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.PrettyParticipantName));
@@ -103,97 +125,114 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             #line default
             #line hidden
             this.Write(@"</div>
+				</div>
+				<div class=""col-auto img"">
+					<img class=""img"" src=""images/personal.png"">
+				</div>
 			</div>
-			<div class=""col-lg-2 p-4"">
-				<img src="""">
-			</div>
-		</div>
-		<div class=""row container-lg lg-max-width mx-auto justify-content-center align-items-center"">
-			<div class=""col-lg-4 p-4"">
-				<div class=""roboto text-center text-important display-8 m-0"">");
+			<div class=""row p-2 justify-content-center align-content-center"">
+				<div class=""col-auto min-col"">
+					<div class=""roboto text-center d-2 m-0"">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.ChipTime[..(result.ChipTime.Length > 3 ? result.ChipTime.Length -2 : result.ChipTime.Length)]));
             
             #line default
             #line hidden
-            this.Write(@"</div>
-				<div class=""roboto text-center text-important display-8 m-0"">Time</div>
-			</div>
-			<div class=""col-lg-4 p-4"">
-				<div class=""roboto text-center text-important display-8 m-0"">13.1</div>
-				<div class=""roboto text-center text-important display-8 m-0"">miles</div>
-			</div>
-			<div class=""col-lg-4 p-4"">
-				<div class=""roboto text-center text-important display-8 m-0"">5:30</div>
-				<div class=""roboto text-center text-important display-8 m-0"">min/mile</div>
-			</div>
-		</div>
-		<div class=""row container-lg lg-max-width mx-auto justify-content-center align-items-center"">
-			<div class=""col-lg-4 p-4"">
-				<div class=""roboto text-center text-important display-8 m-0"">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">Time</div>\n\t\t\t\t</div>\n\t\t\t\t<di" +
+                    "v class=\"col-auto min-col\">\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(distanceValue));
+            
+            #line default
+            #line hidden
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(distanceValueStr));
+            
+            #line default
+            #line hidden
+            this.Write("</div>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"col-auto min-col\">\n\t\t\t\t\t<div class=\"roboto text" +
+                    "-center d-2 m-0\">");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(pace));
+            
+            #line default
+            #line hidden
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
+            
+            #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(paceStr));
+            
+            #line default
+            #line hidden
+            this.Write("</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class=\"row p-1 justify-content-center align-c" +
+                    "ontent-center\">\n\t\t\t\t<div class=\"col-auto min-col\">\n\t\t\t\t\t<div class=\"roboto text-" +
+                    "center d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.Place));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"divider\"></div>\n\t\t\t\t<div class=\"roboto text-center text-im" +
-                    "portant display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"divider mx-auto\"></div>\n\t\t\t\t\t<div class=\"roboto text-cent" +
+                    "er d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(numOverall));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"roboto text-center text-important display-8 m-0\">Overall</" +
-                    "div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-4 p-4\">\n\t\t\t\t<div class=\"roboto text-center " +
-                    "text-important display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">Overall</div>\n\t\t\t\t</div>\n\t\t\t\t" +
+                    "<div class=\"col-auto min-col\">\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.GenderPlace));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"divider\"></div>\n\t\t\t\t<div class=\"roboto text-center text-im" +
-                    "portant display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"divider mx-auto\"></div>\n\t\t\t\t\t<div class=\"roboto text-cent" +
+                    "er d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(numGender));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"roboto text-center text-important display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(GenderStr));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t</div>\n\t\t\t<div class=\"col-lg-4 p-4\">\n\t\t\t\t<div class=\"roboto text-center" +
-                    " text-important display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"col-auto min-col\">\n\t\t\t\t\t<div class=\"roboto text" +
+                    "-center d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(result.AgePlace));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"divider\"></div>\n\t\t\t\t<div class=\"roboto text-center text-im" +
-                    "portant display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"divider mx-auto\"></div>\n\t\t\t\t\t<div class=\"roboto text-cent" +
+                    "er d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(numAgeGroup));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t\t<div class=\"roboto text-center text-important display-8 m-0\">");
+            this.Write("</div>\n\t\t\t\t\t<div class=\"roboto text-center d-2 m-0\">");
             
             #line 1 "D:\Chronokeep\desktop\Chronokeep\IO\HtmlTemplates\HtmlPrintableTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(AgeGroupStr));
             
             #line default
             #line hidden
-            this.Write("</div>\n\t\t\t</div>\n\t\t</div>\n\t</body>\n</html>");
+            this.Write("</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t</body>\n</html>");
             return this.GenerationEnvironment.ToString();
         }
     }

@@ -159,6 +159,11 @@ namespace Chronokeep.Constants
             { EVENTSPECIFIC_DNS, "DNS" },
         };
 
+        public static string SecondsToMinuteTime(long seconds)
+        {
+            return $"{(seconds % 3600) / 60:D2}:{seconds % 60:D2}";
+        }
+
         public static string SecondsToTime(long seconds)
         {
             return $"{seconds / 3600}:{(seconds % 3600) / 60:D2}:{seconds % 60:D2}";

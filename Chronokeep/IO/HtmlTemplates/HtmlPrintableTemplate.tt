@@ -40,53 +40,76 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			.roboto {
 				font-family: "Roboto";
 			}
+			.divider {
+				height: 2px;
+				background-color: black;
+				max-width: 35px;
+			}
+			.min-col {
+				width: 125px;
+			}
+			.d-1 {
+				font-size: 2rem;
+			}
+			.d-2 {
+				font-size: 1rem;
+			}
+			.main {
+				margin-left: 0px;
+				margin-top: 0px;
+			}
+			.img {
+				height:100px;
+			}
 		</style>
 	</head>
 	<body>
-		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
-			<div class="col-lg-2 p-4">
-				<img src="">
+		<div class="main">
+			<div class="row p-1 justify-content-center align-content-center">
+				<div class="col-auto img">
+					<img class="img" src="images/boston.png" style="display:block;margin-left:auto;">
+				</div>
+				<div class="col-auto">
+					<div class="roboto text-center d-2 m-0 mt-3"><#= result.DistanceName #></div>
+					<div class="roboto text-center d-1 m-0"><#= result.PrettyParticipantName #></div>
+				</div>
+				<div class="col-auto img">
+					<img class="img" src="images/personal.png">
+				</div>
 			</div>
-			<div class="col-lg-6 p-4">
-				<div class="roboto text-center text-important display-8 m-0"><#= result.DistanceName #></div>
-				<div class="roboto text-center text-important display-4 m-0"><#= result.PrettyParticipantName #></div>
+			<div class="row p-2 justify-content-center align-content-center">
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= result.ChipTime[..(result.ChipTime.Length > 3 ? result.ChipTime.Length -2 : result.ChipTime.Length)] #></div>
+					<div class="roboto text-center d-2 m-0">Time</div>
+				</div>
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= distanceValue #></div>
+					<div class="roboto text-center d-2 m-0"><#= distanceValueStr #></div>
+				</div>
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= pace #></div>
+					<div class="roboto text-center d-2 m-0"><#= paceStr #></div>
+				</div>
 			</div>
-			<div class="col-lg-2 p-4">
-				<img src="">
-			</div>
-		</div>
-		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0"><#= result.ChipTime[..(result.ChipTime.Length > 3 ? result.ChipTime.Length -2 : result.ChipTime.Length)] #></div>
-				<div class="roboto text-center text-important display-8 m-0">Time</div>
-			</div>
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0">13.1</div>
-				<div class="roboto text-center text-important display-8 m-0">miles</div>
-			</div>
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0">5:30</div>
-				<div class="roboto text-center text-important display-8 m-0">min/mile</div>
-			</div>
-		</div>
-		<div class="row container-lg lg-max-width mx-auto justify-content-center align-items-center">
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0"><#= result.Place #></div>
-				<div class="divider"></div>
-				<div class="roboto text-center text-important display-8 m-0"><#= numOverall #></div>
-				<div class="roboto text-center text-important display-8 m-0">Overall</div>
-			</div>
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0"><#= result.GenderPlace #></div>
-				<div class="divider"></div>
-				<div class="roboto text-center text-important display-8 m-0"><#= numGender #></div>
-				<div class="roboto text-center text-important display-8 m-0"><#= GenderStr #></div>
-			</div>
-			<div class="col-lg-4 p-4">
-				<div class="roboto text-center text-important display-8 m-0"><#= result.AgePlace #></div>
-				<div class="divider"></div>
-				<div class="roboto text-center text-important display-8 m-0"><#= numAgeGroup #></div>
-				<div class="roboto text-center text-important display-8 m-0"><#= AgeGroupStr #></div>
+			<div class="row p-1 justify-content-center align-content-center">
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= result.Place #></div>
+					<div class="divider mx-auto"></div>
+					<div class="roboto text-center d-2 m-0"><#= numOverall #></div>
+					<div class="roboto text-center d-2 m-0">Overall</div>
+				</div>
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= result.GenderPlace #></div>
+					<div class="divider mx-auto"></div>
+					<div class="roboto text-center d-2 m-0"><#= numGender #></div>
+					<div class="roboto text-center d-2 m-0"><#= GenderStr #></div>
+				</div>
+				<div class="col-auto min-col">
+					<div class="roboto text-center d-2 m-0"><#= result.AgePlace #></div>
+					<div class="divider mx-auto"></div>
+					<div class="roboto text-center d-2 m-0"><#= numAgeGroup #></div>
+					<div class="roboto text-center d-2 m-0"><#= AgeGroupStr #></div>
+				</div>
 			</div>
 		</div>
 	</body>

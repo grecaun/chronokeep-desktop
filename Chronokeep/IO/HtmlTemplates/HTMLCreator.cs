@@ -33,13 +33,15 @@ namespace Chronokeep.IO.HtmlTemplates
     {
         private readonly TimeResult result;
         private readonly int numOverall, numGender, numAgeGroup;
-        private string GenderStr, AgeGroupStr;
+        private readonly string GenderStr, AgeGroupStr, pace, paceStr, distanceValueStr;
+        private readonly double distanceValue;
 
         public HtmlPrintableTemplate(
             TimeResult result,
             int numOverall,
             int numGender,
-            int numAgeGroup)
+            int numAgeGroup,
+            Distance? distance)
         {
             this.result = result;
             this.numOverall = numOverall;
@@ -47,6 +49,27 @@ namespace Chronokeep.IO.HtmlTemplates
             this.numAgeGroup = numAgeGroup;
             GenderStr = result.Gender == "Man" ? "Men" : result.Gender == "Woman" ? "Women" : result.Gender == "Not Specified" || result.Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : result.Gender;
             AgeGroupStr = $"{GenderStr} {result.PrettyAgeGroupName()}".Trim();
+            distanceValue = distance?.DistanceValue ?? 0.0;
+            distanceValueStr = distance?.DistanceUnit switch
+            {
+                Constants.Distances.KILOMETERS => "kilometers",
+                Constants.Distances.METERS => "meters",
+                Constants.Distances.MILES => "miles",
+                Constants.Distances.YARDS => "yards",
+                Constants.Distances.FEET => "feet",
+                _ => "??",
+            };
+            pace = Constants.Timing.SecondsToMinuteTime((long)(result.ChipSeconds / distanceValue));
+            paceStr = distance?.DistanceUnit switch
+            {
+                Constants.Distances.KILOMETERS => "min/km",
+                Constants.Distances.METERS => "min/meter",
+                Constants.Distances.MILES => "min/mile",
+                Constants.Distances.YARDS => "min/yard",
+                Constants.Distances.FEET => "min/foot",
+                _ => "min/??",
+            };
+
         }
     }
 

@@ -49,8 +49,12 @@ namespace Chronokeep.Network
         private readonly Dictionary<string, byte[]> emailCache = [];
 
         private readonly Dictionary<string, Participant> participantDictionary = [];
-        private readonly HashSet<string> distanceNames = [];
+        private readonly Dictionary<string, Distance> distanceDictionary = [];
         private readonly Dictionary<int, ApiObject> apiDictionary = [];
+
+        private readonly Dictionary<string, int> NumberOverallParticipants = [];
+        private readonly Dictionary<(string, string), int> NumberGenderParticipants = [];
+        private readonly Dictionary<(string, string, string), int> NumberAgeGroupParticipants = [];
 
         private readonly Lock infoLock = new();
 
@@ -86,24 +90,40 @@ namespace Chronokeep.Network
                         pResList = [];
                         participantResults[r.Bib] = pResList;
                     }
-
                     pResList.Add(r);
                 }
-                distanceNames.Clear();
+                distanceDictionary.Clear();
                 foreach (Distance d in database.GetDistances(theEvent.Identifier).Where(d => d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID))
                 {
-                    distanceNames.Add(d.Name);
+                    distanceDictionary.Add(d.Name, d);
                 }
                 finishResults.AddRange(finishDictionary.Values);
                 finishResults.RemoveAll(r => string.IsNullOrEmpty(r.Bib));
                 finishResults.RemoveAll(r => r.DistanceName.Length < 1);
                 // clear response caches whenever we update information
                 resultsCache = null;
+                printSelectCache = null;
                 participantCache.Clear();
+                printableCache.Clear();
                 participantDictionary.Clear();
                 foreach (Participant p in database.GetParticipants(theEvent.Identifier))
                 {
                     participantDictionary[p.Identifier.ToString()] = p;
+                    if (!NumberOverallParticipants.TryGetValue(p.Distance, out int ov))
+                    {
+                        ov = 0;
+                    }
+                    NumberOverallParticipants[p.Distance] = ov + 1;
+                    if (!NumberGenderParticipants.TryGetValue((p.Distance, p.Gender), out int gnd))
+                    {
+                        gnd = 0;
+                    }
+                    NumberGenderParticipants[(p.Distance, p.Gender)] = gnd + 1;
+                    if (!NumberAgeGroupParticipants.TryGetValue((p.Distance, p.Gender, p.EventSpecific.AgeGroupName), out int ag))
+                    {
+                        ag = 0;
+                    }
+                    NumberAgeGroupParticipants[(p.Distance, p.Gender, p.EventSpecific.AgeGroupName)] = ag + 1;
                 }
                 apiDictionary.Clear();
                 foreach (ApiObject api in database.GetAllApi())
@@ -197,7 +217,11 @@ namespace Chronokeep.Network
                     }
                 }
             }
-            else if (filename.StartsWith("css/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("js/", StringComparison.OrdinalIgnoreCase) || filename.StartsWith("font/", StringComparison.OrdinalIgnoreCase))
+            else if (filename.StartsWith("css/", StringComparison.OrdinalIgnoreCase)
+                || filename.StartsWith("js/", StringComparison.OrdinalIgnoreCase)
+                || filename.StartsWith("fonts/", StringComparison.OrdinalIgnoreCase)
+                || filename.StartsWith("images/", StringComparison.OrdinalIgnoreCase)
+                )
             {
                 Log.D("Network.HttpServer", $"Fetching {filename}");
                 answer = true;
@@ -224,6 +248,14 @@ namespace Chronokeep.Network
                 else if (filename.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
                 {
                     context.Response.ContentType = "font/ttf";
+                }
+                else if (filename.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.ContentType = "image/svg";
+                }
+                else if (filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.ContentType = "image/png";
                 }
             }
             else if (printable.Length > 0)
@@ -254,7 +286,11 @@ namespace Chronokeep.Network
                                 {
                                     if (res.Finish)
                                     {
-                                        HtmlPrintableTemplate print = new(res, 0, 0, 0);
+                                        int numberOverall = NumberOverallParticipants.TryGetValue(res.DistanceName, out int ov) ? ov : 0;
+                                        int numberGender = NumberGenderParticipants.TryGetValue((res.DistanceName, res.Gender), out int gn) ? gn : 0;
+                                        int numberAgeGroup = NumberAgeGroupParticipants.TryGetValue((res.DistanceName, res.Gender, res.AgeGroupName), out int ag) ? ag : 0;
+                                        distanceDictionary.TryGetValue(res.DistanceName, out Distance? d);
+                                        HtmlPrintableTemplate print = new(res, numberOverall, numberGender, numberAgeGroup, d);
                                         partCache = Encoding.Default.GetBytes(print.TransformText());
                                         break;
                                     }
@@ -332,7 +368,7 @@ namespace Chronokeep.Network
                                     theEvent!,
                                     finishResult,
                                     finPart.Email,
-                                    distanceNames.Count == 1,
+                                    distanceDictionary.Keys.Count == 1,
                                     apiDictionary.GetValueOrDefault(theEvent!.ApiId)
                                     );
                                 cachedEmail = Encoding.Default.GetBytes(email.TransformText());
