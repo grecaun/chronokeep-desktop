@@ -57,7 +57,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			.main {
 				margin-left: <#= LeftMargin #>px;
 				margin-top: <#= TopMargin #>px;
-				max-width: <#= ScaledTotalWidth() #>px;
+				width: <#= ScaledTotalWidth() #>px;
 			}
 			.img {
 				height:<#= ScaledImageHeight() #>px;

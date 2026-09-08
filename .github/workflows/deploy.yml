@@ -68,7 +68,7 @@ jobs:
 
     # Build the app for Release
     - name: Build program
-      run: msbuild $env:Solution_Path /p:Platform="Any CPU" /p:Configuration=Release
+      run: msbuild $env:Solution_Path /p:Platform="Any CPU" /p:Configuration=Release /p:SelfContained=True
 
     # Set an environment variable to the tag we want to use to describe this release.
     - name: Get tag environment variable.
@@ -77,11 +77,22 @@ jobs:
 
     # Run Inno Setup
     - name: Create setup with Inno Setup
+      if: matrix.os == 'windows-latest'
       run: .\Inno\ISCC.exe /DMyAppVersion=${{ steps.release-version.outputs.RELEASE_VERSION }} /DMyAppDirectory=$env:Compile_Path /O$env:Compile_Path /SCompression=bzip2 .\install-script.iss
 
-    # Create zip
+    # Remove weasyprint.exe and version.txt
+    - name: Remove files not needed for Linux version.
+      if: matrix.os == 'ubuntu-latest'
+      run: rm $env:Compile_Path\weasyprint.exe $env:Compile_Path\version.txt
+
+    # Create zip/tar
     - name: Create zip of all files.
       run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$env:App_Zip_Archive
+
+    # Gzip the tar
+    - name: Remove files not needed for Linux version.
+      if: matrix.os == 'ubuntu-latest'
+      run: gzip $env:Compile_Path\$env:App_Zip_Archive
 
     # Create the release
     - name: Create release
@@ -100,10 +111,10 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ${{ env.Compile_Path }}\${{ matrix.app_packages_archive }}
 
-      
     # Upload archive
     - name: Update archive
       id: upload-archive
+      if: matrix.os == 'windows-latest'
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
