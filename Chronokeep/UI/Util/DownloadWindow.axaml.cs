@@ -55,17 +55,29 @@ namespace Chronokeep.UI.Util
             if (App.IsWindows)
             {
                 downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-setup-{version}.exe";
+                foreach (Assets asset in r.Assets)
+                {
+                    if (asset.BrowserDownloadUrl.Contains(".exe"))
+                    {
+                        Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
+                        uri = asset.BrowserDownloadUrl;
+                        break;
+                    }
+                }
             }
             else
             {
-                downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-{version}.tar.gz";
-                uri = "";
-                Close();
-                DialogBox.AsyncShow("Linux downloads not yet implemented.");
+                downloadUri = $"{Directory.GetCurrentDirectory()}\\chronokeep.tar.gz";
+                foreach (Assets asset in r.Assets)
+                {
+                    if (asset.BrowserDownloadUrl.Contains(".tar.gz"))
+                    {
+                        Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
+                        uri = asset.BrowserDownloadUrl;
+                    }
+                }
                 return;
             }
-            Log.D("Updates.Check", $"Download URL - {r.Assets[0].BrowserDownloadUrl}");
-            uri = r.Assets[0].BrowserDownloadUrl;
             Activate();
         }
 
@@ -158,11 +170,22 @@ namespace Chronokeep.UI.Util
                 else if (((string)InstallButton.Content).Equals("Install", StringComparison.OrdinalIgnoreCase))
                 {
                     Log.D("Updates.DownloadWindow", "Install clicked.");
-                    using Process install = new();
-                    install.StartInfo.FileName = downloadUri;
-                    install.Start();
-                    Close();
-                    mWindow.Exit();
+                    if (App.IsWindows)
+                    {
+                        using Process install = new();
+                        install.StartInfo.FileName = downloadUri;
+                        install.Start();
+                        Close();
+                        mWindow.Exit();
+                    }
+                    else
+                    {
+                        using Process install = new();
+                        install.StartInfo.FileName = "./update.sh";
+                        install.Start();
+                        Close();
+                        mWindow.Exit();
+                    }
                 }
                 else
                 {
