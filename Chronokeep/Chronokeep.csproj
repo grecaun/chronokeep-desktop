@@ -297,6 +297,9 @@
     <None Update="changelog\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="update.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="weasyprint.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

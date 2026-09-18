@@ -39,6 +39,8 @@ public partial class ReaderSubPart : UserControl
     [GeneratedRegex("[^0-9]")]
     private static partial Regex AllowedNums();
 
+    private readonly bool loaded = false;
+
     public ReaderSubPart(PortalReader reader, ChronokeepInterface readerInterface)
     {
         InitializeComponent();
@@ -72,15 +74,18 @@ public partial class ReaderSubPart : UserControl
                 });
             }
         }
+        loaded = true;
     }
 
     public string GetReaderName()
     {
+        if (!loaded) return "";
         return reader.Name;
     }
 
     public void UpdateAntennas(int[] antennas)
     {
+        if (!loaded) return;
         reader.Antennas = antennas;
         AntennaPanel.Children.Clear();
         for (int ix = 0; ix < reader.Antennas.Length; ix++)
@@ -105,6 +110,7 @@ public partial class ReaderSubPart : UserControl
 
     public void UpdateReader(PortalReader iReader)
     {
+        if (!loaded) return;
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Updating reader {iReader.Id}");
         reader = iReader;
         NameBox.Text = iReader.Name;
@@ -143,7 +149,8 @@ public partial class ReaderSubPart : UserControl
 
     private void KindBox_ValueChanged(object? sender, SelectionChangedEventArgs e)
     {
-        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Changing port for reader {reader.Id}");
+        if (!loaded) return;
+        Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Changing port for reader {reader?.Id}");
         switch (KindBox.SelectedIndex)
         {
             case 0:
@@ -163,22 +170,26 @@ public partial class ReaderSubPart : UserControl
 
     private void IpValidation(object? sender, TextInputEventArgs e)
     {
+        if (!loaded) return;
         e.Handled = AllowedChars().IsMatch(e.Text!);
     }
 
     private void NumberValidation(object? sender, TextInputEventArgs e)
     {
+        if (!loaded) return;
         e.Handled = AllowedNums().IsMatch(e.Text!);
     }
 
     private void DeleteReader(object? sender, RoutedEventArgs e)
     {
+        if (!loaded) return;
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Deleting reader {reader.Id}");
         readerInterface.SendRemoveReader(reader);
     }
 
     private void SaveReader(object? sender, RoutedEventArgs e)
     {
+        if (!loaded) return;
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", $"Saving reader {reader.Id}");
         reader.Name = NameBox.Text!.Trim();
         switch (KindBox.SelectedIndex)
@@ -206,5 +217,17 @@ public partial class ReaderSubPart : UserControl
         reader.AutoConnect = AutoConnectSwitch.IsChecked == true;
 
         readerInterface.SendSaveReader(reader);
+    }
+
+    private void ConnectReader(object?sender, RoutedEventArgs e)
+    {
+        if (reader.Reading)
+        {
+            readerInterface.SendStopReader(reader);
+        }
+        else
+        {
+            readerInterface.SendStartReader(reader);
+        }
     }
 }

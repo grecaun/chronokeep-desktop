@@ -50,37 +50,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      Width="60"
                      Margin="5"
                      TextInput="NumberValidation" />
-            <ToggleSwitch Name="AutoConnectSwitch"
-                            Width="40"
-                            OnContent=""
-                            OffContent=""
-                            Margin="5,-7,-7,-7"
-                            VerticalContentAlignment="Center" />
-            <Label Content="Auto Connect"
-                   Width="80" />
-        </StackPanel>
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Center">
-            <ToggleSwitch Name="ConnectedSwitch"
-                            Width="40"
-                            OnContent=""
-                            OffContent=""
-                            Margin="5,-7,-7,-7"
-                            VerticalContentAlignment="Center" /> <!-- add ConnectReader -->
-            <Label Content="Connected"
-                   Width="75" />
-            <Button Name="SaveReaderButton"
+			<Button Name="SaveReaderButton"
                     Width="40"
                     Margin="5"
                     Click="SaveReader">
-			    <PathIcon Data="{StaticResource save_regular}"/>
-            </Button>
-            <Button Name="RemoveReaderButton"
+				<PathIcon Data="{StaticResource save_regular}"/>
+			</Button>
+			<Button Name="RemoveReaderButton"
                     Width="40"
                     Margin="5"
                     Click="DeleteReader">
-			    <PathIcon Data="{StaticResource delete_regular}"/>
-            </Button>
+				<PathIcon Data="{StaticResource delete_regular}"/>
+			</Button>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+			<ToggleSwitch Name="ConnectedSwitch"
+                            Width="40"
+                            OnContent=""
+                            OffContent=""
+                            Margin="5,-7,0,-7"
+                            VerticalContentAlignment="Center"
+						    Click="ConnectReader"/>
+			<Label Content="Connected"
+				   VerticalAlignment="Center"
+                   Width="75" />
+			<ToggleSwitch Name="AutoConnectSwitch"
+                            Width="40"
+                            OnContent=""
+                            OffContent=""
+                            Margin="5,-7,0,-7"
+                            VerticalContentAlignment="Center"/>
+			<Label Content="Auto Connect"
+				   VerticalAlignment="Center"
+                   Width="95" />
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center"
