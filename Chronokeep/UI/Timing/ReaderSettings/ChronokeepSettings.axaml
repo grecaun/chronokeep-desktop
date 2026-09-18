@@ -48,7 +48,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 Name="ChronokeepToolBar"
                 >
             <DockPanel Margin="0">
-                <TextBlock Name="VersionBlock" Height="20" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock Name="VersionBlock" Height="20" FontSize="16" VerticalAlignment="Center" Margin="10,0"/>
                <StackPanel DockPanel.Dock="Right"
                            Orientation="Horizontal"
                            HorizontalAlignment="Right">

@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Chronokeep.Helpers;
 using Chronokeep.Objects.ChronokeepPortal;
 using Chronokeep.Timing.Interfaces;
@@ -142,6 +143,7 @@ public partial class ReaderSubPart : UserControl
                     Width = 30,
                     Height = 30,
                     CornerRadius = Avalonia.CornerRadius.Parse("15"),
+                    Background = Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_CONNECTED == reader.Antennas[ix] ? Brush.Parse("Green") : Brush.Parse("Red"),
                 });
             }
         }
