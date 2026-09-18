@@ -83,7 +83,8 @@ public partial class ChangeEventWindow : ChronokeepWindow
     private void ChangeButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Change Button Clicked.");
-        Event one = (Event)EventList.SelectedItem!;
+        Event? one = (Event?)EventList.SelectedItem;
+        if (one == null) return;
         Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.SetCurrentEvent(one.Identifier);
         window.WindowFinalize();
@@ -93,7 +94,8 @@ public partial class ChangeEventWindow : ChronokeepWindow
     private void DeleteButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Delete button clicked.");
-        Event one = (Event)EventList.SelectedItem!;
+        Event? one = (Event?)EventList.SelectedItem;
+        if (one == null) return;
         Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.RemoveEvent(one.Identifier);
         UpdateEventBox();
@@ -108,7 +110,8 @@ public partial class ChangeEventWindow : ChronokeepWindow
     private void EventList_MouseDoubleClick(object? sender, TappedEventArgs e)
     {
         Log.D("UI.ChangeEventWindow", "Double Click detected.");
-        Event one = (Event)EventList.SelectedItem!;
+        Event? one = (Event?)EventList.SelectedItem;
+        if (one == null) return;
         Log.D("UI.ChangeEventWindow", $"Selected event has ID of {one.Identifier}");
         database.SetCurrentEvent(one.Identifier);
         window.WindowFinalize();
