@@ -40,7 +40,7 @@ namespace Chronokeep.Timing.Announcer
         private static readonly List<AnnouncerParticipant> Participants = [];
         private static readonly Dictionary<string, DateTime> BibSeen = [];
 
-        private const int SeenWindow = 5; // minutes
+        private const int SeenWindow = 1; // minutes
 
         private AnnouncerWorker(IMainWindow window, IdbInterface database)
         {
@@ -182,7 +182,7 @@ namespace Chronokeep.Timing.Announcer
                     {
                         Log.D("Timing.Announcer.AnnouncerWorker", "New chip reads found!");
                         Event ev2 = database.GetCurrentEvent()!;
-                        // verify that we both ev2 and theevent are not null and they match
+                        // verify that we both ev2 and theEvent are not null and they match
                         if (ev2.Identifier != theEvent.Identifier)
                         {
                             quittingTime = true;
@@ -200,7 +200,14 @@ namespace Chronokeep.Timing.Announcer
                     {
                         Log.D("Timing.Announcer.AnnouncerWorker", "Update window expired.");
                     }
-                    window.UpdateAnnouncerWindow();
+                    try
+                    {
+                        window.UpdateAnnouncerWindow();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.E($"Error trying to update the announcer window. {e}");
+                    }
                 }
                 catch (Exception e)
                 {
