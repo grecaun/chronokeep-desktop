@@ -821,7 +821,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         UpdateStartTime();
     }
 
-    private void StartRaceClick(object? sender, RoutedEventArgs e)
+    private async void StartRaceClick(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.TimingPage", "Starting race.");
         StartTime.Text = DateTime.Now.ToString("HH:mm:ss.fff");
@@ -832,11 +832,11 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         {
             try
             {
-                _ = clock.StartCountUp();
+                _ = await clock.StartCountUp();
             }
             catch
             {
-                Log.D("UI.MainPages.TimingPage", "Error starting countup.");
+                Log.D("UI.MainPages.TimingPage", "Error starting Count Up.");
             } // Exception may get thrown due to not waiting on the async method
             // The clocks need to start as fast as possible, and it does not matter if the
             // call fails (the clock is probably not connected to the same network)

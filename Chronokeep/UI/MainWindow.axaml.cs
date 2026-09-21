@@ -993,9 +993,16 @@ namespace Chronokeep.UI
                                 $"Reader at {system.LocationName} has unexpectedly disconnected. IP Address was {system.IpAddress}.");
                         }
                     }
-                    system.Status = SYSTEM_STATUS.DISCONNECTED;
-                    UpdateTiming();
-                    announcerWindow?.UpdateView();
+                    try
+                    {
+                        system.Status = SYSTEM_STATUS.DISCONNECTED;
+                        UpdateTiming();
+                        announcerWindow?.UpdateView();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.E("UI.MainWindow", $"Exception thrown after Timing System disconnected. {e}");
+                    }
                 });
             }
             catch (TaskCanceledException) { }
