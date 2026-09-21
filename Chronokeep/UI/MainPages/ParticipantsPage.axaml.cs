@@ -316,7 +316,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                             old.EcPhone
                         );
                         // Check if the bib has changed
-                        if (old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
+                        if (old.Bib != null && old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
                         {
                             // Add the old value so we can track it.
                             old.Identifier = -1;
