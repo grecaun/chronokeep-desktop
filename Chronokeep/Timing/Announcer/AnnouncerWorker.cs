@@ -206,7 +206,7 @@ namespace Chronokeep.Timing.Announcer
                     }
                     catch (Exception e)
                     {
-                        Log.E($"Error trying to update the announcer window. {e}");
+                        Log.E("AnnouncerWindow", $"Error trying to update the announcer window. {e}");
                     }
                 }
                 catch (Exception e)

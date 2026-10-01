@@ -70,18 +70,21 @@ public partial class ApiPage3 : UserControl
             });
             int ix = 0;
             int count = 1;
-            foreach (ApiEventYear y in years.EventYears)
+            if (years.EventYears != null)
             {
-                YearCopyBox.Items.Add(new ComboBoxItem
+                foreach (ApiEventYear y in years.EventYears)
                 {
-                    Content = y.Year,
-                    Tag = y.Year
-                });
-                if (theEvent.YearCode == y.Year)
-                {
-                    ix = count;
+                    YearCopyBox.Items.Add(new ComboBoxItem
+                    {
+                        Content = y.Year,
+                        Tag = y.Year
+                    });
+                    if (theEvent.YearCode == y.Year)
+                    {
+                        ix = count;
+                    }
+                    count++;
                 }
-                count++;
             }
             YearCopyBox.SelectedIndex = ix;
             NewPanel.IsVisible = ix == 0;
