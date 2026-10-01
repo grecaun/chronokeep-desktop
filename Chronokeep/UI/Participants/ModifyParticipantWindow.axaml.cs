@@ -304,7 +304,8 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
             age = 0;
         }
         string birthdate = BirthdayBox.SelectedDate?.ToString("yyyy/M/d") ?? "";
-        if (age != 0 && birthdate.Length < 1)
+        // Check if we've been given an age or the birthdate value is empty or set to today.
+        if (age != 0 && (birthdate.Length < 1 || birthdate == DateTime.Now.ToString("yyyy/M/d")))
         {
             if (!int.TryParse(theEvent.Date.Split('/')[2], out int year))
             {
