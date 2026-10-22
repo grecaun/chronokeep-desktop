@@ -48,12 +48,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			<Setter Property="FontSize" Value="14"/>
 			<Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        <Style Selector="TextBox.settings">
+		<Style Selector="TextBox.settings">
 			<Setter Property="Margin" Value="0,0,10,5"/>
 			<Setter Property="FontSize" Value="14"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="VerticalContentAlignment" Value="Top"/>
-        </Style>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="VerticalContentAlignment" Value="Top"/>
+		</Style>
+		<Style Selector="TextBlock.Header">
+			<Setter Property="Margin" Value="0,5,0,0"/>
+			<Setter Property="FontSize" Value="18"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="TextAlignment" Value="Center"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+		</Style>
         <Style Selector="Slider">
 			<Setter Property="Margin" Value="0,0,10,0"/>
 			<Setter Property="FontSize" Value="14"/>
@@ -159,8 +166,54 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                 Classes="setting_two"
                                 Click="ChangeExport_Click" />
                     </Grid>
+					<DockPanel>
+						<TextBlock Text="Alarm Sound"
+                                   Classes="settings"/>
+						<Button Name="PlayBtn"
+                                Content="Play"
+                                Click="PlayBtn_Click"
+                                Classes="setting_two"
+                                Width="70"/>
+						<ComboBox Name="AlarmSoundBox">
+							<ComboBoxItem Content="Alert 1" />
+							<ComboBoxItem Content="Alert 2" />
+							<ComboBoxItem Content="Alert 3" />
+							<ComboBoxItem Content="Alert 4" />
+							<ComboBoxItem Content="Alert 5" />
+							<ComboBoxItem Content="Emily 1" />
+							<ComboBoxItem Content="Emily 2" />
+							<ComboBoxItem Content="Emily 3" />
+							<ComboBoxItem Content="Michael 1" />
+							<ComboBoxItem Content="Michael 2" />
+							<ComboBoxItem Content="Michael 3" />
+						</ComboBox>
+					</DockPanel>
+					<Grid ColumnDefinitions="190,*,105">
+						<TextBlock Grid.Column="0"
+                                   Text="Program Identifier"
+                                   Classes="settings"/>
+						<TextBox Grid.Column="1"
+                                 Name="UniqueProgramId"
+                                 HorizontalContentAlignment="Stretch"
+                                 IsEnabled="False"
+                                 Classes="settings"/>
+						<Button Grid.Column="2"
+                                Name="RegenerateUniqueProgramIdButton"
+                                Content="Regenerate"
+                                Classes="setting_two"
+                                Click="RegenerateUniqueProgramIDButton_Click" />
+					</Grid>
+					<DockPanel>
+						<TextBlock Text="Registration Server Name"
+                                   Classes="settings"/>
+						<TextBox Name="RegistrationServerNameBox"
+                                 Classes="settings"/>
+					</DockPanel>
+					<Grid>
+						<TextBlock Text="Result API Settings" Classes="Header"/>
+					</Grid>
                     <Grid Margin="0,-5,0,0" ColumnDefinitions="190,*,40">
-                        <TextBlock Text="Upload Interval"
+                        <TextBlock Text="Upload Interval (sec)"
                                    Grid.Column="0"
                                    Classes="settings"/>
                         <Slider Grid.Column="1"
@@ -174,7 +227,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                    Classes="settings"/>
                     </Grid>
                     <Grid Margin="0,-10" ColumnDefinitions="190,*,40">
-                        <TextBlock Text="Download Interval"
+                        <TextBlock Text="Download Interval (sec)"
                                    Classes="settings"/>
                         <Slider Grid.Column="1"
                                 Name="DownloadSlider"
@@ -186,66 +239,48 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                    TextAlignment="Center"
                                    Classes="settings"/>
                     </Grid>
-                    <Grid ColumnDefinitions="190,*,40">
-                        <TextBlock Text="Announcer Window"
+					<Grid>
+						<TextBlock Text="Announcer Settings" Classes="Header"/>
+					</Grid>
+					<Grid ColumnDefinitions="190,*,50">
+						<TextBlock Text="Visibility Window (sec)"
                                    Classes="settings"/>
-                        <Slider Grid.Column="1"
+						<Slider Grid.Column="1"
                                 Name="AnnouncerSlider"
                                 ValueChanged="AnnouncerSlider_ValueChanged"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Stretch"
-                                TickFrequency="1"
-                                Minimum="1"
-                                Maximum="120"/>
-                        <TextBlock Grid.Column="2"
+                                TickFrequency="5"
+                                Minimum="30"
+                                Maximum="1200"/>
+						<TextBlock Grid.Column="2"
                                    Name="AnnouncerBlock"
+                                   Width="40"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   Classes="settings"/>
+					</Grid>
+					<Grid ColumnDefinitions="190,*,40">
+						<TextBlock Text="Repeat Window (min)"
+                                   Classes="settings"/>
+						<Slider Grid.Column="1"
+                                Name="AnnRepSlider"
+                                ValueChanged="AnnRepSlider_ValueChanged"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch"
+                                TickFrequency="1"
+                                Minimum="0"
+                                Maximum="300"/>
+						<TextBlock Grid.Column="2"
+                                   Name="AnnRepBlock"
                                    Width="30"
                                    HorizontalAlignment="Center"
                                    TextAlignment="Center"
                                    Classes="settings"/>
-                    </Grid>
-                    <DockPanel>
-                        <TextBlock Text="Alarm Sound"
-                                   Classes="settings"/>
-                        <Button Name="PlayBtn"
-                                Content="Play"
-                                Click="PlayBtn_Click"
-                                Classes="setting_two"
-                                Width="70"/>
-                        <ComboBox Name="AlarmSoundBox">
-                            <ComboBoxItem Content="Alert 1" />
-                            <ComboBoxItem Content="Alert 2" />
-                            <ComboBoxItem Content="Alert 3" />
-                            <ComboBoxItem Content="Alert 4" />
-                            <ComboBoxItem Content="Alert 5" />
-                            <ComboBoxItem Content="Emily 1" />
-                            <ComboBoxItem Content="Emily 2" />
-                            <ComboBoxItem Content="Emily 3" />
-                            <ComboBoxItem Content="Michael 1" />
-                            <ComboBoxItem Content="Michael 2" />
-                            <ComboBoxItem Content="Michael 3" />
-                        </ComboBox>
-                    </DockPanel>
-                    <Grid ColumnDefinitions="190,*,105">
-                        <TextBlock Grid.Column="0"
-                                   Text="Program Identifier"
-                                   Classes="settings"/>
-                        <TextBox Grid.Column="1"
-                                 Name="UniqueProgramId"
-                                 HorizontalContentAlignment="Stretch"
-                                 IsEnabled="False"/>
-                        <Button Grid.Column="2"
-                                Name="RegenerateUniqueProgramIdButton"
-                                Content="Regenerate"
-                                Classes="setting_two"
-                                Click="RegenerateUniqueProgramIDButton_Click" />
-                    </Grid>
-                    <DockPanel>
-                        <TextBlock Text="Registration Server Name"
-                                   Classes="settings"/>
-                        <TextBox Name="RegistrationServerNameBox"
-                                 Classes="settings"/>
-                    </DockPanel>
+					</Grid>
+					<Grid>
+						<TextBlock Text="Twilio Settings" Classes="Header" Margin="0,5"/>
+					</Grid>
                     <DockPanel>
                         <TextBlock Text="Twilio Account SID"
                                    Classes="settings"/>
@@ -264,6 +299,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         <TextBox Name="TwilioPhoneNumberBox"
                                  Classes="settings"/>
                     </DockPanel>
+					<Grid>
+						<TextBlock Text="Mailgun Settings" Classes="Header" Margin="0,5"/>
+					</Grid>
                     <DockPanel>
                         <TextBlock Text="Mailgun From Name"
                                    Classes="settings"/>

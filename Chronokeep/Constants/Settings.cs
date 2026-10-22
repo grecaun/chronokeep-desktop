@@ -51,6 +51,7 @@ namespace Chronokeep.Constants
         public const string UPLOAD_INTERVAL             = "SETTING_UPLOAD_INTERVAL";
         public const string DOWNLOAD_INTERVAL           = "SETTINGS_DOWNLOAD_INTERVAL";
         public const string ANNOUNCER_WINDOW            = "SETTING_ANNOUNCER_WINDOW";
+        public const string SEEN_WINDOW                 = "SETTING_SEEN_WINDOW";
         public const string ALARM_SOUND                 = "SETTING_ALARM_SOUND";
         public const string MINIMUM_COMPATIBLE_DATABASE = "SETTING_MINIMUM_COMPATIBLE_DATABASE";
         // Settings 5
@@ -83,6 +84,7 @@ namespace Chronokeep.Constants
 
         public const string DEFAULT_INTERVAL  = "30";
         public const string DEFAULT_ANNOUNCER = "45";
+        public const string DEFAULT_SEEN      = "5";
         public const string DEFAULT_ALARM     = "1";
 
         [GeneratedRegex("[^a-zA-Z0-9]")]
@@ -156,6 +158,10 @@ namespace Chronokeep.Constants
             if (database.GetAppSetting(ANNOUNCER_WINDOW) == null)
             {
                 database.SetAppSetting(ANNOUNCER_WINDOW, DEFAULT_ANNOUNCER);
+            }
+            if (database.GetAppSetting(SEEN_WINDOW) == null)
+            {
+                database.SetAppSetting(SEEN_WINDOW, DEFAULT_SEEN);
             }
             if (database.GetAppSetting(ALARM_SOUND) == null)
             {

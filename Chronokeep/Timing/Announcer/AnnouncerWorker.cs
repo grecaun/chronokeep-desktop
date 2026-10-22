@@ -40,8 +40,6 @@ namespace Chronokeep.Timing.Announcer
         private static readonly List<AnnouncerParticipant> Participants = [];
         private static readonly Dictionary<string, DateTime> BibSeen = [];
 
-        private const int SeenWindow = 1; // minutes
-
         private AnnouncerWorker(IMainWindow window, IdbInterface database)
         {
             this.window = window;
@@ -123,10 +121,10 @@ namespace Chronokeep.Timing.Announcer
                 // Check to ensure we know the bib of this person
                 if (read.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
                 {
-                    // Check if we've already seen the bib (or we haven't seen the bib in seenWindow minutes).
+                    // Check if we've already seen the bib (or we haven't seen the bib in SeenWindow minutes (SeenWindow of 0 means only show once)).
                     // Only work if we've not seen it before.
                     if ((!BibSeen.TryGetValue(read.Bib, out DateTime lastSeen)
-                        || lastSeen.AddMinutes(SeenWindow).CompareTo(timeRightNow) < 0)
+                        || (Globals.SeenWindow != 0 && lastSeen.AddMinutes(Globals.SeenWindow).CompareTo(timeRightNow) < 0))
                         && participantBibDictionary.TryGetValue(read.Bib, out Participant? part))
                     {
                         newParticipants = true;

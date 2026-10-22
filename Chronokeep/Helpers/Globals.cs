@@ -32,6 +32,7 @@ namespace Chronokeep.Helpers
         public static int UploadInterval = -1;
         public static int DownloadInterval = -1;
         public static int AnnouncerWindow = 45;
+        public static int SeenWindow = 1;
         public static string ErrorLogPath = "";
 
         public static void SetupValues(IdbInterface db)
@@ -47,6 +48,10 @@ namespace Chronokeep.Helpers
             if (!int.TryParse(db.GetAppSetting(Constants.Settings.ANNOUNCER_WINDOW)!.Value, out AnnouncerWindow))
             {
                 DialogBox.AsyncShow("Something went wrong trying to get the announcer window.");
+            }
+            if (!int.TryParse(db.GetAppSetting(Constants.Settings.SEEN_WINDOW)!.Value, out SeenWindow))
+            {
+                DialogBox.AsyncShow("Something went wrong trying to get the seen window.");
             }
         }
 

@@ -132,10 +132,15 @@ public partial class SettingsPage : UserControl, IMainPage
             DownloadSlider.Value = downloadInt;
             DownloadBlock.Text = downloadInt.ToString();
         }
-        if (int.TryParse(database.GetAppSetting(Constants.Settings.ANNOUNCER_WINDOW)!.Value, out int announcerWindow) && announcerWindow is >= 15 and <= 180)
+        if (int.TryParse(database.GetAppSetting(Constants.Settings.ANNOUNCER_WINDOW)!.Value, out int announcerWindow) && announcerWindow is >= 30 and <= 1200)
         {
             AnnouncerSlider.Value = announcerWindow;
             AnnouncerBlock.Text = announcerWindow.ToString();
+        }
+        if (int.TryParse(database.GetAppSetting(Constants.Settings.SEEN_WINDOW)!.Value, out int seenWindow) && seenWindow is >= 0 and <= 300)
+        {
+            AnnRepSlider.Value = seenWindow;
+            AnnRepBlock.Text = seenWindow.ToString();
         }
         if (int.TryParse(database.GetAppSetting(Constants.Settings.ALARM_SOUND)!.Value, out int alarm))
         {
@@ -170,6 +175,8 @@ public partial class SettingsPage : UserControl, IMainPage
         Globals.DownloadInterval = Convert.ToInt32(DownloadSlider.Value);
         database.SetAppSetting(Constants.Settings.ANNOUNCER_WINDOW, Convert.ToInt32(AnnouncerSlider.Value).ToString());
         Globals.AnnouncerWindow = Convert.ToInt32(AnnouncerSlider.Value);
+        database.SetAppSetting(Constants.Settings.SEEN_WINDOW, Convert.ToInt32(AnnRepSlider.Value).ToString());
+        Globals.SeenWindow = Convert.ToInt32(AnnRepSlider.Value);
         database.SetAppSetting(Constants.Settings.ALARM_SOUND, AlarmSoundBox.SelectedIndex.ToString());
         database.SetAppSetting(Constants.Settings.SERVER_NAME, RegistrationServerNameBox.Text!.Trim());
 
@@ -337,6 +344,14 @@ public partial class SettingsPage : UserControl, IMainPage
         if (AnnouncerSlider != null && AnnouncerBlock != null)
         {
             AnnouncerBlock.Text = AnnouncerSlider.Value.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    private void AnnRepSlider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (AnnRepSlider != null && AnnRepBlock != null)
+        {
+            AnnRepBlock.Text = AnnRepSlider.Value.ToString(CultureInfo.InvariantCulture);
         }
     }
 
