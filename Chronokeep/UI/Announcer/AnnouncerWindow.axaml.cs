@@ -45,9 +45,7 @@ public partial class AnnouncerWindow : ChronokeepWindow
         this.database = database;
         theEvent = database.GetCurrentEvent();
         AnnouncerParticipant.TheEvent = theEvent;
-        AnnouncerWorker announcerWorker1 = AnnouncerWorker.NewAnnouncer(window, database);
-        Thread announcerThread1 = new(announcerWorker1.Run);
-        announcerThread1.Start();
+        window.StartAnnouncerWorker();
         UpdateView();
         UpdateTiming();
     }

@@ -36,7 +36,7 @@ namespace Chronokeep.Timing.Announcer
         private static readonly Semaphore Semaphore = new(0, 2);
         private static readonly Lock AnLock = new();
 
-        private static bool quittingTime;
+        private static bool quittingTime = true;
         private static readonly List<AnnouncerParticipant> Participants = [];
         private static readonly Dictionary<string, DateTime> BibSeen = [];
 

@@ -502,4 +502,8 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     public bool StopRegistration() { return false; }
 
     public bool IsRegistrationRunning() { return false; }
+
+    public bool StartAnnouncerWorker() { return false; }
+
+    public bool StopAnnouncerWorker() { return false; }
 }

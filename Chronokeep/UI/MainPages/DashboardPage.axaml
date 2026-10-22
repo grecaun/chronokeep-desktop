@@ -232,13 +232,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 Margin="0,5,0,5"
                 HorizontalAlignment="Stretch"
                 />
-            <Button
+			<Button
                 Name="RegistrationButton"
                 Content="Start Registration"
                 Click="RegistrationButton_Click"
                 Classes="dash"
                 Margin="0,5,0,5"
                 HorizontalAlignment="Stretch"
+                />
+			<Button
+                Name="RestartAnnouncerButton"
+                Content="Restart Announcer Worker"
+                Click="RestartAnnouncerButton_Click"
+                Classes="dash"
+                Margin="0,5,0,5"
+                HorizontalAlignment="Stretch"
+				FontSize="12"
                 />
         </StackPanel>
     </Grid>

@@ -85,6 +85,7 @@ namespace Chronokeep.UI
 
         // Announcer objects
         private AnnouncerWindow? announcerWindow;
+        private AnnouncerWorker? announcerWorker;
 
         private readonly List<Window> openWindows = [];
 
@@ -1291,6 +1292,37 @@ namespace Chronokeep.UI
         {
             currentPage?.UpdateView();
             UpdateStatus();
+        }
+
+        public bool StartAnnouncerWorker()
+        {
+            if (database == null) return false;
+            if (announcerWorker != null)
+            {
+                AnnouncerWorker.Shutdown();
+                AnnouncerWorker.Notify();
+                if (AnnouncerWorker.Running())
+                {
+                    DialogBox.AsyncShow("Something went wrong trying to start the announcer worker.");
+                    return false;
+                }
+            }
+            announcerWorker = AnnouncerWorker.NewAnnouncer(this, database);
+            Thread announcerThread = new(announcerWorker.Run);
+            announcerThread.Start();
+            return true;
+        }
+
+        public bool StopAnnouncerWorker()
+        {
+            AnnouncerWorker.Shutdown();
+            AnnouncerWorker.Notify();
+            if (AnnouncerWorker.Running())
+            {
+                DialogBox.AsyncShow("Something went wrong trying to stop the announcer worker.");
+                return false;
+            }
+            return true;
         }
     }
 }
