@@ -235,7 +235,6 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
 
     private void Clear()
     {
-        DistanceBox.SelectedItem = 0;
         BibBox.Text = "";
         FirstBox.Text = "";
         LastBox.Text = "";
@@ -278,6 +277,11 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
     {
         if (theEvent == null || theEvent.Identifier < 0)
         {
+            return null;
+        }
+        if (DistanceBox.SelectedItem == null)
+        {
+            DialogBox.AsyncShow("Please select a distance.");
             return null;
         }
         int eventSpecificId = -1, participantId = -1;
