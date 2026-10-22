@@ -36,6 +36,7 @@ public partial class AgeGroupsPage : UserControl, IMainPage
     private readonly Event? theEvent;
 
     private bool touched;
+    private int currentDistanceId = Constants.Timing.COMMON_AGEGROUPS_DISTANCEID;
 
     public AgeGroupsPage(IMainWindow mWindow, IdbInterface database)
     {
@@ -91,8 +92,10 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         ageGroups.RemoveAll(x => Constants.Timing.AGEGROUPS_CUSTOM_DISTANCEID == x.DistanceId);
         if (!theEvent.CommonAgeGroups)
         {
+            Log.D("Age groups", "Attempting to figure out which distance we're looking for.");
             if (int.TryParse(((ComboBoxItem)DistancesBox.SelectedItem!).Tag!.ToString(), out int distanceId))
             {
+                Log.D("Age groups", $"Distance found {distanceId}");
                 ageGroups.RemoveAll(x => x.DistanceId != distanceId);
             }
             else
@@ -245,11 +248,12 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         int divId = Constants.Timing.COMMON_AGEGROUPS_DISTANCEID;
         if (!theEvent.CommonAgeGroups)
         {
-            divId = Convert.ToInt32((string)((ComboBoxItem)DistancesBox.SelectedItem!).Tag!);
+            divId = currentDistanceId;
         }
         database.RemoveAgeGroups(theEvent.Identifier, divId);
         foreach (AgeGroup age in ageGroups)
         {
+            age.DistanceId = divId;
             database.AddAgeGroup(age);
         }
         touched = true;
@@ -278,6 +282,8 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
+        // Change this after updating the database.
+        currentDistanceId = Convert.ToInt32((string)((ComboBoxItem)DistancesBox.SelectedItem!).Tag!);
         UpdateAgeGroupsList();
     }
 

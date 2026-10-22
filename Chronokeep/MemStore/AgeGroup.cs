@@ -41,8 +41,7 @@ namespace Chronokeep.MemStore
                     currentAgeGroups[(g.DistanceId, i)] = g;
                 }
 
-                if (lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) &&
-                    group.StartAge >= g.StartAge) continue;
+                if (lastAgeGroup.TryGetValue(g.DistanceId, out AgeGroup? group) && group.StartAge >= g.StartAge) { continue; }
                 group = g;
                 lastAgeGroup[g.DistanceId] = group;
             }
