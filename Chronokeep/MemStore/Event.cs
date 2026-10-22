@@ -40,7 +40,10 @@ namespace Chronokeep.MemStore
                 try
                 {
                     anEvent.Identifier = output;
-                    allEvents.Add(anEvent);
+                    if (output > 0)
+                    {
+                        allEvents.Add(anEvent);
+                    }
                 }
                 finally
                 {

@@ -81,7 +81,12 @@ public partial class NewEventWindow : ChronokeepWindow
             oldEventId = oEvent.Identifier;
         }
         Event newEvent = new(nameString, dateVal, yearString);
-        database.AddEvent(newEvent);
+        int success = database.AddEvent(newEvent);
+        if (success < 1)
+        {
+            DialogBox.AsyncShow("Event already exists.");
+            return;
+        }
         newEvent.Identifier = database.GetEventId(newEvent);
         // Copy all values from old event.
         if (oldEventId > 0)
