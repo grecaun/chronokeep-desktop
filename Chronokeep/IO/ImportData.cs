@@ -43,6 +43,7 @@ namespace Chronokeep.IO
             Log.D("IO.ImportData", $"{FileName} is the filename.");
             string[] newheaders = new string[headers.Length + 1];
             Array.Copy(headers, 0, newheaders, 1, headers.Length);
+            newheaders[0] = "";
             GatheredInformationLog("Headers are", newheaders);
             Data = [];
             Headers = newheaders;
@@ -68,6 +69,7 @@ namespace Chronokeep.IO
         {
             string[] newdata = new string[data.Length + 1];
             Array.Copy(data, 0, newdata, 1, data.Length);
+            newdata[0] = "";
             if (Headers.Length != newdata.Length)
             {
                 Log.E("IO.ImportData", $"Header count wrong on import of data: {Headers.Length} - {newdata.Length}");
