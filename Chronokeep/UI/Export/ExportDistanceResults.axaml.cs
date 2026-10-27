@@ -185,6 +185,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string extension = Path.GetExtension(file.Name);
             string fileName = Path.GetFileNameWithoutExtension(file.Name);
             string filePath = file.TryGetLocalPath()!;
+            filePath = filePath[..(filePath.Length - fileName.Length - extension.Length)];
             foreach (Distance distance in distanceDictionary!.Values)
             {
                 SaveBostonInternal(
@@ -226,6 +227,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string extension = Path.GetExtension(file.Name);
             string fileName = Path.GetFileNameWithoutExtension(file.Name);
             string filePath = file.TryGetLocalPath()!;
+            filePath = filePath[..(filePath.Length - fileName.Length - extension.Length)];
             foreach (Distance distance in distanceDictionary!.Values)
             {
                 SaveUltraSignupInternal(
@@ -266,6 +268,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             string extension = Path.GetExtension(file.Name);
             string fileName = Path.GetFileNameWithoutExtension(file.Name);
             string filePath = file.TryGetLocalPath()!;
+            filePath = filePath[..(filePath.Length - fileName.Length - extension.Length)];
             foreach (Distance distance in distanceDictionary!.Values)
             {
                 SaveRunSignupInternal(
