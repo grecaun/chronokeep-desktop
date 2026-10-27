@@ -20,6 +20,8 @@ using Chronokeep.Helpers;
 using Chronokeep.Interfaces.IO;
 using ClosedXML.Excel;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
 
 namespace Chronokeep.IO
 {
@@ -41,7 +43,7 @@ namespace Chronokeep.IO
                 for (int j = 0; j < localData[0].Length; j++)
                 {
                     worksheet.Cell(i + 1, j + 1).Style.NumberFormat.Format = "@";
-                    worksheet.Cell(i + 1, j + 1).Value = localData[i][j].ToString();
+                    worksheet.Cell(i + 1, j + 1).Value = localData[i][j] != null ? localData[i][j].ToString() : "";
                 }
             }
             workbook.SaveAs(path);
@@ -56,7 +58,22 @@ namespace Chronokeep.IO
         {
             headers = iHeaders;
             data = iData;
-            Log.D("IO.ExcelExporter", $"Headers {headers} Data {data}");
+            GatheredInformationLog("Headers", headers);
+            foreach (object[] line in data)
+            {
+                GatheredInformationLog("Row", line);
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private static void GatheredInformationLog(string named, object[] data)
+        {
+            StringBuilder sb = new(named);
+            foreach (object s in data)
+            {
+                sb.Append($" '{s}'");
+            }
+            Log.D("IO.ExcelExporter", sb.ToString());
         }
     }
 }

@@ -587,7 +587,8 @@ public partial class ExportResults : ChronokeepWindow
                     exporter.SetData(headers, data);
                     try
                     {
-                        exporter.ExportData(file.TryGetLocalPath()!);
+                        string path = file.TryGetLocalPath()!;
+                        exporter.ExportData(path);
                         DialogBox.AsyncShow("File saved.");
                     }
                     catch (Exception ex)
