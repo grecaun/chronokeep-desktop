@@ -83,12 +83,12 @@ jobs:
 
     # Create zip/tar
     - name: Create zip of all files.
-      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$env:App_Zip_Archive
+      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$matrix.app_packages_archive
 
     # Gzip the tar
     - name: Remove files not needed for Linux version.
       if: matrix.os == 'ubuntu-latest'
-      run: gzip $env:Compile_Path\$env:App_Zip_Archive
+      run: gzip $env:Compile_Path\$matrix.app_packages_archive
 
     # Create the release
     - name: Create release
