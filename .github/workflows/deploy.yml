@@ -67,10 +67,9 @@ jobs:
     - name: Create setup with Inno Setup
       run: .\Inno\ISCC.exe /DMyAppVersion=${{ steps.release-version.outputs.RELEASE_VERSION }} /DMyAppDirectory=$env:Compile_Path /O$env:Compile_Path /SCompression=bzip2 .\install-script.iss
 
-
     # Create zip/tar
     - name: Create zip of all files.
-      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\env:App_Zip_Archive
+      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$env:App_Zip_Archive
 
     # Create the release
     - name: Create release
