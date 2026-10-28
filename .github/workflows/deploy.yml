@@ -11,18 +11,11 @@ on:
 
 jobs:
   build:
-    strategy:
-      # Continue running other matrix jobs even if one fails.
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            architecture: ['Any CPU', 'x64']
-            app_packages_archive: chronokeep-setup.exe
-            app_zip_archive: chronokeep.zip
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     env:
+      App_Packages_Archive: chronokeep-setup.exe
+      App_Zip_Archive: chronokeep.zip
       SigningCertificate: Chronokeep\Chronokeep.pfx
       Solution_Path: Chronokeep.sln
       Compile_Path: Chronokeep\bin\Release\net10.0
@@ -32,8 +25,7 @@ jobs:
     steps:
     - name: Display build info
       run: |
-        echo "OS: ${{ matrix.os }}"
-        echo "Arch: ${{ matrix.architecture }}"
+        echo "OS: windows-latest"
 
     - name: Checkout
       uses: actions/checkout@v7
@@ -73,13 +65,12 @@ jobs:
 
     # Run Inno Setup
     - name: Create setup with Inno Setup
-      if: matrix.os == 'windows-latest'
       run: .\Inno\ISCC.exe /DMyAppVersion=${{ steps.release-version.outputs.RELEASE_VERSION }} /DMyAppDirectory=$env:Compile_Path /O$env:Compile_Path /SCompression=bzip2 .\install-script.iss
 
 
     # Create zip/tar
     - name: Create zip of all files.
-      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$matrix:app_zip_archive
+      run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\env:App_Zip_Archive
 
     # Create the release
     - name: Create release
@@ -96,13 +87,12 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ matrix.app_packages_archive }}
+        file: ${{ env.Compile_Path }}\${{ env.App_Packages_Archive }}
 
     # Upload archive
     - name: Update archive
       id: upload-archive
-      if: matrix.os == 'windows-latest'
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ matrix.app_zip_archive }}
+        file: ${{ env.Compile_Path }}\${{ env.App_Zip_Archive }}
