@@ -50,13 +50,9 @@ jobs:
       with:
         dotnet-version: '10.x'
 
-    # Setup Nuget to restore packages
-    - name: Setup Nuget
-      uses: Nuget/setup-nuget@v3
-
-    # Restore Nuget Packages
-    - name: Restore Nuget Packages
-      run: nuget restore $env:Solution_Path
+    # Restore Packages
+    - name: Restore Packages
+      run: dotnet restore $env:Solution_Path
 
     # Generate version text file because msbuild isn't generating it properly
     - name: Generate version text file
