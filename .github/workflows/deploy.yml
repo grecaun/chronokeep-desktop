@@ -50,10 +50,6 @@ jobs:
       with:
         dotnet-version: '10.x'
 
-    # Add  MsBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v3
-
     # Setup Nuget to restore packages
     - name: Setup Nuget
       uses: Nuget/setup-nuget@v3
@@ -68,7 +64,7 @@ jobs:
 
     # Build the app for Release
     - name: Build program
-      run: msbuild $env:Solution_Path /p:Platform="Any CPU" /p:Configuration=Release /p:SelfContained=True
+      run: dotnet $env:Solution_Path /p:Platform="Any CPU" --configuration Release --self-contained
 
     # Set an environment variable to the tag we want to use to describe this release.
     - name: Get tag environment variable.
