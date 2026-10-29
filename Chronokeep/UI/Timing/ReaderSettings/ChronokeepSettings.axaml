@@ -109,6 +109,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                   VerticalContentAlignment="Center"/>
                     <Label Content="Play Sound on Read?" VerticalAlignment="Center" Margin="0,0,0,-7"/>
                 </StackPanel>
+				<StackPanel Orientation="Horizontal" Margin="0,-8,0,5">
+					<TextBlock Text="Beep Interval"
+                               Width="120"
+                               Margin="5,0"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"/>
+					<Slider Name="BeepSlider"
+                            ValueChanged="BeepSlider_ValueChanged"
+                            Width="210"
+                            Minimum="0"
+                            Maximum="3000"
+                            Margin="10,0,5,0"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"/>
+					<TextBlock Name="BeepBlock"
+                               FontSize="14"
+                               Text="10"
+                               Width="30"
+                               Margin="0,0,5,0"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+				</StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,-5">
                     <TextBlock Text="Volume"
                                TextAlignment="Right"
@@ -218,6 +241,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                              HorizontalAlignment="Center"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </Expander>
+				<StackPanel Orientation="Horizontal">
+					<TextBlock Text="Heartbeat URL"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Width="120"
+                               Margin="5,5,5,5"/>
+					<TextBox Name="HeartbeatURLBox"
+                             Width="250"
+                             Margin="5,5,5,5"/>
+				</StackPanel>
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+					<ToggleSwitch Name="EnableHeartbeatSwitch"
+                                  Height="35"
+                                  OnContent=""
+                                  OffContent=""
+                                  Margin="5,-7,-7,0"/>
+					<Label Content="Enable Heartbeat" VerticalAlignment="Center" Margin="0,-7,0,0"/>
+				</StackPanel>
                 <Expander Header="Ntfy"
                           Margin="5,5,5,5"
                           HorizontalAlignment="Stretch">
@@ -279,29 +320,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             TickFrequency="5"
                             IsSnapToTickEnabled="True"/>
                     <TextBlock Name="UploadBlock"
-                               FontSize="14"
-                               Text="10"
-                               Width="30"
-                               Margin="0,0,5,0"
-                               TextAlignment="Center"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,-8,0,5">
-                    <TextBlock Text="Beep Interval"
-                               Width="120"
-                               Margin="5,0"
-                               TextAlignment="Right"
-                               VerticalAlignment="Center"/>
-                    <Slider Name="BeepSlider"
-                            ValueChanged="BeepSlider_ValueChanged"
-                            Width="210"
-                            Minimum="0"
-                            Maximum="120"
-                            Margin="10,0,5,0"
-                            TickFrequency="5"
-                            IsSnapToTickEnabled="True"/>
-                    <TextBlock Name="BeepBlock"
                                FontSize="14"
                                Text="10"
                                Width="30"

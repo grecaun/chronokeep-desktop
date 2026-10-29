@@ -36,6 +36,8 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public const string SETTING_ENABLE_NTFY = "SETTING_ENABLE_NTFY";
         public const string SETTING_SCREEN_TYPE = "SETTING_SCREEN_TYPE";
         public const string SETTING_BEEP_INTERVAL = "SETTING_BEEP_IGNORE";
+        public const string SETTING_ENABLE_HEARTBEAT = "SETTING_ENABLE_HEARTBEAT";
+        public const string SETTING_HEARTBEAT_URL = "SETTING_HEARTBEAT_URL";
 
         public const string TYPE_CHIP_DEC = "DEC";
         public const string TYPE_CHIP_HEX = "HEX";

@@ -795,8 +795,13 @@ namespace Chronokeep.Timing.Interfaces
                     },
                     new PortalSetting
                     {
-                        Name = PortalSetting.SETTING_SCREEN_TYPE,
-                        Value = settings.ScreenType
+                        Name = PortalSetting.SETTING_ENABLE_HEARTBEAT,
+                        Value = settings.EnableHeartbeat ? "true" : "false",
+                    },
+                    new PortalSetting
+                    {
+                        Name = PortalSetting.SETTING_HEARTBEAT_URL,
+                        Value = settings.HeartbeatURL
                     }
 
                 ]
