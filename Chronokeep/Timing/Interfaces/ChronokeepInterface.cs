@@ -792,18 +792,7 @@ namespace Chronokeep.Timing.Interfaces
                     {
                         Name = PortalSetting.SETTING_ENABLE_NTFY,
                         Value = settings.EnableNtfy ? "true" : "false",
-                    },
-                    new PortalSetting
-                    {
-                        Name = PortalSetting.SETTING_ENABLE_HEARTBEAT,
-                        Value = settings.EnableHeartbeat ? "true" : "false",
-                    },
-                    new PortalSetting
-                    {
-                        Name = PortalSetting.SETTING_HEARTBEAT_URL,
-                        Value = settings.HeartbeatURL
                     }
-
                 ]
             };
             SendMessage(JsonSerializer.Serialize(settingsReq));
@@ -818,6 +807,9 @@ namespace Chronokeep.Timing.Interfaces
                 Type = api.Kind,
                 Uri = api.Uri,
                 Token = api.Token,
+                Enabled = api.Enabled,
+                Heartbeat = api.Heartbeat,
+                DeviceName = api.DeviceName
             }));
         }
 

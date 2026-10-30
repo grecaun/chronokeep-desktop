@@ -36,6 +36,12 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public string Token { get; set; } = "";
         [JsonPropertyName("uri")]
         public string Uri { get; set; } = "";
+        [JsonPropertyName("enabled")]
+        public bool Enabled { get; set; } = true;
+        [JsonPropertyName("heartbeat")]
+        public bool Heartbeat { get; set; } = false;
+        [JsonPropertyName("device_name")]
+        public string DeviceName { get; set; } = "";
     }
 }
 

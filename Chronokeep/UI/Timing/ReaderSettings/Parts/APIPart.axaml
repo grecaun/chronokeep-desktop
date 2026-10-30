@@ -41,30 +41,61 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <ComboBoxItem Content="Remote Self" Tag="CHRONOKEEP_REMOTE_SELF"/>
             </ComboBox>
         </StackPanel>
-        <StackPanel Orientation="Horizontal"
+		<StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <TextBox Name="TokenBox"
+			<TextBox Name="TokenBox"
                      Width="320"
-                     Margin="5"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal"
+                     Margin="5"
+				     PlaceholderText="Key"/>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center">
-            <TextBox Name="UriBox"
-                     Width="220"
-                     Margin="5"/>
-            <Button Width="40"
+			<TextBox Name="UriBox"
+                     Width="320"
+                     Margin="5"
+				     PlaceholderText="URL"/>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+					VerticalAlignment="Center">
+			<TextBox Name="DevNameBox"
+                     Width="185"
+                     Margin="5"
+					 PlaceholderText="Device Name"/>
+			<TextBlock Text="Heartbeat"
+					   Width="65"
+					   Margin="10,5,5,5"
+					   VerticalAlignment="Center"/>
+			<ToggleSwitch Name="HeartbeatSwitch"
+						  OnContent=""
+						  OffContent=""
+						  Height="35"
+						  Width="55"
+						  VerticalAlignment="Center"
+						  Margin="5,-7,-5,-7"/>
+		</StackPanel>
+		<StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+			<ToggleSwitch Name="EnabledSwitch"
+						  OnContent=""
+						  OffContent=""
+						  Height="35"
+						  Width="55"
+						  VerticalAlignment="Center"
+						  Margin="5,-7,-7,-7"/>
+			<Button Width="40"
                     Height="35"
                     Margin="5"
                     Click="SaveApi">
-			    <PathIcon Data="{StaticResource save_regular}"/>
-            </Button>
-            <Button Width="40"
+				<PathIcon Data="{StaticResource save_regular}"/>
+			</Button>
+			<Button Width="40"
                     Height="35"
                     Margin="5"
                     Click="DeleteApi">
-			    <PathIcon Data="{StaticResource delete_regular}"/>
-            </Button>
-        </StackPanel>
+				<PathIcon Data="{StaticResource delete_regular}"/>
+			</Button>
+		</StackPanel>
     </StackPanel>
 </UserControl>
 

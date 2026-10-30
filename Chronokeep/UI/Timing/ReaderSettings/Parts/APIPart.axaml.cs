@@ -43,6 +43,9 @@ public partial class ApiPart : UserControl
         };
         TokenBox.Text = api.Token;
         UriBox.Text = api.Uri;
+        HeartbeatSwitch.IsChecked = api.Heartbeat;
+        EnabledSwitch.IsChecked = api.Enabled;
+        DevNameBox.Text = api.DeviceName;
         PrivateUpdateUri();
     }
 
@@ -58,6 +61,9 @@ public partial class ApiPart : UserControl
         };
         TokenBox.Text = iApi.Token;
         UriBox.Text = iApi.Uri;
+        HeartbeatSwitch.IsChecked = iApi.Heartbeat;
+        EnabledSwitch.IsChecked = iApi.Enabled;
+        DevNameBox.Text = iApi.DeviceName;
         PrivateUpdateUri();
     }
 
@@ -94,6 +100,9 @@ public partial class ApiPart : UserControl
         api.Token = TokenBox.Text!.Trim();
         api.Uri = UriBox.Text!.Trim();
         api.Kind = (string)((ComboBoxItem)KindBox.SelectedItem!).Tag!;
+        api.Heartbeat = HeartbeatSwitch.IsChecked ?? false;
+        api.Enabled = EnabledSwitch.IsChecked ?? true;
+        api.DeviceName = DevNameBox.Text?.Trim() ?? "";
         reader.SendSaveApi(api);
     }
 }
