@@ -36,19 +36,11 @@ public partial class WavePart : UserControl
     {
         InitializeComponent();
         Wave = num;
-        if (startSeconds >= 0)
-        {
-            PlusWave = true;
-        }
-        else
-        {
-            PlusWave = false;
-            startSeconds *= -1;
-        }
-        if (startMilliseconds < 0)
-        {
-            startMilliseconds *= -1;
-        }
+        PlusWave = startSeconds >= 0;
+        PlusIcon.IsVisible = PlusWave;
+        MinusIcon.IsVisible = !PlusWave;
+        startSeconds = Math.Abs(startSeconds);
+        startMilliseconds = Math.Abs(startMilliseconds);
         StartOffset.Text = string.Format(TimeFormat, startSeconds / 3600,
             (startSeconds % 3600) / 60, startSeconds % 60,
             startMilliseconds);
@@ -57,6 +49,13 @@ public partial class WavePart : UserControl
 
     public void SetTime(long seconds, int milliseconds)
     {
+        seconds = Math.Abs(seconds);
+        milliseconds = Math.Abs(milliseconds);
+        if (milliseconds >= 1000)
+        {
+            milliseconds -= 1000;
+            seconds += 1;
+        }
         StartOffset.Text = string.Format(TimeFormat, seconds / 3600,
             (seconds % 3600) / 60, seconds % 60,
             milliseconds);
@@ -101,15 +100,7 @@ public partial class WavePart : UserControl
     {
         Log.D("UI.Timing.WaveWindow", $"Plus/Minus sign clicked. WaveType is: {(PlusWave ? "+" : "-")}");
         PlusWave = !PlusWave;
-        if (PlusWave)
-        {
-            PlusIcon.IsVisible = true;
-            MinusIcon.IsVisible = false;
-        }
-        else
-        {
-            PlusIcon.IsVisible = false;
-            MinusIcon.IsVisible = true;
-        }
+        PlusIcon.IsVisible = PlusWave;
+        MinusIcon.IsVisible = !PlusWave;
     }
 }

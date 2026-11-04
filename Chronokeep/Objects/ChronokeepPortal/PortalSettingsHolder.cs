@@ -69,8 +69,6 @@ namespace Chronokeep.Objects.ChronokeepPortal
         public string NtfyPass { get; set; } = "";
         public bool EnableNtfy { get; set; } = false;
         public string ScreenType { get; set; } = "";
-        public bool EnableHeartbeat { get; set; } = false;
-        public string HeartbeatURL { get; set; } = "";
     }
 }
 

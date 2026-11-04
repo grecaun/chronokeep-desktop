@@ -23,6 +23,7 @@ using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.UI.Parts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -86,7 +87,7 @@ public partial class WaveWindow : ChronokeepWindow
             foreach (WavePart? wave in WaveList.Items.Cast<WavePart?>())
             {
                 int waveId = wave!.GetWave();
-                wave.SetTime(waveTimes[waveId].seconds + theEvent!.StartSeconds, waveTimes[waveId].milliseconds + theEvent.StartMilliseconds);
+                wave.SetTime(theEvent!.StartSeconds + waveTimes[waveId].seconds, theEvent.StartMilliseconds + waveTimes[waveId].milliseconds);
             }
         }
         else
@@ -107,17 +108,21 @@ public partial class WaveWindow : ChronokeepWindow
             (int waveNo, long seconds, int milliseconds) = wave!.GetValues();
             if (TimeOfDayButton.IsChecked == true)
             {
-                seconds -= theEvent!.StartSeconds;
-                milliseconds -= theEvent.StartMilliseconds;
-                if (milliseconds < 0)
-                {
-                    seconds -= 1;
-                    milliseconds = 1000 - milliseconds;
-                }
                 if (seconds < 0)
                 {
-                    seconds = 0;
-                    milliseconds = 0;
+                    seconds = Math.Abs(seconds);
+                    milliseconds = Math.Abs(milliseconds);
+                    seconds -= theEvent!.StartSeconds;
+                    milliseconds -= theEvent.StartMilliseconds;
+                    seconds = milliseconds > 0 ? seconds + 1 : seconds;
+                    milliseconds = milliseconds > 0 ? milliseconds - 1000 : milliseconds;
+                }
+                else
+                {
+                    seconds -= theEvent!.StartSeconds;
+                    milliseconds -= theEvent.StartMilliseconds;
+                    seconds = milliseconds < 0 ? seconds - 1 : seconds;
+                    milliseconds = milliseconds < 0 ? milliseconds - 1000 : milliseconds;
                 }
             }
             database.SetWaveTimes(theEvent!.Identifier, waveNo, seconds, milliseconds);

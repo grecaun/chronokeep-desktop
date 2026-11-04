@@ -103,8 +103,6 @@ public partial class ChronokeepSettings : ChronokeepWindow
                         ScreenBox.SelectedIndex = -1;
                         break;
                 }
-                EnableHeartbeatSwitch.IsChecked = allSettings.EnableHeartbeat;
-                HeartbeatURLBox.Text = allSettings.HeartbeatURL;
             }
             // add readers and apis to views
             if (allSettings.Changes.Contains(PortalSettingsHolder.ChangeType.READERS))
@@ -367,8 +365,6 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 NtfyPass = NtfyPassBox.Text!.Trim(),
                 EnableNtfy = EnableNtfySwitch.IsChecked == true,
                 ScreenType = ScreenBox.SelectedItem != null ? (string)((ComboBoxItem)ScreenBox.SelectedItem).Tag! : "",
-                HeartbeatURL = HeartbeatURLBox.Text!.Trim(),
-                EnableHeartbeat = EnableHeartbeatSwitch.IsChecked == true,
             };
             reader.SendSetSettings(sett);
         }

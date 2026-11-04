@@ -241,24 +241,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                              HorizontalAlignment="Center"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </Expander>
-				<StackPanel Orientation="Horizontal">
-					<TextBlock Text="Heartbeat URL"
-                               TextAlignment="Right"
-                               VerticalAlignment="Center"
-                               Width="120"
-                               Margin="5,5,5,5"/>
-					<TextBox Name="HeartbeatURLBox"
-                             Width="250"
-                             Margin="5,5,5,5"/>
-				</StackPanel>
-				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-					<ToggleSwitch Name="EnableHeartbeatSwitch"
-                                  Height="35"
-                                  OnContent=""
-                                  OffContent=""
-                                  Margin="5,-7,-7,0"/>
-					<Label Content="Enable Heartbeat" VerticalAlignment="Center" Margin="0,-7,0,0"/>
-				</StackPanel>
                 <Expander Header="Ntfy"
                           Margin="5,5,5,5"
                           HorizontalAlignment="Stretch">
