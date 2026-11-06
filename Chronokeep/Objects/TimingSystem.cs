@@ -158,7 +158,7 @@ namespace Chronokeep.Objects
         public bool TimedOut()
         {
             TimeSpan ellapsed = DateTime.Now - connectedAt;
-            return ellapsed.Seconds > 5;
+            return ellapsed.TotalSeconds > 5;
         }
 
         public bool Equals(TimingSystem? other)

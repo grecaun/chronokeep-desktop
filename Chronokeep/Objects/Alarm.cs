@@ -113,9 +113,16 @@ namespace Chronokeep.Objects
             if (!ListMtx.TryEnter(3000)) return output;
             try
             {
-                output = output && BibAlarms.Remove(alarm.Bib);
-                output = output && ChipAlarms.Remove(alarm.Chip);
-                output = output && Alarms.Remove(alarm);
+                // Match on bib and chip rather than identifier, since unsaved alarms all share the same placeholder id.
+                if (alarm.Bib.Length > 0)
+                {
+                    output |= BibAlarms.Remove(alarm.Bib);
+                }
+                if (alarm.Chip.Length > 0)
+                {
+                    output |= ChipAlarms.Remove(alarm.Chip);
+                }
+                output |= Alarms.RemoveAll(x => x.Bib == alarm.Bib && x.Chip == alarm.Chip) > 0;
             }
             finally
             {
