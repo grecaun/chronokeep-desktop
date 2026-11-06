@@ -22,6 +22,8 @@ namespace Chronokeep.Test.Network
         public List<Request> Requests { get; } = [];
         public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
         public string ResponseBody { get; set; } = "{}";
+        /// <summary>When set, builds the status and body from the request instead of Status/ResponseBody.</summary>
+        public Func<Request, (HttpStatusCode Status, string Body)>? Responder { get; set; }
 
         public FakeApiServer()
         {
@@ -43,13 +45,15 @@ namespace Chronokeep.Test.Network
                 try { context = await listener.GetContextAsync(); }
                 catch { return; }
                 using StreamReader reader = new(context.Request.InputStream, Encoding.UTF8);
+                Request request = new(context.Request.HttpMethod, context.Request.Url!.AbsolutePath.TrimStart('/'),
+                    context.Request.Headers["Authorization"], reader.ReadToEnd());
                 lock (Requests)
                 {
-                    Requests.Add(new Request(context.Request.HttpMethod, context.Request.Url!.AbsolutePath.TrimStart('/'),
-                        context.Request.Headers["Authorization"], reader.ReadToEnd()));
+                    Requests.Add(request);
                 }
-                byte[] body = Encoding.UTF8.GetBytes(ResponseBody);
-                context.Response.StatusCode = (int)Status;
+                (HttpStatusCode status, string text) = Responder?.Invoke(request) ?? (Status, ResponseBody);
+                byte[] body = Encoding.UTF8.GetBytes(text);
+                context.Response.StatusCode = (int)status;
                 context.Response.ContentType = "application/json";
                 context.Response.ContentLength64 = body.Length;
                 context.Response.OutputStream.Write(body);

@@ -119,6 +119,8 @@ namespace Chronokeep.Timing.API
                     // Change TimeResults to APIResults - breaking this up into chunks so we can
                     // properly update them with the UPLOADED field
                     List<ApiResult> upRes = [];
+                    // Results actually sent; the rest are deliberately not uploaded (see below).
+                    List<TimeResult> sent = [];
                     List<TimeResult> uploaded = results.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT);
                     foreach (TimeResult tr in uploaded)
                     {
@@ -130,14 +132,17 @@ namespace Chronokeep.Timing.API
                         if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
                         {
                             upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                            sent.Add(tr);
                         }
                         // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
                         // that info isn't useful to others
                         else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
                         {
                             upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                            sent.Add(tr);
                         }
                     }
+                    if (upRes.Count == 0) continue;
                     try
                     {
                         response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
@@ -153,13 +158,14 @@ namespace Chronokeep.Timing.API
                     }
                     total += response.Count;
                     Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
-                    if (response.Count != Constants.Timing.API_LOOP_COUNT) continue;
+                    // Compare with what was sent, not the batch size: skipped results would never match.
+                    if (response.Count != sent.Count) continue;
                     // Updating uploaded value for uploaded results.
-                    foreach (TimeResult res in uploaded)
+                    foreach (TimeResult res in sent)
                     {
                         res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
                     }
-                    database.SetUploadedTimingResults(uploaded);
+                    database.SetUploadedTimingResults(sent);
                 }
                 int leftovers = results.Count - (loops * Constants.Timing.API_LOOP_COUNT);
                 if (leftovers > 0 && !loopError)
@@ -167,6 +173,8 @@ namespace Chronokeep.Timing.API
                     response = null;
                     // Change TimeResults to APIResults
                     List<ApiResult> upRes = [];
+                    // Results actually sent; the rest are deliberately not uploaded (see below).
+                    List<TimeResult> sent = [];
                     List<TimeResult> uploaded = results.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers);
                     foreach (TimeResult tr in uploaded)
                     {
@@ -178,17 +186,22 @@ namespace Chronokeep.Timing.API
                         if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
                         {
                             upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                            sent.Add(tr);
                         }
                         // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
                         // that info isn't useful to others
                         else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
                         {
                             upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                            sent.Add(tr);
                         }
                     }
                     try
                     {
-                        response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
+                        if (upRes.Count > 0)
+                        {
+                            response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
+                        }
                     }
                     catch
                     {
@@ -202,14 +215,14 @@ namespace Chronokeep.Timing.API
                     {
                         total += response.Count;
                         Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
-                        if (response.Count == leftovers)
+                        if (response.Count == sent.Count)
                         {
                             // Updating uploaded value for uploaded results;
-                            foreach (TimeResult res in uploaded)
+                            foreach (TimeResult res in sent)
                             {
                                 res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
                             }
-                            database.SetUploadedTimingResults(uploaded);
+                            database.SetUploadedTimingResults(sent);
                         }
                     }
                     Log.D("API.APIController", $"Upload finished. Count total: {total}");
