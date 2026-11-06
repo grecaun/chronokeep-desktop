@@ -250,7 +250,7 @@ namespace Chronokeep.Timing.Routines
                             bibLastReadDictionary[(read.Bib, read.LocationId)] = (read, (hour * 2) + 1);
                             // Check if we know the last hour they finished, if we do not know it, or we do, and it's before this hour
                             // then update the hour value
-                            if (bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) || lastHour < hour)
+                            if (!bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) || lastHour < hour)
                             {
                                 bibLastFinishedHour[read.Bib] = hour;
                             }
@@ -309,7 +309,7 @@ namespace Chronokeep.Timing.Routines
                             chipLastReadDictionary[(read.ChipNumber, read.LocationId)] = (read, (hour * 2) + 1);
                             // Check if we know the last hour they finished, if we do not know it, or we do, and it's before this hour
                             // then update the hour value
-                            if (chipLastFinishedHour.TryGetValue(read.ChipNumber, out int lastHour) || lastHour < hour)
+                            if (!chipLastFinishedHour.TryGetValue(read.ChipNumber, out int lastHour) || lastHour < hour)
                             {
                                 chipLastFinishedHour[read.ChipNumber] = hour;
                             }
@@ -389,7 +389,7 @@ namespace Chronokeep.Timing.Routines
                         {
                             // Check if we're at the starting point and within a starting window
                             if ((Constants.Timing.LOCATION_START == read.LocationId || (Constants.Timing.LOCATION_FINISH == read.LocationId && theEvent.CommonStartFinish))
-                                && (secondsNoHour < theEvent.StartWindow || (secondsNoHour == startSeconds && millisecondsDiff <= startMilliseconds)))
+                                && (secondsNoHour < theEvent.StartWindow || (secondsNoHour == theEvent.StartWindow && millisecondsDiff == 0)))
                             {
                                 // check for a stored start chip read with the correct occurence (hour start)
                                 if (bibLastReadDictionary.TryGetValue((bib, read.LocationId), out (ChipRead Read, int Occurrence) oLastRead) && oLastRead.Occurrence == (hour * 2))
@@ -421,7 +421,8 @@ namespace Chronokeep.Timing.Routines
                                     chipMillisecondsDiff -= 1000;
                                 }
                                 // Create a result for the start value.
-                                if (hour == 0 || (bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) && lastHour == hour - 1))
+                                int lastHour = bibLastFinishedHour.GetValueOrDefault(bib, -1);
+                                if (hour == 0 || lastHour == hour - 1)
                                 {
                                     startResult = new TimeResult(theEvent.Identifier,
                                         read.ReadId,
@@ -522,7 +523,8 @@ namespace Chronokeep.Timing.Routines
                                         chipMillisecondsDiff -= 1000;
                                     }
                                     // Check if they finished the last hour (or this is the first hour)
-                                    if (hour == 0 || (bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) && lastHour == hour - 1))
+                                    int lastHour = bibLastFinishedHour.GetValueOrDefault(bib, -1);
+                                    if (hour == 0 || lastHour == hour - 1)
                                     {
                                         bibLastFinishedHour[bib] = hour;
                                         bibLastReadDictionary[(bib, read.LocationId)] = (read, (hour * 2) + 1);
@@ -757,7 +759,8 @@ namespace Chronokeep.Timing.Routines
                                     chipMillisecondsDiff -= 1000;
                                 }
                                 // Create a result for the start value.
-                                if (hour == 0 || (bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) && lastHour == hour - 1))
+                                int lastHour = chipLastFinishedHour.GetValueOrDefault(chip, -1);
+                                if (hour == 0 || lastHour == hour - 1)
                                 {
                                     // Create a result for the start value.
                                     TimeResult startResult = new(theEvent.Identifier,
@@ -842,7 +845,8 @@ namespace Chronokeep.Timing.Routines
                                         chipSecondsDiff++;
                                         chipMillisecondsDiff -= 1000;
                                     }
-                                    if (hour == 0 || (bibLastFinishedHour.TryGetValue(read.Bib, out int lastHour) && lastHour == hour - 1))
+                                    int lastHour = chipLastFinishedHour.GetValueOrDefault(chip, -1);
+                                    if (hour == 0 || lastHour == hour - 1)
                                     {
                                         chipLastFinishedHour[chip] = hour;
                                         chipLastReadDictionary[(chip, read.LocationId)] = (read, (hour * 2) + 1);
@@ -890,7 +894,7 @@ namespace Chronokeep.Timing.Routines
                                             chipMillisecondsDiff,
                                             read.Time,
                                             read.ChipBib == Constants.Timing.CHIPREAD_DUMMYBIB ? read.ReadBib : read.ChipBib,
-                                            Constants.Timing.TIMERESULT_STATUS_NONE,
+                                            Constants.Timing.TIMERESULT_STATUS_DNF,
                                             ""
                                         );
                                         newResults.Add(newResult);
@@ -1002,9 +1006,10 @@ namespace Chronokeep.Timing.Routines
                 }
                 // Calculate the hour
                 int hour = (int)(secondsDiff / interval);
-                if (backyardResultDictionary.TryGetValue((hour, TimeResult.ChipToIdentifier(chip)), out (TimeResult? start, TimeResult? end) oByRes))
+                if (backyardResultDictionary.TryGetValue((hour, TimeResult.ChipToIdentifier(chip)), out (TimeResult? start, TimeResult? end) oByRes)
+                    && oByRes.end != null)
                 {
-                    TimeResult finish = oByRes.end!;
+                    TimeResult finish = oByRes.end;
                     newResults.Remove(finish);
                     finish.ReadId = read.ReadId;
                     finish.Time = "DNF";
@@ -1058,9 +1063,10 @@ namespace Chronokeep.Timing.Routines
                 }
                 // Calculate the hour
                 int hour = (int)(secondsDiff / interval);
-                if (backyardResultDictionary.TryGetValue((hour, TimeResult.BibToIdentifier(bib)), out (TimeResult? start, TimeResult? end) oByRes))
+                if (backyardResultDictionary.TryGetValue((hour, TimeResult.BibToIdentifier(bib)), out (TimeResult? start, TimeResult? end) oByRes)
+                    && oByRes.end != null)
                 {
-                    TimeResult finish = oByRes.end!;
+                    TimeResult finish = oByRes.end;
                     newResults.Remove(finish);
                     finish.ReadId = read.ReadId;
                     finish.Time = "DNF";
@@ -1072,7 +1078,7 @@ namespace Chronokeep.Timing.Routines
                 {
                     newResults.Add(new TimeResult(theEvent.Identifier,
                         read.ReadId,
-                        Constants.Timing.TIMERESULT_DUMMYPERSON,
+                        part == null ? Constants.Timing.TIMERESULT_DUMMYPERSON : part.EventSpecific.Identifier,
                         Constants.Timing.LOCATION_FINISH,
                         Constants.Timing.SEGMENT_FINISH,
                         (hour * 2) + 1,
@@ -1084,7 +1090,7 @@ namespace Chronokeep.Timing.Routines
                         bibDnfDictionary[bib].Time,
                         bibDnfDictionary[bib].ChipBib == Constants.Timing.CHIPREAD_DUMMYBIB ? bibDnfDictionary[bib].ReadBib : bibDnfDictionary[bib].ChipBib,
                         Constants.Timing.TIMERESULT_STATUS_DNF,
-                        ""
+                        part == null ? "" : part.EventSpecific.Division
                         ));
                 }
             }

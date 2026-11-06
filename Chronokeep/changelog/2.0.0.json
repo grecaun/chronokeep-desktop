@@ -34,6 +34,13 @@
     "Fixed an error when banning a phone number or email that was already banned.",
     "Fixed an issue where adding several distances at once to the open event could cause an error.",
     "Fixed an issue where switching events could cause an error or show results with the previous event's location and segment names.",
-    "Fixed an issue where importing a participant whose address had a comma would add a leading space to the second address line."
+    "Fixed an issue where importing a participant whose address had a comma would add a leading space to the second address line.",
+    "Fixed an issue where linked distances weren't ranked using their ranking order in distance based events.",
+    "Fixed an issue where removing a chip from a bib wasn't picked up by results processing until the program was restarted, which could leave a runner marked as DNS.",
+    "Fixed an issue in backyard ultras where a start read exactly at the end of the start window was counted as a loop finish.",
+    "Fixed an issue in backyard ultras where a runner who never finished their first loop was marked DNF on the second loop.",
+    "Fixed an issue in backyard ultras where chips not assigned to a bib were marked DNF after their first loop.",
+    "Fixed an issue in backyard ultras where DNF results for known participants weren't linked to the participant.",
+    "Fixed a potential crash in backyard ultras when processing a DNF for a loop that had been started but not finished."
   ]
 }

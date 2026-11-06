@@ -1184,7 +1184,7 @@ namespace Chronokeep.Timing.Routines
             {
                 (distance1, rank1) = oneDistance;
             }
-            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) twoDistance))
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(two.RealDistanceName, out (Distance, int) twoDistance))
             {
                 (distance2, rank2) = twoDistance;
             }
@@ -1205,7 +1205,7 @@ namespace Chronokeep.Timing.Routines
             {
                 (distance1, rank1) = oneDistance;
             }
-            if (dictionary.LinkedDistanceDictionary.TryGetValue(one.RealDistanceName, out (Distance, int) twoDistance))
+            if (dictionary.LinkedDistanceDictionary.TryGetValue(two.RealDistanceName, out (Distance, int) twoDistance))
             {
                 (distance2, rank2) = twoDistance;
             }

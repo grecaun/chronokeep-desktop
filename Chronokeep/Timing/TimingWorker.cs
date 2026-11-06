@@ -226,6 +226,8 @@ namespace Chronokeep.Timing
                 Dictionary.DistanceEndDict[0] = (startSeconds + d.EndSeconds, startMilliseconds);
             }
             // Set up bibToChipDictionary so we can link bibs to chips
+            Dictionary.ChipToBibDictionary.Clear();
+            Dictionary.BibToChipDictionary.Clear();
             List<BibChipAssociation> bibChips = database.GetBibChips(theEvent.Identifier);
             foreach (BibChipAssociation assoc in bibChips)
             {
