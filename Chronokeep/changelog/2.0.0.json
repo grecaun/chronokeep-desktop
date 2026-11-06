@@ -10,7 +10,8 @@
     "There is now a switch to show every linked distance or just the main distances for bib pickup numbers on the participants page and the finished/active/dns stats on the timing page.",
     "Downloading participants from the API has a minor overhaul. It now adds duplicates when a bib conflict on a single person is detected instead of clobbering information and it will add a distance if it doesn't recognize the distance.",
     "Added a prompt confirming the user wants to delete participants from the API to ensure it wasn't an accidental button click.",
-    "Importing participants should no longer prompt when there are conflicts, it should just import them and the conflicts button should appear allowing the user to deal with it in the main UI."
+    "Importing participants should no longer prompt when there are conflicts, it should just import them and the conflicts button should appear allowing the user to deal with it in the main UI.",
+    "The update check now ignores draft and prerelease versions."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",
@@ -57,6 +58,7 @@
     "Fixed an issue where remote reads could be missed on computers in time zones ahead of UTC.",
     "Fixed an issue where the announcer stopped adding runners after someone crossed the announcer mat again after the seen window.",
     "Fixed a typo in the text message sent when a runner reaches a split.",
-    "Fixed an issue where a text message could be sent for a result that wasn't linked to a participant."
+    "Fixed an issue where a text message could be sent for a result that wasn't linked to a participant.",
+    "Fixed an issue where the update check could fail without saying anything if a release on GitHub wasn't named with a version number."
   ]
 }

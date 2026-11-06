@@ -27,6 +27,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Chronokeep.Updates
@@ -60,6 +61,29 @@ namespace Chronokeep.Updates
         {
             return $"v{Major}.{Minor}.{Patch}";
         }
+
+        private static readonly Regex VersionPattern = new(@"^\s*[vV]?(\d+)\.(\d+)\.(\d+)");
+
+        /// <summary>
+        /// Reads "major.minor.patch" from the start of a tag, release name, or git describe output,
+        /// with an optional leading "v" and anything after it ignored ("v2.0.0-beta", "v1.9.10-5-gabc123").
+        /// </summary>
+        public static bool TryParse(string? text, out Version version)
+        {
+            version = new Version();
+            Match match = VersionPattern.Match(text ?? "");
+            if (!match.Success
+                || !int.TryParse(match.Groups[1].Value, out int major)
+                || !int.TryParse(match.Groups[2].Value, out int minor)
+                || !int.TryParse(match.Groups[3].Value, out int patch))
+            {
+                return false;
+            }
+            version.Major = major;
+            version.Minor = minor;
+            version.Patch = patch;
+            return true;
+        }
     }
 
     public static class Check
@@ -76,14 +100,7 @@ namespace Chronokeep.Updates
                     using StreamReader reader = new(stream);
                     curVersion = await reader.ReadToEndAsync();
                 }
-                Version current = new();
-                string[] version = curVersion.Split('.');
-                if (version.Length >= 3)
-                {
-                    current.Major = int.Parse(version[0][1..]);
-                    current.Minor = int.Parse(version[1]);
-                    current.Patch = int.Parse(version[2].Split('-')[0]);
-                }
+                Version.TryParse(curVersion, out Version current);
                 Log.D("Updates.Check", $"Current version found {current}");
                 List<GithubRelease> releases;
                 try
@@ -96,25 +113,7 @@ namespace Chronokeep.Updates
                     DialogBox.AsyncShow("Unable to check for update.");
                     return;
                 }
-                GithubRelease? latestRelease = null;
-                Version latestVersion = new();
-                foreach (GithubRelease release in releases)
-                {
-                    Version releaseVersion = new();
-                    version = release.Name.Split('.');
-                    if (version.Length >= 3)
-                    {
-                        releaseVersion.Major = int.Parse(version[0].Replace("v", ""));
-                        releaseVersion.Minor = int.Parse(version[1]);
-                        releaseVersion.Patch = int.Parse(version[2].Split('-')[0]);
-                    }
-                    // Check for major version updates
-                    // Then minor version updates
-                    // patches
-                    if (!releaseVersion.Newer(latestVersion)) continue;
-                    latestRelease = release;
-                    latestVersion.Set(releaseVersion);
-                }
+                (GithubRelease? latestRelease, Version latestVersion) = FindLatest(releases);
                 Log.D("Updates.Check", $"Latest version is {latestVersion}");
                 if (latestVersion.Newer(current))
                 {
@@ -131,6 +130,26 @@ namespace Chronokeep.Updates
             {
                 Log.D("Updates.Check", "Error checking releases.");
             }
+        }
+
+        /// <summary>
+        /// Picks the newest published release. Drafts and prereleases are skipped, the version comes
+        /// from the tag (falling back to the release name), and releases without a readable version are ignored.
+        /// </summary>
+        internal static (GithubRelease? Release, Version Version) FindLatest(IEnumerable<GithubRelease> releases)
+        {
+            GithubRelease? latestRelease = null;
+            Version latestVersion = new();
+            foreach (GithubRelease release in releases)
+            {
+                if (release.Draft || release.PreRelease) continue;
+                if (!Version.TryParse(release.TagName, out Version releaseVersion)
+                    && !Version.TryParse(release.Name, out releaseVersion)) continue;
+                if (!releaseVersion.Newer(latestVersion)) continue;
+                latestRelease = release;
+                latestVersion.Set(releaseVersion);
+            }
+            return (latestRelease, latestVersion);
         }
 
         private static async Task<List<GithubRelease>> GetReleases()
