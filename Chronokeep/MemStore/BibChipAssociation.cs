@@ -146,6 +146,23 @@ namespace Chronokeep.MemStore
             return output;
         }
 
+        /// <summary>
+        /// Removes a chip from both association maps, keeping any other chips assigned to the same bib.
+        /// Caller must hold memStoreLock.
+        /// </summary>
+        private static void RemoveCachedChip(string chip)
+        {
+            if (!chipToBibAssociations.Remove(chip, out BibChipAssociation? assoc)) return;
+            if (bibToChipAssociations.TryGetValue(assoc.Bib, out Dictionary<string, BibChipAssociation>? chips))
+            {
+                chips.Remove(chip);
+                if (chips.Count == 0)
+                {
+                    bibToChipAssociations.Remove(assoc.Bib);
+                }
+            }
+        }
+
         public void RemoveBibChipAssociation(int eventId, string chip)
         {
             Log.D("MemStore", "RemoveBibChipAssociation");
@@ -157,17 +174,7 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        chipToBibAssociations.Remove(chip);
-                        string bib = "";
-                        foreach (BibChipAssociation b in chipToBibAssociations.Values.Where(b => b.Chip == chip))
-                        {
-                            bib = b.Bib;
-                            break;
-                        }
-                        if (bib.Length > 0)
-                        {
-                            bibToChipAssociations.Remove(bib);
-                        }
+                        RemoveCachedChip(chip);
                         Dictionary<string, Participant> bibPartDict = new();
                         foreach (Participant part in participants.Values)
                         {
@@ -213,8 +220,7 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == assoc.EventId)
                     {
-                        chipToBibAssociations.Remove(assoc.Chip);
-                        bibToChipAssociations.Remove(assoc.Bib);
+                        RemoveCachedChip(assoc.Chip);
                     }
                     else if (assoc.EventId == -1)
                     {
@@ -262,8 +268,7 @@ namespace Chronokeep.MemStore
                     {
                         if (theEvent != null && theEvent.Identifier == assoc.EventId)
                         {
-                            chipToBibAssociations.Remove(assoc.Chip);
-                            bibToChipAssociations.Remove(assoc.Bib);
+                            RemoveCachedChip(assoc.Chip);
                         }
                         else if (assoc.EventId == -1)
                         {

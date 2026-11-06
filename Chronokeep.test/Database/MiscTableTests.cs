@@ -246,6 +246,20 @@ namespace Chronokeep.Test.Database
         }
 
         [Fact]
+        public void AddBanned_AlreadyBanned_IsIgnored()
+        {
+            Db.AddBannedPhone("1");
+            Db.AddBannedPhone("1");
+            Db.AddBannedPhones(["1", "2", "2"]);
+            Db.AddBannedEmail("a@x.com");
+            Db.AddBannedEmail("a@x.com");
+            Db.AddBannedEmails(["a@x.com", "b@x.com"]);
+
+            Assert.Equal(["1", "2"], Db.GetBannedPhones().Order());
+            Assert.Equal(["a@x.com", "b@x.com"], Db.GetBannedEmails().Order());
+        }
+
+        [Fact]
         public void BannedEmails_AddRemoveClear()
         {
             Db.AddBannedEmail("a@x.com");

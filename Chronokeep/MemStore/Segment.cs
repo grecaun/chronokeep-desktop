@@ -39,11 +39,11 @@ namespace Chronokeep.MemStore
                 if (!memStoreLock.TryEnter(LockTimeout)) return output;
                 try
                 {
+                    seg.Identifier = output;
                     if (theEvent != null && seg.EventId == theEvent.Identifier && seg.Identifier > 0)
                     {
-                        seg.Identifier = output;
+                        segments[seg.Identifier] = seg;
                     }
-                    segments[seg.Identifier] = seg;
                 }
                 finally
                 {

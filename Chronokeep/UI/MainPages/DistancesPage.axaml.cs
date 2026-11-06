@@ -20,7 +20,6 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
-using Chronokeep.Database.SQLite;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Network.API;
@@ -199,10 +198,6 @@ public partial class DistancesPage : UserControl, IMainPage
                 updateTimingWorker = true;
             }
             database.UpdateDistance(listDiv.GetDistance());
-        }
-        if (database is SqLiteInterface)
-        {
-            Results.GetStaticVariables(database);
         }
     }
 

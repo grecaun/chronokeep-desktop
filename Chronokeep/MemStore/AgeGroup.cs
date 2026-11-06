@@ -189,7 +189,7 @@ namespace Chronokeep.MemStore
                 {
                     if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
                     {
-                        list.Remove(group);
+                        list.RemoveAll(g => g.GroupId == group.GroupId);
                     }
                     SetAgeGroups();
                 }
@@ -246,7 +246,7 @@ namespace Chronokeep.MemStore
                     {
                         if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
                         {
-                            list.Remove(group);
+                            list.RemoveAll(g => g.GroupId == group.GroupId);
                         }
                     }
                     SetAgeGroups();

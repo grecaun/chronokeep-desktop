@@ -71,7 +71,7 @@ namespace Chronokeep.MemStore
                     {
                         if (theEvent == null || dist.EventIdentifier != theEvent.Identifier || dist.Identifier <= 0)
                             continue;
-                        dists[dist.Identifier] = dist;
+                        distances[dist.Identifier] = dist;
                         distanceNameDict[dist.Name] = dist;
                     }
                 }

@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Database;
-using Chronokeep.Database.SQLite;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
@@ -116,10 +115,6 @@ public partial class LocationsPage : UserControl, IMainPage
             }
 
             updateTimingWorker = true;
-        }
-        if (database is SqLiteInterface)
-        {
-            Results.GetStaticVariables(database);
         }
     }
 

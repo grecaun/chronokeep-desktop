@@ -55,7 +55,6 @@ namespace Chronokeep.Database
             {
                 dbLock.Exit();
             }
-            Results.GetStaticVariables(this);
         }
 
         /*

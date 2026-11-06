@@ -40,7 +40,7 @@ namespace Chronokeep.Database.SQLite
         public static void AddBannedPhone(string phone, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO sms_ban_list (banned_phone) VALUES (@phone);";
+            command.CommandText = "INSERT OR IGNORE INTO sms_ban_list (banned_phone) VALUES (@phone);";
             command.Parameters.Add(new SQLiteParameter("@phone", phone));
             command.ExecuteNonQuery();
         }
@@ -49,7 +49,7 @@ namespace Chronokeep.Database.SQLite
         {
             using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO sms_ban_list (banned_phone) VALUES (@phone);";
+            command.CommandText = "INSERT OR IGNORE INTO sms_ban_list (banned_phone) VALUES (@phone);";
             foreach (string phone in phones)
             {
                 command.Parameters.Add(new SQLiteParameter("@phone", phone));
@@ -103,7 +103,7 @@ namespace Chronokeep.Database.SQLite
         public static void AddBannedEmail(string email, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO email_ban_list (banned_email) VALUES (@email);";
+            command.CommandText = "INSERT OR IGNORE INTO email_ban_list (banned_email) VALUES (@email);";
             command.Parameters.Add(new SQLiteParameter("@email", email));
             command.ExecuteNonQuery();
         }
@@ -112,7 +112,7 @@ namespace Chronokeep.Database.SQLite
         {
             using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO email_ban_list (banned_email) VALUES (@email);";
+            command.CommandText = "INSERT OR IGNORE INTO email_ban_list (banned_email) VALUES (@email);";
             foreach (string email in emails)
             {
                 command.Parameters.Add(new SQLiteParameter("@email", email));

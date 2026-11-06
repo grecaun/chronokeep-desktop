@@ -88,7 +88,7 @@ namespace Chronokeep.Objects
         public bool Equals(AgeGroup? that)
         {
             if (that == null) return false;
-            return EventId == that.EventId && DistanceId == that.DistanceId && StartAge == that.StartAge && EndAge == that.StartAge;
+            return EventId == that.EventId && DistanceId == that.DistanceId && StartAge == that.StartAge && EndAge == that.EndAge;
         }
     }
 }

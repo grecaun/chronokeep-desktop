@@ -26,42 +26,60 @@ namespace Chronokeep.Database.SQLite
 {
     internal static class Results
     {
-        private static readonly Dictionary<int, TimingLocation> locations = [];
-        private static readonly Dictionary<string, Distance> distances = [];
-        private static readonly Dictionary<int, Segment> segments = [];
-        private static Event? theEvent;
-
-        public static void GetStaticVariables(IdbInterface database)
+        /// <summary>
+        /// Everything needed to turn time_results rows into TimeResult objects for one event.
+        /// Built per query from the event being read, so it never depends on which event is current.
+        /// </summary>
+        private sealed class ResultContext
         {
-            locations.Clear();
-            segments.Clear();
-            distances.Clear();
-            theEvent = database.GetCurrentEvent();
-            if (theEvent == null || theEvent.Identifier < 0)
+            public required Event Event { get; init; }
+            public Dictionary<int, ChipRead> ChipReads { get; } = [];
+            public Dictionary<int, Participant> Participants { get; } = [];
+            public Dictionary<int, Distance> DistancesById { get; } = [];
+            public Dictionary<string, Distance> DistancesByName { get; } = [];
+            public Dictionary<int, TimingLocation> Locations { get; } = [];
+            public Dictionary<int, Segment> Segments { get; } = [];
+        }
+
+        private static ResultContext? LoadContext(int eventId, SQLiteConnection connection)
+        {
+            Event? theEvent = Events.GetEvent(eventId, connection);
+            if (theEvent == null)
             {
-                return;
+                return null;
+            }
+            ResultContext context = new() { Event = theEvent };
+            foreach (ChipRead cr in ChipReads.GetChipReads(eventId, theEvent, connection))
+            {
+                context.ChipReads[cr.ReadId] = cr;
+            }
+            foreach (Participant p in Participants.GetParticipants(eventId, connection))
+            {
+                context.Participants[p.EventSpecific.Identifier] = p;
+            }
+            foreach (Distance d in Distances.GetDistances(eventId, connection))
+            {
+                context.DistancesById[d.Identifier] = d;
+                context.DistancesByName[d.Name] = d;
             }
             if (!theEvent.CommonStartFinish)
             {
-                locations[Constants.Timing.LOCATION_FINISH] = new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin);
-                locations[Constants.Timing.LOCATION_START] = new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow);
+                context.Locations[Constants.Timing.LOCATION_FINISH] = new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin);
+                context.Locations[Constants.Timing.LOCATION_START] = new TimingLocation(Constants.Timing.LOCATION_START, theEvent.Identifier, "Start", 0, theEvent.StartWindow);
             }
             else
             {
-                locations[Constants.Timing.LOCATION_FINISH] = new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin);
+                context.Locations[Constants.Timing.LOCATION_FINISH] = new TimingLocation(Constants.Timing.LOCATION_FINISH, theEvent.Identifier, "Start/Finish", theEvent.FinishMaxOccurrences, theEvent.FinishIgnoreWithin);
             }
-            foreach (TimingLocation loc in database.GetTimingLocations(theEvent.Identifier))
+            foreach (TimingLocation loc in TimingLocations.GetTimingLocations(eventId, connection))
             {
-                locations[loc.Identifier] = loc;
+                context.Locations[loc.Identifier] = loc;
             }
-            foreach (Segment seg in database.GetSegments(theEvent.Identifier))
+            foreach (Segment seg in Segments.GetSegments(eventId, connection))
             {
-                segments[seg.Identifier] = seg;
+                context.Segments[seg.Identifier] = seg;
             }
-            foreach (Distance dist in database.GetDistances(theEvent.Identifier))
-            {
-                distances[dist.Name] = dist;
-            }
+            return context;
         }
 
         internal static void AddTimingResult(TimeResult tr, SQLiteConnection connection)
@@ -109,12 +127,7 @@ namespace Chronokeep.Database.SQLite
             command.ExecuteNonQuery();
         }
 
-        private static List<TimeResult> GetResultsInternal(
-            SQLiteDataReader reader,
-            Dictionary<int, ChipRead> chipReadDict,
-            Dictionary<int, Participant> partDict,
-            Dictionary<int, Distance> distanceDict
-            )
+        private static List<TimeResult> GetResultsInternal(SQLiteDataReader reader, ResultContext context)
         {
             List<TimeResult> output = [];
             while (reader.Read())
@@ -124,8 +137,8 @@ namespace Chronokeep.Database.SQLite
                 int distanceId = -1;
                 string bib = "";
                 Participant? part = null;
-                chipReadDict.TryGetValue(readId, out ChipRead? chipRead);
-                if (eventSpecificId > -1 && partDict.TryGetValue(eventSpecificId, out part))
+                context.ChipReads.TryGetValue(readId, out ChipRead? chipRead);
+                if (eventSpecificId > -1 && context.Participants.TryGetValue(eventSpecificId, out part))
                 {
                     bib = part.Bib;
                     distanceId = part.EventSpecific.DistanceIdentifier;
@@ -134,7 +147,7 @@ namespace Chronokeep.Database.SQLite
                 {
                     bib = chipRead.Bib;
                 }
-                bool knownDist = distanceDict.TryGetValue(distanceId, out Distance? di);
+                bool knownDist = context.DistancesById.TryGetValue(distanceId, out Distance? di);
                 output.Add(new TimeResult(
                     reader["event_id"] == DBNull.Value ? -1 : Convert.ToInt32(reader["event_id"]),
                     reader["eventspecific_id"] == DBNull.Value ? -1 : Convert.ToInt32(reader["eventspecific_id"]),
@@ -162,14 +175,14 @@ namespace Chronokeep.Database.SQLite
                     Convert.ToInt32(reader["timeresult_uploaded"]),
                     part != null ? part.Birthdate : "",
                     knownDist ? di!.Type : Constants.Timing.DISTANCE_TYPE_NORMAL,
-                    knownDist && distanceDict.TryGetValue(di!.LinkedDistance, out Distance? linked) ? linked.Name : "",
+                    knownDist && context.DistancesById.TryGetValue(di!.LinkedDistance, out Distance? linked) ? linked.Name : "",
                     chipRead != null ? chipRead.ChipNumber : "",
                     part is { EventSpecific.Anonymous: true },
                     part != null ? part.Identifier.ToString() : "",
-                    locations,
-                    segments,
-                    distances,
-                    theEvent!,
+                    context.Locations,
+                    context.Segments,
+                    context.DistancesByName,
+                    context.Event,
                     part != null ? part.EventSpecific.Division : "",
                     Convert.ToInt32(reader["timeresult_division_place"])
                     ));
@@ -180,21 +193,10 @@ namespace Chronokeep.Database.SQLite
 
         internal static List<TimeResult> GetTimingResults(int eventId, SQLiteConnection connection)
         {
-            Event lEvent = Events.GetEvent(eventId, connection)!;
-            Dictionary<int, ChipRead> chipReadDict = [];
-            foreach (ChipRead cr in ChipReads.GetChipReads(eventId, lEvent, connection))
+            ResultContext? context = LoadContext(eventId, connection);
+            if (context == null)
             {
-                chipReadDict.Add(cr.ReadId, cr);
-            }
-            Dictionary<int, Participant> partDict = [];
-            foreach (Participant p in Participants.GetParticipants(eventId, connection))
-            {
-                partDict.Add(p.EventSpecific.Identifier, p);
-            }
-            Dictionary<int, Distance> distanceDict = [];
-            foreach (Distance d in Distances.GetDistances(eventId, connection))
-            {
-                distanceDict.Add(d.Identifier, d);
+                return [];
             }
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * " +
@@ -202,27 +204,16 @@ namespace Chronokeep.Database.SQLite
                 "WHERE r.event_id=@eventid";
             command.Parameters.Add(new SQLiteParameter("@eventid", eventId));
             SQLiteDataReader reader = command.ExecuteReader();
-            List<TimeResult> output = GetResultsInternal(reader, chipReadDict, partDict, distanceDict);
+            List<TimeResult> output = GetResultsInternal(reader, context);
             return output;
         }
 
         internal static List<TimeResult> GetLastSeenResults(int eventId, SQLiteConnection connection)
         {
-            Event lEvent = Events.GetEvent(eventId, connection)!;
-            Dictionary<int, ChipRead> chipReadDict = [];
-            foreach (ChipRead cr in ChipReads.GetChipReads(eventId, lEvent, connection))
+            ResultContext? context = LoadContext(eventId, connection);
+            if (context == null)
             {
-                chipReadDict.Add(cr.ReadId, cr);
-            }
-            Dictionary<int, Participant> partDict = [];
-            foreach (Participant p in Participants.GetParticipants(eventId, connection))
-            {
-                partDict.Add(p.EventSpecific.Identifier, p);
-            }
-            Dictionary<int, Distance> distanceDict = [];
-            foreach (Distance d in Distances.GetDistances(eventId, connection))
-            {
-                distanceDict.Add(d.Identifier, d);
+                return [];
             }
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * " +
@@ -234,7 +225,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@eventid", eventId),
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
-            List<TimeResult> output = GetResultsInternal(reader, chipReadDict, partDict, distanceDict);
+            List<TimeResult> output = GetResultsInternal(reader, context);
             return output;
         }
 
@@ -250,21 +241,10 @@ namespace Chronokeep.Database.SQLite
 
         internal static List<TimeResult> GetSegmentTimes(int eventId, int segmentId, SQLiteConnection connection)
         {
-            Event lEvent = Events.GetEvent(eventId, connection)!;
-            Dictionary<int, ChipRead> chipReadDict = [];
-            foreach (ChipRead cr in ChipReads.GetChipReads(eventId, lEvent, connection))
+            ResultContext? context = LoadContext(eventId, connection);
+            if (context == null)
             {
-                chipReadDict.Add(cr.ReadId, cr);
-            }
-            Dictionary<int, Participant> partDict = [];
-            foreach (Participant p in Participants.GetParticipants(eventId, connection))
-            {
-                partDict.Add(p.EventSpecific.Identifier, p);
-            }
-            Dictionary<int, Distance> distanceDict = [];
-            foreach (Distance d in Distances.GetDistances(eventId, connection))
-            {
-                distanceDict.Add(d.Identifier, d);
+                return [];
             }
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * " +
@@ -276,7 +256,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@segment", segmentId)
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
-            List<TimeResult> output = GetResultsInternal(reader, chipReadDict, partDict, distanceDict);
+            List<TimeResult> output = GetResultsInternal(reader, context);
             return output;
         }
 
@@ -316,21 +296,10 @@ namespace Chronokeep.Database.SQLite
 
         internal static List<TimeResult> GetNonUploadedResults(int eventId, SQLiteConnection connection)
         {
-            Event lEvent = Events.GetEvent(eventId, connection)!;
-            Dictionary<int, ChipRead> chipReadDict = [];
-            foreach (ChipRead cr in ChipReads.GetChipReads(eventId, lEvent, connection))
+            ResultContext? context = LoadContext(eventId, connection);
+            if (context == null)
             {
-                chipReadDict.Add(cr.ReadId, cr);
-            }
-            Dictionary<int, Participant> partDict = [];
-            foreach (Participant p in Participants.GetParticipants(eventId, connection))
-            {
-                partDict.Add(p.EventSpecific.Identifier, p);
-            }
-            Dictionary<int, Distance> distanceDict = [];
-            foreach (Distance d in Distances.GetDistances(eventId, connection))
-            {
-                distanceDict.Add(d.Identifier, d);
+                return [];
             }
             SQLiteCommand command = connection.CreateCommand();
             command.CommandText = "SELECT * " +
@@ -342,7 +311,7 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@uploaded") { Value = Constants.Timing.TIMERESULT_UPLOADED_FALSE }
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
-            List<TimeResult> output = GetResultsInternal(reader, chipReadDict, partDict, distanceDict);
+            List<TimeResult> output = GetResultsInternal(reader, context);
             return output;
         }
 

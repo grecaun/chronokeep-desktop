@@ -170,9 +170,26 @@ namespace Chronokeep.MemStore
                 if (!memStoreLock.TryEnter(LockTimeout)) return;
                 try
                 {
-                    if (timingSystems.TryGetValue(system.IpAddress.Trim(), out TimingSystem? oldSystem))
+                    // Find the cached system by id so a changed IP address doesn't leave a stale entry behind.
+                    string? oldKey = null;
+                    foreach ((string key, TimingSystem cached) in timingSystems)
                     {
+                        if (cached.SystemIdentifier == system.SystemIdentifier)
+                        {
+                            oldKey = key;
+                            break;
+                        }
+                    }
+                    if (oldKey == null && timingSystems.ContainsKey(system.IpAddress.Trim()))
+                    {
+                        oldKey = system.IpAddress.Trim();
+                    }
+                    if (oldKey != null)
+                    {
+                        TimingSystem oldSystem = timingSystems[oldKey];
                         oldSystem.CopyFrom(system);
+                        timingSystems.Remove(oldKey);
+                        timingSystems[oldSystem.IpAddress.Trim()] = oldSystem;
                     }
                 }
                 finally

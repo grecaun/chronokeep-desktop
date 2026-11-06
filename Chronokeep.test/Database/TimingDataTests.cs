@@ -1,4 +1,3 @@
-using Chronokeep.Database.SQLite;
 using Chronokeep.Objects;
 
 namespace Chronokeep.Test.Database
@@ -149,8 +148,45 @@ namespace Chronokeep.Test.Database
             theEvent = AddEvent(makeCurrent: true);
             var d = AddDistance(theEvent.Identifier);
             runner = AddParticipant(theEvent.Identifier, d, "9", first: "Timed");
-            // TimeResult construction relies on the cached current event.
-            Results.GetStaticVariables(Db);
+        }
+
+        [Fact]
+        public void GetTimingResults_WorksWithNoCurrentEvent()
+        {
+            var e = AddEvent();
+            var d = AddDistance(e.Identifier);
+            var p = AddParticipant(e.Identifier, d, "1");
+            Db.AddTimingResult(new TimeResult(e.Identifier, Constants.Timing.TIMERESULT_DUMMYREAD, p.EventSpecific.Identifier,
+                Constants.Timing.LOCATION_FINISH, Constants.Timing.SEGMENT_FINISH, 1, 1800, 0, "", 1800, 0, DateTime.Now, "1",
+                Constants.Timing.TIMERESULT_STATUS_NONE, ""));
+
+            Assert.Null(Db.GetCurrentEvent());
+            Assert.Single(Db.GetTimingResults(e.Identifier));
+            Assert.Single(Db.GetFinishTimes(e.Identifier));
+        }
+
+        [Fact]
+        public void GetTimingResults_UsesTheQueriedEventsSettings_NotTheCurrentEvent()
+        {
+            // The current event shares one Start/Finish location; the other event has separate ones.
+            AddEvent("Current", makeCurrent: true);
+            Event other = new() { Name = "Other", Date = DateString(), CommonStartFinish = false };
+            other.Identifier = Db.AddEvent(other);
+            var d = AddDistance(other.Identifier);
+            var p = AddParticipant(other.Identifier, d, "1");
+            int mile = Db.AddTimingLocation(new TimingLocation(other.Identifier, "Mile 5"));
+            Db.AddTimingResults([
+                new TimeResult(other.Identifier, Constants.Timing.TIMERESULT_DUMMYREAD, p.EventSpecific.Identifier,
+                    Constants.Timing.LOCATION_FINISH, Constants.Timing.SEGMENT_FINISH, 1, 1800, 0, "", 1800, 0, DateTime.Now, "1",
+                    Constants.Timing.TIMERESULT_STATUS_NONE, ""),
+                new TimeResult(other.Identifier, Constants.Timing.TIMERESULT_DUMMYREAD, p.EventSpecific.Identifier,
+                    mile, Constants.Timing.SEGMENT_NONE, 1, 900, 0, "", 900, 0, DateTime.Now, "1",
+                    Constants.Timing.TIMERESULT_STATUS_NONE, "")]);
+
+            var byLocation = Db.GetTimingResults(other.Identifier).ToDictionary(r => r.LocationId);
+
+            Assert.Equal("Finish", byLocation[Constants.Timing.LOCATION_FINISH].LocationName);
+            Assert.Equal("Mile 5", byLocation[mile].LocationName);
         }
 
         private TimeResult NewResult(int segment, int occurrence, long seconds, int status = Constants.Timing.TIMERESULT_STATUS_NONE, int? eventSpecificId = null)

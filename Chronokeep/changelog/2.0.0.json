@@ -22,6 +22,17 @@
     "Fixed a silent error where the program would stop the download of participants from the api if it matched via participant information and not participant ID.",
     "Fixed an issue where looking up a timing location or segment by its details would cause a database error.",
     "Fixed an issue where distance stats would leave out distances that weren't linked to another distance.",
-    "Fixed an issue where distance stats could undercount participants when combining linked distances or counting DNS and unknown statuses together."
+    "Fixed an issue where distance stats could undercount participants when combining linked distances or counting DNS and unknown statuses together.",
+    "Fixed an issue where segments added one at a time wouldn't be tracked correctly until the program was restarted.",
+    "Fixed an issue where deleted age groups would continue to be used until the program was restarted.",
+    "Fixed an issue where changes to an event's name, date, start time, or results API weren't picked up until the program was restarted.",
+    "Fixed an issue where changing the start or start/finish options wouldn't fully take effect until the program was restarted.",
+    "Fixed an issue where changing a timing system's IP address would leave the old entry behind.",
+    "Fixed an issue where saving alarms could create duplicate alarms.",
+    "Fixed an issue where removing a chip from a bib could leave names attached to the wrong chip reads.",
+    "Fixed an issue where the program would keep reprocessing results when only start times were left unprocessed.",
+    "Fixed an error when banning a phone number or email that was already banned.",
+    "Fixed an issue where adding several distances at once to the open event could cause an error.",
+    "Fixed an issue where switching events could cause an error or show results with the previous event's location and segment names."
   ]
 }

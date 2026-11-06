@@ -350,7 +350,11 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        if (timingResults.Values.Any(result => result.Status == Constants.Timing.TIMERESULT_STATUS_NONE))
+                        // Match the database rules: start times, segment-less results, and unknown runners never get ranked.
+                        if (timingResults.Values.Any(result => result.Status == Constants.Timing.TIMERESULT_STATUS_NONE
+                            && result.SegmentId != Constants.Timing.SEGMENT_START
+                            && result.SegmentId != Constants.Timing.SEGMENT_NONE
+                            && result.EventSpecificId != Constants.Timing.TIMERESULT_DUMMYPERSON))
                         {
                             output = true;
                         }

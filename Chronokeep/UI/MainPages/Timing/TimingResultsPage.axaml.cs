@@ -46,10 +46,6 @@ public partial class TimingResultsPage : UserControl, ISubPage
         this.parent = parent;
         this.database = database;
         theEvent = database.GetCurrentEvent();
-        if (database is SqLiteInterface)
-        {
-            Database.SQLite.Results.GetStaticVariables(database);
-        }
         if (theEvent is { EventType: Constants.Timing.EVENT_TYPE_TIME or Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA })
         {
             ChipTimeHeader.Text = "Lap Time";

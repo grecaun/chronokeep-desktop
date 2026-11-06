@@ -116,6 +116,8 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
+                        // The database replaces alarms with the same bib and chip, so do the same here.
+                        alarms.RemoveAll(x => x.Bib == alarm.Bib && x.Chip == alarm.Chip);
                         alarms.Add(alarm);
                     }
                 }
@@ -144,7 +146,12 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        alarms.AddRange(output);
+                        // The database replaces alarms with the same bib and chip, so do the same here.
+                        foreach (Alarm alarm in output)
+                        {
+                            alarms.RemoveAll(x => x.Bib == alarm.Bib && x.Chip == alarm.Chip);
+                            alarms.Add(alarm);
+                        }
                     }
                 }
                 finally

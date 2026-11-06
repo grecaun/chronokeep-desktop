@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using System;
 using Avalonia.Controls;
 using Chronokeep.Database;
-using Chronokeep.Database.SQLite;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Network.API;
@@ -160,10 +159,6 @@ public partial class SegmentsPage : UserControl, IMainPage
         database.AddSegments(newSegments);
         updateTimingWorker = true;
         database.UpdateSegments(upSegments);
-        if (database is SqLiteInterface)
-        {
-            Results.GetStaticVariables(database);
-        }
     }
 
     public void KeyboardCtrlA() { }

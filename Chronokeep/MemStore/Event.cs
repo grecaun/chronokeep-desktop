@@ -250,11 +250,11 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
-                        theEvent.CopyFrom(anEvent);
+                        theEvent.CopyAll(anEvent);
                     }
                     foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
-                        ev.CopyFrom(anEvent);
+                        ev.CopyAll(anEvent);
                         break;
                     }
                 }
@@ -372,6 +372,7 @@ namespace Chronokeep.MemStore
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
                         theEvent.StartWindow = anEvent.StartWindow;
+                        theEvent.StartMaxOccurrences = anEvent.StartMaxOccurrences;
                     }
                     foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
@@ -404,6 +405,9 @@ namespace Chronokeep.MemStore
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
                     {
                         theEvent.StartWindow = anEvent.StartWindow;
+                        theEvent.StartMaxOccurrences = anEvent.StartMaxOccurrences;
+                        theEvent.FinishIgnoreWithin = anEvent.FinishIgnoreWithin;
+                        theEvent.FinishMaxOccurrences = anEvent.FinishMaxOccurrences;
                     }
                     foreach (Event ev in allEvents.Where(ev => ev.Identifier == anEvent.Identifier))
                     {
