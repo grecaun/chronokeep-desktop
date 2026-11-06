@@ -128,7 +128,8 @@ namespace Chronokeep.Timing.Announcer
                         && participantBibDictionary.TryGetValue(read.Bib, out Participant? part))
                     {
                         newParticipants = true;
-                        BibSeen.Add(read.Bib, timeRightNow);
+                        // Set rather than Add: a runner seen again after the seen window is already in the dictionary.
+                        BibSeen[read.Bib] = timeRightNow;
                         Participants.Add(new AnnouncerParticipant(part, read.Seconds));
                         // Mark this chipread as USED
                         read.Status = Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED;

@@ -54,6 +54,7 @@
     "Fixed several issues with the local results web server: viewing a runner's results could break their printable certificate, opening a certificate could replace the runner's results page, participant counts on certificates grew with every refresh, emailed certificates didn't update when results changed, and requests for missing files never got a response.",
     "Fixed an issue where results were uploaded again on every upload cycle when the event only uploads specific distances or is a backyard ultra with DNF entries.",
     "Fixed an issue where stopping and starting remote reads would stop downloading reads.",
-    "Fixed an issue where remote reads could be missed on computers in time zones ahead of UTC."
+    "Fixed an issue where remote reads could be missed on computers in time zones ahead of UTC.",
+    "Fixed an issue where the announcer stopped adding runners after someone crossed the announcer mat again after the seen window."
   ]
 }
