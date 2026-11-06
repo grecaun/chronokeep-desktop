@@ -48,7 +48,6 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     private readonly MinTimingPage? page;
 
     // Timing objects.
-    private Thread? timingControllerThread;
     private readonly TimingController? timingController;
 
     private readonly List<Window> openWindows = [];
@@ -289,12 +288,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
                 timingController?.ConnectTimingSystem(system);
             });
             UpdateTiming();
-            await Task.Run(() =>
-            {
-                if (TimingController.IsRunning()) return;
-                timingControllerThread = new Thread(timingController!.Run);
-                timingControllerThread.Start();
-            });
+            timingController!.Start();
         }
         catch (Exception)
         {

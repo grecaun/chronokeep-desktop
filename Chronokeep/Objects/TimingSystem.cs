@@ -44,7 +44,6 @@ namespace Chronokeep.Objects
         public SYSTEM_STATUS Status { get; set; }
         public List<Socket>? Sockets { get; private set; }
         public ITimingSystemInterface? SystemInterface;
-        private DateTime connectedAt;
 
         public string SystemTime { get; set; } = "";
         public string SystemStatus { get; set; } = "";
@@ -148,17 +147,6 @@ namespace Chronokeep.Objects
                     SystemInterface = null;
                     break;
             }
-        }
-
-        public void SetLastCommunicationTime()
-        {
-            connectedAt = DateTime.Now;
-        }
-
-        public bool TimedOut()
-        {
-            TimeSpan ellapsed = DateTime.Now - connectedAt;
-            return ellapsed.TotalSeconds > 5;
         }
 
         public bool Equals(TimingSystem? other)

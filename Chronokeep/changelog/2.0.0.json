@@ -50,7 +50,6 @@
     "Fixed several issues with CSV imports: an extra blank column was shown, quoted values kept a trailing space, and a quoted value with a comma at the end of a line was split in two.",
     "Fixed an issue where Excel imports dropped rows after a blank row and columns after an empty column.",
     "Fixed an issue where an alarm removed on the alarms page kept going off until the alarms were saved.",
-    "Fixed an issue where a timing system that never finished connecting could take longer than expected to be marked as disconnected.",
     "Fixed an issue where clicking Start Web could cause an error instead of showing how to allow the web server when it couldn't start.",
     "Fixed several issues with the local results web server: viewing a runner's results could break their printable certificate, opening a certificate could replace the runner's results page, participant counts on certificates grew with every refresh, emailed certificates didn't update when results changed, and requests for missing files never got a response.",
     "Fixed an issue where results were uploaded again on every upload cycle when the event only uploads specific distances or is a backyard ultra with DNF entries.",
@@ -61,6 +60,7 @@
     "Fixed an issue where a text message could be sent for a result that wasn't linked to a participant.",
     "Fixed an issue where the update check could fail without saying anything if a release on GitHub wasn't named with a version number.",
     "Fixed an issue where certificate links in results emails were broken when a name, event, or distance had a character like '/' or '#' in it.",
-    "Fixed an issue where printable certificates showed a made-up pace when the distance had no length set. The pace is now left blank."
+    "Fixed an issue where printable certificates showed a made-up pace when the distance had no length set. The pace is now left blank.",
+    "Fixed an issue where a reader connected at the same time another reader disconnected might never be read."
   ]
 }

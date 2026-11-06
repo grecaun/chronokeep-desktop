@@ -72,7 +72,6 @@ namespace Chronokeep.UI
         private RegistrationWorker? registrationWorker;
 
         // Timing objects.
-        private Thread? timingControllerThread;
         private readonly TimingController? timingController;
 
         // API objects.
@@ -936,12 +935,7 @@ namespace Chronokeep.UI
                 });
                 UpdateTiming();
                 announcerWindow?.UpdateView();
-                await Task.Run(() =>
-                {
-                    if (TimingController.IsRunning()) return;
-                    timingControllerThread = new Thread(timingController!.Run);
-                    timingControllerThread.Start();
-                });
+                timingController!.Start();
             }
             catch (Exception)
             {

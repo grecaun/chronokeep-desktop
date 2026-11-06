@@ -1,7 +1,6 @@
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronokeepRemote;
 using Chronokeep.Test.Database;
-using System.Reflection;
 using System.Text.Json;
 using TimingConstants = Chronokeep.Constants.Timing;
 
@@ -204,21 +203,6 @@ namespace Chronokeep.Test.Logic
             Assert.True(a.Equals(new TimingSystem(9, " 10.0.0.5 ", 23, TimingConstants.LOCATION_FINISH, Constants.Readers.SYSTEM_RFID)));
             Assert.False(a.Equals(new TimingSystem(1, "10.0.0.5", 24, TimingConstants.LOCATION_FINISH, Constants.Readers.SYSTEM_RFID)));
             Assert.True(a.Saved());
-        }
-
-        private static void LastCommunication(TimingSystem sys, DateTime when)
-            => typeof(TimingSystem).GetField("connectedAt", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(sys, when);
-
-        [Theory]
-        [InlineData(2, false)]
-        [InlineData(10, true)]
-        [InlineData(62, true)]
-        [InlineData(3602, true)]
-        public void TimedOut_AfterFiveSeconds(int secondsAgo, bool expected)
-        {
-            var sys = new TimingSystem("10.0.0.5", Constants.Readers.SYSTEM_RFID);
-            LastCommunication(sys, DateTime.Now.AddSeconds(-secondsAgo));
-            Assert.Equal(expected, sys.TimedOut());
         }
     }
 }
