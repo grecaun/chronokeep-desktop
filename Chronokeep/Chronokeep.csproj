@@ -304,6 +304,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chronokeep.test" />
+  </ItemGroup>
   <Target Name="PreBuild" AfterTargets="PreBuildEvent">
     <Exec Command="git describe --tag &gt; &quot;$(ProjectDir)version.txt&quot;" />
   </Target>

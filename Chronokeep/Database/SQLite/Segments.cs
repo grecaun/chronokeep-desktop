@@ -102,7 +102,7 @@ namespace Chronokeep.Database.SQLite
         internal static int GetSegmentId(Segment seg, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM segments WHERE event_id=@event, distance_id=@distance, location_id=@location, occurance=@occurance;";
+            command.CommandText = "SELECT segment_id FROM segments WHERE event_id=@event AND distance_id=@distance AND location_id=@location AND location_occurance=@occurance;";
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@event",seg.EventId),

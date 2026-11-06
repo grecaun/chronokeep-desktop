@@ -90,7 +90,7 @@ namespace Chronokeep.Database.SQLite
         internal static int GetTimingLocationId(TimingLocation tl, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT timingpoint_id FROM timing_locations WHERE event_id=@eventid, location_name=@name";
+            command.CommandText = "SELECT location_id FROM timing_locations WHERE event_id=@eventid AND location_name=@name";
             command.Parameters.AddRange(
             [
                 new SQLiteParameter("@name", tl.Name),

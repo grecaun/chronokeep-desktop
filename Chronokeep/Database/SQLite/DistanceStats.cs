@@ -31,7 +31,7 @@ namespace Chronokeep.Database.SQLite
             command.CommandText =
                 "SELECT d.distance_id AS id, d.distance_name AS name, e.eventspecific_status AS status, " +
                 "d.distance_linked_id AS linked_id, l.distance_name AS linked_name, " +
-                "COUNT(e.eventspecific_status) AS count FROM distances d JOIN distances l ON " +
+                "COUNT(e.eventspecific_status) AS count FROM distances d LEFT JOIN distances l ON " +
                 "d.distance_linked_id=l.distance_id JOIN eventspecific e ON d.distance_id=e.distance_id " +
                 "WHERE e.event_id=@event " +
                 "GROUP BY d.distance_name, e.eventspecific_status;";
@@ -51,7 +51,10 @@ namespace Chronokeep.Database.SQLite
             {
                 int distanceId = Convert.ToInt32(reader["id"].ToString());
                 string distanceName = reader["name"].ToString()!;
-                if (condense && int.TryParse(reader["linked_id"].ToString(), out int linked))
+                // Only roll a distance up into its linked distance when that link actually exists.
+                if (condense
+                    && reader["linked_name"] != DBNull.Value
+                    && int.TryParse(reader["linked_id"].ToString(), out int linked))
                 {
                     distanceId = linked;
                     distanceName = reader["linked_name"].ToString()!;
@@ -62,24 +65,25 @@ namespace Chronokeep.Database.SQLite
                     DistanceId = distanceId
                 });
                 if (!int.TryParse(reader["status"].ToString(), out int status)) continue;
+                int count = Convert.ToInt32(reader["count"]);
                 switch (status)
                 {
                     case Constants.Timing.EVENTSPECIFIC_DNS:
                     case Constants.Timing.EVENTSPECIFIC_UNKNOWN:
-                        statsDictionary[distanceId].Dns = Convert.ToInt32(reader["count"]);
-                        allstats.Dns += statsDictionary[distanceId].Dns;
+                        statsDictionary[distanceId].Dns += count;
+                        allstats.Dns += count;
                         break;
                     case Constants.Timing.EVENTSPECIFIC_FINISHED:
-                        statsDictionary[distanceId].Finished = Convert.ToInt32(reader["count"]);
-                        allstats.Finished += statsDictionary[distanceId].Finished;
+                        statsDictionary[distanceId].Finished += count;
+                        allstats.Finished += count;
                         break;
                     case Constants.Timing.EVENTSPECIFIC_STARTED:
-                        statsDictionary[distanceId].Active = Convert.ToInt32(reader["count"]);
-                        allstats.Active += statsDictionary[distanceId].Active;
+                        statsDictionary[distanceId].Active += count;
+                        allstats.Active += count;
                         break;
                     case Constants.Timing.EVENTSPECIFIC_DNF:
-                        statsDictionary[distanceId].Dnf = Convert.ToInt32(reader["count"]);
-                        allstats.Dnf += statsDictionary[distanceId].Dnf;
+                        statsDictionary[distanceId].Dnf += count;
+                        allstats.Dnf += count;
                         break;
                 }
             }
