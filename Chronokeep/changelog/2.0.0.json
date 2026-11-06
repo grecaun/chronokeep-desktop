@@ -33,6 +33,7 @@
     "Fixed an issue where the program would keep reprocessing results when only start times were left unprocessed.",
     "Fixed an error when banning a phone number or email that was already banned.",
     "Fixed an issue where adding several distances at once to the open event could cause an error.",
-    "Fixed an issue where switching events could cause an error or show results with the previous event's location and segment names."
+    "Fixed an issue where switching events could cause an error or show results with the previous event's location and segment names.",
+    "Fixed an issue where importing a participant whose address had a comma would add a leading space to the second address line."
   ]
 }

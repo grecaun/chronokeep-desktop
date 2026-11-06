@@ -135,11 +135,11 @@ namespace Chronokeep.Objects
                 switch (addressArray.Length)
                 {
                     case 2 when Street2.Length == 0:
-                        Street = addressArray[0];
-                        Street2 = addressArray[1];
+                        Street = addressArray[0].Trim();
+                        Street2 = addressArray[1].Trim();
                         break;
                     case > 2:
-                        Street = addressArray[0];
+                        Street = addressArray[0].Trim();
                         break;
                 }
             }
