@@ -43,6 +43,10 @@
     "Fixed an issue in backyard ultras where DNF results for known participants weren't linked to the participant.",
     "Fixed a potential crash in backyard ultras when processing a DNF for a loop that had been started but not finished.",
     "Fixed an issue where every read from an IPICO reader was marked as a rewind read.",
-    "Fixed an issue where reads from an IPICO reader with a reader ID containing a letter were dropped."
+    "Fixed an issue where reads from an IPICO reader with a reader ID containing a letter were dropped.",
+    "Fixed an issue where a DNS result would stop all results from uploading until the program was restarted. DNS results are now uploaded as DNS.",
+    "Fixed an issue where databases from older versions of the program couldn't be upgraded.",
+    "Fixed several issues with CSV imports: an extra blank column was shown, quoted values kept a trailing space, and a quoted value with a comma at the end of a line was split in two.",
+    "Fixed an issue where Excel imports dropped rows after a blank row and columns after an empty column."
   ]
 }

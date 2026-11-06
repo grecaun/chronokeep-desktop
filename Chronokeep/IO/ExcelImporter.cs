@@ -76,21 +76,12 @@ namespace Chronokeep.IO
             Log.D("IO.ExcelImporter", "Getting headers from excel file.");
             try
             {
-                Log.D("IO.ExcelImporter", "Used range set.");
-                IXLRows rows = worksheet!.RowsUsed();
-                int numHeaders = 0;
-                int numDataRows = 0;
-                foreach (IXLRow? row in rows)
-                {
-                    int tmp = row.CellsUsed().Count();
-                    numHeaders = numHeaders > tmp ? numHeaders : tmp;
-                    numDataRows++;
-                }
-                Log.D("IO.ExcelImporter", $"Value array populated. Rows {numDataRows} Columns {numHeaders}");
+                int numHeaders = LastColumn();
+                Log.D("IO.ExcelImporter", $"Columns {numHeaders}");
                 string[] headers = new string[numHeaders];
                 for (int i = 1; i <= numHeaders; i++)
                 {
-                    headers[i - 1] = worksheet.Cell(1, i).Value.IsBlank ? "" : worksheet.Cell(1, i).Value.ToString();
+                    headers[i - 1] = worksheet!.Cell(1, i).Value.IsBlank ? "" : worksheet.Cell(1, i).Value.ToString();
                 }
                 Data = new ImportData(headers, filePath, ImportData.FileType.EXCEL);
             }
@@ -107,32 +98,25 @@ namespace Chronokeep.IO
             Log.D("IO.ExcelImporter", "Getting data from excel file.");
             try
             {
-                IXLRows rows = worksheet!.RowsUsed();
-                int numHeaders = 0;
-                int numDataRows = 0;
-                foreach (IXLRow? row in rows)
-                {
-                    int tmp = row.CellsUsed().Count();
-                    numHeaders = numHeaders > tmp ? numHeaders : tmp;
-                    numDataRows++;
-                }
-                object[,] valueArray = new object[numDataRows, numHeaders];
-                for (int i = 1; i <= numDataRows; i++)
-                {
-                    for (int j = 1; j <= numHeaders; j++)
-                    {
-                        valueArray[i - 1, j - 1] = worksheet.Cell(i, j).Value;
-                    }
-                }
-                Log.D("IO.ExcelImporter", $"Value array populated. Rows {numDataRows} Columns {numHeaders}");
-                for (int row = 1; row < numDataRows; row++)
+                int numHeaders = LastColumn();
+                int lastRow = worksheet!.LastRowUsed()?.RowNumber() ?? 0;
+                Log.D("IO.ExcelImporter", $"Rows {lastRow} Columns {numHeaders}");
+                // Row 1 holds the headers.
+                for (int row = 2; row <= lastRow; row++)
                 {
                     string[] dataLine = new string[numHeaders];
-                    for (int column = 0; column < numHeaders; column++)
+                    bool blank = true;
+                    for (int column = 1; column <= numHeaders; column++)
                     {
-                        dataLine[column] = valueArray[row, column].ToString()!;
+                        XLCellValue value = worksheet.Cell(row, column).Value;
+                        dataLine[column - 1] = value.IsBlank ? "" : value.ToString();
+                        blank = blank && dataLine[column - 1].Length == 0;
                     }
-                    Data!.AddData(dataLine);
+                    // Skip completely empty rows rather than importing a blank participant.
+                    if (!blank)
+                    {
+                        Data!.AddData(dataLine);
+                    }
                 }
                 Finish();
             }
@@ -141,6 +125,9 @@ namespace Chronokeep.IO
                 Log.E("IO.ExcelImporter", $"Couldn't get data. {excep.StackTrace}");
             }
         }
+
+        /// <summary>The last column with anything in it, so empty columns don't hide the ones after them.</summary>
+        private int LastColumn() => worksheet!.LastColumnUsed()?.ColumnNumber() ?? 0;
 
         public void Finish()
         {

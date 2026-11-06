@@ -107,129 +107,137 @@ namespace Chronokeep.Timing.API
             {
                 throw new Exception("error grabbing lock to signal start");
             }
-            int total = 0;
-            int loops = results.Count / Constants.Timing.API_LOOP_COUNT;
-            AddResultsResponse? response;
-            bool loopError = false;
-            for (int i = 0; i < loops; i += 1)
+            try
             {
-                Log.D("API.APIController", $"Loop {i}");
-                // Change TimeResults to APIResults - breaking this up into chunks so we can
-                // properly update them with the UPLOADED field
-                List<ApiResult> upRes = [];
-                List<TimeResult> uploaded = results.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT);
-                foreach (TimeResult tr in uploaded)
+                int total = 0;
+                int loops = results.Count / Constants.Timing.API_LOOP_COUNT;
+                AddResultsResponse? response;
+                bool loopError = false;
+                for (int i = 0; i < loops; i += 1)
                 {
-                    //tr.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
-                    DateTime trStart = waveStartTimes.GetValueOrDefault(tr.RealDistanceName, start);
-                    // only add to upload list if we want to upload everything (NOT Specific)
-                    // or we only want to upload specific distances and the distance is in the
-                    // list of distances we want to upload
-                    if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
+                    Log.D("API.APIController", $"Loop {i}");
+                    // Change TimeResults to APIResults - breaking this up into chunks so we can
+                    // properly update them with the UPLOADED field
+                    List<ApiResult> upRes = [];
+                    List<TimeResult> uploaded = results.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT);
+                    foreach (TimeResult tr in uploaded)
                     {
-                        upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        //tr.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
+                        DateTime trStart = waveStartTimes.GetValueOrDefault(tr.RealDistanceName, start);
+                        // only add to upload list if we want to upload everything (NOT Specific)
+                        // or we only want to upload specific distances and the distance is in the
+                        // list of distances we want to upload
+                        if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
+                        {
+                            upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        }
+                        // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
+                        // that info isn't useful to others
+                        else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
+                        {
+                            upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        }
                     }
-                    // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
-                    // that info isn't useful to others
-                    else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
+                    try
                     {
-                        upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
                     }
-                }
-                try
-                {
-                    response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
-                }
-                catch
-                {
-                    // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
-                    Log.D("API.APIController", $"Unable to handle API response. Loop {i}");
-                    loopError = true;
-                    controller?.Errors += 1;
-                    mainWindow?.UpdateTiming();
-                    break;
-                }
-                total += response.Count;
-                Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
-                if (response.Count != Constants.Timing.API_LOOP_COUNT) continue;
-                // Updating uploaded value for uploaded results.
-                foreach (TimeResult res in uploaded)
-                {
-                    res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
-                }
-                database.SetUploadedTimingResults(uploaded);
-            }
-            int leftovers = results.Count - (loops * Constants.Timing.API_LOOP_COUNT);
-            if (leftovers > 0 && !loopError)
-            {
-                response = null;
-                // Change TimeResults to APIResults
-                List<ApiResult> upRes = [];
-                List<TimeResult> uploaded = results.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers);
-                foreach (TimeResult tr in uploaded)
-                {
-                    //tr.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
-                    DateTime trStart = waveStartTimes.GetValueOrDefault(tr.RealDistanceName, start);
-                    // only add to upload list if we want to upload everything (NOT Specific)
-                    // or we only want to upload specific distances and the distance is in the
-                    // list of distances we want to upload
-                    if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
+                    catch
                     {
-                        upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
+                        Log.D("API.APIController", $"Unable to handle API response. Loop {i}");
+                        loopError = true;
+                        controller?.Errors += 1;
+                        mainWindow?.UpdateTiming();
+                        break;
                     }
-                    // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
-                    // that info isn't useful to others
-                    else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
-                    {
-                        upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
-                    }
-                }
-                try
-                {
-                    response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
-                }
-                catch
-                {
-                    // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
-                    Log.D("API.APIController", "Unable to handle API response. Leftovers");
-                    loopError = true;
-                    controller?.Errors += 1;
-                    mainWindow?.UpdateTiming();
-                }
-                if (response != null)
-                {
                     total += response.Count;
                     Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
-                    if (response.Count == leftovers)
+                    if (response.Count != Constants.Timing.API_LOOP_COUNT) continue;
+                    // Updating uploaded value for uploaded results.
+                    foreach (TimeResult res in uploaded)
                     {
-                        // Updating uploaded value for uploaded results;
-                        foreach (TimeResult res in uploaded)
+                        res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
+                    }
+                    database.SetUploadedTimingResults(uploaded);
+                }
+                int leftovers = results.Count - (loops * Constants.Timing.API_LOOP_COUNT);
+                if (leftovers > 0 && !loopError)
+                {
+                    response = null;
+                    // Change TimeResults to APIResults
+                    List<ApiResult> upRes = [];
+                    List<TimeResult> uploaded = results.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers);
+                    foreach (TimeResult tr in uploaded)
+                    {
+                        //tr.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
+                        DateTime trStart = waveStartTimes.GetValueOrDefault(tr.RealDistanceName, start);
+                        // only add to upload list if we want to upload everything (NOT Specific)
+                        // or we only want to upload specific distances and the distance is in the
+                        // list of distances we want to upload
+                        if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA != theEvent.EventType && (!theEvent.UploadSpecific || uploadDistances.Contains(tr.DistanceName)))
                         {
-                            res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
+                            upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
                         }
-                        database.SetUploadedTimingResults(uploaded);
+                        // Make sure that DNF entries are not uploaded when timing Backyard Ultra since multiples are generated and
+                        // that info isn't useful to others
+                        else if (Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA == theEvent.EventType && Constants.Timing.TIMERESULT_STATUS_DNF != tr.Status)
+                        {
+                            upRes.Add(new ApiResult(theEvent, tr, trStart, uniquePad));
+                        }
+                    }
+                    try
+                    {
+                        response = await ApiHandlers.UploadResults(api, eventIds[0], eventIds[1], upRes);
+                    }
+                    catch
+                    {
+                        // Error uploading due to network issues most likely. Keep tally of these errors but continue running.
+                        Log.D("API.APIController", "Unable to handle API response. Leftovers");
+                        loopError = true;
+                        controller?.Errors += 1;
+                        mainWindow?.UpdateTiming();
+                    }
+                    if (response != null)
+                    {
+                        total += response.Count;
+                        Log.D("API.APIController", $"Total: {total} Count: {response.Count}");
+                        if (response.Count == leftovers)
+                        {
+                            // Updating uploaded value for uploaded results;
+                            foreach (TimeResult res in uploaded)
+                            {
+                                res.Uploaded = Constants.Timing.TIMERESULT_UPLOADED_TRUE;
+                            }
+                            database.SetUploadedTimingResults(uploaded);
+                        }
+                    }
+                    Log.D("API.APIController", $"Upload finished. Count total: {total}");
+                }
+                if (!loopError && controller != null)
+                {
+                    controller.Errors = 0;
+                }
+            }
+            finally
+            {
+                // Always clear the flag, even if building or sending results throws,
+                // or every later upload would return early.
+                if (ApiLock.TryEnter(3000))
+                {
+                    try
+                    {
+                        isUploading = false;
+                    }
+                    finally
+                    {
+                        ApiLock.Exit();
                     }
                 }
-                Log.D("API.APIController", $"Upload finished. Count total: {total}");
-            }
-            if (!loopError && controller != null)
-            {
-                controller.Errors = 0;
-            }
-            if (ApiLock.TryEnter(3000))
-            {
-                try
+                else
                 {
-                    isUploading = false;
+                    throw new Exception("error grabbing lock to signal completion");
                 }
-                finally
-                {
-                    ApiLock.Exit();
-                }
-            }
-            else
-            {
-                throw new Exception("error grabbing lock to signal completion");
             }
         }
 

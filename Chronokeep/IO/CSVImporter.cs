@@ -18,16 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.IO;
+using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Chronokeep.IO
 {
-    public partial class CsvImporter : IDataImporter
+    public class CsvImporter : IDataImporter
     {
-        [GeneratedRegex("\"[^\"]*\",|[^,]*,|[^,]*$")]
-        private static partial Regex DataRegex();
-
         public ImportData? Data { get; private set; }
         private readonly string filePath;
         protected readonly StreamReader File;
@@ -47,14 +45,7 @@ namespace Chronokeep.IO
 
         protected void ProcessFirstLine(string line)
         {
-            MatchCollection matches = DataRegex().Matches(line);
-            string[] headers = new string[matches.Count];
-            int counter = 0;
-            foreach (Match m in matches)
-            {
-                headers[counter++] = m.Value.Replace('"', ' ').TrimEnd(',').Trim();
-            }
-            Data = new ImportData(headers, filePath, ImportData.FileType.CSV);
+            Data = new ImportData(ParseLine(line), filePath, ImportData.FileType.CSV);
         }
 
         public void FetchData()
@@ -62,17 +53,55 @@ namespace Chronokeep.IO
             Log.D("IO.CSVImporter", "Getting data from file.");
             while (File.ReadLine() is { } line)
             {
-                MatchCollection matches = DataRegex().Matches(line);
-                string[] dataLine = new string[matches.Count];
-                int counter = 0;
-                foreach (Match m in matches)
-                {
-                    string match = m.Value.Replace('"', ' ').Trim().TrimEnd(',');
-                    dataLine[counter++] = match;
-                }
-                Data!.AddData(dataLine);
+                Data!.AddData(ParseLine(line));
             }
             Finish();
+        }
+
+        /// <summary>
+        /// Splits one CSV line into trimmed values. Commas inside double quotes are part of the value,
+        /// and a doubled quote ("") inside a quoted value is a literal quote.
+        /// </summary>
+        internal static string[] ParseLine(string line)
+        {
+            List<string> values = [];
+            StringBuilder current = new();
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (inQuotes)
+                {
+                    if (c == '"' && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        current.Append('"');
+                        i++;
+                    }
+                    else if (c == '"')
+                    {
+                        inQuotes = false;
+                    }
+                    else
+                    {
+                        current.Append(c);
+                    }
+                }
+                else if (c == '"')
+                {
+                    inQuotes = true;
+                }
+                else if (c == ',')
+                {
+                    values.Add(current.ToString().Trim());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+            values.Add(current.ToString().Trim());
+            return [.. values];
         }
 
         public void Finish()

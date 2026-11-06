@@ -54,6 +54,12 @@ namespace Chronokeep.Objects.ChronoKeepAPI
                 Seconds = 0;
                 Milliseconds = 0;
             }
+            else if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNS)
+            {
+                Type = Constants.Timing.API_TYPE_DNS;
+                Seconds = 0;
+                Milliseconds = 0;
+            }
             else
             {
                 string[] split1 = result.Time.Split('.');

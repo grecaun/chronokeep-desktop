@@ -1635,7 +1635,7 @@ namespace Chronokeep.Database.SQLite
                             "name VARCHAR(100) NOT NULL DEFAULT '', " +
                             "url VARCHAR(100) NOT NULL DEFAULT '', " +
                             "enabled INTEGER NOT NULL DEFAULT 0, " +
-                            "UNIQUE(name) ON CONFLICT IGNORE, UNIQUE(url) ON CONFLICT IGNORE;" +
+                            "UNIQUE(name) ON CONFLICT IGNORE, UNIQUE(url) ON CONFLICT IGNORE);" +
                             $"UPDATE settings SET value='72' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         goto case 72;
