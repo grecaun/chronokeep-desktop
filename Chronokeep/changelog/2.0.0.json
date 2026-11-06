@@ -55,6 +55,8 @@
     "Fixed an issue where results were uploaded again on every upload cycle when the event only uploads specific distances or is a backyard ultra with DNF entries.",
     "Fixed an issue where stopping and starting remote reads would stop downloading reads.",
     "Fixed an issue where remote reads could be missed on computers in time zones ahead of UTC.",
-    "Fixed an issue where the announcer stopped adding runners after someone crossed the announcer mat again after the seen window."
+    "Fixed an issue where the announcer stopped adding runners after someone crossed the announcer mat again after the seen window.",
+    "Fixed a typo in the text message sent when a runner reaches a split.",
+    "Fixed an issue where a text message could be sent for a result that wasn't linked to a participant."
   ]
 }

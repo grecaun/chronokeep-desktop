@@ -65,6 +65,17 @@ namespace Chronokeep.Timing
             return worker;
         }
 
+        /// <summary>The text message sent to people subscribed to a runner's results.</summary>
+        internal static string BuildSmsMessage(TimeResult result, Event theEvent, bool multipleDistances, string resultsUrl)
+        {
+            if (Constants.Timing.SEGMENT_FINISH == result.SegmentId)
+            {
+                string distance = multipleDistances ? $" {result.DistanceName}" : "";
+                return $"{result.First} {result.Last} has finished the {theEvent.Year} {theEvent.Name}{distance} in {result.ChipTimeNoMilliseconds}.{resultsUrl} Reply STOP to opt-out.";
+            }
+            return $"{result.First} {result.Last} has reached {result.SegmentName.Trim()} in {result.ChipTimeNoMilliseconds}.{resultsUrl} Reply STOP to opt-out.";
+        }
+
         public static bool NewResultsExist()
         {
             bool output = false;
@@ -485,7 +496,7 @@ namespace Chronokeep.Timing
                                 // and we're within 15 minutes of it happening
                                 if (!Dictionary.DistanceNameDictionary.TryGetValue(result.RealDistanceName,
                                         out Distance? dist) || !dist.SmsEnabled
-                                                            || Constants.Timing.EVENTSPECIFIC_UNKNOWN ==
+                                                            || Constants.Timing.TIMERESULT_DUMMYPERSON ==
                                                             result.EventSpecificId
                                                             || alertsSent.Contains((result.EventSpecificId,
                                                                 result.SegmentId))
@@ -577,17 +588,9 @@ namespace Chronokeep.Timing
                                         // may change their mind later, and
                                         // we still want to be able to send an SMS to them.
                                         // Only add to the database/dictionary if successful.
-                                        string sms;
-                                        if (Constants.Timing.SEGMENT_FINISH == result.SegmentId)
-                                        {
-                                            sms = Dictionary.MainDistances.Count > 1 ? $"{result.First} {result.Last} has finished the {theEvent.Year} {theEvent.Name} {result.DistanceName} in {result.ChipTimeNoMilliseconds}.{resultsUrl} Reply STOP to opt-out." : $"{result.First} {result.Last} has finished the {theEvent.Year} {theEvent.Name} in {result.ChipTimeNoMilliseconds}.{resultsUrl} Reply STOP to opt-out.";
-                                        }
-                                        else
-                                        {
-                                            sms = $"{result.First} {result.Last} has has reached {result.SegmentName.Trim()} in {result.ChipTimeNoMilliseconds}.{resultsUrl} Reply STOP to opt-out.";
-                                        }
-                                        if (result.EventSpecificId == Constants.Timing.EVENTSPECIFIC_UNKNOWN)
+                                        if (result.EventSpecificId == Constants.Timing.TIMERESULT_DUMMYPERSON)
                                             continue;
+                                        string sms = BuildSmsMessage(result, theEvent, Dictionary.MainDistances.Count > 1, resultsUrl);
                                         bool sent = false;
                                         bool networkError = false;
                                         if (result.Anonymous)
