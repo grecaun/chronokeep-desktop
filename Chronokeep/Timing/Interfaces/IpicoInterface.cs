@@ -161,8 +161,8 @@ namespace Chronokeep.Timing.Interfaces
                             locationId,
                             chip,
                             time,
-                            Convert.ToInt32(message.Substring(2, 2)),
-                            message.Length == 36 ? 0 : 1
+                            Convert.ToInt32(message.Substring(2, 2), 16),
+                            message.TrimEnd().Length == 36 ? 0 : 1
                             );
                         if (window != null && window.InDidNotStartMode())
                         {

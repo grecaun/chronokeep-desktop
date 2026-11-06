@@ -41,6 +41,8 @@
     "Fixed an issue in backyard ultras where a runner who never finished their first loop was marked DNF on the second loop.",
     "Fixed an issue in backyard ultras where chips not assigned to a bib were marked DNF after their first loop.",
     "Fixed an issue in backyard ultras where DNF results for known participants weren't linked to the participant.",
-    "Fixed a potential crash in backyard ultras when processing a DNF for a loop that had been started but not finished."
+    "Fixed a potential crash in backyard ultras when processing a DNF for a loop that had been started but not finished.",
+    "Fixed an issue where every read from an IPICO reader was marked as a rewind read.",
+    "Fixed an issue where reads from an IPICO reader with a reader ID containing a letter were dropped."
   ]
 }

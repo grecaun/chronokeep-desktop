@@ -15,6 +15,9 @@ namespace Chronokeep.Test.Timing
     {
         public List<(string Bib, string Chip)> Alarms { get; } = [];
 
+        /// <summary>What InDidNotStartMode() returns.</summary>
+        public bool DnsMode { get; set; }
+
         internal static IMainWindow Create(out FakeMainWindow fake)
         {
             IMainWindow window = Create<IMainWindow, FakeMainWindow>();
@@ -27,6 +30,10 @@ namespace Chronokeep.Test.Timing
             if (targetMethod?.Name == nameof(IMainWindow.NotifyAlarm))
             {
                 Alarms.Add(((string)args![0]!, (string)args[1]!));
+            }
+            if (targetMethod?.Name == nameof(IMainWindow.InDidNotStartMode))
+            {
+                return DnsMode;
             }
             Type? ret = targetMethod?.ReturnType;
             return ret == null || ret == typeof(void) || !ret.IsValueType ? null : Activator.CreateInstance(ret);
