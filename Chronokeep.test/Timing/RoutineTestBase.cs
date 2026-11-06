@@ -18,6 +18,9 @@ namespace Chronokeep.Test.Timing
         /// <summary>What InDidNotStartMode() returns.</summary>
         public bool DnsMode { get; set; }
 
+        /// <summary>The name of every method called on the window, in order.</summary>
+        public List<string> Calls { get; } = [];
+
         internal static IMainWindow Create(out FakeMainWindow fake)
         {
             IMainWindow window = Create<IMainWindow, FakeMainWindow>();
@@ -27,6 +30,10 @@ namespace Chronokeep.Test.Timing
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
+            lock (Calls)
+            {
+                Calls.Add(targetMethod?.Name ?? "");
+            }
             if (targetMethod?.Name == nameof(IMainWindow.NotifyAlarm))
             {
                 Alarms.Add(((string)args![0]!, (string)args[1]!));

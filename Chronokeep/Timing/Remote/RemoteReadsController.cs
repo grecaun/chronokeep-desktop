@@ -93,6 +93,8 @@ namespace Chronokeep.Timing.Remote
                         }
                         running = true;
                         keepAlive = true;
+                        // Always load the reader list on start; the flag is static and a previous run cleared it.
+                        updateReaders = true;
                     }
                     finally
                     {
@@ -181,7 +183,9 @@ namespace Chronokeep.Timing.Remote
                             // a time period we've already requested.
                             if (lastReaderTime.TryGetValue(reader, out DateTime lTime) && lTime >= read.Time)
                                 continue;
-                            lTime = read.Time;
+                            // read.Time is local wall-clock time but labeled UTC; mark it local so the
+                            // next request's start converts to UTC correctly.
+                            lTime = DateTime.SpecifyKind(read.Time, DateTimeKind.Local);
                             lastReaderTime[reader] = lTime;
                         }
                         database.AddChipReads(reads);
