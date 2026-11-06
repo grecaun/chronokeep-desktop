@@ -64,8 +64,9 @@ namespace Chronokeep.IO.HtmlTemplates
                 Constants.Distances.FEET => "feet",
                 _ => "??",
             };
-            pace = Constants.Timing.SecondsToMinuteTime((long)(result.ChipSeconds / distanceValue));
-            paceStr = distance?.DistanceUnit switch
+            // Without a distance value there's no pace to show (dividing by 0 used to print a made-up one).
+            pace = distanceValue > 0 ? Constants.Timing.SecondsToMinuteTime((long)(result.ChipSeconds / distanceValue)) : "";
+            paceStr = distanceValue <= 0 ? "" : distance?.DistanceUnit switch
             {
                 Constants.Distances.KILOMETERS => "min/km",
                 Constants.Distances.METERS => "min/meter",
@@ -208,7 +209,13 @@ namespace Chronokeep.IO.HtmlTemplates
             }
             participantName = result.First;
             time = result.ChipTimeNoMilliseconds;
-            certificateUrl = $"https://cert.chronokeep.com/{result.First} {result.Last}/{eventName}{distanceName}/{time}/{theEvent.LongDate}";
+            // The certificate site reads exactly four path parts and URL-decodes each one,
+            // so encode them in case a name contains '/', '#', '?', '+' or '%'.
+            certificateUrl = "https://cert.chronokeep.com/"
+                + $"{Uri.EscapeDataString($"{result.First} {result.Last}")}/"
+                + $"{Uri.EscapeDataString($"{eventName}{distanceName}")}/"
+                + $"{Uri.EscapeDataString(time)}/"
+                + Uri.EscapeDataString(theEvent.LongDate);
             resultsLink = "";
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (api is { WebUrl.Length: > 1 })

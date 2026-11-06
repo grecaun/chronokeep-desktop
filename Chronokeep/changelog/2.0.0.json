@@ -59,6 +59,8 @@
     "Fixed an issue where the announcer stopped adding runners after someone crossed the announcer mat again after the seen window.",
     "Fixed a typo in the text message sent when a runner reaches a split.",
     "Fixed an issue where a text message could be sent for a result that wasn't linked to a participant.",
-    "Fixed an issue where the update check could fail without saying anything if a release on GitHub wasn't named with a version number."
+    "Fixed an issue where the update check could fail without saying anything if a release on GitHub wasn't named with a version number.",
+    "Fixed an issue where certificate links in results emails were broken when a name, event, or distance had a character like '/' or '#' in it.",
+    "Fixed an issue where printable certificates showed a made-up pace when the distance had no length set. The pace is now left blank."
   ]
 }
