@@ -1057,7 +1057,8 @@ namespace Chronokeep.UI
 
         public void StopHttpServer()
         {
-            httpServer!.Stop();
+            // httpServer is null if starting it failed (for example, no URL reservation on Windows).
+            httpServer?.Stop();
             httpServer = null;
         }
 

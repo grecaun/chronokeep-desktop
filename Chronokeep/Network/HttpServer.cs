@@ -36,6 +36,7 @@ namespace Chronokeep.Network
         private Thread? serverThread;
         private HttpListener? listener;
         private int port;
+        private string host = "*";
         private IdbInterface? database;
         private Event? theEvent;
         private readonly List<TimeResult> finishResults = [];
@@ -60,8 +61,11 @@ namespace Chronokeep.Network
 
         private bool keepAlive = true;
 
-        public HttpServer(IdbInterface database, int port)
+        // host is "*" in the app (any address, which needs a URL reservation on Windows);
+        // tests use "localhost", which doesn't.
+        public HttpServer(IdbInterface database, int port, string host = "*")
         {
+            this.host = host;
             Initialize(database, port);
         }
 
@@ -105,6 +109,10 @@ namespace Chronokeep.Network
                 printSelectCache = null;
                 participantCache.Clear();
                 printableCache.Clear();
+                emailCache.Clear();
+                NumberOverallParticipants.Clear();
+                NumberGenderParticipants.Clear();
+                NumberAgeGroupParticipants.Clear();
                 participantDictionary.Clear();
                 foreach (Participant p in database.GetParticipants(theEvent.Identifier))
                 {
@@ -224,14 +232,17 @@ namespace Chronokeep.Network
                 )
             {
                 Log.D("Network.HttpServer", $"Fetching {filename}");
-                answer = true;
-                // Serve up the file requested.
+                // Serve up the file requested, or a 404 if it isn't embedded.
                 string newName = filename.Replace('/', '.');
                 Log.D("Network.HttpServer", $"Newname is {newName}");
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Chronokeep.IO.HtmlTemplates.{newName}")!)
+                using (Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Chronokeep.IO.HtmlTemplates.{newName}"))
                 {
-                    message = new byte[stream.Length];
-                    stream.ReadExactly(message);
+                    if (stream != null)
+                    {
+                        answer = true;
+                        message = new byte[stream.Length];
+                        stream.ReadExactly(message);
+                    }
                 }
                 if (filename.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
                 {
@@ -295,7 +306,7 @@ namespace Chronokeep.Network
                                         break;
                                     }
                                 }
-                                participantCache[printable] = partCache;
+                                printableCache[printable] = partCache;
                             }
                             message = partCache;
                             context.Response.ContentType = "text/html";
@@ -415,7 +426,7 @@ namespace Chronokeep.Network
 
             // Test to ensure we can listen.
             listener = new HttpListener();
-            listener.Prefixes.Add($"http://*:{port}/");
+            listener.Prefixes.Add($"http://{host}:{port}/");
             listener.Start();
 
             serverThread = new Thread(Listen);

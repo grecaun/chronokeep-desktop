@@ -49,6 +49,8 @@
     "Fixed several issues with CSV imports: an extra blank column was shown, quoted values kept a trailing space, and a quoted value with a comma at the end of a line was split in two.",
     "Fixed an issue where Excel imports dropped rows after a blank row and columns after an empty column.",
     "Fixed an issue where an alarm removed on the alarms page kept going off until the alarms were saved.",
-    "Fixed an issue where a timing system that never finished connecting could take longer than expected to be marked as disconnected."
+    "Fixed an issue where a timing system that never finished connecting could take longer than expected to be marked as disconnected.",
+    "Fixed an issue where clicking Start Web could cause an error instead of showing how to allow the web server when it couldn't start.",
+    "Fixed several issues with the local results web server: viewing a runner's results could break their printable certificate, opening a certificate could replace the runner's results page, participant counts on certificates grew with every refresh, emailed certificates didn't update when results changed, and requests for missing files never got a response."
   ]
 }

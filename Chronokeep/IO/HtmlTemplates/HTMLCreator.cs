@@ -147,7 +147,9 @@ namespace Chronokeep.IO.HtmlTemplates
             List<TimeResult> rList)
         {
             this.theEvent = theEvent;
-            resultList = rList;
+            // Work on a copy: the caller's list is reused (the web server caches it per bib),
+            // and this constructor sorts and removes items.
+            resultList = [.. rList];
             resultList.Sort(TimeResult.CompareBySystemTime);
             foreach (TimeResult result in resultList)
             {

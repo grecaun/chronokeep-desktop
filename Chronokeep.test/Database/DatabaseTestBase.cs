@@ -30,7 +30,7 @@ namespace Chronokeep.Test.Database
             Db.Initialize();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             SQLiteConnection.ClearAllPools();
             GC.Collect();
