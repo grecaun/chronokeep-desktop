@@ -34,7 +34,14 @@ using Participant = Chronokeep.Objects.Registration.Participant;
 
 namespace Chronokeep.Network.Registration
 {
-    public partial class RegistrationWorker(IdbInterface database, IMainWindow mWindow)
+    /// <summary>
+    /// The server the Chronokeep Registration app connects to for adding and updating participants.
+    /// </summary>
+    /// <param name="database">The database to read and save participants in.</param>
+    /// <param name="mWindow">The main window, told when participants change.</param>
+    /// <param name="listenAddress">The address to listen on. Defaults to every address.</param>
+    /// <param name="port">The port to listen on. Defaults to the program's TCP port.</param>
+    public partial class RegistrationWorker(IdbInterface database, IMainWindow mWindow, IPAddress? listenAddress = null, int? port = null)
     {
         private bool running;
         private bool keepalive;
@@ -119,7 +126,7 @@ namespace Chronokeep.Network.Registration
             }
             server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            server.Bind(new IPEndPoint(IPAddress.Any, NetCore.GetTcpPort()));
+            server.Bind(new IPEndPoint(listenAddress ?? IPAddress.Any, port ?? NetCore.GetTcpPort()));
             server.Listen(10);
             clients.Add(server);
             while (running)
@@ -128,8 +135,8 @@ namespace Chronokeep.Network.Registration
                 readList.AddRange(clients);
                 try
                 {
-                    // 5 seconds
-                    Socket.Select(readList, null, null, 5_000_000);
+                    // Half a second, so a request to stop is noticed quickly.
+                    Socket.Select(readList, null, null, 500_000);
                 }
                 catch (Exception e)
                 {
@@ -418,6 +425,7 @@ namespace Chronokeep.Network.Registration
                                                     }
                                                     database.AddParticipants(newParts);
                                                     database.UpdateParticipants(updParts);
+                                                    SendParticipants(theEvent);
                                                     mWindow.UpdateParticipantsFromRegistration();
                                                 }
                                                 catch (Exception e)

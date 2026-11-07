@@ -32,9 +32,19 @@ namespace Chronokeep.Network
         private static string? serverid;
 
         private static bool running;
+        private readonly IPAddress? listenAddress;
+        private readonly int port;
 
-        public ZeroConf(string? name)
+        /// <summary>
+        /// Answers discovery requests from the Chronokeep apps with this computer's name and registration port.
+        /// </summary>
+        /// <param name="name">The server name to give the apps.</param>
+        /// <param name="listenAddress">The address to listen on. Defaults to every address, which also joins the discovery multicast group.</param>
+        /// <param name="port">The port to listen on. Defaults to the discovery port.</param>
+        public ZeroConf(string? name, IPAddress? listenAddress = null, int port = Constants.Network.CHRONOKEEP_ZCONF_PORT)
         {
+            this.listenAddress = listenAddress;
+            this.port = port;
             char[] chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
             char[] serveridChars = new char[10];
             Random rng = new();
@@ -51,10 +61,14 @@ namespace Chronokeep.Network
         {
             running = true;
             udpClient = new UdpClient();
-            IPEndPoint endPoint = new(IPAddress.Any, Constants.Network.CHRONOKEEP_ZCONF_PORT);
+            IPEndPoint endPoint = new(listenAddress ?? IPAddress.Any, port);
             udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            IPAddress multicastAddr = IPAddress.Parse(Constants.Network.CHRONOKEEP_ZCONF_MULTICAST_IP);
-            udpClient.JoinMulticastGroup(multicastAddr);
+            // Only join the multicast group when listening everywhere, a single address (like 127.0.0.1) can't receive it.
+            if (null == listenAddress)
+            {
+                IPAddress multicastAddr = IPAddress.Parse(Constants.Network.CHRONOKEEP_ZCONF_MULTICAST_IP);
+                udpClient.JoinMulticastGroup(multicastAddr);
+            }
             udpClient.Client.Bind(endPoint);
 
             int counter = 0;
@@ -75,9 +89,13 @@ namespace Chronokeep.Network
                         udpClient.Send(outData, outData.Length, endPoint);
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    Log.E("Network.ZeroConf", "Exception thrown - Shutting down.");
+                    // Stop() closes the socket to end the wait for a message, that's not an error.
+                    if (keepAlive)
+                    {
+                        Log.E("Network.ZeroConf", $"Error receiving a discovery request. {e.Message}");
+                    }
                 }
             }
             running = false;

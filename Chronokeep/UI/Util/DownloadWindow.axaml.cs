@@ -52,31 +52,16 @@ namespace Chronokeep.UI.Util
             this.mWindow = mWindow;
             DownloadProgress.IsVisible = false;
             version = v.ToString();
-            if (App.IsWindows)
+            // Only used on Windows, the only system with an installer to download (see Check.Do).
+            downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-setup-{version}.exe";
+            foreach (Assets asset in r.Assets)
             {
-                downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-setup-{version}.exe";
-                foreach (Assets asset in r.Assets)
+                if (asset.BrowserDownloadUrl.Contains(".exe"))
                 {
-                    if (asset.BrowserDownloadUrl.Contains(".exe"))
-                    {
-                        Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
-                        uri = asset.BrowserDownloadUrl;
-                        break;
-                    }
+                    Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
+                    uri = asset.BrowserDownloadUrl;
+                    break;
                 }
-            }
-            else
-            {
-                downloadUri = $"{Directory.GetCurrentDirectory()}\\chronokeep.tar.gz";
-                foreach (Assets asset in r.Assets)
-                {
-                    if (asset.BrowserDownloadUrl.Contains(".tar.gz"))
-                    {
-                        Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
-                        uri = asset.BrowserDownloadUrl;
-                    }
-                }
-                return;
             }
             Activate();
         }
@@ -170,22 +155,11 @@ namespace Chronokeep.UI.Util
                 else if (((string)InstallButton.Content).Equals("Install", StringComparison.OrdinalIgnoreCase))
                 {
                     Log.D("Updates.DownloadWindow", "Install clicked.");
-                    if (App.IsWindows)
-                    {
-                        using Process install = new();
-                        install.StartInfo.FileName = downloadUri;
-                        install.Start();
-                        Close();
-                        mWindow.Exit();
-                    }
-                    else
-                    {
-                        using Process install = new();
-                        install.StartInfo.FileName = "./update.sh";
-                        install.Start();
-                        Close();
-                        mWindow.Exit();
-                    }
+                    using Process install = new();
+                    install.StartInfo.FileName = downloadUri;
+                    install.Start();
+                    Close();
+                    mWindow.Exit();
                 }
                 else
                 {
@@ -216,9 +190,7 @@ namespace Chronokeep.UI.Util
             BackupDatabaseButton.IsVisible = false;
             BackupPanel.IsVisible = true;
             BackupBlock.Text = $"{BackupBlock.Text}\nChecking for old database files.";
-            string dirPath = App.IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
-                : Path.Combine(Directory.GetCurrentDirectory(), "data");
+            string dirPath = ProgramFolders.Data;
             string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);
             Log.D("Updates.DownloadWindow", "Looking for database file.");
             if (!Directory.Exists(dirPath)) return;
@@ -228,6 +200,7 @@ namespace Chronokeep.UI.Util
             {
                 BackupBlock.Text = $"{BackupBlock.Text}\nBacking up database.";
                 File.Copy(path, backup, false);
+                ProgramFolders.ShareFile(backup);
                 BackupBlock.Text = $"{BackupBlock.Text}\n{backup}";
             }
             catch

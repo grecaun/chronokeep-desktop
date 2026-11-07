@@ -104,10 +104,7 @@ namespace Chronokeep.Constants
             // Settings 2
             if (database.GetAppSetting(DEFAULT_EXPORT_DIR) == null)
             {
-                string dirPath = App.IsWindows ?
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), PROGRAM_DIR, "exports")
-                    : Path.Combine(Directory.GetCurrentDirectory(), "exports");
-                database.SetAppSetting(DEFAULT_EXPORT_DIR, dirPath);
+                database.SetAppSetting(DEFAULT_EXPORT_DIR, Helpers.ProgramFolders.Exports);
             }
             if (database.GetAppSetting(DEFAULT_TIMING_SYSTEM) == null)
             {

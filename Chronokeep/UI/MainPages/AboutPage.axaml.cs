@@ -87,51 +87,25 @@ public partial class AboutPage : UserControl, IMainPage
         clw.Show();
     }
 
-    private async void OpenDataFolder_Click(object? sender, RoutedEventArgs e)
+    private void OpenDataFolder_Click(object? sender, RoutedEventArgs e)
     {
-        try
-        {
-            string dirPath = App.IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
-                : Path.Combine(Directory.GetCurrentDirectory(), "data/");
-            if (!Directory.Exists(dirPath))
-            {
-                return;
-            }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start("explorer", dirPath);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                using Process dbusShowItemsProcess = new();
-                dbusShowItemsProcess.StartInfo = new ProcessStartInfo
-                {
-                    FileName = "dbus-send",
-                    Arguments = $"--print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"file://{dirPath}\" string:\"\"",
-                    UseShellExecute = true
-                };
-                dbusShowItemsProcess.Start();
-                await dbusShowItemsProcess.WaitForExitAsync();
-                if (dbusShowItemsProcess.ExitCode != 0)
-                {
-                    Log.E("UI.MainPages.AboutPage", "Unable to open data directory.");
-                }
-            }
-        }
-        catch (Exception)
-        {
-            Log.E("UI.MainPages.AboutPage", "Error opening data directory.");
-        }
+        OpenFolder(ProgramFolders.Data, "data");
     }
 
-    private async void OpenLogsFolder_Click(object? sender, RoutedEventArgs e)
+    private void OpenLogsFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        OpenFolder(ProgramFolders.Logs, "logs");
+    }
+
+    /// <summary>
+    /// Opens a folder in the computer's file manager.
+    /// </summary>
+    /// <param name="dirPath">The folder to open. Nothing happens if it doesn't exist.</param>
+    /// <param name="name">What the folder is called in error messages.</param>
+    private static async void OpenFolder(string dirPath, string name)
     {
         try
         {
-            string dirPath = App.IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
-                : Path.Combine(Directory.GetCurrentDirectory(), "logs/");
             if (!Directory.Exists(dirPath))
             {
                 return;
@@ -139,6 +113,23 @@ public partial class AboutPage : UserControl, IMainPage
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 Process.Start("explorer", dirPath);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // "open" shows a folder in the Finder.
+                using Process openProcess = new();
+                openProcess.StartInfo = new ProcessStartInfo
+                {
+                    FileName = "open",
+                    UseShellExecute = false
+                };
+                openProcess.StartInfo.ArgumentList.Add(dirPath);
+                openProcess.Start();
+                await openProcess.WaitForExitAsync();
+                if (0 != openProcess.ExitCode)
+                {
+                    Log.E("UI.MainPages.AboutPage", $"Unable to open {name} directory.");
+                }
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -151,15 +142,15 @@ public partial class AboutPage : UserControl, IMainPage
                 };
                 dbusShowItemsProcess.Start();
                 await dbusShowItemsProcess.WaitForExitAsync();
-                if (dbusShowItemsProcess.ExitCode != 0)
+                if (0 != dbusShowItemsProcess.ExitCode)
                 {
-                    Log.E("UI.MainPages.AboutPage", "Unable to open data directory.");
+                    Log.E("UI.MainPages.AboutPage", $"Unable to open {name} directory.");
                 }
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Log.E("UI.MainPages.AboutPage", "Error opening data directory.");
+            Log.E("UI.MainPages.AboutPage", $"Error opening {name} directory. {e.Message}");
         }
     }
 }

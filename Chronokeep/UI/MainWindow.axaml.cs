@@ -169,20 +169,27 @@ namespace Chronokeep.UI
                     }
                 }
             }
-            string dirPath = App.IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR)
-                : Path.Combine(Directory.GetCurrentDirectory(), "data");
+            string dirPath = ProgramFolders.Data;
             string path = Path.Combine(dirPath, DATABASE_FILE_NAME);
             Log.D("UI.MainWindow", "Looking for database file.");
-            if (!Directory.Exists(dirPath))
+            if (!ProgramFolders.CreateFolder(dirPath) || !ProgramFolders.CanWrite(dirPath))
             {
-                Log.D("UI.MainWindow", "Creating directory.");
-                Directory.CreateDirectory(dirPath);
+                DialogBox.Show(ProgramFolders.FolderProblemMessage(dirPath));
+                try
+                {
+                    Close();
+                }
+                catch (Exception e)
+                {
+                    Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
+                }
+                return;
             }
             if (!File.Exists(path))
             {
                 Log.D("UI.MainWindow", "Creating database file.");
                 SQLiteConnection.CreateFile(path);
+                ProgramFolders.ShareFile(path);
             }
             database = MemStore.MemStore.GetMemStore(new SqLiteInterface(path));
             try

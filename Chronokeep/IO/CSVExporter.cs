@@ -31,13 +31,17 @@ namespace Chronokeep.IO
 
         public void ExportData(string path)
         {
-            using FileStream outFile = File.Create(path);
-            using StreamWriter outWriter = new StreamWriter(outFile);
-            outWriter.WriteLine(format, headers);
-            foreach (object[] line in data)
+            using (FileStream outFile = File.Create(path))
             {
-                outWriter.WriteLine(format, [.. line.Select(x => x.ToString())]);
+                using StreamWriter outWriter = new StreamWriter(outFile);
+                outWriter.WriteLine(format, headers);
+                foreach (object[] line in data)
+                {
+                    outWriter.WriteLine(format, [.. line.Select(x => x.ToString())]);
+                }
             }
+            // Let every user on the computer open or replace the export.
+            ProgramFolders.ShareFile(path);
         }
 
         public Utils.FileType FileType()

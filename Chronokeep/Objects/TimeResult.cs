@@ -713,12 +713,15 @@ namespace Chronokeep.Objects
 
         public static SmsState SendSmsAlert(string phone, string sms)
         {
-            if (GlobalVars.TwilioCredentials.AccountSid.Length < 1 || GlobalVars.TwilioCredentials.AuthToken.Length < 1)
+            // Texting hasn't been set up, or our own phone number isn't valid. +15555551234 is a valid phone.
+            if (GlobalVars.TwilioCredentials.AccountSid.Length < 1
+                || GlobalVars.TwilioCredentials.AuthToken.Length < 1
+                || 12 != GlobalVars.TwilioCredentials.PhoneNumber.Length)
             {
-                return SmsState.Invalid;
+                return SmsState.NotSetUp;
             }
-            // Invalid length. +15555551234 is a valid phone
-            if (phone.Length != 12 || GlobalVars.TwilioCredentials.PhoneNumber.Length != 12)
+            // Invalid length.
+            if (12 != phone.Length)
             {
                 return SmsState.Invalid;
             }
@@ -771,7 +774,9 @@ namespace Chronokeep.Objects
             Success,
             AddToBanned,
             Invalid,
-            NetworkError
+            NetworkError,
+            // Texting isn't set up, so the message should be tried again once it is.
+            NotSetUp
         }
     }
 }

@@ -75,6 +75,22 @@ namespace Chronokeep.Test.Logic
         }
 
         [Fact]
+        public void ReleasePage_UsesTheReleasesOwnPage()
+        {
+            GithubRelease r = new() { HtmlUrl = "https://github.com/grecaun/chronokeep-desktop/releases/tag/v2.0.1" };
+            Assert.Equal("https://github.com/grecaun/chronokeep-desktop/releases/tag/v2.0.1", Check.ReleasePage(r));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("javascript:alert(1)")]
+        [InlineData("https://example.com/not-github")]
+        public void ReleasePage_WithoutAGithubPage_UsesTheReleasesList(string htmlUrl)
+        {
+            Assert.Equal("https://github.com/grecaun/chronokeep-desktop/releases", Check.ReleasePage(new GithubRelease { HtmlUrl = htmlUrl }));
+        }
+
+        [Fact]
         public void FindLatest_NothingUsable_ReturnsNoRelease()
         {
             var (release, version) = Check.FindLatest([Release("v3.0.0", draft: true)]);

@@ -73,244 +73,26 @@ public partial class PrintPage : UserControl, ISubPage
 
     private string GetOverallPrintableDocument(List<string> distances)
     {
-        // Get all results for the race
-        List<TimeResult> results = database.GetTimingResults(theEvent!.Identifier);
-        // Remove all unknown participants
-        results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
-        results.RemoveAll(x => x.DistanceName.Length < 1);
-        // REMOVE SOME DEPENDING ON WHO THEY WANT
-        if (distances.Count > 0)
-        {
-            results.RemoveAll(x => !distances.Contains(x.DistanceName));
-        }
-        // remove all segments that are not finish segments
-        results.RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-        // if we're a time based event, exclude all but the last result
-        if (theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
-        {
-            Dictionary<string, TimeResult> lastResult = [];
-            foreach (TimeResult individual in results)
-            {
-                if (lastResult.TryGetValue(individual.ParticipantName, out TimeResult? oLResult))
-                {
-                    if (oLResult.Occurrence < individual.Occurrence)
-                    {
-                        lastResult[individual.ParticipantName] = individual;
-                    }
-                }
-                else
-                {
-                    lastResult[individual.ParticipantName] = individual;
-                }
-            }
-            results = [.. lastResult.Values];
-        }
-        Dictionary<string, List<TimeResult>> distanceResults = [];
-        Dictionary<string, List<TimeResult>> dnfResultDictionary = [];
-        foreach (TimeResult result in results)
-        {
-            if (!distanceResults.TryGetValue(result.DistanceName, out List<TimeResult>? oDistResultList))
-            {
-                oDistResultList = [];
-                distanceResults[result.DistanceName] = oDistResultList;
-            }
-            if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
-            {
-                if (!dnfResultDictionary.TryGetValue(result.DistanceName, out List<TimeResult>? oDnfResList))
-                {
-                    oDnfResList = [];
-                    dnfResultDictionary[result.DistanceName] = oDnfResList;
-                }
-
-                oDnfResList.Add(result);
-            }
-            else
-            {
-                oDistResultList.Add(result);
-            }
-        }
-        foreach (string divName in distanceResults.Keys.OrderBy(i => i))
-        {
-            // get rid of all non-finish segments
-            distanceResults[divName].RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-            // sort by distance place
-            distanceResults[divName].Sort(TimeResult.CompareByDistancePlace);
-        }
-        ResultsPrintableOverall output = new(theEvent, distanceResults, dnfResultDictionary);
+        (Dictionary<string, List<TimeResult>> distanceResults, Dictionary<string, List<TimeResult>> dnfResults) =
+            PrintableResults.Overall(database.GetTimingResults(theEvent!.Identifier), theEvent, distances);
+        ResultsPrintableOverall output = new(theEvent, distanceResults, dnfResults);
         return output.TransformText();
     }
 
     private string GetGenderPrintableDocument(List<string> distances)
     {
-        // Get all finish results for the race
-        List<TimeResult> results = database.GetTimingResults(theEvent!.Identifier);
-        // Remove all unknown participants
-        results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
-        results.RemoveAll(x => x.DistanceName.Length < 1);
-        // REMOVE SOME DEPENDING ON WHO THEY WANT
-        if (distances.Count > 0)
-        {
-            results.RemoveAll(x => !distances.Contains(x.DistanceName));
-        }
-        // remove all segments that are not finish segments
-        results.RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-        // remove all results without a gender specified
-        results.RemoveAll(x => x.Gender == "Not Specified");
-        // if we're a time based event, exclude all but the last result
-        if (theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
-        {
-            Dictionary<string, TimeResult> lastResult = [];
-            foreach (TimeResult individual in results)
-            {
-                if (lastResult.TryGetValue(individual.ParticipantName, out TimeResult? oLResult))
-                {
-                    if (oLResult.Occurrence < individual.Occurrence)
-                    {
-                        lastResult[individual.ParticipantName] = individual;
-                    }
-                }
-                else
-                {
-                    lastResult[individual.ParticipantName] = individual;
-                }
-            }
-            results = [.. lastResult.Values];
-        }
-        // separate each grouping by distance, then by gender
-        Dictionary<string, Dictionary<string, List<TimeResult>>> distanceResults = [];
-        Dictionary<string, Dictionary<string, List<TimeResult>>> dnfResultsDictionary = [];
-        foreach (TimeResult result in results)
-        {
-            if (!distanceResults.TryGetValue(result.DistanceName, out Dictionary<string, List<TimeResult>>? oDistResDict))
-            {
-                oDistResDict = [];
-                distanceResults[result.DistanceName] = oDistResDict;
-            }
-            if (!oDistResDict.TryGetValue(result.Gender, out List<TimeResult>? oDistGenderResList))
-            {
-                oDistGenderResList = [];
-                oDistResDict[result.Gender] = oDistGenderResList;
-            }
-            if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
-            {
-                if (!dnfResultsDictionary.TryGetValue(result.DistanceName, out Dictionary<string, List<TimeResult>>? oDnfResDict))
-                {
-                    oDnfResDict = [];
-                    dnfResultsDictionary[result.DistanceName] = oDnfResDict;
-                }
-                if (!oDnfResDict.TryGetValue(result.Gender, out List<TimeResult>? oDnfGndResList))
-                {
-                    oDnfGndResList = [];
-                    oDnfResDict[result.Gender] = oDnfGndResList;
-                }
-
-                oDnfGndResList.Add(result);
-            }
-            else
-            {
-                oDistGenderResList.Add(result);
-            }
-        }
-        foreach (string divName in distanceResults.Keys.OrderBy(i => i))
-        {
-            foreach (string gender in distanceResults[divName].Keys)
-            {
-                // get rid of non-finish results
-                distanceResults[divName][gender].RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-                // sort results
-                distanceResults[divName][gender].Sort(TimeResult.CompareByDistancePlace);
-            }
-        }
-        ResultsPrintableGender output = new(theEvent, distanceResults, dnfResultsDictionary);
+        (Dictionary<string, Dictionary<string, List<TimeResult>>> distanceResults, Dictionary<string, Dictionary<string, List<TimeResult>>> dnfResults) =
+            PrintableResults.ByGender(database.GetTimingResults(theEvent!.Identifier), theEvent, distances);
+        ResultsPrintableGender output = new(theEvent, distanceResults, dnfResults);
         return output.TransformText();
     }
 
     private string GetAgeGroupPrintableDocument(List<string> distances)
     {
-        // Get all the age groups for the race
-        Dictionary<int, AgeGroup> ageGroups = database.GetAgeGroups(theEvent!.Identifier).ToDictionary(x => x.GroupId, x => x);
-        // Add an age group for our unknown age people/
-        ageGroups[Constants.Timing.TIMERESULT_DUMMYAGEGROUP] = new AgeGroup(theEvent.Identifier, Constants.Timing.COMMON_AGEGROUPS_DISTANCEID, -1, 3000);
-        // Get all finish results for the race
-        List<TimeResult> results = database.GetTimingResults(theEvent.Identifier);
-        // Remove all unknown participants
-        results.RemoveAll(x => x.Bib == Constants.Timing.CHIPREAD_DUMMYBIB);
-        results.RemoveAll(x => x.DistanceName.Length < 1);
-        // REMOVE SOME DEPENDING ON WHO THEY WANT
-        if (distances.Count > 0)
-        {
-            results.RemoveAll(x => !distances.Contains(x.DistanceName));
-        }
-        // remove all segments that are not finish segments
-        results.RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-        // remove all results without a gender specified
-        results.RemoveAll(x => x.Gender == "Not Specified");
-        // if we're a time based event, exclude all but the last result
-        if (theEvent.EventType == Constants.Timing.EVENT_TYPE_TIME)
-        {
-            Dictionary<string, TimeResult> lastResult = [];
-            foreach (TimeResult individual in results)
-            {
-                if (lastResult.TryGetValue(individual.ParticipantName, out TimeResult? oLastRes))
-                {
-                    if (oLastRes.Occurrence < individual.Occurrence)
-                    {
-                        lastResult[individual.ParticipantName] = individual;
-                    }
-                }
-                else
-                {
-                    lastResult[individual.ParticipantName] = individual;
-                }
-            }
-            results = [.. lastResult.Values];
-        }
-        Dictionary<string, Dictionary<(int, string), List<TimeResult>>> distanceResults = [];
-        Dictionary<string, Dictionary<(int, string), List<TimeResult>>> dnfResultsDictionary = [];
-        foreach (TimeResult result in results)
-        {
-            if (!distanceResults.TryGetValue(result.DistanceName, out Dictionary<(int, string), List<TimeResult>>? oDistResDict))
-            {
-                oDistResDict = [];
-                distanceResults[result.DistanceName] = oDistResDict;
-            }
-            if (!oDistResDict.TryGetValue((result.AgeGroupId, result.Gender), out List<TimeResult>? oDistResList))
-            {
-                oDistResList = [];
-                oDistResDict[(result.AgeGroupId, result.Gender)] = oDistResList;
-            }
-            if (result.Status == Constants.Timing.TIMERESULT_STATUS_DNF)
-            {
-                if (!dnfResultsDictionary.TryGetValue(result.DistanceName, out Dictionary<(int, string), List<TimeResult>>? oDnfResDict))
-                {
-                    oDnfResDict = [];
-                    dnfResultsDictionary[result.DistanceName] = oDnfResDict;
-                }
-                if (!oDnfResDict.TryGetValue((result.AgeGroupId, result.Gender), out List<TimeResult>? oDnfResList))
-                {
-                    oDnfResList = [];
-                    oDnfResDict[(result.AgeGroupId, result.Gender)] = oDnfResList;
-                }
-                oDnfResList.Add(result);
-            }
-            else
-            {
-                oDistResList.Add(result);
-            }
-        }
-        foreach (string divName in distanceResults.Keys.OrderBy(i => i))
-        {
-            Dictionary<(int, string), List<TimeResult>> lDistResDict = distanceResults[divName];
-            foreach ((int ag, string gender) in lDistResDict.Keys)
-            {
-                List<TimeResult> lDistResList = lDistResDict[(ag, gender)];
-                // get rid of non-finish results
-                lDistResList.RemoveAll(x => x.SegmentId != Constants.Timing.SEGMENT_FINISH);
-                // sort results
-                lDistResList.Sort(TimeResult.CompareByDistancePlace);
-            }
-        }
-        ResultsPrintableAgeGroup output = new(theEvent, distanceResults, dnfResultsDictionary, ageGroups);
+        Dictionary<int, AgeGroup> ageGroups = PrintableResults.AgeGroups(database.GetAgeGroups(theEvent!.Identifier), theEvent);
+        (Dictionary<string, Dictionary<(int, string), List<TimeResult>>> distanceResults, Dictionary<string, Dictionary<(int, string), List<TimeResult>>> dnfResults) =
+            PrintableResults.ByAgeGroup(database.GetTimingResults(theEvent.Identifier), theEvent, distances);
+        ResultsPrintableAgeGroup output = new(theEvent, distanceResults, dnfResults, ageGroups);
         return output.TransformText();
     }
 
@@ -381,7 +163,8 @@ public partial class PrintPage : UserControl, ISubPage
                 string weasyName;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    weasyName = Path.Combine(Directory.GetCurrentDirectory(), "weasyprint.exe");
+                    // weasyprint.exe ships in the program's folder, which isn't always the current folder.
+                    weasyName = Path.Combine(AppContext.BaseDirectory, "weasyprint.exe");
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
@@ -412,20 +195,26 @@ public partial class PrintPage : UserControl, ISubPage
                 await streamWriter.WriteAsync(htmlString);
                 streamWriter.Close();
                 // Delete old file if it exists.
-                string filePath = file.TryGetLocalPath()!.Replace(' ', '-');
+                // Only the file name gets dashes in place of spaces, the folder it's saved in has to stay the same.
+                string chosenPath = file.TryGetLocalPath()!;
+                string filePath = Path.Combine(Path.GetDirectoryName(chosenPath) ?? "", Path.GetFileName(chosenPath).Replace(' ', '-'));
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
                 // Use weasyprint to convert our temp html file to a saved PDF file.
+                // ArgumentList quotes each path, so paths with spaces work.
                 using Process createPdf = new();
                 createPdf.StartInfo.FileName = weasyName;
-                createPdf.StartInfo.Arguments = $" {tmpFile} {filePath}";
+                createPdf.StartInfo.ArgumentList.Add(tmpFile);
+                createPdf.StartInfo.ArgumentList.Add(filePath);
                 createPdf.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 createPdf.Start();
                 // wait for it to exit then kill it, even if the wait timed out
                 await createPdf.WaitForExitAsync();
                 createPdf.Close();
+                // Let every user on the computer open or replace the PDF.
+                ProgramFolders.ShareFile(filePath);
                 // delete old file
                 File.Delete(tmpFile);
                 // DialogBox.Show("File saved.");

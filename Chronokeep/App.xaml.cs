@@ -59,11 +59,12 @@ namespace Chronokeep
                 options.Release = $"chronokeep-windows@{gitVersion}";
             });
             Log.D("UI.MainWindow", "Looking for log directory.");
-            string logDirPath = IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
-                : Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            Directory.CreateDirectory(logDirPath);
-            Globals.ErrorLogPath = Path.Combine(logDirPath, $"{DateTime.Now:yyyyMMdd}_error_log.txt");
+            string logDirPath = ProgramFolders.Logs;
+            // Without a logs folder errors just aren't written, the program can still run.
+            if (ProgramFolders.CreateFolder(logDirPath))
+            {
+                Globals.ErrorLogPath = Path.Combine(logDirPath, $"{DateTime.Now:yyyyMMdd}_error_log.txt");
+            }
             AvaloniaXamlLoader.Load(this);
         }
 
@@ -108,19 +109,20 @@ namespace Chronokeep
 
         private static void CaptureException(Exception ex)
         {
-            string logDirPath = IsWindows ?
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Constants.Settings.PROGRAM_DIR, "logs")
-                : Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            Directory.CreateDirectory(logDirPath);
-            string date = DateTime.Now.ToString("yyyyMMdd");
-            string logPath = Path.Combine(logDirPath, $"{date}_crash_0.txt");
-            int ix = 0;
-            while (File.Exists(logPath))
+            string logDirPath = ProgramFolders.Logs;
+            if (ProgramFolders.CreateFolder(logDirPath))
             {
-                ix++;
-                logPath = Path.Combine(logDirPath, $"{date}_crash_{ix}.txt");
+                string date = DateTime.Now.ToString("yyyyMMdd");
+                string logPath = Path.Combine(logDirPath, $"{date}_crash_0.txt");
+                int ix = 0;
+                while (File.Exists(logPath))
+                {
+                    ix++;
+                    logPath = Path.Combine(logDirPath, $"{date}_crash_{ix}.txt");
+                }
+                File.WriteAllText(logPath, ex.StackTrace);
+                ProgramFolders.ShareFile(logPath);
             }
-            File.WriteAllText(logPath, ex.StackTrace);
             SentrySdk.CaptureException(ex);
         }
     }

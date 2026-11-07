@@ -73,16 +73,20 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         }
         OneWindow.ReleaseMutex();
 
-        string dirPath = App.IsWindows ?
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Settings.PROGRAM_DIR)
-            : Path.Combine(Directory.GetCurrentDirectory(), "data");
+        string dirPath = ProgramFolders.Data;
         string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);
         Log.D("UI.MinWindow", "Looking for database file.");
-        Directory.CreateDirectory(dirPath);
+        if (!ProgramFolders.CreateFolder(dirPath) || !ProgramFolders.CanWrite(dirPath))
+        {
+            DialogBox.AsyncShow(ProgramFolders.FolderProblemMessage(dirPath));
+            Close();
+            return;
+        }
         if (!File.Exists(path))
         {
             Log.D("UI.MinWindow", "Creating database file.");
             SQLiteConnection.CreateFile(path);
+            ProgramFolders.ShareFile(path);
         }
         database = MemStore.MemStore.GetMemStore(new SqLiteInterface(path));
         try

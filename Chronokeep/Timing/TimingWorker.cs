@@ -65,6 +65,227 @@ namespace Chronokeep.Timing
             return worker;
         }
 
+        /// <summary>
+        /// Finds the results that could get a text message.
+        /// </summary>
+        /// <param name="results">The event's results.</param>
+        /// <param name="distances">The event's distances by name.</param>
+        /// <param name="alertsSent">The (event specific id, segment id) pairs that already had a text sent.</param>
+        /// <param name="fifteenPrior">The time 15 minutes ago. Results from before then are too old to send.</param>
+        /// <returns>
+        /// Finish and split results for known participants in distances with text alerts turned on,
+        /// that haven't had a text sent and happened in the last 15 minutes.
+        /// </returns>
+        internal static List<TimeResult> GetSmsResults(
+            List<TimeResult> results,
+            Dictionary<string, Distance> distances,
+            HashSet<(int, int)> alertsSent,
+            DateTime fifteenPrior
+            )
+        {
+            List<TimeResult> output = [];
+            foreach (TimeResult result in results)
+            {
+                // verify the distance is set to allow sms alerts and the runner hasn't been notified already,
+                // and we're within 15 minutes of it happening
+                if (!distances.TryGetValue(result.RealDistanceName, out Distance? dist)
+                    || !dist.SmsEnabled
+                    || Constants.Timing.TIMERESULT_DUMMYPERSON == result.EventSpecificId
+                    || alertsSent.Contains((result.EventSpecificId, result.SegmentId))
+                    || result.SystemTime.CompareTo(fifteenPrior) <= 0)
+                {
+                    continue;
+                }
+                if (Constants.Timing.SEGMENT_START != result.SegmentId && Constants.Timing.SEGMENT_NONE != result.SegmentId)
+                {
+                    output.Add(result);
+                }
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// Builds a lookup from a participant's name to their bib, used for subscriptions that only have a name.
+        /// </summary>
+        /// <param name="participants">The event's participants.</param>
+        /// <returns>
+        /// Bibs keyed by first and last name, lower case with everything but letters removed. Names shared by more
+        /// than one participant are left out since we can't tell those people apart.
+        /// </returns>
+        internal static Dictionary<string, string> GetNameToBib(List<Participant> participants)
+        {
+            Dictionary<string, string> output = [];
+            HashSet<string> duplicateNames = [];
+            foreach (Participant p in participants)
+            {
+                string name = p.FirstName.ToLower() + p.LastName.ToLower();
+                name = AlphaOnly().Replace(name, string.Empty);
+                if (output.ContainsKey(name))
+                {
+                    duplicateNames.Add(name);
+                }
+                output[name] = p.Bib;
+            }
+            foreach (string dup in duplicateNames)
+            {
+                output.Remove(dup);
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// Works out which phone numbers are subscribed to each bib.
+        /// </summary>
+        /// <param name="subscriptions">The event's text subscriptions.</param>
+        /// <param name="nameToBib">Bibs by name (see GetNameToBib), for subscriptions without a bib.</param>
+        /// <returns>The valid phone numbers subscribed to each bib.</returns>
+        internal static Dictionary<string, HashSet<string>> GetBibToPhones(List<ApiSmsSubscription> subscriptions, Dictionary<string, string> nameToBib)
+        {
+            Dictionary<string, HashSet<string>> output = [];
+            foreach (ApiSmsSubscription sub in subscriptions)
+            {
+                string bib = sub.Bib;
+                string phone = GlobalVars.GetValidPhone(sub.Phone);
+                if (bib.Length < 1 && sub.First.Length + sub.Last.Length > 0)
+                {
+                    string name = sub.First.ToLower() + sub.Last.ToLower();
+                    name = AlphaOnly().Replace(name, string.Empty);
+                    if (nameToBib.TryGetValue(name, out string? bibFromName))
+                    {
+                        bib = bibFromName;
+                    }
+                }
+                if (bib.Length <= 0 || phone.Length <= 0)
+                {
+                    continue;
+                }
+                if (!output.TryGetValue(bib, out HashSet<string>? phoneSet))
+                {
+                    phoneSet = [];
+                    output[bib] = phoneSet;
+                }
+                phoneSet.Add(phone);
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// Matches results to the phone numbers that should get a text for them.
+        /// </summary>
+        /// <param name="smsResults">The results that could get a text (see GetSmsResults).</param>
+        /// <param name="bibToPhones">The phone numbers subscribed to each bib (see GetBibToPhones).</param>
+        /// <returns>The phone numbers to text for each result. Results with no subscribers are left out.</returns>
+        internal static Dictionary<TimeResult, HashSet<string>> GetPhonesToText(List<TimeResult> smsResults, Dictionary<string, HashSet<string>> bibToPhones)
+        {
+            Dictionary<TimeResult, HashSet<string>> output = [];
+            foreach (TimeResult result in smsResults)
+            {
+                if (!bibToPhones.TryGetValue(result.Bib, out HashSet<string>? phonesFromDict))
+                {
+                    continue;
+                }
+                foreach (string phone in phonesFromDict)
+                {
+                    if (!output.TryGetValue(result, out HashSet<string>? phones))
+                    {
+                        phones = [];
+                        output[result] = phones;
+                    }
+                    phones.Add(phone);
+                }
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// The "More results" link added to text messages.
+        /// </summary>
+        /// <param name="theEvent">The event.</param>
+        /// <param name="api">The results API the event uploads to, if any.</param>
+        /// <returns>The link text, or an empty string if the API has no website.</returns>
+        internal static string GetResultsUrl(Event theEvent, ApiObject? api)
+        {
+            string output = "";
+            if (api != null && api.WebUrl.Length > 0)
+            {
+                string[] eventIds = theEvent.ApiEventId.Split(',');
+                output = eventIds.Length == 2 ? $" More results @ {api.WebUrl}results/{eventIds[0]}/{eventIds[1]}." : $" More results @ {api.WebUrl}.";
+            }
+            return output;
+        }
+
+        /// <summary>
+        /// Sends the text messages and records which results have been handled.
+        /// </summary>
+        /// <param name="toSendTo">The phone numbers to text for each result (see GetPhonesToText).</param>
+        /// <param name="theEvent">The event.</param>
+        /// <param name="multipleDistances">Whether the event has more than one main distance, so the message names the distance.</param>
+        /// <param name="resultsUrl">The link text to add (see GetResultsUrl).</param>
+        /// <param name="database">The database the sent alerts are saved in.</param>
+        /// <param name="sendSms">Sends one message to one phone number and returns how it went.</param>
+        /// <param name="banPhone">Adds a phone number to the banned list.</param>
+        internal static void SendSmsAlerts(
+            Dictionary<TimeResult, HashSet<string>> toSendTo,
+            Event theEvent,
+            bool multipleDistances,
+            string resultsUrl,
+            IdbInterface database,
+            Func<string, string, SmsState> sendSms,
+            Action<string> banPhone
+            )
+        {
+            foreach (TimeResult result in toSendTo.Keys)
+            {
+                // Only send alert if participant wants it sent
+                // Do not add to the AlertsSent database because they
+                // may change their mind later, and
+                // we still want to be able to send an SMS to them.
+                // Only add to the database/dictionary if successful.
+                if (Constants.Timing.TIMERESULT_DUMMYPERSON == result.EventSpecificId)
+                {
+                    continue;
+                }
+                string sms = BuildSmsMessage(result, theEvent, multipleDistances, resultsUrl);
+                bool sent = false;
+                bool tryAgain = false;
+                if (result.Anonymous)
+                {
+                    sent = true;
+                }
+                else
+                {
+                    foreach (string phone in toSendTo[result])
+                    {
+                        SmsState status = sendSms(phone, sms);
+                        switch (status)
+                        {
+                            // add to banned phones list
+                            case SmsState.AddToBanned:
+                                banPhone(phone);
+                                break;
+                            case SmsState.Success:
+                                sent = true;
+                                break;
+                            // Try again later if the message couldn't go out for now.
+                            case SmsState.NetworkError:
+                            case SmsState.NotSetUp:
+                                tryAgain = true;
+                                break;
+                            case SmsState.None:
+                            case SmsState.Invalid:
+                            default:
+                                break;
+                        }
+                    }
+                }
+                // update status if we sent a message out, or there's no reason to try again
+                if (sent || !tryAgain)
+                {
+                    database.AddSmsAlert(theEvent.Identifier, result.EventSpecificId, result.SegmentId);
+                }
+            }
+        }
+
         /// <summary>The text message sent to people subscribed to a runner's results.</summary>
         internal static string BuildSmsMessage(TimeResult result, Event theEvent, bool multipleDistances, string resultsUrl)
         {
@@ -466,48 +687,8 @@ namespace Chronokeep.Timing
                             DateTime fifteenPrior = now.AddMinutes(-15);
                             // Changing alerts hashset to locally based and pulled from the database each time we try to send alerts
                             HashSet<(int, int)> alertsSent = [.. alerts];
-                            Dictionary<TimeResult, HashSet<string>> toSendTo = [];
-                            Dictionary<string, string> nameToBibDict = [];
-                            HashSet<string> duplicateNames = [];
-                            // Build dictionary to translate names to bibs for alerts.
-                            foreach (Participant p in database.GetParticipants(theEvent.Identifier))
-                            {
-                                string name = p.FirstName.ToLower() + p.LastName.ToLower();
-                                name = AlphaOnly().Replace(name, string.Empty);
-                                // keep track of duplicate names
-                                // because we can't differentiate between those people
-                                // so we won't send those out at all
-                                if (nameToBibDict.ContainsKey(name))
-                                {
-                                    duplicateNames.Add(name);
-                                }
-                                nameToBibDict[name] = p.Bib;
-                            }
-                            // remove duplicates
-                            foreach (string dup in duplicateNames)
-                            {
-                                nameToBibDict.Remove(dup);
-                            }
                             // Check the finish results for results we can send SMS messages for.
-                            List<TimeResult> smsResults = [];
-                            foreach (TimeResult result in database.GetTimingResults(theEvent.Identifier))
-                            {
-                                // verify the distance is set to allow sms alerts and the runner hasn't been notified already,
-                                // and we're within 15 minutes of it happening
-                                if (!Dictionary.DistanceNameDictionary.TryGetValue(result.RealDistanceName,
-                                        out Distance? dist) || !dist.SmsEnabled
-                                                            || Constants.Timing.TIMERESULT_DUMMYPERSON ==
-                                                            result.EventSpecificId
-                                                            || alertsSent.Contains((result.EventSpecificId,
-                                                                result.SegmentId))
-                                                            || result.SystemTime.CompareTo(fifteenPrior) <= 0)
-                                    continue;
-                                //deal with sms subscriptions
-                                if (Constants.Timing.SEGMENT_START != result.SegmentId && Constants.Timing.SEGMENT_NONE != result.SegmentId)
-                                {
-                                    smsResults.Add(result);
-                                }
-                            }
+                            List<TimeResult> smsResults = GetSmsResults(database.GetTimingResults(theEvent.Identifier), Dictionary.DistanceNameDictionary, alertsSent, fifteenPrior);
                             // Only process further if there are potential SMS results.
                             if (smsResults.Count > 0)
                             {
@@ -532,101 +713,24 @@ namespace Chronokeep.Timing
                                         }
                                     }
                                 }
-                                // Get phones to send sms messages to...
-                                Dictionary<string, HashSet<string>> bibToPhonesDict = [];
-                                foreach (ApiSmsSubscription sub in database.GetSmsSubscriptions(theEvent.Identifier))
-                                {
-                                    string bib = sub.Bib;
-                                    string phone = GlobalVars.GetValidPhone(sub.Phone);
-                                    if (bib.Length < 1 && sub.First.Length + sub.Last.Length > 0)
-                                    {
-                                        string name = sub.First.ToLower() + sub.Last.ToLower();
-                                        name = AlphaOnly().Replace(name, string.Empty);
-                                        if (nameToBibDict.TryGetValue(name, out string? bibFromName))
-                                        {
-                                            bib = bibFromName;
-                                        }
-                                    }
-                                    if (bib.Length <= 0 || phone.Length <= 0) continue;
-                                    if (!bibToPhonesDict.TryGetValue(bib, out HashSet<string>? phoneSet))
-                                    {
-                                        phoneSet = [];
-                                        bibToPhonesDict[bib] = phoneSet;
-                                    }
-                                    phoneSet.Add(phone);
-                                }
-                                // Build list of phones to send result information to
-                                foreach (TimeResult result in smsResults)
-                                {
-                                    if (!bibToPhonesDict.TryGetValue(result.Bib,
-                                            out HashSet<string>? phonesFromDict)) continue;
-                                    foreach (string phone in phonesFromDict)
-                                    {
-                                        if (!toSendTo.TryGetValue(result, out HashSet<string>? phones))
-                                        {
-                                            phones = [];
-                                            toSendTo[result] = phones;
-                                        }
-                                        phones.Add(phone);
-                                    }
-                                }
-                                string resultsUrl = "";
-                                if (Dictionary.Apis.TryGetValue(theEvent.ApiId, out ApiObject? api) && api.WebUrl.Length > 0)
-                                {
-                                    string[] eventIds = theEvent.ApiEventId.Split(',');
-                                    resultsUrl = eventIds.Length == 2 ? $" More results @ {api.WebUrl}results/{eventIds[0]}/{eventIds[1]}." : $" More results @ {api.WebUrl}.";
-                                }
+                                Dictionary<string, string> nameToBibDict = GetNameToBib(database.GetParticipants(theEvent.Identifier));
+                                Dictionary<string, HashSet<string>> bibToPhonesDict = GetBibToPhones(database.GetSmsSubscriptions(theEvent.Identifier), nameToBibDict);
+                                Dictionary<TimeResult, HashSet<string>> toSendTo = GetPhonesToText(smsResults, bibToPhonesDict);
                                 // Only check banned phones or try to send texts if there is something to send.
                                 if (toSendTo.Count > 0)
                                 {
                                     // Update banned phones list.
                                     GlobalVars.UpdateBannedPhones();
-                                    foreach (TimeResult result in toSendTo.Keys)
-                                    {
-                                        // Only send alert if participant wants it sent
-                                        // Do not add to the AlertsSent database because they
-                                        // may change their mind later, and
-                                        // we still want to be able to send an SMS to them.
-                                        // Only add to the database/dictionary if successful.
-                                        if (result.EventSpecificId == Constants.Timing.TIMERESULT_DUMMYPERSON)
-                                            continue;
-                                        string sms = BuildSmsMessage(result, theEvent, Dictionary.MainDistances.Count > 1, resultsUrl);
-                                        bool sent = false;
-                                        bool networkError = false;
-                                        if (result.Anonymous)
-                                        {
-                                            sent = true;
-                                        }
-                                        else
-                                        {
-                                            foreach (string phone in toSendTo[result])
-                                            {
-                                                SmsState status = SendSmsAlert(phone, sms);
-                                                switch (status)
-                                                {
-                                                    // add to banned phones list
-                                                    case SmsState.AddToBanned:
-                                                        GlobalVars.AddBannedPhone(phone);
-                                                        break;
-                                                    case SmsState.Success:
-                                                        sent = true;
-                                                        break;
-                                                    case SmsState.NetworkError:
-                                                        networkError = true;
-                                                        break;
-                                                    case SmsState.None:
-                                                    case SmsState.Invalid:
-                                                    default:
-                                                        break;
-                                                }
-                                            }
-                                        }
-                                        // update status if there's no network error, or we send a message out
-                                        if (sent || !networkError)
-                                        {
-                                            database.AddSmsAlert(theEvent.Identifier, result.EventSpecificId, result.SegmentId);
-                                        }
-                                    }
+                                    Dictionary.Apis.TryGetValue(theEvent.ApiId, out ApiObject? api);
+                                    SendSmsAlerts(
+                                        toSendTo,
+                                        theEvent,
+                                        Dictionary.MainDistances.Count > 1,
+                                        GetResultsUrl(theEvent, api),
+                                        database,
+                                        SendSmsAlert,
+                                        GlobalVars.AddBannedPhone
+                                        );
                                 }
                             }
                         }

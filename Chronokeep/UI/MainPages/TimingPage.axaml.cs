@@ -1477,7 +1477,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             if (file is null) return;
             List<TimeResult> finishResults = database.GetFinishTimes(theEvent!.Identifier);
             HtmlResultsTemplate template = new(theEvent, finishResults);
-            await File.WriteAllTextAsync(file.TryGetLocalPath()!, template.TransformText());
+            string htmlPath = file.TryGetLocalPath()!;
+            await File.WriteAllTextAsync(htmlPath, template.TransformText());
+            // Let every user on the computer open or replace the file.
+            ProgramFolders.ShareFile(htmlPath);
             DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)

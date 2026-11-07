@@ -22,6 +22,7 @@ using Chronokeep.UI;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -89,6 +90,7 @@ namespace Chronokeep.Updates
     public static class Check
     {
         private const string RepoUrl = "https://api.github.com/repos/grecaun/chronokeep-desktop/releases";
+        private const string ReleasesPageUrl = "https://github.com/grecaun/chronokeep-desktop/releases";
 
         public static async void Do(IMainWindow mWindow, bool messageOnNoUpdate = false)
         {
@@ -115,11 +117,22 @@ namespace Chronokeep.Updates
                 }
                 (GithubRelease? latestRelease, Version latestVersion) = FindLatest(releases);
                 Log.D("Updates.Check", $"Latest version is {latestVersion}");
-                if (latestVersion.Newer(current))
+                if (latestVersion.Newer(current) && App.IsWindows)
                 {
                     Log.D("Updates.Check", "Newer version found.");
                     DownloadWindow downloadWindow = new(latestRelease!, latestVersion, mWindow);
                     _ = downloadWindow.ShowDialog(MainWindow.MWindow!);
+                }
+                else if (latestVersion.Newer(current))
+                {
+                    // Only the Windows installer can be downloaded and run, so point everyone else at the release.
+                    string releasePage = ReleasePage(latestRelease!);
+                    DialogBox.AsyncShow(
+                        $"Chronokeep {latestVersion} is available.",
+                        "Open Release",
+                        "Later",
+                        () => OpenInBrowser(releasePage)
+                        );
                 }
                 else if (messageOnNoUpdate)
                 {
@@ -129,6 +142,39 @@ namespace Chronokeep.Updates
             catch (Exception)
             {
                 Log.D("Updates.Check", "Error checking releases.");
+            }
+        }
+
+        /// <summary>
+        /// The web page for a release on GitHub.
+        /// </summary>
+        /// <param name="release">The release.</param>
+        /// <returns>The release's page, or the list of releases if GitHub didn't give one.</returns>
+        internal static string ReleasePage(GithubRelease release)
+        {
+            string output = ReleasesPageUrl;
+            if (release.HtmlUrl.StartsWith("https://github.com/", StringComparison.OrdinalIgnoreCase))
+            {
+                output = release.HtmlUrl;
+            }
+            return output;
+        }
+
+        private static void OpenInBrowser(string url)
+        {
+            try
+            {
+                // The shell picks the default browser: open on macOS, xdg-open on Linux.
+                using Process browser = new();
+                browser.StartInfo = new ProcessStartInfo(url)
+                {
+                    UseShellExecute = true
+                };
+                browser.Start();
+            }
+            catch (Exception e)
+            {
+                Log.E("Updates.Check", $"Unable to open the release page. {e.Message}");
             }
         }
 

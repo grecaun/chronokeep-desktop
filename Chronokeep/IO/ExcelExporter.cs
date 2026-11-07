@@ -47,6 +47,8 @@ namespace Chronokeep.IO
                 }
             }
             workbook.SaveAs(path);
+            // Let every user on the computer open or replace the export.
+            ProgramFolders.ShareFile(path);
         }
 
         public Utils.FileType FileType()

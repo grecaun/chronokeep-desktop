@@ -32,7 +32,13 @@ namespace Chronokeep.Helpers
 
         private static AudioPlaybackEngine? instance;
         private static int currentIndex;
-        private static CachedSound alert = new(Path.Combine("sounds", "alert-1.wav"));
+        private static CachedSound alert = new(SoundPath("alert-1.wav"));
+
+        /// <summary>
+        /// The full path to a file in the program's sounds folder. The current folder isn't always the
+        /// program's folder (shortcuts, file associations, the macOS Finder), so don't rely on it.
+        /// </summary>
+        private static string SoundPath(string fileName) => Path.Combine(AppContext.BaseDirectory, "sounds", fileName);
 
         private AudioPlaybackEngine(int sampleRate = 44100, int channelCount = 2)
         {
@@ -64,38 +70,38 @@ namespace Chronokeep.Helpers
         private static void LoadCachedSound(int index)
         {
             currentIndex = index;
-            string soundFile = Path.Combine("sounds", "alert-1.wav");
+            string soundFile = SoundPath("alert-1.wav");
             switch (index)
             {
                 case 1:
-                    soundFile = Path.Combine("sounds", "alert-2.wav");
+                    soundFile = SoundPath("alert-2.wav");
                     break;
                 case 2:
-                    soundFile = Path.Combine("sounds", "alert-3.wav");
+                    soundFile = SoundPath("alert-3.wav");
                     break;
                 case 3:
-                    soundFile = Path.Combine("sounds", "alert-4.wav");
+                    soundFile = SoundPath("alert-4.wav");
                     break;
                 case 4:
-                    soundFile = Path.Combine("sounds", "alert-5.wav");
+                    soundFile = SoundPath("alert-5.wav");
                     break;
                 case 5:
-                    soundFile = Path.Combine("sounds", "emily-runner-here.wav");
+                    soundFile = SoundPath("emily-runner-here.wav");
                     break;
                 case 6:
-                    soundFile = Path.Combine("sounds", "emily-runner-arrived.wav");
+                    soundFile = SoundPath("emily-runner-arrived.wav");
                     break;
                 case 7:
-                    soundFile = Path.Combine("sounds", "emily-alert-runner-here.wav");
+                    soundFile = SoundPath("emily-alert-runner-here.wav");
                     break;
                 case 8:
-                    soundFile = Path.Combine("sounds", "michael-runner-here.wav");
+                    soundFile = SoundPath("michael-runner-here.wav");
                     break;
                 case 9:
-                    soundFile = Path.Combine("sounds", "michael-runner-arrived.wav");
+                    soundFile = SoundPath("michael-runner-arrived.wav");
                     break;
                 case 10:
-                    soundFile = Path.Combine("sounds", "michael-alert-runner-here.wav");
+                    soundFile = SoundPath("michael-alert-runner-here.wav");
                     break;
             }
             alert = new CachedSound(soundFile);

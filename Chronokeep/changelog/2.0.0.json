@@ -12,7 +12,11 @@
     "Added a prompt confirming the user wants to delete participants from the API to ensure it wasn't an accidental button click.",
     "Importing participants should no longer prompt when there are conflicts, it should just import them and the conflicts button should appear allowing the user to deal with it in the main UI.",
     "The update check now ignores draft and prerelease versions.",
-    "The RFID Ultra settings window now tells you when the reader doesn't save a setting."
+    "The RFID Ultra settings window now tells you when the reader doesn't save a setting.",
+    "Errors are now written to the error log in release builds.",
+    "Stopping registration is now much quicker.",
+    "On macOS and Linux the database, logs and exports are now kept in a folder every user can use: /Users/Shared/Chronokeep on macOS and /var/lib/chronokeep on Linux. Exported files can also be opened or replaced by every user. On Linux an administrator needs to create that folder first, and the program explains how if it's missing.",
+    "On macOS and Linux the update check now links to the new release's page instead of offering a download, since the installer is only for Windows."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",
@@ -66,6 +70,19 @@
     "Fixed an issue where settings changed on an RFID Ultra from the reader settings window were sent without the ending character the Ultra expects.",
     "Fixed an issue where setting a reader's time sent an invalid time on computers using a language that separates hours and minutes with a '.', such as Danish or Finnish.",
     "Fixed an issue where setting an IPICO reader to a specific time set it to the current time instead.",
-    "Fixed the RFID Ultra channel number and antenna 4 backup commands so they match the Ultra's manual."
+    "Fixed the RFID Ultra channel number and antenna 4 backup commands so they match the Ultra's manual.",
+    "Fixed an issue where alarm sounds wouldn't play if the program was started from a different folder, such as from a shortcut or the macOS Finder.",
+    "Fixed an issue where printouts for time based events combined people who share a name.",
+    "Fixed an issue where an overall award winner could be skipped for their age group award, giving it to someone slower.",
+    "Fixed an issue where custom award winners were listed in their age group instead of the custom group.",
+    "Fixed an issue where award age groups were printed in the wrong order, such as 5-9 after 10-19.",
+    "Fixed an error when printing awards for a distance with no award winners.",
+    "Fixed an issue where adding or updating several participants at once from the registration app didn't send the new list to the other connected registration apps.",
+    "Fixed an issue where the check for a database moved to a different computer never ran.",
+    "Fixed an issue where stopping registration always logged an error.",
+    "Fixed an issue where text message alerts were marked as sent when texting wasn't set up, so they were never sent once it was.",
+    "Fixed an issue where the buttons on the About page for opening the data and logs folders did nothing on macOS.",
+    "Fixed an issue where saving results or awards as a PDF failed when the folder had a space in its name.",
+    "Fixed an issue on Windows where saving results or awards as a PDF failed if the program was started from a different folder, such as from a shortcut."
   ]
 }
