@@ -206,7 +206,7 @@ namespace Chronokeep.Timing.Interfaces
         public void SetTime(DateTime date)
         {
             // setdate.YYMMDDHH:MM:SS
-            SendMessage($"setdate.{DateTime.Now:yyMMddHH:mm:ss}");
+            SendMessage($"setdate.{date.ToString("yyMMddHH:mm:ss", CultureInfo.InvariantCulture)}");
         }
 
         public void GetTime()

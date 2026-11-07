@@ -668,7 +668,7 @@ namespace Chronokeep.Timing.Interfaces
         {
             SendMessage(JsonSerializer.Serialize(new TimeSetRequest()
             {
-                Time = date.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss.fffzzz")
+                Time = date.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss.fffzzz", CultureInfo.InvariantCulture)
             }));
         }
 

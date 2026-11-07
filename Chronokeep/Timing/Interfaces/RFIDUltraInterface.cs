@@ -101,6 +101,7 @@ namespace Chronokeep.Timing.Interfaces
             }
             List<ChipRead> chipReads = [];
             RfidSettingsHolder? settingsHolder = null;
+            List<string> settingsNotSaved = [];
             while (m.Success)
             {
                 buffer.Remove(m.Index, m.Length);
@@ -251,66 +252,18 @@ namespace Chronokeep.Timing.Interfaces
                 else if (SettingConfirmation().IsMatch(message))
                 {
                     Log.D("Timing.Interfaces.RFIDUltraInterface", $"It's a settings confirmation message. {message}{BitConverter.ToString([.. message.Select(c => (byte)c)])}");
-                    settingsHolder ??= new RfidSettingsHolder();
-                    char settingId = message[1];
-                    switch (settingId)
+                    // The Ultra answers each setting change with u[setting][0x02] when it was saved.
+                    if (message.Length > 2 && message[1] != '\n' && message[2] != (char)0x02)
                     {
-                        case RfidUltraCodes.ULTRA_ID:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Ultra ID set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.CHIP_OUT_TYPE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Chip out type set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.GATING_MODE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating mode set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.GATING_INTERVAL:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Gating Interval set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.WHEN_BEEP:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "When to beep set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.BEEPER_VOLUME:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Beeper volume set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.AUTO_SET_GPS:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Set time via gps set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
-                        case RfidUltraCodes.TIME_ZONE:
-                            Log.D("Timing.Interfaces.RFIDUltraInterface", "Timezone set");
-                            if (message[2] != (char)0x02)
-                            {
-                                Log.E("Timing.Interfaces.RFIDUltraInterface", "Setting not saved.");
-                            }
-                            break;
+                        string notSaved = $"The reader didn't save the {SettingName(message[1])} setting.";
+                        Log.E("Timing.Interfaces.RFIDUltraInterface", notSaved);
+                        if (!output.TryGetValue(MessageType.ERROR, out List<string>? errorList))
+                        {
+                            errorList = [];
+                            output[MessageType.ERROR] = errorList;
+                        }
+                        errorList.Add(notSaved);
+                        settingsNotSaved.Add(notSaved);
                     }
                     output[MessageType.SETTINGCHANGE] = [];
                 }
@@ -376,8 +329,30 @@ namespace Chronokeep.Timing.Interfaces
             {
                 settingsWindow.UpdateView(settingsHolder);
             }
+            if (settingsNotSaved.Count > 0 && settingsWindow != null)
+            {
+                settingsWindow.SettingsNotSaved(settingsNotSaved);
+            }
             return output;
         }
+
+        /// <summary>The name of an Ultra setting, as shown to the user.</summary>
+        internal static string SettingName(char setting) => setting switch
+        {
+            RfidUltraCodes.ULTRA_ID => "Ultra ID",
+            RfidUltraCodes.CHIP_OUT_TYPE => "chip output type",
+            RfidUltraCodes.GATING_MODE => "gating mode",
+            RfidUltraCodes.GATING_INTERVAL => "gating interval",
+            RfidUltraCodes.CHANNEL_NUMBER => "channel number",
+            RfidUltraCodes.WHEN_BEEP => "when to beep",
+            RfidUltraCodes.BEEPER_VOLUME => "beeper volume",
+            RfidUltraCodes.AUTO_SET_GPS => "set time from GPS",
+            RfidUltraCodes.TIME_ZONE => "time zone",
+            RfidUltraCodes.DATA_SENDING => "data sending",
+            RfidUltraCodes.READ1_ANTENNA4_BACKUP => "reader 1 antenna 4 backup",
+            RfidUltraCodes.READ2_ANTENNA4_BACKUP => "reader 2 antenna 4 backup",
+            _ => $"0x{(int)setting:X2}",
+        };
 
         public void StartReading()
         {
@@ -415,12 +390,12 @@ namespace Chronokeep.Timing.Interfaces
 
         public void SetTime(DateTime date)
         {
-            SendMessage($"t{RfidUltraCodes.SET_TIME}{date:HH:mm:ss dd-MM-yyyy}");
+            SendMessage($"t{RfidUltraCodes.SET_TIME}{date.ToString("HH:mm:ss dd-MM-yyyy", CultureInfo.InvariantCulture)}");
         }
 
         public void SetTime()
         {
-            SendMessage($"t{RfidUltraCodes.SET_TIME}{DateTime.Now:HH:mm:ss dd-MM-yyyy}");
+            SetTime(DateTime.Now);
         }
 
         public void GetTime()
@@ -707,7 +682,7 @@ namespace Chronokeep.Timing.Interfaces
          */
         public void SetChannelNumber(char number)
         {
-            SendMessage($"u{RfidUltraCodes.GATING_INTERVAL}{number}{RfidUltraCodes.SETTINGS_TERM}");
+            SendMessage($"u{RfidUltraCodes.CHANNEL_NUMBER}{number}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -781,7 +756,7 @@ namespace Chronokeep.Timing.Interfaces
                 default:
                     return;
             }
-            SendMessage($"u{code}{(value ? 0x01 : 0x00)}{RfidUltraCodes.SETTINGS_TERM}");
+            SendMessage($"u{code}{(value ? (char)0x01 : (char)0x00)}{RfidUltraCodes.SETTINGS_TERM}");
         }
 
         /**
@@ -841,7 +816,9 @@ namespace Chronokeep.Timing.Interfaces
         private void SendMessage(string msg)
         {
             Log.D("Timing.Interfaces.RFIDUltraInterface", $"Sending message '{msg}'");
-            sock!.Send(Encoding.ASCII.GetBytes($"{msg}\n"));
+            // Latin1 sends every character from 0 to 255 as that same byte. Settings end with 0xFF
+            // and IP addresses are sent as raw bytes, which ASCII would turn into '?'.
+            sock!.Send(Encoding.Latin1.GetBytes($"{msg}\n"));
         }
 
         public void SetMainSocket(Socket iSock)

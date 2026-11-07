@@ -23,6 +23,7 @@ using Chronokeep.Objects.RFID;
 using Chronokeep.Timing.Interfaces;
 using Chronokeep.UI.Util;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls;
@@ -110,6 +111,13 @@ public partial class RfidSettings : ChronokeepWindow
             };
             SettingsPanel.IsVisible = true;
         });
+    }
+
+    /// <summary>Tells the user the Ultra didn't save one or more settings.</summary>
+    public void SettingsNotSaved(List<string> messages)
+    {
+        string text = string.Join("\n", messages);
+        Application.Current!.Dispatcher.Invoke(() => DialogBox.AsyncShow(text));
     }
 
     public void CloseWindow()

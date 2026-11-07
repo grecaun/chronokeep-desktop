@@ -11,7 +11,8 @@
     "Downloading participants from the API has a minor overhaul. It now adds duplicates when a bib conflict on a single person is detected instead of clobbering information and it will add a distance if it doesn't recognize the distance.",
     "Added a prompt confirming the user wants to delete participants from the API to ensure it wasn't an accidental button click.",
     "Importing participants should no longer prompt when there are conflicts, it should just import them and the conflicts button should appear allowing the user to deal with it in the main UI.",
-    "The update check now ignores draft and prerelease versions."
+    "The update check now ignores draft and prerelease versions.",
+    "The RFID Ultra settings window now tells you when the reader doesn't save a setting."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",
@@ -61,6 +62,10 @@
     "Fixed an issue where the update check could fail without saying anything if a release on GitHub wasn't named with a version number.",
     "Fixed an issue where certificate links in results emails were broken when a name, event, or distance had a character like '/' or '#' in it.",
     "Fixed an issue where printable certificates showed a made-up pace when the distance had no length set. The pace is now left blank.",
-    "Fixed an issue where a reader connected at the same time another reader disconnected might never be read."
+    "Fixed an issue where a reader connected at the same time another reader disconnected might never be read.",
+    "Fixed an issue where settings changed on an RFID Ultra from the reader settings window were sent without the ending character the Ultra expects.",
+    "Fixed an issue where setting a reader's time sent an invalid time on computers using a language that separates hours and minutes with a '.', such as Danish or Finnish.",
+    "Fixed an issue where setting an IPICO reader to a specific time set it to the current time instead.",
+    "Fixed the RFID Ultra channel number and antenna 4 backup commands so they match the Ultra's manual."
   ]
 }
