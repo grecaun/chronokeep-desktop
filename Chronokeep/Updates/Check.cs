@@ -117,7 +117,9 @@ namespace Chronokeep.Updates
                 }
                 (GithubRelease? latestRelease, Version latestVersion) = FindLatest(releases);
                 Log.D("Updates.Check", $"Latest version is {latestVersion}");
-                if (latestVersion.Newer(current) && App.IsWindows)
+                bool hasDownload = null != latestRelease
+                    && null != UpdatePackage.FindAsset(latestRelease, UpdatePackage.CurrentKind(File.Exists));
+                if (latestVersion.Newer(current) && hasDownload)
                 {
                     Log.D("Updates.Check", "Newer version found.");
                     DownloadWindow downloadWindow = new(latestRelease!, latestVersion, mWindow);
@@ -125,7 +127,8 @@ namespace Chronokeep.Updates
                 }
                 else if (latestVersion.Newer(current))
                 {
-                    // Only the Windows installer can be downloaded and run, so point everyone else at the release.
+                    // The release has nothing this computer can install (like a Linux system without dpkg or rpm),
+                    // so point them at the release instead.
                     string releasePage = ReleasePage(latestRelease!);
                     DialogBox.AsyncShow(
                         $"Chronokeep {latestVersion} is available.",

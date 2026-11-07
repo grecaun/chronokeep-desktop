@@ -23,7 +23,9 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Updates;
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -39,6 +41,10 @@ namespace Chronokeep.UI.Util
         private readonly string uri;
         private readonly string downloadUri;
         private readonly string version;
+        // The update's name in the release, used to find its checksum.
+        private readonly string fileName;
+        private readonly string checksumsUrl;
+        private readonly UpdateKind kind;
 
         private CancellationTokenSource? cancellationToken;
 
@@ -52,17 +58,16 @@ namespace Chronokeep.UI.Util
             this.mWindow = mWindow;
             DownloadProgress.IsVisible = false;
             version = v.ToString();
-            // Only used on Windows, the only system with an installer to download (see Check.Do).
-            downloadUri = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\\chronokeep-setup-{version}.exe";
-            foreach (Assets asset in r.Assets)
-            {
-                if (asset.BrowserDownloadUrl.Contains(".exe"))
-                {
-                    Log.D("Updates.Check", $"Download URL - {asset.BrowserDownloadUrl}");
-                    uri = asset.BrowserDownloadUrl;
-                    break;
-                }
-            }
+            // Check.Do only opens this window when the release has an update for this computer.
+            kind = UpdatePackage.CurrentKind(File.Exists);
+            Assets? asset = UpdatePackage.FindAsset(r, kind);
+            uri = asset?.BrowserDownloadUrl ?? "";
+            fileName = asset?.Name ?? "";
+            checksumsUrl = UpdatePackage.ChecksumsUrl(r);
+            Log.D("Updates.Check", $"Download URL - {uri}");
+            downloadUri = UpdateKind.WindowsInstaller == kind
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"chronokeep-setup-{version}.exe")
+                : Path.Combine(Path.GetTempPath(), fileName);
             Activate();
         }
 
@@ -128,38 +133,68 @@ namespace Chronokeep.UI.Util
                     InstallButton.IsEnabled = false;
                     BackupDatabaseButton.IsEnabled = false;
                     BackupDatabaseButton.IsVisible = true;
-                    using (HttpClient client = GetHttpClient())
+                    cancellationToken = new CancellationTokenSource();
+                    using HttpClient client = GetHttpClient();
+                    try
                     {
-                        await using FileStream file = new(downloadUri, FileMode.Create);
-                        Progress<double> progress = new();
-                        progress.ProgressChanged += (_, value) =>
+                        await using (FileStream file = new(downloadUri, FileMode.Create))
                         {
-                            Log.D("Updates.Check", $"Download at {value}%");
-                            DownloadProgress.Value = value;
-                        };
-                        cancellationToken = new CancellationTokenSource();
-                        try
-                        {
+                            Progress<double> progress = new();
+                            progress.ProgressChanged += (_, value) =>
+                            {
+                                Log.D("Updates.Check", $"Download at {value}%");
+                                DownloadProgress.Value = value;
+                            };
                             await DownloadFileAsync(client, file, uri, progress, cancellationToken.Token);
                         }
-                        catch (Exception ex)
-                        {
-                            Log.E("Updates.Check", $"Error downloading update. {ex.Message}");
-                            DialogBox.AsyncShow("Unable to download update.");
-                            Close();
-                        }
                     }
+                    catch (Exception ex)
+                    {
+                        Log.E("Updates.Check", $"Error downloading update. {ex.Message}");
+                        DeleteDownload();
+                        DialogBox.AsyncShow("Unable to download update.");
+                        Close();
+                        return;
+                    }
+                    // Don't offer to install anything that doesn't check out.
+                    DownloadLabel.Text = $"Checking {version}";
+                    string problem = await UpdateVerifier.Verify(client, checksumsUrl, UpdateVerifier.AttestationsUrl, fileName, downloadUri, cancellationToken.Token);
+                    if (problem.Length > 0)
+                    {
+                        Log.E("Updates.DownloadWindow", $"Update failed its check. {problem}");
+                        DeleteDownload();
+                        DialogBox.AsyncShow(problem);
+                        Close();
+                        return;
+                    }
+                    DownloadLabel.Text = $"Ready to install {version}";
                     InstallButton.IsEnabled = true;
                     BackupDatabaseButton.IsEnabled = true;
                 }
                 else if (((string)InstallButton.Content).Equals("Install", StringComparison.OrdinalIgnoreCase))
                 {
                     Log.D("Updates.DownloadWindow", "Install clicked.");
-                    using Process install = new();
-                    install.StartInfo.FileName = downloadUri;
-                    install.Start();
-                    Close();
-                    mWindow.Exit();
+                    switch (kind)
+                    {
+                        case UpdateKind.WindowsInstaller:
+                            using (Process install = new())
+                            {
+                                install.StartInfo.FileName = downloadUri;
+                                install.Start();
+                            }
+                            Close();
+                            mWindow.Exit();
+                            break;
+                        case UpdateKind.MacDiskImage:
+                            InstallMac();
+                            break;
+                        case UpdateKind.LinuxDeb:
+                        case UpdateKind.LinuxRpm:
+                            await InstallLinux();
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 else
                 {
@@ -170,6 +205,102 @@ namespace Chronokeep.UI.Util
             {
                 Log.D("Updates.DownloadWindow", "Something went wrong installing.");
             }
+        }
+
+        private void DeleteDownload()
+        {
+            try
+            {
+                File.Delete(downloadUri);
+            }
+            catch (Exception e)
+            {
+                Log.E("Updates.DownloadWindow", $"Unable to delete the download. {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Runs one of UpdatePackage's shell scripts. It keeps running after Chronokeep closes.
+        /// </summary>
+        /// <param name="script">The script's contents.</param>
+        /// <param name="name">The file name to save the script as.</param>
+        /// <param name="arguments">The script's arguments.</param>
+        private static void StartScript(string script, string name, List<string> arguments)
+        {
+            string scriptPath = Path.Combine(Path.GetTempPath(), name);
+            File.WriteAllText(scriptPath, script);
+            using Process process = new();
+            process.StartInfo.FileName = "/bin/sh";
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.ArgumentList.Add(scriptPath);
+            foreach (string argument in arguments)
+            {
+                process.StartInfo.ArgumentList.Add(argument);
+            }
+            process.Start();
+        }
+
+        /// <summary>
+        /// Replaces Chronokeep.app with the downloaded one after Chronokeep closes. If the app can't be replaced
+        /// (it isn't running from an app, or this user can't change the folder it's in) the .dmg is opened instead
+        /// so the new app can be dragged into Applications.
+        /// </summary>
+        private void InstallMac()
+        {
+            string app = UpdatePackage.MacAppBundle(AppContext.BaseDirectory);
+            string? appFolder = app.Length > 0 ? Path.GetDirectoryName(app) : null;
+            if (null == appFolder || !ProgramFolders.CanWrite(appFolder))
+            {
+                using Process open = new();
+                open.StartInfo.FileName = "open";
+                open.StartInfo.UseShellExecute = false;
+                open.StartInfo.ArgumentList.Add(downloadUri);
+                open.Start();
+            }
+            else
+            {
+                StartScript(UpdatePackage.MacUpdateScript, "chronokeep-update.sh", [Environment.ProcessId.ToString(), downloadUri, app]);
+            }
+            Close();
+            mWindow.Exit();
+        }
+
+        /// <summary>
+        /// Installs the downloaded package with the system's package manager, which asks for an administrator
+        /// password, then starts the new version once Chronokeep closes.
+        /// </summary>
+        private async Task InstallLinux()
+        {
+            List<string> command = UpdatePackage.LinuxInstallCommand(kind, downloadUri, File.Exists);
+            if (command.Count < 1)
+            {
+                DialogBox.AsyncShow($"Chronokeep can't install the update itself on this computer. The package was saved to {downloadUri}.");
+                Close();
+                return;
+            }
+            DownloadLabel.Text = $"Installing {version}";
+            InstallButton.IsEnabled = false;
+            using Process install = new();
+            install.StartInfo.FileName = command[0];
+            install.StartInfo.UseShellExecute = false;
+            foreach (string argument in command.Skip(1))
+            {
+                install.StartInfo.ArgumentList.Add(argument);
+            }
+            install.Start();
+            await install.WaitForExitAsync();
+            if (0 != install.ExitCode)
+            {
+                Log.E("Updates.DownloadWindow", $"Package install exited with {install.ExitCode}.");
+                DialogBox.AsyncShow($"The update wasn't installed. The package was saved to {downloadUri} if you'd like to install it yourself.");
+                DownloadLabel.Text = $"Ready to install {version}";
+                InstallButton.IsEnabled = true;
+                return;
+            }
+            DeleteDownload();
+            StartScript(UpdatePackage.RestartScript, "chronokeep-restart.sh", [Environment.ProcessId.ToString(), "/usr/bin/chronokeep"]);
+            Close();
+            mWindow.Exit();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
