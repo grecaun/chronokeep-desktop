@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Chronokeep
+Comment=Race timing and results
+Exec=/opt/chronokeep/Chronokeep
+Icon=chronokeep
+Terminal=false
+Categories=Utility;
+StartupWMClass=Chronokeep

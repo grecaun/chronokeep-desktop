@@ -14,7 +14,7 @@
     <AssemblyName>Chronokeep</AssemblyName>
     <RootNamespace>Chronokeep</RootNamespace>
     <IsPackable>false</IsPackable>
-    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64;osx-x64;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Chronokeep.App</StartupObject>
@@ -297,7 +297,8 @@
     <None Update="changelog\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="weasyprint.exe">
+    <!-- Windows only, Linux uses the system's weasyprint. -->
+    <None Update="weasyprint.exe" Condition="'$(RuntimeIdentifier)' == '' Or $(RuntimeIdentifier.StartsWith('win'))">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -16,7 +16,8 @@
     "Errors are now written to the error log in release builds.",
     "Stopping registration is now much quicker.",
     "On macOS and Linux the database, logs and exports are now kept in a folder every user can use: /Users/Shared/Chronokeep on macOS and /var/lib/chronokeep on Linux. Exported files can also be opened or replaced by every user. On Linux an administrator needs to create that folder first, and the program explains how if it's missing.",
-    "On macOS and Linux the update check now links to the new release's page instead of offering a download, since the installer is only for Windows."
+    "On macOS and Linux the update check now links to the new release's page instead of offering a download, since the installer is only for Windows.",
+    "Releases now include Linux packages (.deb and .rpm) and a macOS disk image (.dmg), along with SHA256 checksums and GitHub build attestations to check downloads."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",

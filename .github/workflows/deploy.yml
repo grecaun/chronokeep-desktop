@@ -1,5 +1,17 @@
 # This is a continuous delivery pipeline for github meant to deploy Chronokeep whenever a tag is pushed.
 #
+# Builds the Windows installer, the Linux .deb and .rpm and the macOS .dmg, then uploads them all to the
+# release for the tag along with a SHA256SUMS file. Each file also gets a GitHub build provenance attestation.
+#
+# Optional secrets (packages are built unsigned without them):
+#   CHRONOKEEP_GPG_PRIVATE_KEY   armored GPG private key that signs the Linux packages and SHA256SUMS
+#   CHRONOKEEP_GPG_PASSPHRASE    that key's passphrase, if it has one
+#   MACOS_CERTIFICATE_P12        base64 of the Developer ID Application certificate exported as .p12
+#   MACOS_CERTIFICATE_PASSWORD   the .p12's password
+#   MACOS_SIGNING_IDENTITY       the certificate's name, like "Developer ID Application: James Sentinella (TEAMID)"
+#   MACOS_NOTARY_KEY             base64 of the App Store Connect API key (.p8) used to notarize
+#   MACOS_NOTARY_KEY_ID          that key's ID
+#   MACOS_NOTARY_ISSUER_ID       that key's issuer ID
 name: Chronokeep Continuous Delivery
 
 on:
@@ -10,27 +22,21 @@ on:
       - '*'
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
 
     env:
       App_Packages_Archive: chronokeep-setup.exe
       App_Zip_Archive: chronokeep.zip
-      SigningCertificate: Chronokeep\Chronokeep.pfx
       Solution_Path: Chronokeep.sln
       Compile_Path: Chronokeep\bin\Release\net10.0
       Version_Path: Chronokeep\version.txt
-      Actions_Allow_Unsecure_Commands: true # Allows AddPAth and SetEnv commands
 
     steps:
-    - name: Display build info
-      run: |
-        echo "OS: windows-latest"
-
     - name: Checkout
       uses: actions/checkout@v7
       with:
-        fetch-tags: true
+        fetch-depth: 0
 
     # Install the .NET Core workload
     - name: Install .NET Core
@@ -52,46 +58,214 @@ jobs:
 
     # Generate version text file because msbuild isn't generating it properly
     - name: Generate version text file
-      run: git describe --tag > $env:Version_Path
+      run: git describe --tags > $env:Version_Path
 
     # Build the app for Release
     - name: Build program
       run: msbuild $env:Solution_Path /p:Platform="Any CPU" /p:Configuration=Release /p:SelfContained=True
 
-    # Set an environment variable to the tag we want to use to describe this release.
-    - name: Get tag environment variable.
-      run: echo "RELEASE_VERSION=$(git describe --tag)" >> $GITHUB_OUTPUT
+    # Set an output to the tag we want to use to describe this release.
+    - name: Get tag
       id: release-version
+      run: echo "RELEASE_VERSION=$(git describe --tags)" >> $env:GITHUB_OUTPUT
 
     # Run Inno Setup
     - name: Create setup with Inno Setup
       run: .\Inno\ISCC.exe /DMyAppVersion=${{ steps.release-version.outputs.RELEASE_VERSION }} /DMyAppDirectory=$env:Compile_Path /O$env:Compile_Path /SCompression=bzip2 .\install-script.iss
 
-    # Create zip/tar
+    # Create zip
     - name: Create zip of all files.
       run: Compress-Archive -Path $env:Compile_Path\* -Destination $env:Compile_Path\$env:App_Zip_Archive
 
-    # Create the release
+    - name: Save Windows files for the release
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows
+        path: |
+          ${{ env.Compile_Path }}\${{ env.App_Packages_Archive }}
+          ${{ env.Compile_Path }}\${{ env.App_Zip_Archive }}
+        if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+
+    env:
+      CHRONOKEEP_GPG_PRIVATE_KEY: ${{ secrets.CHRONOKEEP_GPG_PRIVATE_KEY }}
+      NFPM_PASSPHRASE: ${{ secrets.CHRONOKEEP_GPG_PASSPHRASE }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5.3.0
+      with:
+        dotnet-version: '10.x'
+
+    - name: Install nfpm
+      run: |
+        go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.41.1
+        echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+    - name: Generate version text file
+      run: git describe --tags > Chronokeep/version.txt
+
+    - name: Publish program
+      run: dotnet publish Chronokeep/Chronokeep.csproj -c Release -r linux-x64 --self-contained true -p:IsPublishable=true -o publish/linux-x64
+
+    - name: Set up the signing key
+      if: env.CHRONOKEEP_GPG_PRIVATE_KEY != ''
+      run: |
+        printf '%s\n' "$CHRONOKEEP_GPG_PRIVATE_KEY" > "$RUNNER_TEMP/signing-key.asc"
+        echo "GPG_KEY_FILE=$RUNNER_TEMP/signing-key.asc" >> "$GITHUB_ENV"
+
+    - name: Build .deb and .rpm
+      run: |
+        chmod +x packaging/linux/build-packages.sh
+        packaging/linux/build-packages.sh "$(git describe --tags)" publish/linux-x64 out
+
+    - name: Remove the signing key
+      if: always()
+      run: rm -f "$RUNNER_TEMP/signing-key.asc"
+
+    - name: Save Linux packages for the release
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux
+        path: out/*
+        if-no-files-found: error
+
+  macos:
+    runs-on: macos-latest
+
+    env:
+      MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_NOTARY_KEY: ${{ secrets.MACOS_NOTARY_KEY }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5.3.0
+      with:
+        dotnet-version: '10.x'
+
+    - name: Generate version text file
+      run: git describe --tags > Chronokeep/version.txt
+
+    # Intel build: the SQLite library only ships native code for Intel Macs. Apple Silicon Macs run it through Rosetta.
+    - name: Publish program
+      run: dotnet publish Chronokeep/Chronokeep.csproj -c Release -r osx-x64 --self-contained true -p:IsPublishable=true -o publish/osx-x64
+
+    - name: Set up the signing certificate
+      if: env.MACOS_CERTIFICATE_P12 != ''
+      run: |
+        KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+        KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+        security set-keychain-settings -lut 21600 "$KEYCHAIN"
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+        printf '%s' "$MACOS_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+        security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+        rm -f "$RUNNER_TEMP/certificate.p12"
+        security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+        security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+        echo "MACOS_SIGNING_IDENTITY=${{ secrets.MACOS_SIGNING_IDENTITY }}" >> "$GITHUB_ENV"
+
+    - name: Set up the notarizing key
+      if: env.MACOS_CERTIFICATE_P12 != '' && env.MACOS_NOTARY_KEY != ''
+      run: |
+        printf '%s' "$MACOS_NOTARY_KEY" | base64 --decode > "$RUNNER_TEMP/notary-key.p8"
+        echo "NOTARY_KEY_FILE=$RUNNER_TEMP/notary-key.p8" >> "$GITHUB_ENV"
+        echo "NOTARY_KEY_ID=${{ secrets.MACOS_NOTARY_KEY_ID }}" >> "$GITHUB_ENV"
+        echo "NOTARY_ISSUER_ID=${{ secrets.MACOS_NOTARY_ISSUER_ID }}" >> "$GITHUB_ENV"
+
+    - name: Build .dmg
+      run: |
+        chmod +x packaging/macos/build-dmg.sh
+        packaging/macos/build-dmg.sh "$(git describe --tags)" publish/osx-x64 out
+
+    - name: Remove the signing details
+      if: always()
+      run: |
+        rm -f "$RUNNER_TEMP/notary-key.p8"
+        if [ -f "$RUNNER_TEMP/signing.keychain-db" ]; then
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db"
+        fi
+
+    - name: Save the .dmg for the release
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos
+        path: out/*.dmg
+        if-no-files-found: error
+
+  release:
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Needed to create the build provenance attestations.
+      id-token: write
+      attestations: write
+
+    env:
+      CHRONOKEEP_GPG_PRIVATE_KEY: ${{ secrets.CHRONOKEEP_GPG_PRIVATE_KEY }}
+      CHRONOKEEP_GPG_PASSPHRASE: ${{ secrets.CHRONOKEEP_GPG_PASSPHRASE }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Get tag
+      id: release-version
+      run: echo "RELEASE_VERSION=$(git describe --tags)" >> "$GITHUB_OUTPUT"
+
+    - name: Collect the files
+      uses: actions/download-artifact@v4
+      with:
+        path: release
+        merge-multiple: true
+
+    # Records that each file was built by this repository's workflow from this tag, signed by GitHub, so
+    # anyone can check where a download came from without a key from us:
+    #   gh attestation verify chronokeep-setup.exe --repo grecaun/chronokeep-desktop
+    # Free for public repositories.
+    - name: Attest build provenance
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-path: release/*
+
+    # Lets anyone check a download wasn't damaged or changed: sha256sum -c SHA256SUMS
+    - name: Create checksums
+      working-directory: release
+      run: sha256sum * > SHA256SUMS
+
+    # SHA256SUMS.asc proves the checksums came from us, and the public key is included to check it with.
+    - name: Sign checksums
+      if: env.CHRONOKEEP_GPG_PRIVATE_KEY != ''
+      working-directory: release
+      run: |
+        export GNUPGHOME="$RUNNER_TEMP/gnupg"
+        mkdir -p "$GNUPGHOME"
+        chmod 700 "$GNUPGHOME"
+        printf '%s\n' "$CHRONOKEEP_GPG_PRIVATE_KEY" | gpg --batch --import
+        gpg --batch --yes --pinentry-mode loopback --passphrase "$CHRONOKEEP_GPG_PASSPHRASE" --armor --detach-sign --output SHA256SUMS.asc SHA256SUMS
+        gpg --armor --export > chronokeep-signing-key.asc
+        rm -rf "$GNUPGHOME"
+
     - name: Create release
-      id: create_release
       uses: ncipollo/release-action@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
         tag: ${{ steps.release-version.outputs.RELEASE_VERSION }}
-
-    # Upload installer
-    - name: Update installer
-      id: upload-installer
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ env.App_Packages_Archive }}
-
-    # Upload archive
-    - name: Update archive
-      id: upload-archive
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{ env.Compile_Path }}\${{ env.App_Zip_Archive }}
+        artifacts: release/*
+        allowUpdates: true
+        replacesArtifacts: true

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- __VERSION__ is replaced by packaging/macos/build-dmg.sh. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Chronokeep</string>
+    <key>CFBundleDisplayName</key>
+    <string>Chronokeep</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.chronokeep.desktop</string>
+    <key>CFBundleExecutable</key>
+    <string>Chronokeep</string>
+    <key>CFBundleIconFile</key>
+    <string>Chronokeep.icns</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>__VERSION__</string>
+    <key>CFBundleVersion</key>
+    <string>__VERSION__</string>
+    <!-- The oldest macOS .NET 10 runs on. -->
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.sports</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright (C) James Sentinella. Licensed under the GNU AGPL v3.</string>
+</dict>
+</plist>

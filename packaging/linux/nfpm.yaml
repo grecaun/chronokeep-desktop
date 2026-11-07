@@ -1,0 +1,77 @@
+# Builds the Linux .deb and .rpm packages with nfpm (https://nfpm.goreleaser.com).
+# Run from the repository root through packaging/linux/build-packages.sh, which fills in:
+#   VERSION       the version to package, like 2.0.0
+#   PUBLISH_DIR   the output of dotnet publish for linux-x64
+#   GPG_KEY_FILE  an armored GPG private key to sign with, or empty to leave the packages unsigned
+# nfpm reads the key's passphrase, if it has one, from NFPM_PASSPHRASE.
+name: chronokeep
+arch: amd64
+platform: linux
+version: ${VERSION}
+version_schema: semver
+section: misc
+priority: optional
+maintainer: James Sentinella <james@sentinella.me>
+vendor: Chronokeep
+homepage: https://www.chronokeep.com
+license: AGPL-3.0-or-later
+description: |
+  Chronokeep race timing and results.
+  Times races with RFID Ultra, IPICO and Chronokeep Portal readers and publishes results.
+
+# Debian and Ubuntu package names. The libicu alternatives cover Ubuntu 22.04/24.04 and Debian 12/13.
+depends:
+  - libc6
+  - libgcc-s1
+  - libstdc++6
+  - zlib1g
+  - libssl3 | libssl1.1
+  - libicu76 | libicu74 | libicu72 | libicu70
+  - libx11-6
+  - libice6
+  - libsm6
+  - libfontconfig1
+# Needed to save results and awards as PDFs.
+recommends:
+  - weasyprint
+
+overrides:
+  rpm:
+    # Fedora, RHEL and openSUSE package names.
+    depends:
+      - glibc
+      - libstdc++
+      - zlib
+      - openssl-libs
+      - libicu
+      - libX11
+      - libICE
+      - libSM
+      - fontconfig
+
+contents:
+  # The program itself, everything dotnet publish produced.
+  - src: ${PUBLISH_DIR}
+    dst: /opt/chronokeep
+    type: tree
+  - src: /opt/chronokeep/Chronokeep
+    dst: /usr/bin/chronokeep
+    type: symlink
+  - src: packaging/linux/chronokeep.desktop
+    dst: /usr/share/applications/chronokeep.desktop
+    file_info:
+      mode: 0644
+  - src: Chronokeep/help/icons/icon.png
+    dst: /usr/share/icons/hicolor/512x512/apps/chronokeep.png
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: packaging/linux/postinstall.sh
+
+deb:
+  signature:
+    key_file: ${GPG_KEY_FILE}
+rpm:
+  signature:
+    key_file: ${GPG_KEY_FILE}
