@@ -286,7 +286,7 @@ public partial class ImportFileWindow : ChronokeepWindow
                     {
                         if (int.TryParse(data.Data[counter][keys[AGE]], out age))
                         {
-                            birthday = $"{thisYear - age,4}/01/01";
+                            birthday = Birthdates.JanuaryFirst(thisYear - age);
                         }
                     }
                     else if (keys[BIRTHDAY] != 0)

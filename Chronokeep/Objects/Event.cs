@@ -147,6 +147,13 @@ namespace Chronokeep.Objects
         public int EventType { get; set; } = Constants.Timing.EVENT_TYPE_DISTANCE;
         public int ApiId { get; set; } = ApiConstants.NULL_ID;
         public string ApiEventId { get; set; } = ApiConstants.NULL_EVENT_ID;
+        /// <summary>The registration (Runsignup) API this event pulls participants from; separate from the results link.</summary>
+        public int RegistrationApiId { get; set; } = ApiConstants.NULL_ID;
+        /// <summary>The Runsignup race id. Its events are mapped to distances in registration_distances.</summary>
+        public string RegistrationRaceId { get; set; } = ApiConstants.NULL_EVENT_ID;
+        /// <summary>Comma list of participant fields copied into Comments, such as "q:51234,team_name".</summary>
+        public string RegistrationCommentFields { get; set; } = "";
+        public bool IsRegistrationLinked => RegistrationApiId != ApiConstants.NULL_ID && RegistrationRaceId.Length > 0;
         public bool DisplayPlacements { get => displayPlacements != 0; set => displayPlacements = value ? 1 : 0; }
         public bool DivisionsEnabled { get => divisionsEnabled != 0;
             private set => divisionsEnabled = value ? 1 : 0; }
@@ -215,6 +222,9 @@ namespace Chronokeep.Objects
             EventType = other.EventType;
             ApiId = other.ApiId;
             ApiEventId = other.ApiEventId;
+            RegistrationApiId = other.RegistrationApiId;
+            RegistrationRaceId = other.RegistrationRaceId;
+            RegistrationCommentFields = other.RegistrationCommentFields;
             DisplayPlacements = other.DisplayPlacements;
             DivisionsEnabled = other.DivisionsEnabled;
             DaysAllowed = other.DaysAllowed;

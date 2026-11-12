@@ -131,6 +131,11 @@ namespace Chronokeep.Objects
         public string Division { get; private set; }
         public int Version { get; set; }
         public int UploadedVersion { get; set; }
+        /// <summary>The registration system's id for this entry, such as rsu-{registration_id}. Empty when entered locally.</summary>
+        public string ExternalId { get; set; } = "";
+        /// <summary>Why the registration system removed this entry (cleared, removed, transferred, deferred). Empty when active.</summary>
+        public string Removed { get; set; } = "";
+        public bool IsRemoved => Removed.Length > 0;
 
         public void CopyFrom(EventSpecific other)
         {
@@ -151,6 +156,8 @@ namespace Chronokeep.Objects
             Division = other.Division;
             Version = other.Version;
             UploadedVersion = other.UploadedVersion;
+            ExternalId = other.ExternalId;
+            Removed = other.Removed;
         }
 
         public bool Equals(EventSpecific other)

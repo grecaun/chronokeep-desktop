@@ -23,7 +23,7 @@ namespace Chronokeep.Test.Database
             Assert.Equal("Springfield", p.City);
             Assert.Equal("OR", p.State);
             Assert.Equal("97477", p.Zip);
-            Assert.Equal("01/02/1990", p.Birthdate);
+            Assert.Equal("1990/01/02", p.Birthdate); // stored as yyyy/MM/dd whatever form it was entered in
             Assert.Equal("jane@example.com", p.Email);
             Assert.Equal("555-0100", p.Phone);
             Assert.Equal("555-0101", p.Mobile);

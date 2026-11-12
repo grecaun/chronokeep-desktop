@@ -364,8 +364,15 @@ namespace Chronokeep.Objects
             return $"Chip:{iChip}";
         }
 
+        /// <summary>
+        /// The participant was removed in the registration system. Their results still show locally
+        /// (tinted on the results page) but are never uploaded.
+        /// </summary>
+        public bool Removed { get; set; }
+
         public void SetParticipant(Participant p)
         {
+            Removed = p.EventSpecific.IsRemoved;
             ParticipantId = p.Identifier.ToString();
             Anonymous = p.Anonymous;
             RealDistanceName = p.EventSpecific.DistanceName;
@@ -379,6 +386,7 @@ namespace Chronokeep.Objects
 
         public void SetBlankParticipant()
         {
+            Removed = false;
             ParticipantId = "";
             Anonymous = false;
             RealDistanceName = "";

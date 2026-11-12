@@ -33,7 +33,8 @@ namespace Chronokeep.Database.SQLite
                 "d.distance_linked_id AS linked_id, l.distance_name AS linked_name, " +
                 "COUNT(e.eventspecific_status) AS count FROM distances d LEFT JOIN distances l ON " +
                 "d.distance_linked_id=l.distance_id JOIN eventspecific e ON d.distance_id=e.distance_id " +
-                "WHERE e.event_id=@event " +
+                // Participants removed in Runsignup are left out of every count.
+                "WHERE e.event_id=@event AND e.eventspecific_removed='' " +
                 "GROUP BY d.distance_name, e.eventspecific_status;";
             command.Parameters.Add(new SQLiteParameter("@event", eventId));
             SQLiteDataReader reader = command.ExecuteReader();

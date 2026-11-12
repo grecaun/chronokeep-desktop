@@ -80,7 +80,10 @@ namespace Chronokeep.Database.SQLite
         {
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
-            command.CommandText = "DELETE FROM segments WHERE distance_id=@id; DELETE FROM eventspecific WHERE distance_id=@id; DELETE FROM age_groups WHERE distance_id=@id; DELETE FROM distances WHERE distance_id=@id";
+            // Runsignup events mapped to this distance become unmapped (skipped) rather than pointing at nothing.
+            command.CommandText = "DELETE FROM segments WHERE distance_id=@id; DELETE FROM eventspecific WHERE distance_id=@id; DELETE FROM age_groups WHERE distance_id=@id; " +
+                $"UPDATE registration_distances SET distance_id={RegistrationDistance.SkipDistance} WHERE distance_id=@id; " +
+                "DELETE FROM distances WHERE distance_id=@id";
             command.Parameters.AddRange([
                 new SQLiteParameter("@id", identifier) ]);
             command.ExecuteNonQuery();

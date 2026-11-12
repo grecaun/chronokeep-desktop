@@ -96,7 +96,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      VerticalContentAlignment="Center"
                      />
         </StackPanel>
-        <Button Grid.Column="5"
+        <Button Name="RemoveButton"
+                Grid.Column="5"
                 Click="Remove_Click"
                 Height="38"
                 Margin="0,5,0,9"

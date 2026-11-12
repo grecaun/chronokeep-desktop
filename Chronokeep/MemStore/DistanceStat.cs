@@ -20,6 +20,7 @@ using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.MemStore
 {
@@ -50,7 +51,8 @@ namespace Chronokeep.MemStore
                             Dns = 0,
                             Finished = 0
                         };
-                        foreach (Participant p in participants.Values)
+                        // Participants removed in Runsignup are left out of every count.
+                        foreach (Participant p in participants.Values.Where(p => !p.EventSpecific.IsRemoved))
                         {
                             int distIdent = p.EventSpecific.DistanceIdentifier;
                             string distName = distances.TryGetValue(distIdent, out Distance? dist) ? dist.Name : "";

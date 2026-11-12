@@ -109,7 +109,9 @@ namespace Chronokeep.Database.SQLite
                 "eventspecific_apparel, " +
                 "eventspecific_division, " +
                 "eventspecific_version, " +
-                "eventspecific_uploaded_version" +
+                "eventspecific_uploaded_version, " +
+                "eventspecific_external_id, " +
+                "eventspecific_removed" +
                 ") " +
                 "VALUES " +
                 "(" +
@@ -128,7 +130,9 @@ namespace Chronokeep.Database.SQLite
                 "@apparel," +
                 "@division, " +
                 "@version, " +
-                "@uploaded" +
+                "@uploaded, " +
+                "@externalId, " +
+                "@removed" +
                 ")";
             command.Parameters.AddRange([
                 new SQLiteParameter("@participant", person.Identifier),
@@ -146,7 +150,9 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@apparel", person.EventSpecific.Apparel),
                 new SQLiteParameter("@division", person.EventSpecific.Division),
                 new SQLiteParameter("@version", person.EventSpecific.Version),
-                new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion)
+                new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion),
+                new SQLiteParameter("@externalId", person.EventSpecific.ExternalId),
+                new SQLiteParameter("@removed", person.EventSpecific.Removed)
             ]);
             command.ExecuteNonQuery();
             long outVal = connection.LastInsertRowId;
@@ -230,7 +236,9 @@ namespace Chronokeep.Database.SQLite
                 "eventspecific_apparel=@apparel, " +
                 "eventspecific_division=@division, " +
                 "eventspecific_version=@version, " +
-                "eventspecific_uploaded_version=@uploaded " +
+                "eventspecific_uploaded_version=@uploaded, " +
+                "eventspecific_external_id=@externalId, " +
+                "eventspecific_removed=@removed " +
                 "WHERE eventspecific_id=@eventspecid";
             command.Parameters.AddRange([
                     new SQLiteParameter("@distanceId", person.EventSpecific.DistanceIdentifier),
@@ -248,7 +256,9 @@ namespace Chronokeep.Database.SQLite
                     new SQLiteParameter("@apparel", person.EventSpecific.Apparel),
                     new SQLiteParameter("@division", person.EventSpecific.Division),
                     new SQLiteParameter("@version", person.EventSpecific.Version),
-                    new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion)
+                    new SQLiteParameter("@uploaded", person.EventSpecific.UploadedVersion),
+                    new SQLiteParameter("@externalId", person.EventSpecific.ExternalId),
+                    new SQLiteParameter("@removed", person.EventSpecific.Removed)
                 ]);
             command.ExecuteNonQuery();
         }
@@ -383,26 +393,7 @@ namespace Chronokeep.Database.SQLite
                     reader["participant_state"].ToString()!,
                     reader["participant_zip"].ToString()!,
                     reader["participant_birthday"].ToString()!,
-                    new EventSpecific(
-                        Convert.ToInt32(reader["eventspecific_id"]),
-                        Convert.ToInt32(reader["event_id"]),
-                        Convert.ToInt32(reader["distance_id"]),
-                        reader["distance_name"].ToString()!,
-                        reader["eventspecific_bib"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_checkedin"]),
-                        reader["eventspecific_comments"].ToString()!,
-                        reader["eventspecific_owes"].ToString()!,
-                        reader["eventspecific_other"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_status"]),
-                        reader["eventspecific_age_group_name"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_age_group_id"]),
-                        Convert.ToInt16(reader["eventspecific_anonymous"]) != 0,
-                        Convert.ToInt16(reader["eventspecific_sms_enabled"]) != 0,
-                        reader["eventspecific_apparel"] != DBNull.Value ? reader["eventspecific_apparel"].ToString()! : "",
-                        reader["eventspecific_division"] != DBNull.Value ? reader["eventspecific_division"].ToString()! : "",
-                        Convert.ToInt32(reader["eventspecific_version"]),
-                        Convert.ToInt32(reader["eventspecific_uploaded_version"])
-                        ),
+                    ReadEventSpecific(reader),
                     reader["participant_email"].ToString()!,
                     reader["participant_phone"].ToString()!,
                     reader["participant_mobile"].ToString()!,
@@ -418,6 +409,32 @@ namespace Chronokeep.Database.SQLite
             return output;
         }
 
+        private static EventSpecific ReadEventSpecific(SQLiteDataReader reader) =>
+            new(
+                Convert.ToInt32(reader["eventspecific_id"]),
+                Convert.ToInt32(reader["event_id"]),
+                Convert.ToInt32(reader["distance_id"]),
+                reader["distance_name"].ToString()!,
+                reader["eventspecific_bib"].ToString()!,
+                Convert.ToInt32(reader["eventspecific_checkedin"]),
+                reader["eventspecific_comments"].ToString()!,
+                reader["eventspecific_owes"].ToString()!,
+                reader["eventspecific_other"].ToString()!,
+                Convert.ToInt32(reader["eventspecific_status"]),
+                reader["eventspecific_age_group_name"].ToString()!,
+                Convert.ToInt32(reader["eventspecific_age_group_id"]),
+                Convert.ToInt16(reader["eventspecific_anonymous"]) != 0,
+                Convert.ToInt16(reader["eventspecific_sms_enabled"]) != 0,
+                reader["eventspecific_apparel"] != DBNull.Value ? reader["eventspecific_apparel"].ToString()! : "",
+                reader["eventspecific_division"] != DBNull.Value ? reader["eventspecific_division"].ToString()! : "",
+                Convert.ToInt32(reader["eventspecific_version"]),
+                Convert.ToInt32(reader["eventspecific_uploaded_version"])
+                )
+            {
+                ExternalId = reader["eventspecific_external_id"].ToString()!,
+                Removed = reader["eventspecific_removed"].ToString()!,
+            };
+
         private static Participant? GetParticipantWorker(SQLiteDataReader reader)
         {
             if (reader.Read())
@@ -431,26 +448,7 @@ namespace Chronokeep.Database.SQLite
                     reader["participant_state"].ToString()!,
                     reader["participant_zip"].ToString()!,
                     reader["participant_birthday"].ToString()!,
-                    new EventSpecific(
-                        Convert.ToInt32(reader["eventspecific_id"]),
-                        Convert.ToInt32(reader["event_id"]),
-                        Convert.ToInt32(reader["distance_id"]),
-                        reader["distance_name"].ToString()!,
-                        reader["eventspecific_bib"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_checkedin"]),
-                        reader["eventspecific_comments"].ToString()!,
-                        reader["eventspecific_owes"].ToString()!,
-                        reader["eventspecific_other"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_status"]),
-                        reader["eventspecific_age_group_name"].ToString()!,
-                        Convert.ToInt32(reader["eventspecific_age_group_id"]),
-                        Convert.ToInt16(reader["eventspecific_anonymous"]) != 0,
-                        Convert.ToInt16(reader["eventspecific_sms_enabled"]) != 0,
-                        reader["eventspecific_apparel"] != DBNull.Value ? reader["eventspecific_apparel"].ToString()! : "",
-                        reader["eventspecific_division"] != DBNull.Value ? reader["eventspecific_division"].ToString()! : "",
-                        Convert.ToInt32(reader["eventspecific_version"]),
-                        Convert.ToInt32(reader["eventspecific_uploaded_version"])
-                        ),
+                    ReadEventSpecific(reader),
                     reader["participant_email"].ToString()!,
                     reader["participant_phone"].ToString()!,
                     reader["participant_mobile"].ToString()!,

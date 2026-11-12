@@ -22,6 +22,7 @@ using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Chronokeep.Database.SQLite
@@ -30,6 +31,82 @@ namespace Chronokeep.Database.SQLite
     {
         [GeneratedRegex("[/+=]")]
         private static partial Regex Guid();
+
+        /// <summary>
+        /// Maps each Runsignup event (5K, 10K...) in a linked race to a Chronokeep distance.
+        /// distance_id -1 means that Runsignup event is skipped. Shared by new-database setup and the v76 upgrade.
+        /// </summary>
+        internal const string CreateRegistrationDistancesTable =
+            "CREATE TABLE IF NOT EXISTS registration_distances (" +
+            "event_id INTEGER NOT NULL REFERENCES events(event_id), " +
+            "rsu_event_id VARCHAR NOT NULL, " +
+            "rsu_event_name VARCHAR NOT NULL DEFAULT '', " +
+            "distance_id INTEGER NOT NULL DEFAULT -1, " +
+            "UNIQUE (event_id, rsu_event_id) ON CONFLICT REPLACE" +
+            ");";
+
+        /// <summary>
+        /// Rewrites every participant birthdate as yyyy/MM/dd (<see cref="Birthdates.Format"/>).
+        /// participants is UNIQUE(first, last, street, zip, birthday) ON CONFLICT IGNORE, so two rows
+        /// for one person stored as 01/02/1990 and 1/2/1990 would collide once normalized and the
+        /// update would be silently skipped. Those rows are merged first: the duplicate's eventspecific
+        /// rows move to the kept row and the duplicate is deleted. Values that are not dates are left as is.
+        /// </summary>
+        internal static void NormalizeBirthdates(SQLiteConnection connection)
+        {
+            List<(long Id, string? First, string? Last, string? Street, string? Zip, string Birthday, string Normalized)> rows = [];
+            using (SQLiteCommand read = connection.CreateCommand())
+            {
+                read.CommandText = "SELECT participant_id, participant_first, participant_last, participant_street, " +
+                    "participant_zip, participant_birthday FROM participants ORDER BY participant_id;";
+                using SQLiteDataReader reader = read.ExecuteReader();
+                while (reader.Read())
+                {
+                    string birthday = reader["participant_birthday"] as string ?? "";
+                    rows.Add((
+                        Convert.ToInt64(reader["participant_id"]),
+                        reader["participant_first"] as string,
+                        reader["participant_last"] as string,
+                        reader["participant_street"] as string,
+                        reader["participant_zip"] as string,
+                        birthday,
+                        Birthdates.Normalize(birthday)));
+                }
+            }
+            // SQLite treats NULLs as distinct in a UNIQUE constraint, so rows with a NULL key column never collide.
+            IEnumerable<IGrouping<object, (long Id, string? First, string? Last, string? Street, string? Zip, string Birthday, string Normalized)>> groups =
+                rows.GroupBy(r => r.First == null || r.Last == null || r.Street == null || r.Zip == null
+                    ? (object)r.Id
+                    : (r.First, r.Last, r.Street, r.Zip, r.Normalized));
+            foreach (var group in groups)
+            {
+                var members = group.ToList();
+                // Keep the row already in the stored format if there is one, otherwise the oldest.
+                var keep = members.FirstOrDefault(m => m.Birthday == m.Normalized);
+                if (keep == default)
+                {
+                    keep = members[0];
+                }
+                foreach (var duplicate in members.Where(m => m.Id != keep.Id))
+                {
+                    using SQLiteCommand merge = connection.CreateCommand();
+                    merge.CommandText = "UPDATE eventspecific SET participant_id=@keep WHERE participant_id=@dup; " +
+                        "DELETE FROM participants WHERE participant_id=@dup;";
+                    merge.Parameters.Add(new SQLiteParameter("@keep", keep.Id));
+                    merge.Parameters.Add(new SQLiteParameter("@dup", duplicate.Id));
+                    merge.ExecuteNonQuery();
+                    Log.D("Database.SQLite.Update", $"Merged participant {duplicate.Id} into {keep.Id} while normalizing birthdates.");
+                }
+                if (keep.Birthday != keep.Normalized)
+                {
+                    using SQLiteCommand update = connection.CreateCommand();
+                    update.CommandText = "UPDATE participants SET participant_birthday=@birthday WHERE participant_id=@id;";
+                    update.Parameters.Add(new SQLiteParameter("@birthday", keep.Normalized));
+                    update.Parameters.Add(new SQLiteParameter("@id", keep.Id));
+                    update.ExecuteNonQuery();
+                }
+            }
+        }
 
         internal static void UpdateClient(int dbVersion, int maxVersion)
         {
@@ -1681,6 +1758,25 @@ namespace Chronokeep.Database.SQLite
                         Log.D("Database.SQLite.Update", "Upgrading from version 74.");
                         command.CommandText = "ALTER TABLE events ADD COLUMN event_use_male_female INTEGER NOT NULL DEFAULT 0;" +
                             $"UPDATE settings SET value='75' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
+                        command.ExecuteNonQuery();
+                        goto case 75;
+                    case 75:
+                        // Version 76: Runsignup registration support and yyyy/MM/dd birthdates.
+                        Log.D("Database.SQLite.Update", "Upgrading from version 75.");
+                        command = connection.CreateCommand();
+                        command.CommandText =
+                            // The event's Runsignup link: the API record, the race, and the fields copied into Comments.
+                            "ALTER TABLE events ADD COLUMN registration_api_id INTEGER NOT NULL DEFAULT -1;" +
+                            "ALTER TABLE events ADD COLUMN registration_race_id VARCHAR NOT NULL DEFAULT '';" +
+                            "ALTER TABLE events ADD COLUMN registration_comment_fields VARCHAR NOT NULL DEFAULT '';" +
+                            // rsu-{registration_id} for re-download matching, and the Runsignup removal reason ('' = active).
+                            "ALTER TABLE eventspecific ADD COLUMN eventspecific_external_id VARCHAR NOT NULL DEFAULT '';" +
+                            "ALTER TABLE eventspecific ADD COLUMN eventspecific_removed VARCHAR NOT NULL DEFAULT '';" +
+                            CreateRegistrationDistancesTable;
+                        command.ExecuteNonQuery();
+                        NormalizeBirthdates(connection);
+                        command = connection.CreateCommand();
+                        command.CommandText = $"UPDATE settings SET value='76' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();
                         break;
 

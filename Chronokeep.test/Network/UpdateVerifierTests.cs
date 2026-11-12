@@ -124,11 +124,57 @@ namespace Chronokeep.Test.Network
         [Fact]
         public async Task Verify_GitHubUnreachable_IsRejected()
         {
-            string url;
-            using (FakeApiServer stopped = new()) url = stopped.Url;
+            // A port that nothing ever registered, so the connection is refused at once. A stopped
+            // HttpListener can leave its HTTP.sys URL registered, which makes the request hang instead.
+            System.Net.Sockets.TcpListener probe = new(System.Net.IPAddress.Loopback, 0);
+            probe.Start();
+            int port = ((System.Net.IPEndPoint)probe.LocalEndpoint).Port;
+            probe.Stop();
+            string url = $"http://127.0.0.1:{port}/";
             using HttpClient client = new();
             string problem = await UpdateVerifier.Verify(client, $"{url}SHA256SUMS", $"{url}attestations/sha256:", "chronokeep.deb", WriteFile("chronokeep.deb", "abc"), CancellationToken.None);
             Assert.Contains("Unable to reach GitHub", problem);
+        }
+
+        /// <summary>Accepts connections and never answers, so a request can only end by timing out or being cancelled.</summary>
+        private static System.Net.Sockets.TcpListener SilentServer(out string url)
+        {
+            System.Net.Sockets.TcpListener listener = new(IPAddress.Loopback, 0);
+            listener.Start();
+            url = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}/";
+            return listener;
+        }
+
+        [Fact]
+        public async Task Verify_GitHubTimesOut_IsRejected()
+        {
+            System.Net.Sockets.TcpListener silent = SilentServer(out string url);
+            try
+            {
+                using HttpClient client = new() { Timeout = TimeSpan.FromMilliseconds(300) };
+                string problem = await UpdateVerifier.Verify(client, $"{url}SHA256SUMS", $"{url}attestations/sha256:", "chronokeep.deb", WriteFile("chronokeep.deb", "abc"), CancellationToken.None);
+                Assert.Contains("Unable to reach GitHub", problem);
+            }
+            finally
+            {
+                silent.Stop();
+            }
+        }
+
+        [Fact]
+        public async Task Verify_CancelledByTheCaller_StillThrows()
+        {
+            System.Net.Sockets.TcpListener silent = SilentServer(out string url);
+            try
+            {
+                using HttpClient client = new();
+                using CancellationTokenSource cancel = new(TimeSpan.FromMilliseconds(300));
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => UpdateVerifier.Verify(client, $"{url}SHA256SUMS", $"{url}attestations/sha256:", "chronokeep.deb", WriteFile("chronokeep.deb", "abc"), cancel.Token));
+            }
+            finally
+            {
+                silent.Stop();
+            }
         }
     }
 

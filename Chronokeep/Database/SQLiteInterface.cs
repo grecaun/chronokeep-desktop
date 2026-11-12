@@ -32,10 +32,10 @@ namespace Chronokeep.Database
     internal class SqLiteInterface(string info) : IdbInterface
     {
         /**
-         * HIGHEST LOCK ID = 175
-         * NEXT AVAILABLE   = 176
+         * HIGHEST LOCK ID = 177
+         * NEXT AVAILABLE   = 178
          */
-        private const int Version = 75;
+        private const int Version = 76;
         public const int MINIMUM_COMPATIBLE_VERSION = 63;
         private readonly Lock dbLock = new();
 
@@ -2788,6 +2788,54 @@ namespace Chronokeep.Database
                 dbLock.Exit();
             }
             return output;
+        }
+
+        /*
+         * Registration (Runsignup) distance map
+         */
+
+        public List<RegistrationDistance> GetRegistrationDistances(int eventId)
+        {
+            List<RegistrationDistance> output = [];
+            Log.D("SQLiteInterface", "Attempting to grab Lock: ID 176");
+            if (!dbLock.TryEnter(3000))
+            {
+                Log.D("SQLiteInterface", "Failed to grab Lock: ID 176");
+                return output;
+            }
+            try
+            {
+                SQLiteConnection connection = new($"Data Source={info};Version=3");
+                connection.Open();
+                output = RegistrationDistances.GetRegistrationDistances(eventId, connection);
+                connection.Close();
+            }
+            finally
+            {
+                dbLock.Exit();
+            }
+            return output;
+        }
+
+        public void SetRegistrationDistances(int eventId, List<RegistrationDistance> distances)
+        {
+            Log.D("SQLiteInterface", "Attempting to grab Lock: ID 177");
+            if (!dbLock.TryEnter(3000))
+            {
+                Log.D("SQLiteInterface", "Failed to grab Lock: ID 177");
+                return;
+            }
+            try
+            {
+                SQLiteConnection connection = new($"Data Source={info};Version=3");
+                connection.Open();
+                RegistrationDistances.SetRegistrationDistances(eventId, distances, connection);
+                connection.Close();
+            }
+            finally
+            {
+                dbLock.Exit();
+            }
         }
 
         public List<Alarm> SaveAlarms(int eventId, List<Alarm> alarms)

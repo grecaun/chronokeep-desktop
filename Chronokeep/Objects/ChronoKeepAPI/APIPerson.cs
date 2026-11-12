@@ -71,7 +71,7 @@ namespace Chronokeep.Objects.ChronoKeepAPI
             Bib = Bib.Trim();
             First = First.Trim();
             Last = Last.Trim();
-            Birthdate = Birthdate.Trim();
+            Birthdate = Helpers.Birthdates.Normalize(Birthdate);
             Gender = Gender.Trim();
             AgeGroup = AgeGroup.Trim();
             Distance = Distance.Trim();
@@ -81,12 +81,9 @@ namespace Chronokeep.Objects.ChronoKeepAPI
 
         public void FormatData()
         {
-            string dummyYear = $"{DateTime.Now.Year - 130}";
-            if (!DateTime.TryParse(Birthdate, out DateTime birthDateTime))
-            {
-                birthDateTime = DateTime.Parse($"{dummyYear}/01/01");
-            }
-            Birthdate = birthDateTime.ToShortDateString();
+            Birthdate = Helpers.Birthdates.TryParse(Birthdate, out DateTime birthDateTime)
+                ? birthDateTime.ToString(Helpers.Birthdates.Format, System.Globalization.CultureInfo.InvariantCulture)
+                : Helpers.Birthdates.JanuaryFirst(DateTime.Now.Year - 130);
         }
     }
 }

@@ -63,7 +63,11 @@ namespace Chronokeep.Database.SQLite
         {
             using SQLiteTransaction transaction = connection.BeginTransaction();
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "UPDATE events SET api_id=-1, api_event_id='' WHERE api_id=@id; DELETE FROM results_api WHERE api_id=@id;";
+            command.CommandText = "UPDATE events SET api_id=-1, api_event_id='' WHERE api_id=@id; " +
+                // A removed registration API unlinks its events and drops their distance maps.
+                "DELETE FROM registration_distances WHERE event_id IN (SELECT event_id FROM events WHERE registration_api_id=@id); " +
+                "UPDATE events SET registration_api_id=-1, registration_race_id='', registration_comment_fields='' WHERE registration_api_id=@id; " +
+                "DELETE FROM results_api WHERE api_id=@id;";
             command.Parameters.Add(new SQLiteParameter("@id", identifier));
             command.ExecuteNonQuery();
             transaction.Commit();

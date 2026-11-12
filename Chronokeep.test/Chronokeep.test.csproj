@@ -7,6 +7,8 @@
     <LangVersion>14</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- xunit v3 test projects are self-hosting executables. -->
+    <OutputType>Exe</OutputType>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>Chronokeep.Test</RootNamespace>
@@ -15,8 +17,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <!-- Headless Avalonia for UI tests; its 12.1.1 build matches the app's Avalonia and requires xunit v3. -->
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="12.1.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

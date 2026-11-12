@@ -146,6 +146,13 @@ namespace Chronokeep.Updates
                 Log.E("Updates.UpdateVerifier", $"Unable to check the download. {e.Message}");
                 output = "Unable to reach GitHub to check the download.";
             }
+            // HttpClient reports its own timeout as a cancellation. Only a cancel from the caller should
+            // escape; a timeout means GitHub could not be reached.
+            catch (TaskCanceledException e) when (!token.IsCancellationRequested)
+            {
+                Log.E("Updates.UpdateVerifier", $"Timed out checking the download. {e.Message}");
+                output = "Unable to reach GitHub to check the download.";
+            }
             return output;
         }
     }

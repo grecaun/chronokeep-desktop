@@ -20,6 +20,7 @@ using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.MemStore
 {
@@ -111,6 +112,22 @@ namespace Chronokeep.MemStore
                 try
                 {
                     apis.Remove(identifier);
+                    // Mirror the database: events linked to this API lose that link.
+                    IEnumerable<Event> cached = theEvent == null ? allEvents : allEvents.Append(theEvent);
+                    foreach (Event ev in cached)
+                    {
+                        if (ev.ApiId == identifier)
+                        {
+                            ev.ApiId = Constants.ApiConstants.NULL_ID;
+                            ev.ApiEventId = Constants.ApiConstants.NULL_EVENT_ID;
+                        }
+                        if (ev.RegistrationApiId == identifier)
+                        {
+                            ev.RegistrationApiId = Constants.ApiConstants.NULL_ID;
+                            ev.RegistrationRaceId = Constants.ApiConstants.NULL_EVENT_ID;
+                            ev.RegistrationCommentFields = "";
+                        }
+                    }
                 }
                 finally
                 {
@@ -156,6 +173,22 @@ namespace Chronokeep.MemStore
                 Log.D("MemStore", $"Exception acquiring apiLock. {e.Message}");
                 throw new ChronokeepLockException("apiLock");
             }
+        }
+
+        /**
+         * Registration (Runsignup) distance map: read and written straight through, not cached.
+         */
+
+        public List<RegistrationDistance> GetRegistrationDistances(int eventId)
+        {
+            Log.D("MemStore", "GetRegistrationDistances");
+            return database.GetRegistrationDistances(eventId);
+        }
+
+        public void SetRegistrationDistances(int eventId, List<RegistrationDistance> distances)
+        {
+            Log.D("MemStore", "SetRegistrationDistances");
+            database.SetRegistrationDistances(eventId, distances);
         }
     }
 }

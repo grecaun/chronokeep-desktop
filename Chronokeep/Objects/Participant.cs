@@ -34,7 +34,7 @@ namespace Chronokeep.Objects
             string ecName, string ecPhone
             )
         {
-            birthdate = birthday;
+            birthdate = Helpers.Birthdates.Normalize(birthday);
             FirstName = first;
             LastName = last;
             Street = street;
@@ -62,7 +62,7 @@ namespace Chronokeep.Objects
             string ecName, string ecPhone
             )
         {
-            birthdate = birthday;
+            birthdate = Helpers.Birthdates.Normalize(birthday);
             Identifier = id;
             FirstName = first;
             LastName = last;
@@ -96,7 +96,7 @@ namespace Chronokeep.Objects
 
         internal void Trim()
         {
-            birthdate = birthdate.Trim();
+            birthdate = Helpers.Birthdates.Normalize(birthdate);
             FirstName = FirstName.Trim();
             LastName = LastName.Trim();
             Street = Street.Trim();
@@ -476,12 +476,9 @@ namespace Chronokeep.Objects
             {
                 Gender = "Not Specified";
             }
-            string dummyYear = $"{DateTime.Now.Year - 130}";
-            if (!DateTime.TryParse(birthdate, out DateTime birthDateTime))
-            {
-                birthDateTime = DateTime.Parse($"{dummyYear}/01/01");
-            }
-            birthdate = birthDateTime.ToShortDateString();
+            birthdate = Helpers.Birthdates.TryParse(birthdate, out DateTime birthDateTime)
+                ? birthDateTime.ToString(Helpers.Birthdates.Format, System.Globalization.CultureInfo.InvariantCulture)
+                : Helpers.Birthdates.JanuaryFirst(DateTime.Now.Year - 130);
         }
 
         private static bool AllCaps(string val) => val.Equals(val.ToUpper());
@@ -669,7 +666,7 @@ namespace Chronokeep.Objects
             FirstName = firstName;
             LastName = lastName;
             Gender = gender;
-            birthdate = birthDate;
+            birthdate = Helpers.Birthdates.Normalize(birthDate);
             EventSpecific.DistanceIdentifier = d.Identifier;
             EventSpecific.DistanceName = d.Name;
             EventSpecific.Bib = bib;

@@ -121,7 +121,7 @@ namespace Chronokeep.Test.Logic
             Assert.Equal("XYZ42", person.Identifier);
             Assert.Equal("101", person.Bib);
             Assert.Equal("Jane", person.First);
-            Assert.Equal("06/16/1990", person.Birthdate);
+            Assert.Equal("1990/06/16", person.Birthdate);
             Assert.Equal("Woman", person.Gender);
             Assert.Equal("30-39", person.AgeGroup);
             Assert.Equal("5K", person.Distance);
@@ -153,7 +153,7 @@ namespace Chronokeep.Test.Logic
             person.FormatData();
             Assert.Equal("7", person.Bib);
             Assert.Equal("Jane", person.First);
-            Assert.Equal(new DateTime(DateTime.Now.Year - 130, 1, 1).ToShortDateString(), person.Birthdate);
+            Assert.Equal(new DateTime(DateTime.Now.Year - 130, 1, 1).ToString("yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture), person.Birthdate);
         }
     }
 }

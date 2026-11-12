@@ -86,6 +86,7 @@ namespace Chronokeep.Database.SQLite
                 "DELETE FROM distances WHERE event_id=@event;" +
                 "DELETE FROM timing_locations WHERE event_id=@event;" +
                 "DELETE FROM eventspecific WHERE event_id=@event;" +
+                "DELETE FROM registration_distances WHERE event_id=@event;" +
                 "DELETE FROM events WHERE event_id=@event;";
             command.Parameters.AddRange([
                 new SQLiteParameter("@event", identifier) ]);
@@ -119,6 +120,9 @@ namespace Chronokeep.Database.SQLite
                 "event_start_window=@startWindow," +
                 "api_id=@apiid," +
                 "api_event_id=@apieventid," +
+                "registration_api_id=@regapiid," +
+                "registration_race_id=@regraceid," +
+                "registration_comment_fields=@regcomments," +
                 "event_display_placements=@display," +
                 "event_age_groups_as_divisions=@agDiv," +
                 "event_days_allowed=@daysAllowed," +
@@ -143,6 +147,9 @@ namespace Chronokeep.Database.SQLite
                 new SQLiteParameter("@startWindow", anEvent.StartWindow),
                 new SQLiteParameter("@apiid", anEvent.ApiId),
                 new SQLiteParameter("@apieventid", anEvent.ApiEventId),
+                new SQLiteParameter("@regapiid", anEvent.RegistrationApiId),
+                new SQLiteParameter("@regraceid", anEvent.RegistrationRaceId),
+                new SQLiteParameter("@regcomments", anEvent.RegistrationCommentFields),
                 new SQLiteParameter("@display", anEvent.DisplayPlacements),
                 new SQLiteParameter("@agDiv", anEvent.DivisionsEnabled),
                 new SQLiteParameter("@daysAllowed", anEvent.DaysAllowed),
@@ -162,33 +169,41 @@ namespace Chronokeep.Database.SQLite
             SQLiteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
-                output.Add(new Event(Convert.ToInt32(reader["event_id"]),
-                    reader["event_name"].ToString()!,
-                    reader["event_date"].ToString()!,
-                    Convert.ToInt32(reader["event_common_age_groups"]),
-                    Convert.ToInt32(reader["event_common_start_finish"]),
-                    Convert.ToInt32(reader["event_distance_specific_segments"]),
-                    Convert.ToInt32(reader["event_rank_by_gun"]),
-                    reader["event_yearcode"].ToString()!,
-                    Convert.ToInt32(reader["event_finish_max_occurances"]),
-                    Convert.ToInt32(reader["event_finish_ignore_within"]),
-                    Convert.ToInt32(reader["event_start_window"]),
-                    Convert.ToInt64(reader["event_start_time_seconds"]),
-                    Convert.ToInt32(reader["event_start_time_milliseconds"]),
-                    Convert.ToInt32(reader["event_type"]),
-                    Convert.ToInt32(reader["api_id"]),
-                    reader["api_event_id"].ToString()!,
-                    Convert.ToInt32(reader["event_display_placements"]),
-                    Convert.ToInt32(reader["event_age_groups_as_divisions"]),
-                    Convert.ToInt32(reader["event_days_allowed"]),
-                    Convert.ToInt32(reader["event_upload_specific_distance_results"]),
-                    Convert.ToInt32(reader["event_start_max_occurrences"]),
-                    Convert.ToInt32(reader["event_use_male_female"]) != 0
-                    ));
+                output.Add(ReadEvent(reader));
             }
             reader.Close();
             return output;
         }
+
+        private static Event ReadEvent(SQLiteDataReader reader) =>
+            new(Convert.ToInt32(reader["event_id"]),
+                reader["event_name"].ToString()!,
+                reader["event_date"].ToString()!,
+                Convert.ToInt32(reader["event_common_age_groups"]),
+                Convert.ToInt32(reader["event_common_start_finish"]),
+                Convert.ToInt32(reader["event_distance_specific_segments"]),
+                Convert.ToInt32(reader["event_rank_by_gun"]),
+                reader["event_yearcode"].ToString()!,
+                Convert.ToInt32(reader["event_finish_max_occurances"]),
+                Convert.ToInt32(reader["event_finish_ignore_within"]),
+                Convert.ToInt32(reader["event_start_window"]),
+                Convert.ToInt64(reader["event_start_time_seconds"]),
+                Convert.ToInt32(reader["event_start_time_milliseconds"]),
+                Convert.ToInt32(reader["event_type"]),
+                Convert.ToInt32(reader["api_id"]),
+                reader["api_event_id"].ToString()!,
+                Convert.ToInt32(reader["event_display_placements"]),
+                Convert.ToInt32(reader["event_age_groups_as_divisions"]),
+                Convert.ToInt32(reader["event_days_allowed"]),
+                Convert.ToInt32(reader["event_upload_specific_distance_results"]),
+                Convert.ToInt32(reader["event_start_max_occurrences"]),
+                Convert.ToInt32(reader["event_use_male_female"]) != 0
+                )
+            {
+                RegistrationApiId = Convert.ToInt32(reader["registration_api_id"]),
+                RegistrationRaceId = reader["registration_race_id"].ToString()!,
+                RegistrationCommentFields = reader["registration_comment_fields"].ToString()!,
+            };
 
         internal static int GetEventId(Event anEvent, SQLiteConnection connection)
         {
@@ -222,29 +237,7 @@ namespace Chronokeep.Database.SQLite
             Event? output = null;
             if (reader.Read())
             {
-                output = new Event(Convert.ToInt32(reader["event_id"]),
-                    reader["event_name"].ToString()!,
-                    reader["event_date"].ToString()!,
-                    Convert.ToInt32(reader["event_common_age_groups"]),
-                    Convert.ToInt32(reader["event_common_start_finish"]),
-                    Convert.ToInt32(reader["event_distance_specific_segments"]),
-                    Convert.ToInt32(reader["event_rank_by_gun"]),
-                    reader["event_yearcode"].ToString()!,
-                    Convert.ToInt32(reader["event_finish_max_occurances"]),
-                    Convert.ToInt32(reader["event_finish_ignore_within"]),
-                    Convert.ToInt32(reader["event_start_window"]),
-                    Convert.ToInt64(reader["event_start_time_seconds"]),
-                    Convert.ToInt32(reader["event_start_time_milliseconds"]),
-                    Convert.ToInt32(reader["event_type"]),
-                    Convert.ToInt32(reader["api_id"]),
-                    reader["api_event_id"].ToString()!,
-                    Convert.ToInt32(reader["event_display_placements"]),
-                    Convert.ToInt32(reader["event_age_groups_as_divisions"]),
-                    Convert.ToInt32(reader["event_days_allowed"]),
-                    Convert.ToInt32(reader["event_upload_specific_distance_results"]),
-                    Convert.ToInt32(reader["event_start_max_occurrences"]),
-                    Convert.ToInt32(reader["event_use_male_female"]) != 0
-                    );
+                output = ReadEvent(reader);
             }
             reader.Close();
             return output;

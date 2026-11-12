@@ -185,7 +185,10 @@ namespace Chronokeep.Database.SQLite
                     context.Event,
                     part != null ? part.EventSpecific.Division : "",
                     Convert.ToInt32(reader["timeresult_division_place"])
-                    ));
+                    )
+                {
+                    Removed = part is { EventSpecific.IsRemoved: true },
+                });
             }
             reader.Close();
             return output;
@@ -312,6 +315,9 @@ namespace Chronokeep.Database.SQLite
             ]);
             SQLiteDataReader reader = command.ExecuteReader();
             List<TimeResult> output = GetResultsInternal(reader, context);
+            // Results of participants removed in Runsignup are never uploaded. They stay not-uploaded,
+            // so they go up if the registration is reinstated.
+            output.RemoveAll(result => result.Removed);
             return output;
         }
 

@@ -42,6 +42,10 @@ namespace Chronokeep.Database
         ApiObject? GetApi(int identifier);
         List<ApiObject> GetAllApi();
 
+        // Registration (Runsignup) distance map
+        List<RegistrationDistance> GetRegistrationDistances(int eventId);
+        void SetRegistrationDistances(int eventId, List<RegistrationDistance> distances);
+
         // Event Functions
         int AddEvent(Event anEvent);
         void RemoveEvent(int identifier);

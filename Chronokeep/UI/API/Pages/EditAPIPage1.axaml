@@ -36,13 +36,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 VerticalAlignment="Center"
                 Margin="0,10,0,10"
                 >
-        <Button Content="Unlink"
+        <Button Name="UnlinkButton"
+                Content="Unlink"
                 Click="Unlink_Click"/>
-        <Button Content="Edit Event"
+        <Button Name="EditEventButton"
+                Content="Edit Event"
                 Click="Edit_Event_Click"/>
-        <Button Content="Edit Year"
+        <Button Name="EditYearButton"
+                Content="Edit Year"
                 Click="Edit_Year_Click"/>
-        <Button Content="Cancel"
+        <Button Name="CancelButton"
+                Content="Cancel"
                 Click="Cancel_Click"/>
     </StackPanel>
 </UserControl>

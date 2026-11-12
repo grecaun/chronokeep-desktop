@@ -114,6 +114,9 @@ namespace Chronokeep.Database.SQLite
                     "event_use_male_female INTEGER NOT NULL DEFAULT 0," +
                     "api_id INTEGER REFERENCES results_api(api_id) NOT NULL DEFAULT -1," +
                     "api_event_id VARCHAR(200) NOT NULL DEFAULT ''," +
+                    "registration_api_id INTEGER NOT NULL DEFAULT -1," +
+                    "registration_race_id VARCHAR NOT NULL DEFAULT ''," +
+                    "registration_comment_fields VARCHAR NOT NULL DEFAULT ''," +
                     "event_display_placements INTEGER NOT NULL DEFAULT 1," +
                     "UNIQUE (event_name, event_date) ON CONFLICT IGNORE" +
                     ");");
@@ -187,8 +190,11 @@ namespace Chronokeep.Database.SQLite
                     "eventspecific_division VARCHAR NOT NULL DEFAULT '', " +
                     $"eventspecific_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
                     $"eventspecific_uploaded_version INTEGER NOT NULL DEFAULT {Constants.Timing.EVENTSPECIFIC_DEFAULT_VERSION}, " +
+                    "eventspecific_external_id VARCHAR NOT NULL DEFAULT '', " +
+                    "eventspecific_removed VARCHAR NOT NULL DEFAULT '', " +
                     "UNIQUE (participant_id, event_id, distance_id, eventspecific_bib) ON CONFLICT REPLACE" +
                     ");");
+                queries.Add(Update.CreateRegistrationDistancesTable);
                 queries.Add("CREATE TABLE IF NOT EXISTS segments (" +
                     "segment_id INTEGER PRIMARY KEY," +
                     "event_id INTEGER NOT NULL REFERENCES events(event_id)," +
@@ -247,7 +253,7 @@ namespace Chronokeep.Database.SQLite
                     "UNIQUE (event_id, eventspecific_id, location_id, timeresult_occurance, timeresult_unknown_id) ON CONFLICT REPLACE" +
                     ");");
                 queries.Add("INSERT INTO participants (participant_id, participant_first, participant_last," +
-                    " participant_birthday) VALUES (0, 'J', 'Doe', '01/01/1901');");
+                    " participant_birthday) VALUES (0, 'J', 'Doe', '1901/01/01');");
                 queries.Add("CREATE TABLE IF NOT EXISTS settings (" +
                     "setting VARCHAR NOT NULL," +
                     "value VARCHAR NOT NULL," +

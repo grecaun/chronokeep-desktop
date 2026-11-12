@@ -237,7 +237,7 @@ namespace Chronokeep.MemStore
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
                     {
-                        output.AddRange(timingResults.Values.Where(tr => tr.EventIdentifier == eventId && !tr.IsUploaded() && tr.DistanceName.Length > 0));
+                        output.AddRange(timingResults.Values.Where(tr => tr.EventIdentifier == eventId && !tr.IsUploaded() && tr.DistanceName.Length > 0 && !tr.Removed));
                     }
                 }
                 finally

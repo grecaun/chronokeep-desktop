@@ -307,16 +307,16 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         {
             age = 0;
         }
-        string birthdate = BirthdayBox.SelectedDate?.ToString("yyyy/M/d") ?? "";
+        string birthdate = BirthdayBox.SelectedDate?.ToString(Birthdates.Format, System.Globalization.CultureInfo.InvariantCulture) ?? "";
         // Check if we've been given an age or the birthdate value is empty or set to today.
-        if (age != 0 && (birthdate.Length < 1 || birthdate == DateTime.Now.ToString("yyyy/M/d")))
+        if (age != 0 && (birthdate.Length < 1 || birthdate == DateTime.Now.ToString(Birthdates.Format, System.Globalization.CultureInfo.InvariantCulture)))
         {
             if (!int.TryParse(theEvent.Date.Split('/')[2], out int year))
             {
                 year = 0;
             }
             year = year < 1969 ? DateTime.Now.Year : year;
-            birthdate = $"1/1/{year - age}";
+            birthdate = Birthdates.JanuaryFirst(year - age);
         }
         Log.D("UI.Participants.ModifyParticipantWindow", $"----- Birthdate ----- {birthdate}");
         Participant output = new(
