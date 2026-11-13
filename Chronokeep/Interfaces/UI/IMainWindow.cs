@@ -42,7 +42,6 @@ namespace Chronokeep.Interfaces.UI
         void UpdateStatus();
         void UpdateTimingFromController();
         void UpdateTiming();
-        void UpdateAnnouncerWindow();
         void UpdateRegistrationDistances();
         void UpdateParticipantsFromRegistration();
         bool BackgroundProcessesRunning();
@@ -61,8 +60,6 @@ namespace Chronokeep.Interfaces.UI
         void NotifyAlarm(string bib, string chip);
 
         // Announcer related calls.
-        bool AnnouncerConnected();
-        void AnnouncerClosing();
         bool AnnouncerOpen();
         void StopAnnouncer();
         bool StartAnnouncerWorker();

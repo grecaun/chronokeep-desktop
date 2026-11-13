@@ -180,7 +180,10 @@
     "Fixed an issue where removing a participant from an event also removed them from every other event they were in.",
     "Fixed an issue where starting Chronokeep while another copy was open crashed with a closed window error instead of saying Chronokeep is already running.",
     "Fixed an issue where Chronokeep stopped responding while participants downloaded from Chronokeep or Runsignup were being saved.",
-    "The announcer window shows runners read at the announcer location and runners crossing the finish line together in one list. A runner read at the announcer location who then finishes shows once.",
-    "Added a Show Unknown Participants switch to the announcer window. It lists bibs that were read but that nobody is registered with."
+    "The announcer is now a web page instead of a window, so any computer or tablet on the network can show it. The Announcer button turns it on and off, starting the web server if it isn't running. The page is at /announcer on the web address shown on the Timing page.",
+    "The announcer page shows runners read at the announcer location and runners crossing the finish line together in one list, with how long ago each was first seen. A runner read at the announcer location who then finishes within the Repeat Window shows once, and with a Repeat Window of 0 each runner only shows once. The Time column shows their finish time once they've finished.",
+    "The announcer page has a settings pane for making the text larger or smaller, choosing which columns show, showing unknown runners (bibs that were read but that nobody is registered with) and showing a running clock for each distance along the bottom. Settings are kept separately on each device.",
+    "The announcer list is built once and shared by every device showing the announcer page, so having several open doesn't slow Chronokeep down.",
+    "Anonymous runners show as Anonymous on the announcer page, without their city, state or comments."
   ]
 }

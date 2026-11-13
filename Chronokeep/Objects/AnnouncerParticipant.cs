@@ -30,18 +30,25 @@ namespace Chronokeep.Objects
     {
         private readonly long seconds = seconds;
         private readonly Participant? person = person;
+        // The finish result when this pass includes the runner finishing.
+        private TimeResult? finish;
 
         public AnnouncerParticipant(Participant person, long seconds) : this(person.Bib, person, seconds) { }
 
         public static Event? TheEvent { get; set; }
-        public DateTime When => Constants.Timing.RfidEpochToDate(seconds);
-        public string AnnouncerWhen => When.ToString("HH:mm:ss");
+        // Read times are this computer's local time, though the RFID epoch they're counted from is marked UTC.
+        public DateTime When => DateTime.SpecifyKind(Constants.Timing.RfidEpochToDate(seconds), DateTimeKind.Local);
         public string Distance => person?.Distance ?? "";
         public string Bib { get; } = bib;
-        public string ParticipantName => person == null ? "" : $"{person.FirstName} {person.LastName}";
-        public string CityState => person == null ? "" : $"{person.City} {person.State}";
+        // Anonymous runners keep their bib, distance and age, but nothing that names them or where they're from.
+        private bool Hidden => person == null || person.Anonymous;
+        public string ParticipantName => person == null ? "" : person.Anonymous ? "Anonymous" : $"{person.FirstName} {person.LastName}";
+        public string CityState => Hidden ? "" : $"{person!.City} {person.State}";
         public string AgeGender => person == null ? "" : TheEvent == null ? $"? {person.Gender}" : $"{person.Age(TheEvent.Date)} {person.Gender}";
-        public string Comments => person?.Comments ?? "";
+        public string Comments => Hidden ? "" : person!.Comments;
+
+        /// <summary>The runner's finish time, once they've finished in this pass; blank until then.</summary>
+        public string FinishTime => finish?.Time.Split('.')[0] ?? "";
 
         public int CompareTo(AnnouncerParticipant other)
         {
@@ -49,29 +56,47 @@ namespace Chronokeep.Objects
         }
 
         /// <summary>
-        /// Combines the announcer-location rows with the finishers into one list, newest first. Only rows at or
-        /// after the cutoff are kept, and each bib shows once, at its latest time, so a runner read at the
-        /// announcer location who then finishes isn't listed twice.
+        /// Combines the announcer-location rows with the finishers into one list, newest first. Each runner's
+        /// sightings are grouped into passes: a sighting within repeatMinutes of the start of their last pass
+        /// is part of it, and a repeatMinutes of 0 means a runner only ever has one pass. Each pass shows once,
+        /// at the time the runner was first seen, and only passes starting at or after the cutoff are listed.
         /// </summary>
         public static List<AnnouncerParticipant> Merge(
             IEnumerable<AnnouncerParticipant> announced,
             IEnumerable<TimeResult> results,
             Func<string, Participant?> findParticipant,
             DateTime cutoff,
+            int repeatMinutes,
             bool includeUnknown)
         {
             long cutoffSeconds = Constants.Timing.RfidDateToEpoch(cutoff);
-            return [.. announced
+            List<AnnouncerParticipant> output = [];
+            foreach (IGrouping<string, AnnouncerParticipant> sightings in announced
                 .Concat(results
                     .Where(r => !TimeResult.IsNotFinish(r) && !r.IsDnf() && r.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
-                    .Select(r => new AnnouncerParticipant(r.Bib, null, Constants.Timing.RfidDateToEpoch(r.SystemTime))))
-                .Where(x => x.seconds >= cutoffSeconds)
-                .GroupBy(x => x.Bib)
-                .Select(g => new AnnouncerParticipant(g.Key,
-                    g.Select(x => x.person).FirstOrDefault(p => p != null) ?? findParticipant(g.Key),
-                    g.Max(x => x.seconds)))
-                .Where(x => includeUnknown || x.person != null)
-                .OrderByDescending(x => x.seconds)];
+                    .Select(r => new AnnouncerParticipant(r.Bib, null, Constants.Timing.RfidDateToEpoch(r.SystemTime)) { finish = r }))
+                .GroupBy(x => x.Bib))
+            {
+                Participant? person = sightings.Select(x => x.person).FirstOrDefault(p => p != null);
+                AnnouncerParticipant? pass = null;
+                foreach (AnnouncerParticipant seen in sightings.OrderBy(x => x.seconds))
+                {
+                    if (pass != null && (repeatMinutes == 0 || seen.seconds - pass.seconds < repeatMinutes * 60L))
+                    {
+                        // Part of the pass already listed (or left out); it keeps the first time, but takes a finish.
+                        pass.finish ??= seen.finish;
+                        continue;
+                    }
+                    bool recent = seen.seconds >= cutoffSeconds;
+                    if (recent) person ??= findParticipant(sightings.Key);
+                    pass = new AnnouncerParticipant(sightings.Key, person, seen.seconds) { finish = seen.finish };
+                    if (recent && (includeUnknown || person != null))
+                    {
+                        output.Add(pass);
+                    }
+                }
+            }
+            return [.. output.OrderByDescending(x => x.seconds)];
         }
     }
 }

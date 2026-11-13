@@ -20,6 +20,7 @@ using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.IO.HtmlTemplates;
 using Chronokeep.Objects;
+using Chronokeep.Timing.Announcer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace Chronokeep.Network
@@ -50,7 +52,10 @@ namespace Chronokeep.Network
         private readonly Dictionary<string, byte[]> emailCache = [];
 
         private readonly Dictionary<string, Participant> participantDictionary = [];
+        private readonly Dictionary<string, Participant> participantBibDictionary = [];
         private readonly Dictionary<string, Distance> distanceDictionary = [];
+        // When each distance started, by identifier, for the announcer's clocks; empty until the race starts.
+        private readonly Dictionary<int, DateTime> distanceStarts = [];
         private readonly Dictionary<int, ApiObject> apiDictionary = [];
 
         private readonly Dictionary<string, int> NumberOverallParticipants = [];
@@ -58,6 +63,12 @@ namespace Chronokeep.Network
         private readonly Dictionary<(string, string, string), int> NumberAgeGroupParticipants = [];
 
         private readonly Lock infoLock = new();
+
+        // The announcer list, built once and shared by every open announcer page. It's built again when the
+        // results or the announcer reads change, or once it's a second old so runners leave the window on time.
+        private readonly Dictionary<bool, (DateTime Built, long AnnouncerVersion, List<object> Runners)> announcerCache = [];
+        private long announcerGeneration;
+        private static readonly TimeSpan AnnouncerCacheAge = TimeSpan.FromSeconds(1);
 
         // Read by the listening thread and set by Stop on another, so it must not be cached.
         private volatile bool keepAlive = true;
@@ -81,6 +92,7 @@ namespace Chronokeep.Network
             try
             {
                 theEvent = database!.GetCurrentEvent();
+                AnnouncerParticipant.TheEvent = theEvent;
                 finishResults.Clear();
                 finishDictionary.Clear();
                 participantResults.Clear();
@@ -98,15 +110,24 @@ namespace Chronokeep.Network
                     pResList.Add(r);
                 }
                 distanceDictionary.Clear();
+                distanceStarts.Clear();
+                bool started = theEvent.StartSeconds >= 0 && EventDates.TryParse(theEvent.Date, out _);
+                DateTime gun = started ? EventDates.Parse(theEvent.Date).Date.AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds) : default;
                 foreach (Distance d in database.GetDistances(theEvent.Identifier).Where(d => d.LinkedDistance == Constants.Timing.DISTANCE_NO_LINKED_ID))
                 {
                     distanceDictionary.Add(d.Name, d);
+                    if (started)
+                    {
+                        distanceStarts[d.Identifier] = gun.AddSeconds(d.StartOffsetSeconds).AddMilliseconds(d.StartOffsetMilliseconds);
+                    }
                 }
                 finishResults.AddRange(finishDictionary.Values);
                 finishResults.RemoveAll(r => string.IsNullOrEmpty(r.Bib));
                 finishResults.RemoveAll(r => r.DistanceName.Length < 1);
                 // clear response caches whenever we update information
                 resultsCache = null;
+                announcerCache.Clear();
+                announcerGeneration++;
                 printSelectCache = null;
                 participantCache.Clear();
                 printableCache.Clear();
@@ -115,9 +136,11 @@ namespace Chronokeep.Network
                 NumberGenderParticipants.Clear();
                 NumberAgeGroupParticipants.Clear();
                 participantDictionary.Clear();
+                participantBibDictionary.Clear();
                 foreach (Participant p in database.GetParticipants(theEvent.Identifier))
                 {
                     participantDictionary[p.Identifier.ToString()] = p;
+                    participantBibDictionary.TryAdd(p.Bib, p);
                     if (!NumberOverallParticipants.TryGetValue(p.Distance, out int ov))
                     {
                         ov = 0;
@@ -194,7 +217,25 @@ namespace Chronokeep.Network
 
             byte[] message = Encoding.Default.GetBytes("");
             bool answer = false;
-            if (string.IsNullOrEmpty(filename) || filename.Equals("results.htm", StringComparison.OrdinalIgnoreCase) || filename.Equals("results.html", StringComparison.OrdinalIgnoreCase))
+            if (filename.Equals("announcer", StringComparison.OrdinalIgnoreCase) || filename.Equals("announcer/", StringComparison.OrdinalIgnoreCase))
+            {
+                using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Chronokeep.IO.HtmlTemplates.announcer.html");
+                if (stream != null)
+                {
+                    answer = true;
+                    message = new byte[stream.Length];
+                    stream.ReadExactly(message);
+                    context.Response.ContentType = "text/html";
+                }
+            }
+            else if (filename.Equals("announcer/data", StringComparison.OrdinalIgnoreCase))
+            {
+                answer = true;
+                message = Encoding.UTF8.GetBytes(AnnouncerJson(context.Request.QueryString["unknown"] == "1"));
+                context.Response.ContentType = "application/json";
+                context.Response.Headers["Cache-Control"] = "no-store";
+            }
+            else if (string.IsNullOrEmpty(filename) || filename.Equals("results.htm", StringComparison.OrdinalIgnoreCase) || filename.Equals("results.html", StringComparison.OrdinalIgnoreCase))
             {
                 answer = true;
                 // Serve up HtmlResultsTemplate
@@ -416,6 +457,86 @@ namespace Chronokeep.Network
             {
                 Log.E("Network.HttpServer", $"Error attempting to write response.\n{ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// The announcer page's data: who to announce, newest first, and when each distance started so the
+        /// page can run a clock for it. Times are milliseconds since 1970 by this computer's clock.
+        /// </summary>
+        private string AnnouncerJson(bool includeUnknown)
+        {
+            Event? ev;
+            Dictionary<string, Participant>? byBib = null;
+            List<object> clocks = [];
+            List<object>? runners = null;
+            long generation;
+            long announcerVersion = AnnouncerWorker.Version;
+            lock (infoLock)
+            {
+                ev = theEvent;
+                generation = announcerGeneration;
+                clocks.AddRange(distanceDictionary.Values.OrderBy(d => d.Name).Select(d => new
+                {
+                    distance = d.Name,
+                    start = distanceStarts.TryGetValue(d.Identifier, out DateTime start) ? new DateTimeOffset(start).ToUnixTimeMilliseconds() : (long?)null,
+                }));
+                if (announcerCache.TryGetValue(includeUnknown, out var cached)
+                    && cached.AnnouncerVersion == announcerVersion
+                    && DateTime.Now - cached.Built < AnnouncerCacheAge)
+                {
+                    runners = cached.Runners;
+                }
+                else
+                {
+                    byBib = new(participantBibDictionary);
+                }
+            }
+            if (runners == null)
+            {
+                runners = [];
+                if (ev != null)
+                {
+                    runners.AddRange(BuildAnnouncerList(ev, byBib!, includeUnknown));
+                }
+                lock (infoLock)
+                {
+                    // Results may have changed while the list was built; leave it for the next request to build again.
+                    if (generation == announcerGeneration)
+                    {
+                        announcerCache[includeUnknown] = (DateTime.Now, announcerVersion, runners);
+                    }
+                }
+            }
+            // The time is added for every request, since the page sets its clocks from it.
+            return JsonSerializer.Serialize(new
+            {
+                @event = ev == null ? "" : $"{ev.YearCode} {ev.Name}".Trim(),
+                now = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                runners,
+                clocks,
+            });
+        }
+
+        private IEnumerable<object> BuildAnnouncerList(Event ev, Dictionary<string, Participant> byBib, bool includeUnknown)
+        {
+            return AnnouncerParticipant.Merge(
+                    AnnouncerWorker.GetList(),
+                    database!.GetTimingResults(ev.Identifier),
+                    byBib.GetValueOrDefault,
+                    DateTime.Now.AddSeconds(-1 * Globals.AnnouncerWindow),
+                    Globals.SeenWindow,
+                    includeUnknown
+                    ).Select(a => new
+                    {
+                        time = a.FinishTime,
+                        at = new DateTimeOffset(a.When).ToUnixTimeMilliseconds(),
+                        distance = a.Distance,
+                        bib = a.Bib,
+                        name = a.ParticipantName,
+                        cityState = a.CityState,
+                        ageGender = a.AgeGender,
+                        comments = a.Comments,
+                    });
         }
 
         private void Initialize(IdbInterface iDatabase, int iPort)

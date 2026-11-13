@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Chronokeep.Database;
 using Chronokeep.Helpers;
-using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,6 @@ namespace Chronokeep.Timing.Announcer
     public class AnnouncerWorker
     {
         private readonly IdbInterface database;
-        private readonly IMainWindow window;
         private static AnnouncerWorker? announcer;
 
         private static readonly Semaphore Semaphore = new(0, 2);
@@ -38,17 +36,17 @@ namespace Chronokeep.Timing.Announcer
 
         private static bool quittingTime = true;
         private static readonly List<AnnouncerParticipant> Participants = [];
+        private static long version;
         private static readonly Dictionary<string, DateTime> BibSeen = [];
 
-        private AnnouncerWorker(IMainWindow window, IdbInterface database)
+        private AnnouncerWorker(IdbInterface database)
         {
-            this.window = window;
             this.database = database;
         }
 
-        public static AnnouncerWorker NewAnnouncer(IMainWindow window, IdbInterface database)
+        public static AnnouncerWorker NewAnnouncer(IdbInterface database)
         {
-            announcer ??= new AnnouncerWorker(window, database);
+            announcer ??= new AnnouncerWorker(database);
             quittingTime = false;
             return announcer;
         }
@@ -84,6 +82,18 @@ namespace Chronokeep.Timing.Announcer
             return output;
         }
 
+        /// <summary>Goes up every time the list changes, so readers can tell when to build anything from it again.</summary>
+        public static long Version
+        {
+            get
+            {
+                lock (AnLock)
+                {
+                    return version;
+                }
+            }
+        }
+
         public static bool Running()
         {
             bool output = false;
@@ -114,7 +124,7 @@ namespace Chronokeep.Timing.Announcer
         private bool ProcessReads(List<ChipRead> announcerReads, Dictionary<string, Participant> participantBibDictionary)
         {
             Log.D("Timing.Announcer.AnnouncerWorker", "Processing chip reads.");
-            bool newParticipants = false;
+            List<AnnouncerParticipant> found = [];
             DateTime timeRightNow = DateTime.Now;
             foreach (ChipRead read in announcerReads)
             {
@@ -125,10 +135,9 @@ namespace Chronokeep.Timing.Announcer
                     && (!BibSeen.TryGetValue(read.Bib, out DateTime lastSeen)
                         || (Globals.SeenWindow != 0 && lastSeen.AddMinutes(Globals.SeenWindow).CompareTo(timeRightNow) < 0)))
                 {
-                    newParticipants = true;
                     // Set rather than Add: a runner seen again after the seen window is already in the dictionary.
                     BibSeen[read.Bib] = timeRightNow;
-                    Participants.Add(new AnnouncerParticipant(read.Bib, participantBibDictionary.GetValueOrDefault(read.Bib), read.Seconds));
+                    found.Add(new AnnouncerParticipant(read.Bib, participantBibDictionary.GetValueOrDefault(read.Bib), read.Seconds));
                     // Mark this chipread as USED
                     read.Status = Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED;
                 }
@@ -139,7 +148,13 @@ namespace Chronokeep.Timing.Announcer
                 }
             }
             database.UpdateChipReads(announcerReads);
-            return newParticipants;
+            // The web server reads the list from its own thread.
+            lock (AnLock)
+            {
+                Participants.AddRange(found);
+                if (found.Count > 0) version++;
+            }
+            return found.Count > 0;
         }
 
         public void Run()
@@ -150,6 +165,13 @@ namespace Chronokeep.Timing.Announcer
             foreach (Participant part in database.GetParticipants(theEvent.Identifier).Where(part => !participantBibDictionary.TryAdd(part.Bib, part)))
             {
                 Log.D("Timing.Announcer.AnnouncerWorker", $"Multiples of a Bib found in participants set. {part.Bib}");
+            }
+            // Start from nothing; a previous run may have been for another event.
+            lock (AnLock)
+            {
+                Participants.Clear();
+                version++;
+                BibSeen.Clear();
             }
             // Process any announcer reads that we've already used so we don't announce them later.
             ProcessReads(database.GetAnnouncerUsedChipReads(theEvent.Identifier), participantBibDictionary);
@@ -174,40 +196,23 @@ namespace Chronokeep.Timing.Announcer
                             AnLock.Exit();
                         }
                     }
-                    if (notified)
+                    if (!notified) continue;
+                    Log.D("Timing.Announcer.AnnouncerWorker", "New chip reads found!");
+                    // Quit if the event changed; the announcer page is started again for the new one.
+                    if (database.GetCurrentEvent()!.Identifier != theEvent.Identifier)
                     {
-                        Log.D("Timing.Announcer.AnnouncerWorker", "New chip reads found!");
-                        Event ev2 = database.GetCurrentEvent()!;
-                        // verify that we both ev2 and theEvent are not null and they match
-                        if (ev2.Identifier != theEvent.Identifier)
-                        {
-                            quittingTime = true;
-                            Log.D("Timing.Announcer.AnnouncerWorker", "The event changed while the announcer window is open.");
-                            return;
-                        }
-                        // Ensure the event exists.
-                        if (theEvent.Identifier == -1) continue;
-                        // If we've seen new participants update the window.
-                        if (!ProcessReads(database.GetAnnouncerChipReads(theEvent.Identifier),
-                                participantBibDictionary)) continue;
-                        Log.D("Timing.Announcer.AnnouncerWorker", "There are people to announce.");
+                        quittingTime = true;
+                        Log.D("Timing.Announcer.AnnouncerWorker", "The event changed while the announcer was running.");
+                        return;
                     }
-                    else
-                    {
-                        Log.D("Timing.Announcer.AnnouncerWorker", "Update window expired.");
-                    }
-                    try
-                    {
-                        window.UpdateAnnouncerWindow();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.E("AnnouncerWindow", $"Error trying to update the announcer window. {e}");
-                    }
+                    // Ensure the event exists.
+                    if (theEvent.Identifier == -1) continue;
+                    // The announcer page asks for the list itself, so there's nothing to tell once the reads are processed.
+                    ProcessReads(database.GetAnnouncerChipReads(theEvent.Identifier), participantBibDictionary);
                 }
                 catch (Exception e)
                 {
-                    Log.E("AnnouncerWindow", $"Error processing announcer reads. {e}");
+                    Log.E("Timing.Announcer.AnnouncerWorker", $"Error processing announcer reads. {e}");
                 }
             }
         }

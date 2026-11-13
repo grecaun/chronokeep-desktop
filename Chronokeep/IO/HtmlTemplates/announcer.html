@@ -1,0 +1,290 @@
+<!--
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Announcer</title>
+    <style>
+        :root {
+            --text-size: 22px;
+            --bg: #ffffff; --fg: #1b1b1f; --muted: #6b6b75; --line: #d9d9e0;
+            --stripe: #f4f4f7; --bar: #ececf1; --accent: #2f6fde; --panel: #ffffff; --shade: rgba(0, 0, 0, 0.35);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #16161a; --fg: #ececf1; --muted: #9a9aa5; --line: #34343c;
+                --stripe: #1e1e23; --bar: #222228; --accent: #6b9cf0; --panel: #1e1e23; --shade: rgba(0, 0, 0, 0.6);
+            }
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
+        body {
+            background: var(--bg); color: var(--fg);
+            font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        header {
+            display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+            background: var(--bar); border-bottom: 1px solid var(--line);
+        }
+        header h1 { flex: 1; margin: 0; font-size: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #status { color: var(--muted); font-size: 14px; }
+        button.icon {
+            border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+            border-radius: 6px; padding: 4px 12px; font-size: 16px; line-height: 1.4; cursor: pointer;
+        }
+        #settingsButton { font-size: 22px; padding: 2px 12px; }
+        main { flex: 1; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: var(--text-size); }
+        th, td { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+        th { position: sticky; top: 0; background: var(--bg); font-weight: 600; }
+        tbody tr:nth-child(even) { background: var(--stripe); }
+        td.ago, td.time, td.bib { font-variant-numeric: tabular-nums; white-space: nowrap; }
+        #empty { padding: 24px 16px; color: var(--muted); font-size: calc(var(--text-size) * 0.8); }
+        #clocks {
+            display: flex; flex-wrap: nowrap; overflow: hidden; gap: 0;
+            background: var(--bar); border-top: 1px solid var(--line);
+        }
+        .clock { flex: 0 0 auto; padding: 6px 20px; border-right: 1px solid var(--line); white-space: nowrap; }
+        .clock .name { font-size: calc(var(--text-size) * 0.64); color: var(--muted); }
+        .clock .time { font-size: calc(var(--text-size) * 1.27); font-weight: 600; font-variant-numeric: tabular-nums; }
+        #shade { position: fixed; inset: 0; background: var(--shade); display: none; }
+        #settings {
+            position: fixed; top: 0; right: 0; bottom: 0; width: min(340px, 100%);
+            background: var(--panel); border-left: 1px solid var(--line); padding: 16px;
+            overflow-y: auto; transform: translateX(100%); transition: transform 0.2s ease;
+        }
+        body.settings-open #settings { transform: none; }
+        body.settings-open #shade { display: block; }
+        #settings h2 { margin: 0 0 12px; font-size: 20px; display: flex; justify-content: space-between; align-items: center; }
+        #settings h3 { margin: 20px 0 8px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        #settings label { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 17px; cursor: pointer; }
+        /* Checkboxes are drawn as sliding switches. */
+        #settings input[type=checkbox] {
+            appearance: none; flex: 0 0 auto; position: relative; width: 44px; height: 24px; margin: 0;
+            border-radius: 12px; background: var(--line); cursor: pointer; transition: background 0.15s ease;
+        }
+        #settings input[type=checkbox]::before {
+            content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+            border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: transform 0.15s ease;
+        }
+        #settings input[type=checkbox]:checked { background: var(--accent); }
+        #settings input[type=checkbox]:checked::before { transform: translateX(20px); }
+        #settings input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        button.icon:disabled { opacity: 0.4; cursor: default; }
+        .stepper { display: flex; align-items: center; gap: 12px; }
+        .stepper span { min-width: 56px; text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+        .hint { color: var(--muted); font-size: 14px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="eventName">Announcer</h1>
+        <span id="status"></span>
+        <button class="icon" id="settingsButton" type="button" aria-label="Settings" title="Settings">&#9776;</button>
+    </header>
+    <main>
+        <table>
+            <thead><tr id="headerRow"></tr></thead>
+            <tbody id="rows"></tbody>
+        </table>
+        <div id="empty">Nobody to announce yet.</div>
+    </main>
+    <div id="clocks"></div>
+    <div id="shade"></div>
+    <aside id="settings" aria-label="Settings">
+        <h2>Settings <button class="icon" id="closeSettings" type="button" aria-label="Close settings">&#10005;</button></h2>
+        <h3>Text size</h3>
+        <div class="stepper">
+            <button class="icon" id="smallerText" type="button" aria-label="Smaller text">A&#8722;</button>
+            <span id="textSize"></span>
+            <button class="icon" id="largerText" type="button" aria-label="Larger text">A+</button>
+        </div>
+        <h3>Runners</h3>
+        <label><input type="checkbox" id="showUnknown"> Show unknown runners</label>
+        <div class="hint">Bibs that were read but that nobody is registered with.</div>
+        <h3>Columns</h3>
+        <div id="columnChoices"></div>
+        <h3>Clocks</h3>
+        <label><input type="checkbox" id="showClocks"> Show distance clocks</label>
+        <div id="clockChoices"></div>
+    </aside>
+    <script>
+        "use strict";
+        const COLUMNS = [
+            ["ago", "Ago"], ["time", "Time"], ["distance", "Distance"], ["bib", "Bib"], ["name", "Name"],
+            ["cityState", "City, State"], ["ageGender", "Age G"], ["comments", "Comments"]
+        ];
+        const STORAGE_KEY = "chronokeep.announcer.settings";
+        const TEXT_SIZES = { min: 12, max: 64, step: 2, normal: 22 };
+        const settings = Object.assign({ hiddenColumns: [], showUnknown: false, showClocks: true, hiddenClocks: [], textSize: TEXT_SIZES.normal }, load());
+        let data = { runners: [], clocks: [] };
+        let lastRunners = "";
+        let clockOffset = 0;
+
+        function load() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+        }
+        function save() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch { }
+        }
+        function el(tag, props, children) {
+            const node = Object.assign(document.createElement(tag), props || {});
+            (children || []).forEach(c => node.append(c));
+            return node;
+        }
+        function toggleIn(list, value, on) {
+            const i = list.indexOf(value);
+            if (on && i < 0) list.push(value);
+            if (!on && i >= 0) list.splice(i, 1);
+        }
+        function checkbox(text, checked, onChange) {
+            const box = el("input", { type: "checkbox", checked: checked });
+            box.addEventListener("change", () => { onChange(box.checked); save(); });
+            return el("label", {}, [box, " " + text]);
+        }
+
+        // Settings pane.
+        const body = document.body;
+        document.getElementById("settingsButton").onclick = () => body.classList.add("settings-open");
+        document.getElementById("closeSettings").onclick = () => body.classList.remove("settings-open");
+        document.getElementById("shade").onclick = () => body.classList.remove("settings-open");
+        document.addEventListener("keydown", e => { if (e.key === "Escape") body.classList.remove("settings-open"); });
+        function setTextSize(size) {
+            settings.textSize = Math.min(TEXT_SIZES.max, Math.max(TEXT_SIZES.min, size));
+            document.documentElement.style.setProperty("--text-size", `${settings.textSize}px`);
+            document.getElementById("textSize").textContent = `${Math.round(settings.textSize / TEXT_SIZES.normal * 100)}%`;
+            document.getElementById("smallerText").disabled = settings.textSize <= TEXT_SIZES.min;
+            document.getElementById("largerText").disabled = settings.textSize >= TEXT_SIZES.max;
+        }
+        setTextSize(Number(settings.textSize) || TEXT_SIZES.normal);
+        document.getElementById("smallerText").onclick = () => { setTextSize(settings.textSize - TEXT_SIZES.step); save(); };
+        document.getElementById("largerText").onclick = () => { setTextSize(settings.textSize + TEXT_SIZES.step); save(); };
+        const showUnknown = document.getElementById("showUnknown");
+        showUnknown.checked = settings.showUnknown;
+        showUnknown.onchange = () => { settings.showUnknown = showUnknown.checked; save(); refresh(); };
+        const showClocks = document.getElementById("showClocks");
+        showClocks.checked = settings.showClocks;
+        showClocks.onchange = () => { settings.showClocks = showClocks.checked; save(); renderClocks(); };
+        document.getElementById("columnChoices").append(...COLUMNS.map(([key, title]) =>
+            checkbox(title, !settings.hiddenColumns.includes(key), on => { toggleIn(settings.hiddenColumns, key, !on); renderRunners(); })));
+
+        function visibleColumns() {
+            return COLUMNS.filter(([key]) => !settings.hiddenColumns.includes(key));
+        }
+
+        function renderRunners() {
+            const columns = visibleColumns();
+            document.getElementById("headerRow").replaceChildren(...columns.map(([, title]) => el("th", { textContent: title })));
+            document.getElementById("rows").replaceChildren(...data.runners.map(r =>
+                el("tr", {}, columns.map(([key]) => {
+                    const cell = el("td", { className: key, textContent: r[key] || "" });
+                    if (key === "ago") cell.dataset.at = r.at;
+                    return cell;
+                }))));
+            document.getElementById("empty").style.display = data.runners.length ? "none" : "block";
+            tickAges();
+        }
+
+        // How long ago each runner was seen, by the timing computer's clock.
+        function formatAgo(ms) {
+            const total = Math.max(0, Math.floor(ms / 1000));
+            return total < 60 ? `${total}s ago` : `${Math.floor(total / 60)}m ${String(total % 60).padStart(2, "0")}s ago`;
+        }
+
+        function tickAges() {
+            const now = Date.now() + clockOffset;
+            document.querySelectorAll("td.ago").forEach(td => { td.textContent = formatAgo(now - Number(td.dataset.at)); });
+        }
+
+        // Distances that started together share one clock, named for all of them when the names are short enough.
+        const CLOCK_NAME_LENGTH = 24;
+        function clockGroups() {
+            const groups = new Map();
+            data.clocks.forEach(c => {
+                const key = String(c.start ?? "");
+                if (!groups.has(key)) groups.set(key, { start: c.start, names: [] });
+                groups.get(key).names.push(c.distance);
+            });
+            return [...groups.values()].map(g => {
+                const all = g.names.join(" / ");
+                const name = all.length <= CLOCK_NAME_LENGTH || g.names.length === 1 ? all : `${g.names[0]} +${g.names.length - 1}`;
+                return { key: all, name, all, start: g.start };
+            });
+        }
+
+        function renderClockChoices() {
+            document.getElementById("clockChoices").replaceChildren(...clockGroups().map(g =>
+                checkbox(g.all, !settings.hiddenClocks.includes(g.key), on => { toggleIn(settings.hiddenClocks, g.key, !on); renderClocks(); })));
+        }
+
+        function formatElapsed(ms) {
+            const sign = ms < 0 ? "-" : "";
+            const total = Math.floor(Math.abs(ms) / 1000);
+            const pad = n => String(n).padStart(2, "0");
+            return `${sign}${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
+        }
+
+        function renderClocks() {
+            const bar = document.getElementById("clocks");
+            const shown = settings.showClocks ? clockGroups().filter(g => !settings.hiddenClocks.includes(g.key)) : [];
+            bar.style.display = shown.length ? "flex" : "none";
+            bar.replaceChildren(...shown.map(g => {
+                const time = el("div", { className: "time" });
+                time.dataset.start = g.start ?? "";
+                return el("div", { className: "clock", title: g.all }, [el("div", { className: "name", textContent: g.name }), time]);
+            }));
+            tickClocks();
+        }
+
+        function tickClocks() {
+            const now = Date.now() + clockOffset;
+            document.querySelectorAll("#clocks .time").forEach(t => {
+                t.textContent = t.dataset.start === "" ? "--:--:--" : formatElapsed(now - Number(t.dataset.start));
+            });
+        }
+
+        async function refresh() {
+            try {
+                const response = await fetch(`/announcer/data?unknown=${settings.showUnknown ? 1 : 0}`, { cache: "no-store" });
+                if (!response.ok) throw new Error(response.statusText);
+                const next = await response.json();
+                // Clocks follow the timing computer's time, not this device's.
+                clockOffset = next.now - Date.now();
+                document.getElementById("eventName").textContent = next.event || "Announcer";
+                document.title = next.event ? `${next.event} Announcer` : "Announcer";
+                document.getElementById("status").textContent = "";
+                const clocksChanged = JSON.stringify(next.clocks) !== JSON.stringify(data.clocks);
+                const runners = JSON.stringify(next.runners);
+                data = next;
+                if (runners !== lastRunners) { lastRunners = runners; renderRunners(); }
+                if (clocksChanged) { renderClockChoices(); renderClocks(); }
+            } catch {
+                document.getElementById("status").textContent = "Can't reach Chronokeep";
+            }
+        }
+
+        renderRunners();
+        refresh();
+        setInterval(refresh, 1000);
+        setInterval(() => { tickClocks(); tickAges(); }, 250);
+    </script>
+</body>
+</html>

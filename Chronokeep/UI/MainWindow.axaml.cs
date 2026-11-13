@@ -33,7 +33,6 @@ using Chronokeep.Timing;
 using Chronokeep.Timing.Announcer;
 using Chronokeep.Timing.API;
 using Chronokeep.Timing.Remote;
-using Chronokeep.UI.Announcer;
 using Chronokeep.UI.MainPages;
 using Chronokeep.UI.Util;
 using System;
@@ -83,7 +82,6 @@ namespace Chronokeep.UI
         private RemoteReadsController? remoteController;
 
         // Announcer objects
-        private AnnouncerWindow? announcerWindow;
         private AnnouncerWorker? announcerWorker;
 
         private readonly List<Window> openWindows = [];
@@ -735,7 +733,6 @@ namespace Chronokeep.UI
                     timingPage.UpdateView();
                     timingPage.NewMessage();
                 }
-                announcerWindow?.UpdateView();
             });
         }
 
@@ -770,15 +767,6 @@ namespace Chronokeep.UI
         public int RemoteErrors()
         {
             return remoteController?.Errors ?? 0;
-        }
-
-        public void UpdateAnnouncerWindow()
-        {
-            // Let the announcer window know that it has new information.
-            Application.Current!.Dispatcher.Invoke(delegate
-            {
-                announcerWindow?.UpdateView();
-            });
         }
 
         public void UpdateTiming()
@@ -828,7 +816,6 @@ namespace Chronokeep.UI
             {
                 timingPage.UpdateSubView();
             }
-            announcerWindow?.UpdateTiming();
         }
 
         public void AddWindow(Window w)
@@ -885,7 +872,7 @@ namespace Chronokeep.UI
             }
             DashboardButton.IsChecked = currentPage is DashboardPage;
             TimingButton.IsChecked = currentPage is TimingPage;
-            AnnouncerButton.IsChecked = announcerWindow != null;
+            AnnouncerButton.IsChecked = AnnouncerOpen();
             ParticipantsButton.IsChecked = currentPage is ParticipantsPage;
             ChipsButton.IsChecked = currentPage is ChipAssignmentPage;
             LocationsButton.IsChecked = currentPage is LocationsPage;
@@ -915,7 +902,6 @@ namespace Chronokeep.UI
                     timingController!.ConnectTimingSystem(system);
                 });
                 UpdateTiming();
-                announcerWindow?.UpdateView();
                 timingController!.Start();
             }
             catch (Exception)
@@ -933,7 +919,6 @@ namespace Chronokeep.UI
                     timingController!.DisconnectTimingSystem(system);
                 });
                 UpdateTiming();
-                announcerWindow?.UpdateView();
             }
             catch (Exception)
             {
@@ -973,8 +958,7 @@ namespace Chronokeep.UI
                     {
                         system.Status = SYSTEM_STATUS.DISCONNECTED;
                         UpdateTiming();
-                        announcerWindow?.UpdateView();
-                    }
+                            }
                     catch (Exception e)
                     {
                         Log.E("UI.MainWindow", $"Exception thrown after Timing System disconnected. {e}");
@@ -999,19 +983,30 @@ namespace Chronokeep.UI
 
         private void Announcer_Click(object sender, RoutedEventArgs e)
         {
-            Log.D("UI.MainWindow", "Announcer window button clicked.");
-            Log.E("UI.MainWindow", $"announcerWindow is null? {announcerWindow == null}");
-            if (announcerWindow != null)
+            Log.D("UI.MainWindow", "Announcer button clicked.");
+            if (AnnouncerOpen())
             {
-                announcerWindow.Hide();
-                announcerWindow.Show();
+                StopAnnouncer();
                 UpdateStatus();
                 return;
             }
-            Log.E("UI.MainWindow", "beep boop");
-            announcerWindow = new AnnouncerWindow(this, database!);
-            announcerWindow.Show();
+            // The announcer is a page on the web server, so any computer or tablet on the network can show it.
+            if (httpServer == null)
+            {
+                try
+                {
+                    StartHttpServer();
+                }
+                catch
+                {
+                    StopHttpServer();
+                    DialogBox.AsyncShow("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
+                    return;
+                }
+            }
+            StartAnnouncerWorker();
             UpdateStatus();
+            DialogBox.AsyncShow($"The announcer page is at http://localhost:{HttpServerPort}/announcer on this computer, or /announcer on the web address shown on the Timing page.");
         }
 
         public void NetworkUpdateResults()
@@ -1035,6 +1030,9 @@ namespace Chronokeep.UI
             // httpServer is null if starting it failed (for example, no URL reservation on Windows).
             httpServer?.Stop();
             httpServer = null;
+            // The announcer page lives on the web server.
+            StopAnnouncer();
+            UpdateStatus();
         }
 
         public bool HttpServerActive()
@@ -1042,40 +1040,15 @@ namespace Chronokeep.UI
             return httpServer != null;
         }
 
-        public bool AnnouncerConnected()
-        {
-            foreach (TimingSystem system in timingController!.GetConnectedSystems())
-            {
-                if (system.LocationId == Constants.Timing.LOCATION_ANNOUNCER)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void AnnouncerClosing()
-        {
-            if (announcerWindow != null)
-            {
-                announcerWindow = null;
-                UpdateStatus();
-                Log.D("UI.MainWindow", "Announcer Window has closed.");
-            }
-            else
-            {
-                Log.D("UI.MainWindow", "Announcer Window was supposed to close but did not.");
-            }
-        }
-
         public bool AnnouncerOpen()
         {
-            return announcerWindow != null;
+            return AnnouncerWorker.Running();
         }
 
         public void StopAnnouncer()
         {
-            announcerWindow?.Close();
+            AnnouncerWorker.Shutdown();
+            AnnouncerWorker.Notify();
         }
 
         public bool InDidNotStartMode()
@@ -1283,7 +1256,7 @@ namespace Chronokeep.UI
                     return false;
                 }
             }
-            announcerWorker = AnnouncerWorker.NewAnnouncer(this, database);
+            announcerWorker = AnnouncerWorker.NewAnnouncer(database);
             Thread announcerThread = new(announcerWorker.Run);
             announcerThread.Start();
             return true;

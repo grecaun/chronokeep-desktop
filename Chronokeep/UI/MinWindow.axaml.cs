@@ -440,7 +440,6 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         });
     }
 
-    public void UpdateAnnouncerWindow() { }
 
     public void UpdateRegistrationDistances() { }
 
@@ -453,10 +452,6 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     public bool StopDidNotStartMode() { return false; }
 
     public void NotifyAlarm(string bib, string chip) { }
-
-    public bool AnnouncerConnected() { return false; }
-
-    public void AnnouncerClosing() { }
 
     public bool AnnouncerOpen() { return false; }
 

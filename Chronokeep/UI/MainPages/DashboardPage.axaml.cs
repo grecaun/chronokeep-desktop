@@ -23,7 +23,6 @@ using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.Timing.Announcer;
-using Chronokeep.UI.Announcer;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.EventWindows;
 using Chronokeep.UI.MainPages.Dashboard;
