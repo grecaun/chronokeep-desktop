@@ -57,7 +57,6 @@ namespace Chronokeep.Test.UI.Infrastructure
         public int UpdateTimingFromControllerCalls { get; private set; }
         public void UpdateTimingFromController() => UpdateTimingFromControllerCalls++;
         public void UpdateTiming() => UpdateTimingCalls++;
-        public void UpdateAnnouncerWindow() { }
         public void UpdateRegistrationDistances() { }
         public void UpdateParticipantsFromRegistration() { }
         /// <summary>Set to make pages think timing or uploads are running in the background.</summary>
@@ -95,9 +94,6 @@ namespace Chronokeep.Test.UI.Infrastructure
         public void NotifyAlarm(string bib, string chip) { }
 
         // Announcer related calls.
-        public bool AnnouncerConnected() => false;
-        public int AnnouncerClosingCalls { get; private set; }
-        public void AnnouncerClosing() => AnnouncerClosingCalls++;
         public bool AnnouncerOpen() => false;
         public void StopAnnouncer() { }
         public int StartAnnouncerWorkerCalls { get; private set; }

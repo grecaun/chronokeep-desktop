@@ -20,22 +20,23 @@ namespace Chronokeep.Test.Timing
         private static TimeResult Finish(string bib, int secondsAgo, int segment = TimingConstants.SEGMENT_FINISH, int status = TimingConstants.TIMERESULT_STATUS_NONE) =>
             new(1, 1, 1, TimingConstants.LOCATION_FINISH, segment, 1, 1800, 0, "", 1800, 0, Now.AddSeconds(-secondsAgo), bib, status, "");
 
-        private static string When(int secondsAgo) => Now.AddSeconds(-secondsAgo).ToString("HH:mm:ss");
+        private static DateTime When(int secondsAgo) => Now.AddSeconds(-secondsAgo);
 
-        /// <summary>Merges with a 45 second window. Bibs 1 to 3 are registered.</summary>
-        private static List<AnnouncerParticipant> Merge(IEnumerable<AnnouncerParticipant> announced, IEnumerable<TimeResult> results, bool includeUnknown = false)
+        /// <summary>Merges with a 45 second window and, unless given, a 5 minute repeat window. Bibs 1 to 3 are registered.</summary>
+        private static List<AnnouncerParticipant> Merge(IEnumerable<AnnouncerParticipant> announced, IEnumerable<TimeResult> results, bool includeUnknown = false, int repeatMinutes = 5)
         {
             Dictionary<string, Participant> people = new[] { "1", "2", "3" }.ToDictionary(b => b, Person);
-            return AnnouncerParticipant.Merge(announced, results, people.GetValueOrDefault, Now.AddSeconds(-45), includeUnknown);
+            return AnnouncerParticipant.Merge(announced, results, people.GetValueOrDefault, Now.AddSeconds(-45), repeatMinutes, includeUnknown);
         }
 
         [Fact]
-        public void AnnouncerReadsOnly_AreListedNewestFirst()
+        public void AnnouncerReadsOnly_AreListedNewestFirstWithNoFinishTime()
         {
             List<AnnouncerParticipant> list = Merge([Seen("1", 30, Person("1")), Seen("2", 10, Person("2"))], []);
 
+            Assert.All(list, x => Assert.Equal("", x.FinishTime));
             Assert.Equal(["2", "1"], list.Select(x => x.Bib));
-            Assert.Equal([When(10), When(30)], list.Select(x => x.AnnouncerWhen));
+            Assert.Equal([When(10), When(30)], list.Select(x => x.When));
         }
 
         [Fact]
@@ -46,7 +47,7 @@ namespace Chronokeep.Test.Timing
             Assert.Equal("Runner1 Last", row.ParticipantName);
             Assert.Equal("Eugene OR", row.CityState);
             Assert.Equal("Go 1!", row.Comments);
-            Assert.Equal(When(5), row.AnnouncerWhen);
+            Assert.Equal(When(5), row.When);
         }
 
         [Fact]
@@ -58,20 +59,46 @@ namespace Chronokeep.Test.Timing
         }
 
         [Fact]
-        public void AnnouncerReadThenFinish_ShowsTheRunnerOnceAtTheFinishTime()
+        public void AnnouncerReadThenFinish_ShowsTheRunnerOnceAtTheFirstTimeWithTheirFinishTime()
         {
             List<AnnouncerParticipant> list = Merge([Seen("1", 30, Person("1")), Seen("2", 20, Person("2"))], [Finish("1", 5)]);
 
-            Assert.Equal(["1", "2"], list.Select(x => x.Bib));
-            Assert.Equal(When(5), list[0].AnnouncerWhen);
+            Assert.Equal(["2", "1"], list.Select(x => x.Bib));
+            Assert.Equal(When(30), list[1].When);
+            Assert.Equal("0:30:00", list[1].FinishTime);
+            Assert.Equal("", list[0].FinishTime);
         }
 
         [Fact]
-        public void FinishThenAnnouncerRead_ShowsTheRunnerOnceAtTheLaterTime()
+        public void FinishThenAnnouncerRead_ShowsTheRunnerOnceAtTheFirstTime()
         {
             AnnouncerParticipant row = Assert.Single(Merge([Seen("1", 2, Person("1"))], [Finish("1", 10)]));
 
-            Assert.Equal(When(2), row.AnnouncerWhen);
+            Assert.Equal(When(10), row.When);
+        }
+
+        [Fact]
+        public void FinishWithinTheRepeatWindowOfAnOlderRead_IsNotShownAgain()
+        {
+            // First seen 2 minutes ago, so that pass has left the 45 second window, and the finish is part of it.
+            Assert.Empty(Merge([Seen("1", 120, Person("1"))], [Finish("1", 5)]));
+        }
+
+        [Fact]
+        public void FinishAfterTheRepeatWindow_IsShownAgain()
+        {
+            AnnouncerParticipant row = Assert.Single(Merge([Seen("1", 600, Person("1"))], [Finish("1", 5)]));
+
+            Assert.Equal(When(5), row.When);
+        }
+
+        [Fact]
+        public void RepeatWindowOfZero_ShowsEachRunnerOnlyOnce()
+        {
+            Assert.Empty(Merge([Seen("1", 3600, Person("1"))], [Finish("1", 5)], repeatMinutes: 0));
+
+            AnnouncerParticipant row = Assert.Single(Merge([Seen("1", 30, Person("1"))], [Finish("1", 5)], repeatMinutes: 0));
+            Assert.Equal(When(30), row.When);
         }
 
         [Fact]

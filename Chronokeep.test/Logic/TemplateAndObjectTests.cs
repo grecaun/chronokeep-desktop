@@ -193,7 +193,7 @@ namespace Chronokeep.Test.Logic
             try
             {
                 var a = new AnnouncerParticipant(p, seconds);
-                Assert.Equal("08:25:03", a.AnnouncerWhen);
+                Assert.Equal(new DateTime(2026, 6, 15, 8, 25, 3), a.When);
                 Assert.Equal("Jane Runner", a.ParticipantName);
                 Assert.Equal("Eugene OR", a.CityState);
                 Assert.Equal("35 F", a.AgeGender);

@@ -1,6 +1,5 @@
 using Chronokeep.Database;
 using Chronokeep.Helpers;
-using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.Test.Database;
 using Chronokeep.Timing.Announcer;
@@ -27,8 +26,8 @@ namespace Chronokeep.Test.Timing
             Static<IDictionary>("BibSeen").Clear();
             Globals.SeenWindow = 5;
             worker = (AnnouncerWorker)typeof(AnnouncerWorker)
-                .GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, [typeof(IMainWindow), typeof(IdbInterface)])!
-                .Invoke([FakeMainWindow.Create(out _), Db]);
+                .GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, [typeof(IdbInterface)])!
+                .Invoke([Db]);
             theEvent = AddEvent(makeCurrent: true);
             var d = AddDistance(theEvent.Identifier);
             foreach (string bib in new[] { "1", "2" })

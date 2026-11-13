@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Chronokeep.Objects;
 using Chronokeep.Test.UI.Infrastructure;
-using Chronokeep.UI.Announcer;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.ChipAssignment;
 using Chronokeep.UI.EventWindows;
@@ -26,7 +25,7 @@ namespace Chronokeep.Test.UI
     {
         public static TheoryData<string> Windows =>
         [
-            "Announcer", "ApiLink", "EditApiLink", "ChipTool", "ChangeEvent", "NewEvent",
+            "ApiLink", "EditApiLink", "ChipTool", "ChangeEvent", "NewEvent",
             "ChangeMultiParticipant", "ModifyParticipantNew", "ModifyParticipantExisting",
             "ParticipantConflicts", "SmsWaveEnabled", "ManualEntry", "Wave", "ChangeLog",
             "PrintSettings", "ReaderNotification", "ExportResults", "ExportDistanceResults",
@@ -37,7 +36,6 @@ namespace Chronokeep.Test.UI
             List<Participant> participants = Db.GetParticipants(Db.GetCurrentEvent()!.Identifier);
             return name switch
             {
-                "Announcer" => new AnnouncerWindow(MainWindow, Db),
                 "ApiLink" => ApiWindow.NewWindow(MainWindow, Db),
                 "EditApiLink" => EditApiWindow.NewWindow(MainWindow, Db),
                 "ChipTool" => ChipTool.NewWindow(MainWindow, Db),
