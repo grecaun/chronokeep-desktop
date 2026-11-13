@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Chronokeep.Helpers;
 using Chronokeep.Objects;
-using Chronokeep.Objects.ChronokeepRemote;
 using Chronokeep.Test.UI.Infrastructure;
 using Chronokeep.UI.Announcer;
 using Chronokeep.UI.MainPages;
@@ -249,6 +248,25 @@ namespace Chronokeep.Test.UI
                 Constants.Timing.LOCATION_FINISH, segment, 1, 1800, 0, "", 1800, 0, systemTime, p.Bib, status, "");
         }
 
+        private static System.Collections.IList AnnouncerList() =>
+            (System.Collections.IList)typeof(Chronokeep.Timing.Announcer.AnnouncerWorker)
+                .GetField("Participants", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.GetValue(null)!;
+
+        private static AnnouncerParticipant SeenAt(string bib, Participant? p, int secondsAgo) =>
+            new(bib, p, Constants.Timing.RfidDateToEpoch(DateTime.Now.AddSeconds(-secondsAgo)));
+
+        private static List<string> Bibs(AnnouncerWindow window) =>
+            [.. Find<DataGrid>(window, "AnnouncerBox").ItemsSource!.Cast<AnnouncerParticipant>().Select(r => r.Bib)];
+
+        /// <summary>Opens the announcer window with the given announcer-location rows in the worker's list.</summary>
+        private AnnouncerWindow OpenAnnouncer(params AnnouncerParticipant[] announced)
+        {
+            System.Collections.IList list = AnnouncerList();
+            list.Clear();
+            foreach (AnnouncerParticipant a in announced) list.Add(a);
+            return Show(new AnnouncerWindow(MainWindow, Db));
+        }
+
         [AvaloniaFact]
         public void Announcer_shows_recent_finishers_newest_first()
         {
@@ -265,25 +283,60 @@ namespace Chronokeep.Test.UI
                 Finish(e, dnf, DateTime.Now.AddSeconds(-2), status: Constants.Timing.TIMERESULT_STATUS_DNF),
             ]);
 
-            AnnouncerWindow window = Show(new AnnouncerWindow(MainWindow, Db));
+            AnnouncerWindow window = OpenAnnouncer();
 
-            DataGrid results = Find<DataGrid>(window, "ResultsBox");
-            Assert.True(results.IsVisible);
-            Assert.False(Find<DataGrid>(window, "AnnouncerBox").IsVisible);
-            Assert.Equal(["2", "1"], results.ItemsSource!.Cast<TimeResult>().Select(r => r.Bib));
+            Assert.Equal(["2", "1"], Bibs(window));
+            Assert.Equal("First Runner", Find<DataGrid>(window, "AnnouncerBox").ItemsSource!.Cast<AnnouncerParticipant>().Last().ParticipantName);
             Assert.Equal(1, MainWindow.StartAnnouncerWorkerCalls);
         }
 
         [AvaloniaFact]
-        public void Announcer_switches_to_the_announcer_list_when_an_announcer_reader_is_set_up()
+        public void Announcer_lists_announcer_reads_and_finishers_together_once_each()
         {
             Event e = AddEvent(makeCurrent: true);
-            Db.AddRemoteReaders(e.Identifier, [new RemoteReader("Announcer Box", -1, Constants.Timing.LOCATION_ANNOUNCER, e.Identifier)]);
+            Distance d = AddDistance(e.Identifier);
+            Participant passing = AddParticipant(e.Identifier, d, "1", first: "Passing");
+            Participant finished = AddParticipant(e.Identifier, d, "2", first: "Finished");
+            Participant both = AddParticipant(e.Identifier, d, "3", first: "Both");
+            Db.AddTimingResults([
+                Finish(e, finished, DateTime.Now.AddSeconds(-10)),
+                Finish(e, both, DateTime.Now.AddSeconds(-3)),
+            ]);
+            try
+            {
+                AnnouncerWindow window = OpenAnnouncer(SeenAt("1", passing, 5), SeenAt("3", both, 30));
 
-            AnnouncerWindow window = Show(new AnnouncerWindow(MainWindow, Db));
+                Assert.Equal(["3", "1", "2"], Bibs(window));
+            }
+            finally
+            {
+                AnnouncerList().Clear();
+            }
+        }
 
-            Assert.True(Find<DataGrid>(window, "AnnouncerBox").IsVisible);
-            Assert.False(Find<DataGrid>(window, "ResultsBox").IsVisible);
+        [AvaloniaFact]
+        public void Show_unknown_participants_switch_adds_bibs_nobody_is_registered_with()
+        {
+            Event e = AddEvent(makeCurrent: true);
+            Distance d = AddDistance(e.Identifier);
+            Participant known = AddParticipant(e.Identifier, d, "1", first: "Known");
+            try
+            {
+                AnnouncerWindow window = OpenAnnouncer(SeenAt("1", known, 10), SeenAt("77", null, 5));
+                Assert.Equal(["1"], Bibs(window));
+
+                Find<ToggleSwitch>(window, "ShowUnknownSwitch").IsChecked = true;
+                Pump();
+                Assert.Equal(["77", "1"], Bibs(window));
+
+                Find<ToggleSwitch>(window, "ShowUnknownSwitch").IsChecked = false;
+                Pump();
+                Assert.Equal(["1"], Bibs(window));
+            }
+            finally
+            {
+                AnnouncerList().Clear();
+            }
         }
 
         [AvaloniaFact]

@@ -84,6 +84,19 @@ namespace Chronokeep.Test.Timing
         }
 
         [Fact]
+        public void KnownBibWithoutParticipant_IsKeptForTheWindowToShowIfAsked()
+        {
+            Db.AddBibChipAssociation(theEvent.Identifier, [new BibChipAssociation { EventId = theEvent.Identifier, Bib = "9", Chip = "C9" }]);
+
+            Assert.True(Process("C9"));
+
+            var announced = Assert.Single(AnnouncerWorker.GetList());
+            Assert.Equal("9", announced.Bib);
+            Assert.Equal("", announced.ParticipantName);
+            Assert.Equal(TimingConstants.CHIPREAD_STATUS_ANNOUNCER_USED, Assert.Single(Reads()).Status);
+        }
+
+        [Fact]
         public void SameRunnerWithinSeenWindow_IsAnnouncedOnce()
         {
             Process("C1");
