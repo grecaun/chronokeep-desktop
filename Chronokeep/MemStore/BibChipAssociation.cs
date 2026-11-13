@@ -40,7 +40,7 @@ namespace Chronokeep.MemStore
             database.AddBibChipAssociation(eventId, assoc);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -169,7 +169,7 @@ namespace Chronokeep.MemStore
             database.RemoveBibChipAssociation(eventId, chip);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -215,7 +215,7 @@ namespace Chronokeep.MemStore
             database.RemoveBibChipAssociation(assoc);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == assoc.EventId)
@@ -261,7 +261,7 @@ namespace Chronokeep.MemStore
             database.RemoveBibChipAssociations(assocs);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (BibChipAssociation assoc in assocs)

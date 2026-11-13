@@ -217,6 +217,14 @@ public partial class TimingResultsPage : UserControl, ISubPage
         if (UpdateListView.SelectedItem == null) return;
         TimeResult selected = (TimeResult)UpdateListView.SelectedItem;
         ModifyParticipantWindow modifyParticipant = new(parent, database, selected.EventSpecificId, selected.Bib);
-        modifyParticipant.Show();
+        // Owned by the Timing page's window so it closes with Chronokeep instead of keeping it running.
+        if (TopLevel.GetTopLevel(this) is Window owner)
+        {
+            modifyParticipant.Show(owner);
+        }
+        else
+        {
+            modifyParticipant.Show();
+        }
     }
 }

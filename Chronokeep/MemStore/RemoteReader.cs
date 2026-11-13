@@ -35,7 +35,7 @@ namespace Chronokeep.MemStore
             database.AddRemoteReaders(eventId, readers);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;
@@ -63,7 +63,7 @@ namespace Chronokeep.MemStore
             database.DeleteRemoteReader(eventId, reader);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -89,7 +89,7 @@ namespace Chronokeep.MemStore
             database.DeleteRemoteReaders(eventId, readers);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;

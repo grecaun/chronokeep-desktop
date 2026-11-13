@@ -469,7 +469,7 @@ namespace Chronokeep.MemStore
             database.RemoveParticipant(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     int eventSpecId = -1;
@@ -501,7 +501,7 @@ namespace Chronokeep.MemStore
             database.RemoveParticipantEntries(parts);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Participant person in parts)
@@ -527,7 +527,7 @@ namespace Chronokeep.MemStore
             database.RemoveParticipantEntry(person);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     participants.Remove(person.EventSpecific.Identifier);

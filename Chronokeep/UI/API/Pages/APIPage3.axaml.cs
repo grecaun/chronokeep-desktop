@@ -89,7 +89,7 @@ public partial class ApiPage3 : UserControl
             YearCopyBox.SelectedIndex = ix;
             NewPanel.IsVisible = ix == 0;
             YearBox.Text = theEvent.YearCode;
-            DateBox.SelectedDate = DateTime.Parse(theEvent.Date);
+            DateBox.SelectedDate = EventDates.Parse(theEvent.Date);
             if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
             {
                 RankBox.Items.Add(new ComboBoxItem

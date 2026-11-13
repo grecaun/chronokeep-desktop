@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Chronokeep.Helpers;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
@@ -255,7 +256,7 @@ namespace Chronokeep.Database.SQLite
 
         private static List<ChipRead> GetChipReadsWorker(SQLiteDataReader reader, Event theEvent, SQLiteConnection connection)
         {
-            DateTime start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
+            DateTime start = EventDates.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
             List<TimingLocation> locations = [];
             locations.AddRange(TimingLocations.GetTimingLocations(theEvent.Identifier, connection));
             if (!theEvent.CommonStartFinish)

@@ -67,9 +67,10 @@ namespace Chronokeep.IO
 
         public void AddData(string[] data)
         {
-            string[] newdata = new string[data.Length + 1];
+            // Rows can be short when a program leaves off trailing empty cells; pad them so every column exists.
+            string[] newdata = new string[Math.Max(data.Length + 1, Headers.Length)];
+            Array.Fill(newdata, "");
             Array.Copy(data, 0, newdata, 1, data.Length);
-            newdata[0] = "";
             if (Headers.Length != newdata.Length)
             {
                 Log.E("IO.ImportData", $"Header count wrong on import of data: {Headers.Length} - {newdata.Length}");

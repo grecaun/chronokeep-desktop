@@ -1028,14 +1028,17 @@ namespace Chronokeep.Timing.Routines
                     return CompareByChipTime(x1, x2, dictionary);
                 });
             }
-            List<TimeResult> dnfResults = segmentResults.FindAll(x => x.IsDnf());
+            // DNFs and runners removed from registration keep their results but take no place, so
+            // clear every place they may have had from an earlier pass.
+            List<TimeResult> dnfResults = segmentResults.FindAll(x => x.IsDnf() || x.Removed);
             foreach (TimeResult res in dnfResults)
             {
                 res.Place = Constants.Timing.TIMERESULT_DUMMYPLACE;
                 res.AgePlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
                 res.GenderPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                res.DivisionPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
             }
-            int removed = segmentResults.RemoveAll(x => x.IsDnf());
+            int removed = segmentResults.RemoveAll(x => x.IsDnf() || x.Removed);
             Log.D("Timing.Routines.DistanceRoutine", $"{dnfResults.Count} Result(s) in DNFResults - {removed} Result(s) removed from segmentResults");
             // Get Dictionaries for storing ranked results (division, age group, gender, overall)
             // The key is as follows: (Distance ID, Division)

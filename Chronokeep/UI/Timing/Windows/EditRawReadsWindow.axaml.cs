@@ -43,6 +43,8 @@ public partial class EditRawReadsWindow : ChronokeepWindow
     public EditRawReadsWindow(ITimingPage parent, IdbInterface database, List<ChipRead> chipReads)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        DaysBox.FilterTyping(DaysBox_PreviewTextInput);
         ChronokeepInitialize();
         this.parent = parent;
         this.database = database;

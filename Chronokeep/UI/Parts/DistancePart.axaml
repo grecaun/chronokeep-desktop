@@ -74,7 +74,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                            VerticalAlignment="Center"/>
                 <TextBox Name="Ranking"
                          GotFocus="SelectAll"
-                         TextInput="NumberValidation"
                          Margin="0,5,5,5"
                          FontSize="16"
                          Width="50"
@@ -103,7 +102,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                            HorizontalAlignment="Right"/>
                 <TextBox Name="DistanceBox"
                          GotFocus="SelectAll"
-                         TextInput="DotValidation"
                          Margin="0,5"
                          FontSize="16"
                          VerticalAlignment="Center"
@@ -151,7 +149,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                            VerticalAlignment="Center"/>
                 <TextBox Name="Wave"
                          GotFocus="SelectAll"
-                         TextInput="NumberValidation"
                          Width="50"
                          Margin="0,5"
                          FontSize="16"

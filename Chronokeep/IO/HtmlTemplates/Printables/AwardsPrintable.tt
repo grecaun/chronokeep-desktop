@@ -96,7 +96,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 	<body>
 		<div class='text-important table-header'><#= theEvent.YearCode #> <#= theEvent.Name #></div>
 		<div class='text-important table-h3'>Awards</div>
-		<div class='text-important table-h4'><#= theEvent.Date #></div>
+		<div class='text-important table-h4'><#= theEvent.LongDate #></div>
 		<div class='events-panel panel panel-default'>
 			<# foreach (string d in distanceResults.Keys.OrderBy(i => i))
 			{ #>

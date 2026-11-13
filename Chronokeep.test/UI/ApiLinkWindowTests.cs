@@ -283,5 +283,20 @@ namespace Chronokeep.Test.UI
 
             Assert.IsType<Chronokeep.UI.MainPages.Dashboard.ApiPage>(Assert.Single(MainWindow.SwitchedPages));
         }
+
+        [AvaloniaFact]
+        public async Task Double_clicking_an_event_moves_on_to_its_years()
+        {
+            SeedEvent("Spring Fling");
+            AddResultsApi();
+            ApiWindow window = OpenWizard();
+            ApiPage2 page2 = await GoToEvents(window);
+            ListBox events = Find<ListBox>(page2, "EventList");
+            ApiEvent springFling = events.ItemsSource!.Cast<ApiEvent>().Single(e => e.Slug == "spring-fling");
+
+            DoubleClick(RowOf(events, springFling));
+
+            await WaitUntil(() => Frame(window) is ApiPage3, because: "the year page");
+        }
     }
 }

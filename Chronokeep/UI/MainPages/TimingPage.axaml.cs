@@ -592,7 +592,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         ElapsedRelativeToBox.IsVisible = waves.Count > 1;
         StartTime.Text = startTimeValue;
         Log.D("UI.MainPages.TimingPage", $"Start time is {startTimeValue}");
-        startTime = DateTime.ParseExact($"{startTimeValue}{DateTime.Parse(theEvent!.Date):ddMMyyyy}", "HH:mm:ss.fffddMMyyyy", null);
+        startTime = DateTime.ParseExact($"{startTimeValue}{EventDates.Parse(theEvent!.Date):ddMMyyyy}", "HH:mm:ss.fffddMMyyyy", null);
         Log.D("UI.MainPages.TimingPage", $"Start time is {startTime:yyyy-MM-dd HH:mm:ss.fff}");
     }
 
@@ -814,7 +814,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             return;
         }
         Log.D("UI.MainPages.TimingPage", "Start Time Box return key found.");
-        UpdateStartTime();
+        // Save the start like leaving the box does, not just start the clock on screen.
+        StartTimeChanged();
     }
 
     private async void StartRaceClick(object? sender, RoutedEventArgs e)

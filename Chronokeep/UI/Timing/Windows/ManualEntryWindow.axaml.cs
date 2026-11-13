@@ -51,7 +51,7 @@ public partial class ManualEntryWindow : ChronokeepWindow
         {
             return;
         }
-        DateBox.SelectedDate = DateTime.Parse(theEvent.Date);
+        DateBox.SelectedDate = EventDates.Parse(theEvent.Date);
         UpdateLocations(locations);
     }
 
@@ -166,13 +166,13 @@ public partial class ManualEntryWindow : ChronokeepWindow
                 {
                     startOffset = oStart;
                 }
-                time = DateTime.Parse($"{theEvent.Date} 00:00:00.000");
+                time = EventDates.Parse(theEvent.Date);
                 milliseconds += theEvent.StartMilliseconds + startOffset.milliseconds;
                 seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds + startOffset.seconds;
             }
             else if (ClockTimeButton.IsChecked == true)
             {
-                time = DateTime.Parse($"{theEvent!.Date} 00:00:00.000");
+                time = EventDates.Parse(theEvent!.Date);
                 milliseconds += theEvent.StartMilliseconds;
                 seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds;
             }
@@ -238,13 +238,13 @@ public partial class ManualEntryWindow : ChronokeepWindow
             {
                 startOffset = oStart;
             }
-            time = DateTime.Parse($"{theEvent.Date} 00:00:00.000");
+            time = EventDates.Parse(theEvent.Date);
             milliseconds += theEvent.StartMilliseconds + startOffset.milliseconds;
             seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds + startOffset.seconds;
         }
         else if (ClockTimeButton.IsChecked == true)
         {
-            time = DateTime.Parse($"{theEvent!.Date} 00:00:00.000");
+            time = EventDates.Parse(theEvent!.Date);
             milliseconds += theEvent.StartMilliseconds;
             seconds += (minutes * 60) + (hours * 3600) + theEvent.StartSeconds;
         }

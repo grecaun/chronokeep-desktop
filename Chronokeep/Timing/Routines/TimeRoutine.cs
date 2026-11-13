@@ -22,6 +22,7 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.Timing.Routines
 {
@@ -860,6 +861,18 @@ namespace Chronokeep.Timing.Routines
                 // Make sure we know who we're looking at. Can't rank otherwise.
                 if (!dictionary.ParticipantEventSpecificDictionary.TryGetValue(result.EventSpecificId,
                         out Participant? person)) continue;
+                // Runners removed from registration keep their laps but take no place.
+                if (person.EventSpecific.IsRemoved)
+                {
+                    foreach (TimeResult removedResult in personResults[result.EventSpecificId].Append(result))
+                    {
+                        removedResult.Place = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                        removedResult.GenderPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                        removedResult.AgePlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                        removedResult.DivisionPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                    }
+                    continue;
+                }
                 // Use a linked distance ID for ranking instead of a specific distance id.
                 if (!dictionary.LinkedDistanceIdentifierDictionary.TryGetValue(person.EventSpecific.DistanceIdentifier, out int distanceId))
                 {

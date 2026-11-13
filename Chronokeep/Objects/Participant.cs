@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using Chronokeep.Objects.ChronoKeepAPI;
+using Chronokeep.Helpers;
 using System;
 using System.Text;
 
@@ -592,14 +593,17 @@ namespace Chronokeep.Objects
             {
                 return "";
             }
-            DateTime eventDateTime = Convert.ToDateTime(eventDate);
-            DateTime myDateTime = Convert.ToDateTime(birthdate);
+            // Both dates read the same on every computer (see EventDates and Birthdates).
+            if (!EventDates.TryParse(eventDate, out DateTime eventDateTime) || !Birthdates.TryParse(birthdate, out DateTime myDateTime))
+            {
+                return "";
+            }
             int numYears = eventDateTime.Year - myDateTime.Year;
             if (eventDateTime.Month < myDateTime.Month || eventDateTime.Month == myDateTime.Month && eventDateTime.Day < myDateTime.Day)
             {
                 numYears--;
             }
-            return numYears > 120 ? "" : Convert.ToString(numYears);
+            return numYears is > 120 or < 0 ? "" : Convert.ToString(numYears);
         }
 
         public int GetAge(string eventDate)
@@ -608,14 +612,17 @@ namespace Chronokeep.Objects
             {
                 return -1;
             }
-            DateTime eventDateTime = Convert.ToDateTime(eventDate);
-            DateTime myDateTime = Convert.ToDateTime(birthdate);
+            // Both dates read the same on every computer (see EventDates and Birthdates).
+            if (!EventDates.TryParse(eventDate, out DateTime eventDateTime) || !Birthdates.TryParse(birthdate, out DateTime myDateTime))
+            {
+                return -1;
+            }
             int numYears = eventDateTime.Year - myDateTime.Year;
             if (eventDateTime.Month < myDateTime.Month || eventDateTime.Month == myDateTime.Month && eventDateTime.Day < myDateTime.Day)
             {
                 numYears--;
             }
-            if (numYears > 120)
+            if (numYears is > 120 or < 0)
             {
                 return -1;
             }

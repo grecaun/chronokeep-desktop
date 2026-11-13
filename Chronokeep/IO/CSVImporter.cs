@@ -33,8 +33,26 @@ namespace Chronokeep.IO
         public CsvImporter(string filePath)
         {
             Log.D("IO.CSVImporter", "Opening file.");
-            File = new StreamReader(filePath);
+            File = new StreamReader(filePath, FileEncoding(filePath));
             this.filePath = filePath;
+        }
+
+        /// <summary>
+        /// UTF-8 unless the file isn't valid UTF-8, which means it was saved in the Windows code page
+        /// (Excel's plain CSV), so accented names like José read correctly either way. A byte order mark
+        /// still wins.
+        /// </summary>
+        internal static Encoding FileEncoding(string filePath)
+        {
+            try
+            {
+                new UTF8Encoding(false, true).GetString(System.IO.File.ReadAllBytes(filePath));
+                return Encoding.UTF8;
+            }
+            catch (DecoderFallbackException)
+            {
+                return Encoding.Latin1;
+            }
         }
 
         public void FetchHeaders()

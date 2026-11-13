@@ -311,10 +311,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         // Check if we've been given an age or the birthdate value is empty or set to today.
         if (age != 0 && (birthdate.Length < 1 || birthdate == DateTime.Now.ToString(Birthdates.Format, System.Globalization.CultureInfo.InvariantCulture)))
         {
-            if (!int.TryParse(theEvent.Date.Split('/')[2], out int year))
-            {
-                year = 0;
-            }
+            int year = EventDates.TryParse(theEvent.Date, out DateTime eventDate) ? eventDate.Year : 0;
             year = year < 1969 ? DateTime.Now.Year : year;
             birthdate = Birthdates.JanuaryFirst(year - age);
         }

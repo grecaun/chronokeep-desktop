@@ -37,6 +37,9 @@ public partial class AgeGroupPart : UserControl
     public AgeGroupPart(AgeGroupsPage page, AgeGroup group)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        StartAge.FilterTyping(NumberValidation);
+        EndAge.FilterTyping(NumberValidation);
         this.page = page;
         MyGroup = group;
         StartAge.Text = group.StartAge.ToString();

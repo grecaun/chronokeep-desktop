@@ -1,4 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Chronokeep.Objects;
@@ -112,6 +116,69 @@ namespace Chronokeep.Test.UI.Infrastructure
         protected static void Click(Button button)
         {
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Pump();
+        }
+
+        /// <summary>Double-clicks the middle of a control with the headless mouse, as a user would.</summary>
+        protected static void DoubleClick(Control target)
+        {
+            target.BringIntoView();
+            Pump();
+            TopLevel top = TopLevel.GetTopLevel(target)!;
+            // In from the left (past any row header), since wide rows can run past the right of the window.
+            // And in the upper part, since a grid's scroll bar can overlap the bottom of its last row.
+            Point point = target.TranslatePoint(new Point(Math.Min(target.Bounds.Width / 2, 150), target.Bounds.Height / 4), top)!.Value;
+            Assert.True(new Rect(top.ClientSize).Contains(point), $"{target.GetType().Name} is outside the window at {point}.");
+            try
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    top.MouseDown(point, MouseButton.Left);
+                    top.MouseUp(point, MouseButton.Left);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // The double-click closed the window, so there's nothing left to release over.
+            }
+            Pump();
+        }
+
+        /// <summary>The row showing an item in a ListBox or DataGrid, once it has been laid out.</summary>
+        protected static Control RowOf(Control list, object item)
+        {
+            Pump();
+            Control? row = list.GetVisualDescendants().OfType<Control>()
+                .FirstOrDefault(c => c is ListBoxItem or DataGridRow && ReferenceEquals(c.DataContext, item)
+                    && c.IsEffectivelyVisible && c.TranslatePoint(default, TopLevel.GetTopLevel(c)!) != null);
+            Assert.True(row != null, $"No row shown for {item} in {list.Name}.");
+            return row!;
+        }
+
+        /// <summary>Focuses a control and presses a key on the headless keyboard, as a user would.</summary>
+        protected static void PressKey(InputElement target, PhysicalKey key, RawInputModifiers modifiers = RawInputModifiers.None)
+        {
+            target.Focus();
+            Pump();
+            TopLevel top = TopLevel.GetTopLevel((Visual)target)!;
+            top.KeyPressQwerty(key, modifiers);
+            try
+            {
+                top.KeyReleaseQwerty(key, modifiers);
+            }
+            catch (ObjectDisposedException)
+            {
+                // The key closed the window, so there's nothing left to release over.
+            }
+            Pump();
+        }
+
+        /// <summary>Focuses a text box and types into it on the headless keyboard.</summary>
+        protected static void Type(InputElement target, string text)
+        {
+            target.Focus();
+            Pump();
+            TopLevel.GetTopLevel((Visual)target)!.KeyTextInput(text);
             Pump();
         }
 

@@ -20,6 +20,7 @@ using Chronokeep.Helpers;
 using Chronokeep.Interfaces.IO;
 using ClosedXML.Excel;
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -81,7 +82,7 @@ namespace Chronokeep.IO
                 string[] headers = new string[numHeaders];
                 for (int i = 1; i <= numHeaders; i++)
                 {
-                    headers[i - 1] = worksheet!.Cell(1, i).Value.IsBlank ? "" : worksheet.Cell(1, i).Value.ToString();
+                    headers[i - 1] = CellText(worksheet!.Cell(1, i).Value);
                 }
                 Data = new ImportData(headers, filePath, ImportData.FileType.EXCEL);
             }
@@ -108,8 +109,7 @@ namespace Chronokeep.IO
                     bool blank = true;
                     for (int column = 1; column <= numHeaders; column++)
                     {
-                        XLCellValue value = worksheet.Cell(row, column).Value;
-                        dataLine[column - 1] = value.IsBlank ? "" : value.ToString();
+                        dataLine[column - 1] = CellText(worksheet.Cell(row, column).Value);
                         blank = blank && dataLine[column - 1].Length == 0;
                     }
                     // Skip completely empty rows rather than importing a blank participant.
@@ -124,6 +124,24 @@ namespace Chronokeep.IO
             {
                 Log.E("IO.ExcelImporter", $"Couldn't get data. {excep.StackTrace}");
             }
+        }
+
+        /// <summary>
+        /// A cell as text that reads the same on every computer: dates as yyyy/MM/dd (with the time if it
+        /// has one) and numbers with a decimal point, rather than in the computer's own formats.
+        /// </summary>
+        internal static string CellText(XLCellValue value)
+        {
+            if (value.IsBlank) return "";
+            if (value.IsDateTime)
+            {
+                DateTime date = value.GetDateTime();
+                return date.TimeOfDay == TimeSpan.Zero
+                    ? date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)
+                    : date.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+            }
+            if (value.IsNumber) return value.GetNumber().ToString(CultureInfo.InvariantCulture);
+            return value.ToString();
         }
 
         /// <summary>The last column with anything in it, so empty columns don't hide the ones after them.</summary>

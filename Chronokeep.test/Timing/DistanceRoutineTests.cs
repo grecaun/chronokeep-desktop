@@ -438,5 +438,273 @@ namespace Chronokeep.Test.Timing
             Assert.Equal(2, FinishFor("1").Place);
             Assert.False(FinishFor("1").IsUploaded());
         }
+    
+
+        private void MarkRemoved(string bib)
+        {
+            Participant p = Runner(bib);
+            p.EventSpecific.Removed = "Transferred";
+            Db.UpdateParticipant(p);
+        }
+
+        private void SetAgeGroup(string bib, int ageGroupId)
+        {
+            Participant p = Runner(bib);
+            p.EventSpecific.AgeGroupId = ageGroupId;
+            Db.UpdateParticipant(p);
+        }
+
+        [Fact]
+        public void Tied_times_still_get_one_place_each()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1");
+            AddRunner(d, "2");
+            AddRunner(d, "3");
+            ReadAt(Chip("1"), 1500);
+            ReadAt(Chip("2"), 1500);
+            ReadAt(Chip("3"), 1600);
+
+            ProcessDistance();
+
+            Assert.Equal([1, 2], new[] { FinishFor("1").Place, FinishFor("2").Place }.Order());
+            Assert.Equal(3, FinishFor("3").Place);
+        }
+
+        [Fact]
+        public void Age_group_places_count_within_age_group_and_gender()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            int young = Db.AddAgeGroup(new AgeGroup(TheEvent.Identifier, d.Identifier, 0, 39));
+            int older = Db.AddAgeGroup(new AgeGroup(TheEvent.Identifier, d.Identifier, 40, 99));
+            AddRunner(d, "1", gender: "F");
+            AddRunner(d, "2", gender: "F");
+            AddRunner(d, "3", gender: "F");
+            AddRunner(d, "4", gender: "M");
+            SetAgeGroup("1", young);
+            SetAgeGroup("2", older);
+            SetAgeGroup("3", young);
+            SetAgeGroup("4", young);
+            ReadAt(Chip("1"), 1500);
+            ReadAt(Chip("2"), 1400);
+            ReadAt(Chip("3"), 1600);
+            ReadAt(Chip("4"), 1300);
+
+            ProcessDistance();
+
+            Assert.Equal(1, FinishFor("1").AgePlace);
+            Assert.Equal(1, FinishFor("2").AgePlace);
+            Assert.Equal(2, FinishFor("3").AgePlace);
+            Assert.Equal(1, FinishFor("4").AgePlace);
+        }
+
+        [Fact]
+        public void Runner_without_an_age_group_has_no_age_place()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1");
+            ReadAt(Chip("1"), 1500);
+
+            ProcessDistance();
+
+            Assert.Equal(1, FinishFor("1").Place);
+            Assert.Equal(TimingConstants.TIMERESULT_DUMMYPLACE, FinishFor("1").AgePlace);
+        }
+
+        [Fact]
+        public void Runners_without_a_gender_are_ranked_together()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1", gender: "");
+            AddRunner(d, "2", gender: "F");
+            AddRunner(d, "3", gender: "");
+            ReadAt(Chip("1"), 1500);
+            ReadAt(Chip("2"), 1400);
+            ReadAt(Chip("3"), 1600);
+
+            ProcessDistance();
+
+            Assert.Equal(1, FinishFor("1").GenderPlace);
+            Assert.Equal(2, FinishFor("3").GenderPlace);
+            Assert.Equal(1, FinishFor("2").GenderPlace);
+        }
+
+        [Fact]
+        public void Division_names_are_matched_ignoring_case()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1", division: "Elite");
+            AddRunner(d, "2", division: "elite");
+            ReadAt(Chip("1"), 1500);
+            ReadAt(Chip("2"), 1400);
+
+            ProcessDistance();
+
+            Assert.Equal(2, FinishFor("1").DivisionPlace);
+            Assert.Equal(1, FinishFor("2").DivisionPlace);
+        }
+
+        [Fact]
+        public void A_placed_runner_who_becomes_dnf_loses_their_division_place()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1", division: "Elite");
+            AddRunner(d, "2", division: "Elite");
+            ReadAt(Chip("1"), 1500);
+            ReadAt(Chip("2"), 1600);
+            ProcessDistance();
+            TimeResult placed = FinishFor("1");
+            Assert.Equal(1, placed.DivisionPlace);
+
+            // A result already placed is marked DNF and placements run again.
+            placed.Status = TimingConstants.TIMERESULT_STATUS_DNF;
+            Db.AddTimingResults([placed]);
+            Chronokeep.Timing.Routines.DistanceRoutine.ProcessPlacements(TheEvent, Db, BuildDictionary());
+
+            TimeResult dnf = FinishFor("1");
+            Assert.Equal((TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE), (dnf.Place, dnf.GenderPlace, dnf.AgePlace, dnf.DivisionPlace));
+            Assert.Equal((1, 1), (FinishFor("2").Place, FinishFor("2").DivisionPlace));
+        }
+
+        [Fact]
+        public void Removed_runners_keep_their_result_but_take_no_place()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1", gender: "F", division: "Elite");
+            AddRunner(d, "2", gender: "F", division: "Elite");
+            ReadAt(Chip("1"), 1400);
+            ReadAt(Chip("2"), 1500);
+            MarkRemoved("1");
+
+            ProcessDistance();
+
+            TimeResult removed = FinishFor("1");
+            Assert.Equal(1400, removed.Seconds);
+            Assert.Equal((TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE, TimingConstants.TIMERESULT_DUMMYPLACE), (removed.Place, removed.GenderPlace, removed.AgePlace, removed.DivisionPlace));
+            Assert.Equal((1, 1, 1), Places("2"));
+        }
+    }
+}
+
+namespace Chronokeep.Test.Timing
+{
+    /// <summary>Courses beyond one lap and one finish: laps, repeated mats, late starts and start-line repeats.</summary>
+    public class DistanceRoutineCourseTests : RoutineTestBase
+    {
+        private List<TimeResult> FinishLine(string bib) =>
+            [.. Results().Where(r => r.Bib == bib && r.LocationId == TimingConstants.LOCATION_FINISH).OrderBy(r => r.Occurrence)];
+
+        [Fact]
+        public void Multi_lap_distance_finishes_on_its_last_lap()
+        {
+            SetupEvent(configure: e => e.FinishMaxOccurrences = 3);
+            var d = AddRaceDistance("10K", x => x.FinishOccurrence = 3);
+            AddRunner(d, "1");
+            ReadAt(Chip("1"), 600);
+            ReadAt(Chip("1"), 1200);
+            ReadAt(Chip("1"), 1800);
+            var extra = ReadAt(Chip("1"), 2400);
+
+            ProcessDistance();
+
+            List<TimeResult> laps = FinishLine("1");
+            Assert.Equal([1, 2, 3], laps.Select(l => l.Occurrence));
+            Assert.Equal(TimingConstants.SEGMENT_FINISH, laps[2].SegmentId);
+            Assert.All(laps.Take(2), l => Assert.NotEqual(TimingConstants.SEGMENT_FINISH, l.SegmentId));
+            Assert.Equal("0:30:00.000", FinishFor("1").Time);
+            Assert.Equal(TimingConstants.CHIPREAD_STATUS_OVERMAX, ReadById(extra.ReadId).Status);
+        }
+
+        [Fact]
+        public void Each_distance_finishes_on_its_own_lap_count()
+        {
+            SetupEvent(configure: e => e.FinishMaxOccurrences = 2);
+            var fiveK = AddRaceDistance("5K", x => x.FinishOccurrence = 1);
+            var tenK = AddRaceDistance("10K", x => x.FinishOccurrence = 2);
+            AddRunner(fiveK, "1");
+            AddRunner(tenK, "2");
+            ReadAt(Chip("1"), 1500);
+            var fiveKExtra = ReadAt(Chip("1"), 3000);
+            ReadAt(Chip("2"), 1400);
+            ReadAt(Chip("2"), 2900);
+
+            ProcessDistance();
+
+            Assert.Equal("0:25:00.000", FinishFor("1").Time);
+            Assert.Equal(TimingConstants.CHIPREAD_STATUS_OVERMAX, ReadById(fiveKExtra.ReadId).Status);
+            Assert.Equal("0:48:20.000", FinishFor("2").Time);
+            Assert.Equal(2, FinishFor("2").Occurrence);
+        }
+
+        [Fact]
+        public void A_mat_crossed_twice_gives_each_crossing_its_own_segment()
+        {
+            SetupEvent();
+            var d = AddRaceDistance();
+            AddRunner(d, "1");
+            int loop = Db.AddTimingLocation(new TimingLocation(TheEvent.Identifier, "Loop") { MaxOccurrences = 2, IgnoreWithin = 60 });
+            int first = Db.AddSegment(new Segment(TheEvent.Identifier, TimingConstants.COMMON_SEGMENTS_DISTANCEID, loop, 1, 1.0, 1.0,
+                Constants.Distances.MILES, "Loop 1", "", ""));
+            int second = Db.AddSegment(new Segment(TheEvent.Identifier, TimingConstants.COMMON_SEGMENTS_DISTANCEID, loop, 2, 2.0, 1.0,
+                Constants.Distances.MILES, "Loop 2", "", ""));
+            ReadAt(Chip("1"), 480, loop);
+            var tooSoon = ReadAt(Chip("1"), 500, loop);
+            ReadAt(Chip("1"), 960, loop);
+            var third = ReadAt(Chip("1"), 1300, loop);
+            ReadAt(Chip("1"), 1500);
+
+            ProcessDistance();
+
+            List<TimeResult> splits = [.. Results().Where(r => r.LocationId == loop).OrderBy(r => r.Occurrence)];
+            Assert.Equal([first, second], splits.Select(s => s.SegmentId));
+            Assert.Equal(["0:08:00.000", "0:16:00.000"], splits.Select(s => s.Time));
+            Assert.Equal(TimingConstants.CHIPREAD_STATUS_WITHINIGN, ReadById(tooSoon.ReadId).Status);
+            Assert.Equal(TimingConstants.CHIPREAD_STATUS_OVERMAX, ReadById(third.ReadId).Status);
+        }
+
+        [Fact]
+        public void Late_start_distance_times_from_the_linked_distances_gun()
+        {
+            SetupEvent();
+            var main = AddRaceDistance("Half");
+            var late = AddRaceDistance("Half Late", x =>
+            {
+                x.LinkedDistance = main.Identifier;
+                x.Type = TimingConstants.DISTANCE_TYPE_LATE;
+                x.Wave = 2;
+                x.StartOffsetSeconds = 600;
+            });
+            AddRunner(late, "1");
+            ReadAt(Chip("1"), 2400);
+
+            ProcessDistance();
+
+            Assert.Equal("0:40:00.000", FinishFor("1").Time);
+        }
+
+        [Theory]
+        [InlineData(1, TimingConstants.CHIPREAD_STATUS_OVERMAX)]
+        [InlineData(2, TimingConstants.CHIPREAD_STATUS_USED)]
+        public void Start_line_repeats_count_toward_its_max(int startMax, int repeatStatus)
+        {
+            SetupEvent(configure: e => { e.CommonStartFinish = false; e.StartMaxOccurrences = startMax; });
+            var d = AddRaceDistance();
+            AddRunner(d, "1");
+            ReadAt(Chip("1"), 10, TimingConstants.LOCATION_START);
+            var repeat = ReadAt(Chip("1"), 900, TimingConstants.LOCATION_START);
+            ReadAt(Chip("1"), 1500);
+
+            ProcessDistance();
+
+            Assert.Equal(repeatStatus, ReadById(repeat.ReadId).Status);
+            Assert.Equal("0:25:00.000", FinishFor("1").Time);
+        }
     }
 }

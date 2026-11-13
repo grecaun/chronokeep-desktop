@@ -36,13 +36,13 @@ namespace Chronokeep.MemStore
             read.ReadId = database.AddChipRead(read);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return read.ReadId;
+                memStoreLock.Enter();
                 try
                 {
                     DateTime start = DateTime.Now;
                     if (theEvent != null)
                     {
-                        start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
+                        start = EventDates.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
                     }
                     read.Start = start;
                     read.ChipBib = chipToBibAssociations.TryGetValue(read.ChipNumber, out BibChipAssociation? ba) ? ba.Bib : Constants.Timing.CHIPREAD_DUMMYBIB;
@@ -78,7 +78,7 @@ namespace Chronokeep.MemStore
             List<ChipRead> output = database.AddChipReads(reads);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     Dictionary<string, Participant> partDictionary = [];
@@ -89,7 +89,7 @@ namespace Chronokeep.MemStore
                     DateTime start = DateTime.Now;
                     if (theEvent != null)
                     {
-                        start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
+                        start = EventDates.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
                     }
                     foreach (ChipRead read in output)
                     {
@@ -123,7 +123,7 @@ namespace Chronokeep.MemStore
             database.DeleteChipReads(reads);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (ChipRead read in reads)
@@ -317,7 +317,7 @@ namespace Chronokeep.MemStore
             database.SetChipReadStatus(read);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (chipReads.TryGetValue(read.ReadId, out ChipRead? known))
@@ -343,7 +343,7 @@ namespace Chronokeep.MemStore
             database.SetChipReadStatuses(reads);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (ChipRead read in reads)
@@ -372,7 +372,7 @@ namespace Chronokeep.MemStore
             database.UpdateChipRead(read);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (!chipReads.TryGetValue(read.ReadId, out ChipRead? known)) return;
@@ -398,7 +398,7 @@ namespace Chronokeep.MemStore
             database.UpdateChipReads(reads);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (ChipRead read in reads)

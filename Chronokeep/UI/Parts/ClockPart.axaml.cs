@@ -119,7 +119,7 @@ public partial class ClockPart : UserControl
         }
         else if (theEvent.StartSeconds > 0 || theEvent.StartMilliseconds > 0)
         {
-            CountDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
+            CountDatePicker.SelectedDate = EventDates.Parse(theEvent.Date);
             // The time box takes exactly HH:mm:ss, so pad the hour for starts before 10:00.
             long startSeconds = theEvent.StartMilliseconds >= 500 ? theEvent.StartSeconds + 1 : theEvent.StartSeconds;
             ChangeCountTimeBox($"{startSeconds / 3600:D2}:{startSeconds % 3600 / 60:D2}:{startSeconds % 60:D2}");

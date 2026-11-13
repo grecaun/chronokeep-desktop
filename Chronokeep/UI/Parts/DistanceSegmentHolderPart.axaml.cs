@@ -37,6 +37,8 @@ public partial class DistanceSegmentHolderPart : UserControl
                 List<Distance> distances, List<Segment> segments, List<TimingLocation> locations)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        NumAdd.FilterTyping(NumberValidation);
         this.distance = distance;
         this.page = page;
         List<Distance> otherDistances1 = [.. distances];

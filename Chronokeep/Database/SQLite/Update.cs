@@ -52,6 +52,38 @@ namespace Chronokeep.Database.SQLite
         /// update would be silently skipped. Those rows are merged first: the duplicate's eventspecific
         /// rows move to the kept row and the duplicate is deleted. Values that are not dates are left as is.
         /// </summary>
+        /// <summary>
+        /// Rewrites every event date as yyyy/MM/dd (see EventDates). Dates were stored in the format of the
+        /// computer that wrote them, so they're read in this computer's format first.
+        /// </summary>
+        internal static void NormalizeEventDates(SQLiteConnection connection)
+        {
+            List<(long Id, string Normalized)> changes = [];
+            using (SQLiteCommand read = connection.CreateCommand())
+            {
+                read.CommandText = "SELECT event_id, event_date FROM events;";
+                using SQLiteDataReader reader = read.ExecuteReader();
+                while (reader.Read())
+                {
+                    string stored = reader["event_date"] as string ?? "";
+                    if (!EventDates.TryParseLocalFirst(stored, out DateTime date)) continue;
+                    string normalized = EventDates.From(date);
+                    if (normalized != stored)
+                    {
+                        changes.Add((Convert.ToInt64(reader["event_id"]), normalized));
+                    }
+                }
+            }
+            foreach ((long id, string normalized) in changes)
+            {
+                using SQLiteCommand update = connection.CreateCommand();
+                update.CommandText = "UPDATE events SET event_date=@date WHERE event_id=@id;";
+                update.Parameters.Add(new SQLiteParameter("@date", normalized));
+                update.Parameters.Add(new SQLiteParameter("@id", id));
+                update.ExecuteNonQuery();
+            }
+        }
+
         internal static void NormalizeBirthdates(SQLiteConnection connection)
         {
             List<(long Id, string? First, string? Last, string? Street, string? Zip, string Birthday, string Normalized)> rows = [];
@@ -1775,6 +1807,7 @@ namespace Chronokeep.Database.SQLite
                             CreateRegistrationDistancesTable;
                         command.ExecuteNonQuery();
                         NormalizeBirthdates(connection);
+                        NormalizeEventDates(connection);
                         command = connection.CreateCommand();
                         command.CommandText = $"UPDATE settings SET value='76' WHERE setting='{Constants.Settings.DATABASE_VERSION}';";
                         command.ExecuteNonQuery();

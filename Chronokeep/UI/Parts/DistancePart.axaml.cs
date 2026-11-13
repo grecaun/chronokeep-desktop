@@ -56,6 +56,10 @@ public partial class DistancePart : UserControl
         this.page = page;
         theDistance = distance;
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        Ranking.FilterTyping(NumberValidation);
+        DistanceBox.FilterTyping(DotValidation);
+        Wave.FilterTyping(NumberValidation);
         DistanceName.Text = theDistance.Name;
         CopyFromBox.Items.Clear();
         CopyFromBox.Items.Add(new ComboBoxItem()

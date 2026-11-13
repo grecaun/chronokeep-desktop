@@ -338,5 +338,37 @@ namespace Chronokeep.Test.Timing
 
             Assert.Equal(1, FinishesFor(winner).Last().Place);
         }
+    
+
+        [Fact]
+        public void Removed_runners_keep_their_loops_but_take_no_place()
+        {
+            var d = Setup();
+            AddRunner(d, "1", gender: "F");
+            AddRunner(d, "2", gender: "F");
+            foreach (int h in new[] { 0, 1, 2 }) Loop("1", h, 2400);
+            foreach (int h in new[] { 0, 1 }) Loop("2", h, 2500);
+            Participant p = Runner("1");
+            p.EventSpecific.Removed = "Refunded";
+            Db.UpdateParticipant(p);
+
+            ProcessBackyard();
+
+            Assert.Equal(3, FinishesFor("1").Count);
+            Assert.All(FinishesFor("1"), f => Assert.Equal(TimingConstants.TIMERESULT_DUMMYPLACE, f.Place));
+            Assert.Equal((1, 1), (FinishesFor("2").Last().Place, FinishesFor("2").Last().GenderPlace));
+        }
+
+        [Fact]
+        public void Every_loop_carries_the_runners_division_place()
+        {
+            var d = Setup();
+            AddRunner(d, "1", division: "Elite");
+            foreach (int h in new[] { 0, 1, 2 }) Loop("1", h, 2400);
+
+            ProcessBackyard();
+
+            Assert.All(FinishesFor("1"), f => Assert.Equal(1, f.DivisionPlace));
+        }
     }
 }

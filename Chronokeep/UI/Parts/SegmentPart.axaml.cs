@@ -43,6 +43,8 @@ public partial class SegmentPart : UserControl
     public SegmentPart(Event theEvent, SegmentsPage page, Segment segment, List<TimingLocation> locations)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        CumDistance.FilterTyping(DoubleValidation);
         this.page = page;
         this.theEvent = theEvent;
         MySegment = segment;

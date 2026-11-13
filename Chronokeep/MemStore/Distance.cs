@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             dist.Identifier = database.AddDistance(dist);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return dist.Identifier;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && dist.EventIdentifier == theEvent.Identifier && dist.Identifier > 0)
@@ -64,7 +64,7 @@ namespace Chronokeep.MemStore
             List<Distance> output = database.AddDistances(dists);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Distance dist in output)
@@ -177,7 +177,7 @@ namespace Chronokeep.MemStore
             database.RemoveDistance(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     distances.Remove(identifier);
@@ -215,7 +215,7 @@ namespace Chronokeep.MemStore
             database.RemoveDistance(dist);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     distances.Remove(dist.Identifier);
@@ -244,7 +244,7 @@ namespace Chronokeep.MemStore
             database.UpdateDistance(dist);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     Dictionary<string, string> oldDistanceNameDict = new();
@@ -294,7 +294,7 @@ namespace Chronokeep.MemStore
             database.SetWaveTimes(eventId, wave, seconds, milliseconds);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;

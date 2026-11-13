@@ -58,7 +58,7 @@ namespace Chronokeep.MemStore
             database.SetAppSetting(name, value);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     settings[name] = new AppSetting { Name = name, Value = value };
@@ -81,7 +81,7 @@ namespace Chronokeep.MemStore
             database.SetAppSetting(setting);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     settings[setting.Name] = setting;

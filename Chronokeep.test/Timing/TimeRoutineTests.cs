@@ -1,3 +1,4 @@
+using Chronokeep.Objects;
 using TimingConstants = Chronokeep.Constants.Timing;
 
 namespace Chronokeep.Test.Timing
@@ -117,6 +118,26 @@ namespace Chronokeep.Test.Timing
             var laps = LapsFor("1");
             Assert.Equal([1, 2], laps.Select(l => l.Occurrence));
             Assert.Equal("0:10:00.000", laps[1].LapTime);
+        }
+    
+
+        [Fact]
+        public void Removed_runners_keep_their_laps_but_take_no_place()
+        {
+            var d = Setup();
+            AddRunner(d, "1");
+            AddRunner(d, "2");
+            foreach (int t in new[] { 500, 1000, 1500, 2000 }) ReadAt(Chip("1"), t);
+            foreach (int t in new[] { 600, 1200, 1800 }) ReadAt(Chip("2"), t);
+            Participant p = Runner("1");
+            p.EventSpecific.Removed = "Refunded";
+            Db.UpdateParticipant(p);
+
+            ProcessTime();
+
+            Assert.Equal(4, LapsFor("1").Count);
+            Assert.All(LapsFor("1"), l => Assert.Equal(TimingConstants.TIMERESULT_DUMMYPLACE, l.Place));
+            Assert.Equal(1, LapsFor("2").Last().Place);
         }
     }
 }

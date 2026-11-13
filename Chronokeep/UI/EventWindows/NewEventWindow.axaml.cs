@@ -64,11 +64,8 @@ public partial class NewEventWindow : ChronokeepWindow
     {
         string nameString = NameBox.Text!.Trim();
         string yearString = YearCodeBox.Text!.Trim();
-        long dateVal = DateTime.Now.Date.Ticks;
-        if (DatePicker.Text != null)
-        {
-            dateVal = DateTime.Parse(DatePicker.Text.Replace('_', '0')).Ticks;
-        }
+        // The picked date itself, not its text, which is in the computer's date format.
+        long dateVal = (DatePicker.SelectedDate ?? DateTime.Now).Date.Ticks;
         Log.D("NewEventWindow", $"Name given for event: '{nameString}' Date Given: {dateVal} Date Value: {dateVal}");
         if (nameString == "")
         {

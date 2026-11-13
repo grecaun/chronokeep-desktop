@@ -423,7 +423,7 @@ namespace Chronokeep.Timing
             }
             // Get the start time for the event. (Net time of 0:00:00.000)
             Dictionary.DistanceStartDict.Clear();
-            DateTime startTime = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds);
+            DateTime startTime = EventDates.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds);
             Dictionary.DistanceStartDict[0] = (Constants.Timing.RfidDateToEpoch(startTime), theEvent.StartMilliseconds);
             // And the end time (for time based events)
             Dictionary.DistanceEndDict.Clear();
@@ -587,167 +587,175 @@ namespace Chronokeep.Timing
                     {
                         break;
                     }
-                    Event theEvent = database.GetCurrentEvent()!;
-                    // ensure the event exists and we've got unprocessed reads
-                    if (theEvent.Identifier == -1) continue;
-                    Log.D("Timing.TimingWorker", "Lock Wait 06");
-                    if (ResetDictionariesLock.TryEnter(3000))
+                    // One failed pass (a busy database, bad data) mustn't stop scoring for the rest of the race.
+                    try
                     {
-                        try
+                        Event? theEvent = database.GetCurrentEvent();
+                        // ensure the event exists and we've got unprocessed reads
+                        if (theEvent == null || theEvent.Identifier == -1) continue;
+                        Log.D("Timing.TimingWorker", "Lock Wait 06");
+                        if (ResetDictionariesLock.TryEnter(3000))
                         {
-                            if (resetDictionariesBool)
+                            try
                             {
-                                RecalculateDictionaries(theEvent);
-                            }
-                            resetDictionariesBool = false;
-                        }
-                        finally
-                        {
-                            ResetDictionariesLock.Exit();
-                        }
-                    }
-                    bool touched = false;
-                    // Check if we have new DNS entries and reset if necessary.
-                    if (database.GetDnsChipReads(theEvent.Identifier).Count > Dictionary.DnsEntryCount)
-                    {
-                        RecalculateDns(theEvent);
-                    }
-                    // Process chip reads first.
-                    if (database.UnprocessedReadsExist(theEvent.Identifier))
-                    {
-                        Log.D("Timing.TimingWorker", "Unprocessed reads exist.");
-#if DEBUG
-                        DateTime start = DateTime.Now;
-#endif
-                        switch (theEvent.EventType)
-                        {
-                            // If RACE TYPE is DISTANCE
-                            case Constants.Timing.EVENT_TYPE_DISTANCE:
-                                _ = DistanceRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                                touched = true;
-                                break;
-                            // Else RACE TYPE is TIME
-                            case Constants.Timing.EVENT_TYPE_TIME:
-                                _ = TimeRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                                touched = true;
-                                break;
-                            // Else if RACE TYPE is BACKYARD_ULTRA
-                            case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
-                                _ = BackyardUltraRoutine.ProcessRace(theEvent, database, Dictionary, window);
-                                touched = true;
-                                break;
-                        }
-#if DEBUG
-                        DateTime end = DateTime.Now;
-                        TimeSpan time = end - start;
-                        Log.D("Timing.TimingWorker", $"Time to process all chip reads was: {time.Hours} hours {time.Minutes} minutes {time.Seconds} seconds {time.Milliseconds} milliseconds");
-#endif
-                    }
-                    // Now process Results that aren't ranked.
-                    if (database.UnprocessedResultsExist(theEvent.Identifier))
-                    {
-                        Log.D("Timing.TimingWorker", "Unprocessed results exist.");
-#if DEBUG
-                        DateTime start = DateTime.Now;
-#endif
-                        switch (theEvent.EventType)
-                        {
-                            // If RACE TYPE is DISTANCE
-                            case Constants.Timing.EVENT_TYPE_DISTANCE:
-                                _ = DistanceRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                                touched = true;
-                                break;
-                            // Else if RACE TYPE is TIME
-                            case Constants.Timing.EVENT_TYPE_TIME:
-                                TimeRoutine.ProcessLapTimes(theEvent, database);
-                                _ = TimeRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                                touched = true;
-                                break;
-                            // Else if RACE TYPE is BACKYARD_ULTRA
-                            case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
-                                _ = BackyardUltraRoutine.ProcessPlacements(theEvent, database, Dictionary);
-                                touched = true;
-                                break;
-                        }
-#if DEBUG
-                        DateTime end = DateTime.Now;
-                        TimeSpan time = end - start;
-                        Log.D("Timing.TimingWorker", $"Time to process placements was: {time.Hours} hours {time.Minutes} minutes {time.Seconds} seconds {time.Milliseconds} milliseconds");
-#endif
-                        window.NetworkUpdateResults();
-                    }
-                    if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType) // && SMS set up && SMS enabled on event
-                    {
-                        // Build list of potential SMS Alerts to send out.
-                        // First check for any alerts already sent out.
-                        List<(int, int)> alerts = database.GetSmsAlerts(theEvent.Identifier);
-                        // If null, db lookup failed, so soft fail here.
-                        {
-                            DateTime now = DateTime.Now;
-                            DateTime fifteenPrior = now.AddMinutes(-15);
-                            // Changing alerts hashset to locally based and pulled from the database each time we try to send alerts
-                            HashSet<(int, int)> alertsSent = [.. alerts];
-                            // Check the finish results for results we can send SMS messages for.
-                            List<TimeResult> smsResults = GetSmsResults(database.GetTimingResults(theEvent.Identifier), Dictionary.DistanceNameDictionary, alertsSent, fifteenPrior);
-                            // Only process further if there are potential SMS results.
-                            if (smsResults.Count > 0)
-                            {
-                                if (lastSubscriptionFetch.AddSeconds(30).CompareTo(now) < 0)
+                                if (resetDictionariesBool)
                                 {
-                                    ApiObject apiObject = database.GetApi(theEvent.ApiId)!;
-                                    string[] eventIds = theEvent.ApiEventId.Split(',');
-                                    if (eventIds.Length == 2)
+                                    RecalculateDictionaries(theEvent);
+                                }
+                                resetDictionariesBool = false;
+                            }
+                            finally
+                            {
+                                ResetDictionariesLock.Exit();
+                            }
+                        }
+                        bool touched = false;
+                        // Check if we have new DNS entries and reset if necessary.
+                        if (database.GetDnsChipReads(theEvent.Identifier).Count > Dictionary.DnsEntryCount)
+                        {
+                            RecalculateDns(theEvent);
+                        }
+                        // Process chip reads first.
+                        if (database.UnprocessedReadsExist(theEvent.Identifier))
+                        {
+                            Log.D("Timing.TimingWorker", "Unprocessed reads exist.");
+    #if DEBUG
+                            DateTime start = DateTime.Now;
+    #endif
+                            switch (theEvent.EventType)
+                            {
+                                // If RACE TYPE is DISTANCE
+                                case Constants.Timing.EVENT_TYPE_DISTANCE:
+                                    _ = DistanceRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                    touched = true;
+                                    break;
+                                // Else RACE TYPE is TIME
+                                case Constants.Timing.EVENT_TYPE_TIME:
+                                    _ = TimeRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                    touched = true;
+                                    break;
+                                // Else if RACE TYPE is BACKYARD_ULTRA
+                                case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
+                                    _ = BackyardUltraRoutine.ProcessRace(theEvent, database, Dictionary, window);
+                                    touched = true;
+                                    break;
+                            }
+    #if DEBUG
+                            DateTime end = DateTime.Now;
+                            TimeSpan time = end - start;
+                            Log.D("Timing.TimingWorker", $"Time to process all chip reads was: {time.Hours} hours {time.Minutes} minutes {time.Seconds} seconds {time.Milliseconds} milliseconds");
+    #endif
+                        }
+                        // Now process Results that aren't ranked.
+                        if (database.UnprocessedResultsExist(theEvent.Identifier))
+                        {
+                            Log.D("Timing.TimingWorker", "Unprocessed results exist.");
+    #if DEBUG
+                            DateTime start = DateTime.Now;
+    #endif
+                            switch (theEvent.EventType)
+                            {
+                                // If RACE TYPE is DISTANCE
+                                case Constants.Timing.EVENT_TYPE_DISTANCE:
+                                    _ = DistanceRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                    touched = true;
+                                    break;
+                                // Else if RACE TYPE is TIME
+                                case Constants.Timing.EVENT_TYPE_TIME:
+                                    TimeRoutine.ProcessLapTimes(theEvent, database);
+                                    _ = TimeRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                    touched = true;
+                                    break;
+                                // Else if RACE TYPE is BACKYARD_ULTRA
+                                case Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA:
+                                    _ = BackyardUltraRoutine.ProcessPlacements(theEvent, database, Dictionary);
+                                    touched = true;
+                                    break;
+                            }
+    #if DEBUG
+                            DateTime end = DateTime.Now;
+                            TimeSpan time = end - start;
+                            Log.D("Timing.TimingWorker", $"Time to process placements was: {time.Hours} hours {time.Minutes} minutes {time.Seconds} seconds {time.Milliseconds} milliseconds");
+    #endif
+                            window.NetworkUpdateResults();
+                        }
+                        if (Constants.Timing.EVENT_TYPE_DISTANCE == theEvent.EventType) // && SMS set up && SMS enabled on event
+                        {
+                            // Build list of potential SMS Alerts to send out.
+                            // First check for any alerts already sent out.
+                            List<(int, int)> alerts = database.GetSmsAlerts(theEvent.Identifier);
+                            // If null, db lookup failed, so soft fail here.
+                            {
+                                DateTime now = DateTime.Now;
+                                DateTime fifteenPrior = now.AddMinutes(-15);
+                                // Changing alerts hashset to locally based and pulled from the database each time we try to send alerts
+                                HashSet<(int, int)> alertsSent = [.. alerts];
+                                // Check the finish results for results we can send SMS messages for.
+                                List<TimeResult> smsResults = GetSmsResults(database.GetTimingResults(theEvent.Identifier), Dictionary.DistanceNameDictionary, alertsSent, fifteenPrior);
+                                // Only process further if there are potential SMS results.
+                                if (smsResults.Count > 0)
+                                {
+                                    if (lastSubscriptionFetch.AddSeconds(30).CompareTo(now) < 0)
                                     {
-                                        try
+                                        ApiObject apiObject = database.GetApi(theEvent.ApiId)!;
+                                        string[] eventIds = theEvent.ApiEventId.Split(',');
+                                        if (eventIds.Length == 2)
                                         {
-                                            GetSmsSubscriptionsResponse subscriptionResponse = await ApiHandlers.GetSmsSubscriptions(apiObject, eventIds[0], eventIds[1]);
-                                            // delete old then upload all the new subscriptions
-                                            // this is just to make sure that we remove anyone who may have unsubscribed
-                                            database.DeleteSmsSubscriptions(theEvent.Identifier);
-                                            database.AddSmsSubscriptions(theEvent.Identifier, subscriptionResponse.Subscriptions);
-                                            lastSubscriptionFetch = now;
-                                        }
-                                        catch
-                                        {
-                                            Log.E("Timing.TimingWorker", "Exception getting sms subscriptions.");
+                                            try
+                                            {
+                                                GetSmsSubscriptionsResponse subscriptionResponse = await ApiHandlers.GetSmsSubscriptions(apiObject, eventIds[0], eventIds[1]);
+                                                // delete old then upload all the new subscriptions
+                                                // this is just to make sure that we remove anyone who may have unsubscribed
+                                                database.DeleteSmsSubscriptions(theEvent.Identifier);
+                                                database.AddSmsSubscriptions(theEvent.Identifier, subscriptionResponse.Subscriptions);
+                                                lastSubscriptionFetch = now;
+                                            }
+                                            catch
+                                            {
+                                                Log.E("Timing.TimingWorker", "Exception getting sms subscriptions.");
+                                            }
                                         }
                                     }
-                                }
-                                Dictionary<string, string> nameToBibDict = GetNameToBib(database.GetParticipants(theEvent.Identifier));
-                                Dictionary<string, HashSet<string>> bibToPhonesDict = GetBibToPhones(database.GetSmsSubscriptions(theEvent.Identifier), nameToBibDict);
-                                Dictionary<TimeResult, HashSet<string>> toSendTo = GetPhonesToText(smsResults, bibToPhonesDict);
-                                // Only check banned phones or try to send texts if there is something to send.
-                                if (toSendTo.Count > 0)
-                                {
-                                    // Update banned phones list.
-                                    GlobalVars.UpdateBannedPhones();
-                                    Dictionary.Apis.TryGetValue(theEvent.ApiId, out ApiObject? api);
-                                    SendSmsAlerts(
-                                        toSendTo,
-                                        theEvent,
-                                        Dictionary.MainDistances.Count > 1,
-                                        GetResultsUrl(theEvent, api),
-                                        database,
-                                        SendSmsAlert,
-                                        GlobalVars.AddBannedPhone
-                                        );
+                                    Dictionary<string, string> nameToBibDict = GetNameToBib(database.GetParticipants(theEvent.Identifier));
+                                    Dictionary<string, HashSet<string>> bibToPhonesDict = GetBibToPhones(database.GetSmsSubscriptions(theEvent.Identifier), nameToBibDict);
+                                    Dictionary<TimeResult, HashSet<string>> toSendTo = GetPhonesToText(smsResults, bibToPhonesDict);
+                                    // Only check banned phones or try to send texts if there is something to send.
+                                    if (toSendTo.Count > 0)
+                                    {
+                                        // Update banned phones list.
+                                        GlobalVars.UpdateBannedPhones();
+                                        Dictionary.Apis.TryGetValue(theEvent.ApiId, out ApiObject? api);
+                                        SendSmsAlerts(
+                                            toSendTo,
+                                            theEvent,
+                                            Dictionary.MainDistances.Count > 1,
+                                            GetResultsUrl(theEvent, api),
+                                            database,
+                                            SendSmsAlert,
+                                            GlobalVars.AddBannedPhone
+                                            );
+                                    }
                                 }
                             }
                         }
+                        if (!touched) continue;
+                        if (ResultsLock.TryEnter(3000))
+                        {
+                            try
+                            {
+                                newResults = true;
+                            }
+                            finally
+                            {
+                                ResultsLock.Exit();
+                            }
+                        }
+                        window.UpdateTiming();
                     }
-                    if (!touched) continue;
-                    if (ResultsLock.TryEnter(3000))
+                    catch (Exception e)
                     {
-                        try
-                        {
-                            newResults = true;
-                        }
-                        finally
-                        {
-                            ResultsLock.Exit();
-                        }
+                        Log.E("Timing.TimingWorker", $"Error processing timing data, will try again on the next pass. {e.Message}");
                     }
-                    window.UpdateTiming();
                 } while (true);
             }
             catch (Exception e)

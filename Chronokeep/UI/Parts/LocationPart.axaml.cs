@@ -40,6 +40,8 @@ public partial class LocationPart : UserControl
     public LocationPart(LocationsPage page, TimingLocation location, Event theEvent)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        MaxOccurrences.FilterTyping(NumberValidation);
         this.page = page;
         MyLocation = location;
         LocationName.Text = MyLocation.Name;

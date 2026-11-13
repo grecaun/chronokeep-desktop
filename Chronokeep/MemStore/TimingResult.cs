@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             database.AddTimingResult(tr);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     string bib = "";
@@ -95,7 +95,7 @@ namespace Chronokeep.MemStore
             database.AddTimingResults(results);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (TimeResult tr in results)
@@ -292,7 +292,7 @@ namespace Chronokeep.MemStore
             database.RemoveTimingResult(tr);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     timingResults.Remove((tr.EventSpecificId, tr.LocationId, tr.Occurrence, tr.UnknownId));
@@ -315,7 +315,7 @@ namespace Chronokeep.MemStore
             database.SetUploadedTimingResults(results);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (TimeResult changed in results)
@@ -383,7 +383,7 @@ namespace Chronokeep.MemStore
             database.ResetTimingResultsEvent(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;
@@ -415,7 +415,7 @@ namespace Chronokeep.MemStore
             database.ResetTimingResultsPlacements(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;

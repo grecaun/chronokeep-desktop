@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Chronokeep.Helpers;
 using System;
 using Chronokeep.Constants;
 
@@ -38,7 +39,7 @@ namespace Chronokeep.Objects
         public Event(string n, long d, string yearCode)
         {
             DateTime time = new(d);
-            Date = time.ToShortDateString();
+            Date = EventDates.From(time);
             Name = n;
             YearCode = yearCode;
             StartWindow = 600;
@@ -50,7 +51,7 @@ namespace Chronokeep.Objects
             Identifier = id;
             Name = n;
             DateTime time = new(d);
-            Date = time.ToShortDateString();
+            Date = EventDates.From(time);
             StartWindow = 600;
             FinishIgnoreWithin = 600;
         }
@@ -58,7 +59,7 @@ namespace Chronokeep.Objects
         public Event(string n, long d, int age, int start, int seg, int gun)
         {
             DateTime time = new(d);
-            Date = time.ToShortDateString();
+            Date = EventDates.From(time);
             Name = n;
             commonAgeGroups = age;
             commonStartFinish = start;
@@ -78,7 +79,7 @@ namespace Chronokeep.Objects
             Identifier = id;
             Name = n;
             DateTime time = new(d);
-            Date = time.ToShortDateString();
+            Date = EventDates.From(time);
             commonAgeGroups = age;
             commonStartFinish = start;
             distanceSpecificSegments = seg;
@@ -100,8 +101,8 @@ namespace Chronokeep.Objects
         {
             Identifier = id;
             Name = n;
-            DateTime time = DateTime.Parse(d);
-            Date = time.ToShortDateString();
+            // Normalize also reads dates written in the computer's own format before dates had one format.
+            Date = d;
             commonAgeGroups = age;
             commonStartFinish = start;
             distanceSpecificSegments = seg;
@@ -131,13 +132,16 @@ namespace Chronokeep.Objects
         public RankingType RankedBy { get; set; } = RankingType.Clock;
         public int Identifier { get; set; }
         public string Name { get; set; } = "";
-        public string Date { get; set; } = "";
-        public string LongDate => DateTime.Parse(Date).ToString("MMMM d, yyyy");
+        private string date = "";
+        /// <summary>The event's date, always stored as yyyy/MM/dd (see EventDates).</summary>
+        public string Date { get => date; set => date = EventDates.Normalize(value); }
+        /// <summary>The date for people to read, such as June 15, 2026.</summary>
+        public string LongDate => EventDates.Display(Date);
         public bool CommonAgeGroups { get => commonAgeGroups != 0; set => commonAgeGroups = value ? 1 : 0; }
         public bool CommonStartFinish { get => commonStartFinish != 0; set => commonStartFinish = value ? 1 : 0; }
         public bool DistanceSpecificSegments { get => distanceSpecificSegments != 0; set => distanceSpecificSegments = value ? 1 : 0; }
         public string YearCode { get; set; } = "";
-        public string Year => Date.Split('/').Length == 3 ? Date.Split('/')[2] : "";
+        public string Year => EventDates.TryParse(Date, out DateTime date) ? date.Year.ToString() : "";
         public int StartWindow { get; set; } = -1;
         public int FinishMaxOccurrences { get; set; } = 1;
         public int FinishIgnoreWithin { get; set; }
@@ -176,8 +180,8 @@ namespace Chronokeep.Objects
         public int CompareTo(Event? other)
         {
             if (other == null) return 1;
-            DateTime thisDate = DateTime.Parse(Date);
-            DateTime otherDate = DateTime.Parse(other.Date);
+            DateTime thisDate = EventDates.Parse(Date);
+            DateTime otherDate = EventDates.Parse(other.Date);
             return thisDate.CompareTo(otherDate) * -1;
         }
 

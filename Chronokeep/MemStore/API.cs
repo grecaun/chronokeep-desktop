@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             anApi.Identifier = database.AddApi(anApi);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return anApi.Identifier;
+                memStoreLock.Enter();
                 try
                 {
                     apis[anApi.Identifier] = anApi;
@@ -108,7 +108,7 @@ namespace Chronokeep.MemStore
             database.RemoveApi(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     apis.Remove(identifier);
@@ -147,7 +147,7 @@ namespace Chronokeep.MemStore
             database.UpdateApi(anApi);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (apis.TryGetValue(anApi.Identifier, out ApiObject? api))

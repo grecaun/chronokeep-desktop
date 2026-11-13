@@ -57,6 +57,9 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
     public ChipAssignmentPage(IMainWindow mWindow, IdbInterface database)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        SingleChipBox.FilterTyping(ChipValidation);
+        RangeStartChipBox.FilterTyping(ChipValidation);
         this.mWindow = mWindow;
         this.database = database;
         chipType = database.GetAppSetting(Constants.Settings.DEFAULT_CHIP_TYPE)!;

@@ -1,3 +1,4 @@
+using Chronokeep.Database;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Chronokeep.Helpers;
@@ -204,7 +205,22 @@ namespace Chronokeep.Test.UI
             MinWindow safe = Open();
 
             Assert.True(File.Exists(Path.Combine(data, global::Chronokeep.UI.MainWindow.DATABASE_FILE_NAME)));
+            Assert.Equal("", Find<TextBlock>(safe, "EventDate").Text ?? "");
             Assert.IsType<MinTimingPage>(Find<UserControl>(safe, "TheFrame").Content);
+        }
+
+        [AvaloniaFact]
+        public void Shows_the_event_date_written_out()
+        {
+            SqLiteInterface db = new(Path.Combine(data, global::Chronokeep.UI.MainWindow.DATABASE_FILE_NAME));
+            db.Initialize();
+            int id = db.AddEvent(new Event("Spring Fling", new DateTime(2026, 6, 15).Ticks, "2026"));
+            db.SetCurrentEvent(id);
+
+            MinWindow safe = Open();
+
+            Assert.Equal("Spring Fling", Find<TextBlock>(safe, "EventName").Text);
+            Assert.Equal("June 15, 2026", Find<TextBlock>(safe, "EventDate").Text);
         }
 
         [AvaloniaFact]

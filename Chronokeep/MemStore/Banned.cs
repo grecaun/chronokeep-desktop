@@ -34,7 +34,7 @@ namespace Chronokeep.MemStore
             database.AddBannedEmail(email);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedEmails.Add(email);
@@ -57,7 +57,7 @@ namespace Chronokeep.MemStore
             database.AddBannedEmails(emails);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (string email in emails)
@@ -83,7 +83,7 @@ namespace Chronokeep.MemStore
             database.AddBannedPhone(phone);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedPhones.Add(phone);
@@ -106,7 +106,7 @@ namespace Chronokeep.MemStore
             database.AddBannedPhones(phones);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (string phone in phones)
@@ -180,7 +180,7 @@ namespace Chronokeep.MemStore
             database.RemoveBannedEmail(email);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedEmails.Remove(email);
@@ -203,7 +203,7 @@ namespace Chronokeep.MemStore
             database.RemoveBannedEmails(emails);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (string email in emails)
@@ -229,7 +229,7 @@ namespace Chronokeep.MemStore
             database.RemoveBannedPhone(phone);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedPhones.Remove(phone);
@@ -252,7 +252,7 @@ namespace Chronokeep.MemStore
             database.RemoveBannedPhones(phones);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (string phone in phones)
@@ -278,7 +278,7 @@ namespace Chronokeep.MemStore
             database.ClearBannedEmails();
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedEmails.Clear();
@@ -301,7 +301,7 @@ namespace Chronokeep.MemStore
             database.ClearBannedPhones();
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     bannedPhones.Clear();

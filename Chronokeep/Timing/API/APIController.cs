@@ -74,7 +74,7 @@ namespace Chronokeep.Timing.API
             Event theEvent
             )
         {
-            DateTime start = DateTime.SpecifyKind(DateTime.Parse(theEvent.Date), DateTimeKind.Local).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
+            DateTime start = DateTime.SpecifyKind(EventDates.Parse(theEvent.Date), DateTimeKind.Local).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
             Dictionary<string, DateTime> waveStartTimes = [];
             HashSet<string> uploadDistances = [];
             foreach (Distance d in database.GetDistances(theEvent.Identifier))
@@ -373,83 +373,93 @@ namespace Chronokeep.Timing.API
                 // keep looping until told to stop
                 while (true)
                 {
-                    // Start upload of data to API.
-                    Event theEvent = database.GetCurrentEvent()!;
-                    // Get API to upload. Exit if not found
-                    if (theEvent is { ApiId: < 0, ApiEventId.Length: > 1 })
-                    {
-                        Log.D("API.APIController", "Unable to find API information.");
-                        keepAlive = false;
-                        running = false;
-                        mainWindow.UpdateTiming();
-                        return;
-                    }
-                    ApiObject api;
+                    // One failed pass mustn't stop uploads for the rest of the race; count it and try again next time.
                     try
                     {
-                        api = database.GetApi(theEvent.ApiId)!;
-                    }
-                    catch
-                    {
-                        Log.D("API.APIController", "Database doesn't contain information about the specified API.");
-                        keepAlive = false;
-                        running = false;
-                        mainWindow.UpdateTiming();
-                        return;
-                    }
-                    // Get the event id values. Exit if not valid.
-                    string[] eventIds = theEvent.ApiEventId.Split(',');
-                    if (eventIds.Length != 2)
-                    {
-                        Log.D("API.APIController", "Event ID values for API upload not valid.");
-                        keepAlive = false;
-                        running = false;
-                        mainWindow.UpdateTiming();
-                        return;
-                    }
-                    // Get results to upload.
-                    List<TimeResult> results = database.GetNonUploadedResults(theEvent.Identifier);
-                    // Remove all results to upload that don't have a place set, are not DNF/DNS results, and are also not start times.
-                    results.RemoveAll(x => x.Place < 1
-                                           && x.Status != Constants.Timing.TIMERESULT_STATUS_DNF
-                                           && x.Status != Constants.Timing.TIMERESULT_STATUS_DNS
-                                           && x.SegmentId != Constants.Timing.SEGMENT_START);
-                    Log.D("API.APIController", $"Results count: {results.Count}");
-                    bool upload = false;
-                    if (ApiLock.TryEnter(3000))
-                    {
+                        // Start upload of data to API.
+                        Event theEvent = database.GetCurrentEvent()!;
+                        // Get API to upload. Exit if not found
+                        if (theEvent is { ApiId: < 0, ApiEventId.Length: > 1 })
+                        {
+                            Log.D("API.APIController", "Unable to find API information.");
+                            keepAlive = false;
+                            running = false;
+                            mainWindow.UpdateTiming();
+                            return;
+                        }
+                        ApiObject api;
                         try
                         {
-                            upload = canUpload;
+                            api = database.GetApi(theEvent.ApiId)!;
                         }
-                        finally
+                        catch
                         {
-                            ApiLock.Exit();
+                            Log.D("API.APIController", "Database doesn't contain information about the specified API.");
+                            keepAlive = false;
+                            running = false;
+                            mainWindow.UpdateTiming();
+                            return;
                         }
-                    }
-                    //Log.D("Timing.API.APIController", $"We are {(!upload ? "not " : "")}able to upload right now.");
-                    if (results.Count > 0 && upload)
-                    {
-                        await UploadResults(results, api, eventIds, database, this, mainWindow, theEvent);
-                        mainWindow.UpdateTiming();
-                    }
-                    else // KeepAlive check
-                    {
-                        try
+                        // Get the event id values. Exit if not valid.
+                        string[] eventIds = theEvent.ApiEventId.Split(',');
+                        if (eventIds.Length != 2)
                         {
-                            bool healthy = await ApiHandlers.IsHealthy(api);
-                            // clear errors if we don't get an exception
-                            if (healthy)
+                            Log.D("API.APIController", "Event ID values for API upload not valid.");
+                            keepAlive = false;
+                            running = false;
+                            mainWindow.UpdateTiming();
+                            return;
+                        }
+                        // Get results to upload.
+                        List<TimeResult> results = database.GetNonUploadedResults(theEvent.Identifier);
+                        // Remove all results to upload that don't have a place set, are not DNF/DNS results, and are also not start times.
+                        results.RemoveAll(x => x.Place < 1
+                                               && x.Status != Constants.Timing.TIMERESULT_STATUS_DNF
+                                               && x.Status != Constants.Timing.TIMERESULT_STATUS_DNS
+                                               && x.SegmentId != Constants.Timing.SEGMENT_START);
+                        Log.D("API.APIController", $"Results count: {results.Count}");
+                        bool upload = false;
+                        if (ApiLock.TryEnter(3000))
+                        {
+                            try
                             {
-                                Errors = 0;
+                                upload = canUpload;
+                            }
+                            finally
+                            {
+                                ApiLock.Exit();
                             }
                         }
-                        catch (Exception ex)
+                        //Log.D("Timing.API.APIController", $"We are {(!upload ? "not " : "")}able to upload right now.");
+                        if (results.Count > 0 && upload)
                         {
-                            Log.D("API.APIController", ex.Message);
-                            Errors += 1;
+                            await UploadResults(results, api, eventIds, database, this, mainWindow, theEvent);
                             mainWindow.UpdateTiming();
                         }
+                        else // KeepAlive check
+                        {
+                            try
+                            {
+                                bool healthy = await ApiHandlers.IsHealthy(api);
+                                // clear errors if we don't get an exception
+                                if (healthy)
+                                {
+                                    Errors = 0;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.D("API.APIController", ex.Message);
+                                Errors += 1;
+                                mainWindow.UpdateTiming();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Errors += 1;
+                        Log.E("Timing.API.APIController", $"Error uploading results, will try again. {ex.Message}");
+                        mainWindow.UpdateTiming();
                     }
                     // Block with timeout on a semaphore
                     // Use this to allow us to only send information every so often based upon a global

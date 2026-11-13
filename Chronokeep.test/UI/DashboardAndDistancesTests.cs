@@ -51,7 +51,7 @@ namespace Chronokeep.Test.UI
 
             Event saved = Db.GetEvent(e.Identifier)!;
             Assert.Equal(("Spring Fling 10K", "2027"), (saved.Name, saved.YearCode));
-            Assert.Equal(new DateTime(2027, 4, 18), DateTime.Parse(saved.Date));
+            Assert.Equal("2027/04/18", saved.Date);
             Assert.Equal(RankingType.Chip, saved.RankedBy);
             Assert.False(saved.DisplayPlacements);
             Assert.Equal(Constants.DashboardLabels.EDIT, ContentText(Find<Button>(page, "EditButton")));
@@ -89,6 +89,25 @@ namespace Chronokeep.Test.UI
             Dictionary<string, string> genders = Db.GetParticipants(e.Identifier).ToDictionary(p => p.FirstName, p => p.Gender);
             Assert.Equal("Female", genders["Jane"]);
             Assert.Equal("Male", genders["Max"]);
+        }
+
+        [AvaloniaTheory]
+        [InlineData("de-DE")]
+        [InlineData("en-GB")]
+        [InlineData("fi-FI")]
+        public void Editing_the_event_keeps_its_date_on_any_computer(string culture)
+        {
+            Event e = AddEvent(date: "6/5/2026", makeCurrent: true);
+            Chronokeep.Test.Timing.CultureScope.In(culture, () =>
+            {
+                DashboardPage page = OpenDashboard();
+                Assert.Equal(new DateTime(2026, 6, 5), Find<CalendarDatePicker>(page, "EventDatePicker").SelectedDate?.Date);
+
+                Click(Find<Button>(page, "EditButton"));
+                Click(Find<Button>(page, "EditButton"));
+
+                Assert.Equal("2026/06/05", Db.GetEvent(e.Identifier)!.Date);
+            });
         }
 
         private DistancesPage OpenDistances()

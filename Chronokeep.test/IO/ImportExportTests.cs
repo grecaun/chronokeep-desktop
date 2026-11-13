@@ -289,3 +289,117 @@ namespace Chronokeep.Test.IO
         }
     }
 }
+
+namespace Chronokeep.Test.IO
+{
+    /// <summary>Files as they really arrive: odd encodings, Excel dates, ragged rows, repeated headers and big files.</summary>
+    public class ImportEdgeCaseTests : FileTestBase
+    {
+        private string WriteBytes(string name, byte[] bytes)
+        {
+            string path = Path.Combine(Dir, name);
+            File.WriteAllBytes(path, bytes);
+            return path;
+        }
+
+        private static ImportData ImportCsv(string path)
+        {
+            CsvImporter importer = new(path);
+            importer.FetchHeaders();
+            importer.FetchData();
+            return importer.Data!;
+        }
+
+        private static ImportData ImportExcel(string path)
+        {
+            ExcelImporter importer = new(path);
+            importer.FetchHeaders();
+            importer.FetchData();
+            return importer.Data!;
+        }
+
+        [Fact]
+        public void A_utf8_file_with_a_byte_order_mark_reads_its_first_header_cleanly()
+        {
+            string path = WriteBytes("bom.csv", [.. new byte[] { 0xEF, 0xBB, 0xBF }, .. System.Text.Encoding.UTF8.GetBytes("Bib,First\n1,José\n")]);
+
+            ImportData data = ImportCsv(path);
+
+            Assert.Equal(["", "Bib", "First"], data.Headers);
+            Assert.Equal("José", data.Data.Single()[2]);
+        }
+
+        [Fact]
+        public void A_file_saved_in_the_windows_encoding_keeps_its_accents()
+        {
+            // Excel's plain "CSV" saves in the Windows code page, not UTF-8.
+            string path = WriteBytes("ansi.csv", System.Text.Encoding.Latin1.GetBytes("Bib,First,Last\n1,José,Muñoz\n"));
+
+            ImportData data = ImportCsv(path);
+
+            Assert.Equal(["José", "Muñoz"], data.Data.Single()[2..]);
+        }
+
+        [Fact]
+        public void A_short_row_is_padded_to_the_headers()
+        {
+            string path = WriteFile("short.csv", "Bib,First,Last,Phone\n1,Ann,Alpha\n2,Ben,Bravo,555-0100\n");
+
+            ImportData data = ImportCsv(path);
+
+            Assert.All(data.Data, row => Assert.Equal(data.Headers.Length, row.Length));
+            Assert.Equal("", data.Data[0][4]);
+        }
+
+        [Fact]
+        public void Repeated_header_names_keep_every_column()
+        {
+            string path = WriteFile("dupes.csv", "Bib,Phone,Phone\n1,555-0100,555-0101\n");
+
+            ImportData data = ImportCsv(path);
+
+            Assert.Equal(["", "Bib", "Phone", "Phone"], data.Headers);
+            Assert.Equal(["555-0100", "555-0101"], data.Data.Single()[2..]);
+        }
+
+        [Fact]
+        public void A_large_file_imports_every_row()
+        {
+            System.Text.StringBuilder csv = new("Bib,First,Last\n");
+            for (int i = 1; i <= 20000; i++)
+            {
+                csv.Append(i).Append(",First").Append(i).Append(",Last").Append(i).Append('\n');
+            }
+            string path = WriteFile("large.csv", csv.ToString());
+
+            ImportData data = ImportCsv(path);
+
+            Assert.Equal(20000, data.Data.Count);
+            Assert.Equal(["20000", "First20000", "Last20000"], data.Data[^1][1..]);
+        }
+
+        [Theory]
+        [InlineData("en-US")]
+        [InlineData("de-DE")]
+        [InlineData("fi-FI")]
+        public void Excel_date_cells_import_as_year_month_day(string culture)
+        {
+            string path = Path.Combine(Dir, "dates.xlsx");
+            using (XLWorkbook wb = new())
+            {
+                IXLWorksheet ws = wb.Worksheets.Add("People");
+                ws.Cell(1, 1).Value = "Bib";
+                ws.Cell(1, 2).Value = "Birthday";
+                ws.Cell(1, 3).Value = "Distance";
+                ws.Cell(2, 1).Value = 42;
+                ws.Cell(2, 2).Value = new DateTime(1990, 1, 2);
+                ws.Cell(2, 3).Value = 3.1;
+                wb.SaveAs(path);
+            }
+
+            ImportData data = Chronokeep.Test.Timing.CultureScope.In(culture, () => ImportExcel(path));
+
+            Assert.Equal(["42", "1990/01/02", "3.1"], data.Data.Single()[1..]);
+        }
+    }
+}

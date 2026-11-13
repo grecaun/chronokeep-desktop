@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             int output = database.AddEvent(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     anEvent.Identifier = output;
@@ -88,7 +88,7 @@ namespace Chronokeep.MemStore
             database.SetCurrentEvent(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     LoadEvent();
@@ -191,7 +191,7 @@ namespace Chronokeep.MemStore
             database.RemoveEvent(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     allEvents.RemoveAll(x => x.Identifier == identifier);
@@ -218,7 +218,7 @@ namespace Chronokeep.MemStore
             database.RemoveEvent(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     allEvents.RemoveAll(x => x.Identifier == anEvent.Identifier);
@@ -245,7 +245,7 @@ namespace Chronokeep.MemStore
             database.UpdateEvent(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
@@ -308,7 +308,7 @@ namespace Chronokeep.MemStore
                     DateTime start = DateTime.Now;
                     if (theEvent != null)
                     {
-                        start = DateTime.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
+                        start = EventDates.Parse(theEvent.Date).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
                     }
                     foreach (ChipRead cr in chipReads.Values)
                     {
@@ -333,7 +333,7 @@ namespace Chronokeep.MemStore
             database.SetFinishOptions(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
@@ -366,7 +366,7 @@ namespace Chronokeep.MemStore
             database.SetStartOptions(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)
@@ -399,7 +399,7 @@ namespace Chronokeep.MemStore
             database.SetStartFinishOptions(anEvent);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == anEvent.Identifier)

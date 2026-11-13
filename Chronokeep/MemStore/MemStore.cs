@@ -33,6 +33,8 @@ namespace Chronokeep.MemStore
 
         internal class InvalidEventId(string message) : Exception(message) { }
 
+        // Reads give up on the cache after this long. Writes wait for the lock however long it takes:
+        // they've already saved to the database, and skipping the cache would leave it missing the change.
         private const int LockTimeout = 5000;
 
         // Singleton
@@ -268,7 +270,7 @@ namespace Chronokeep.MemStore
             database.HardResetDatabase();
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     ResetVariables();
@@ -374,7 +376,7 @@ namespace Chronokeep.MemStore
             database.ResetDatabase();
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     ResetVariables();

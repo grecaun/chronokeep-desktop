@@ -51,6 +51,12 @@ public partial class AwardPage : UserControl, ISubPage
     public AwardPage(TimingPage parent, IdbInterface database)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        OverallNumberParticipants.FilterTyping(IsNumber);
+        AgNumberParticipants.FilterTyping(IsNumber);
+        CustomNumberParticipants.FilterTyping(IsNumber);
+        StartCustom.FilterTyping(IsNumber);
+        EndCustom.FilterTyping(IsNumber);
         this.parent = parent;
         this.database = database;
         theEvent = database.GetCurrentEvent();

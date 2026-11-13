@@ -48,7 +48,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      HorizontalAlignment="Center"
                      Width="40"
                      Height="35"
-                     TextInput="NumberValidation"
                      Margin="2,5,2,2"
                      Grid.Column="1"/>
             <Button Name="AddButton"

@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             int output = database.AddTimingSystem(system);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     system.SystemIdentifier = output;
@@ -85,7 +85,7 @@ namespace Chronokeep.MemStore
             database.RemoveTimingSystem(system);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     timingSystems.Remove(system.IpAddress.Trim());
@@ -108,7 +108,7 @@ namespace Chronokeep.MemStore
             database.RemoveTimingSystem(systemId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     string ip = "";
@@ -140,7 +140,7 @@ namespace Chronokeep.MemStore
             database.SetTimingSystems(systems);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     timingSystems.Clear();
@@ -167,7 +167,7 @@ namespace Chronokeep.MemStore
             database.UpdateTimingSystem(system);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     // Find the cached system by id so a changed IP address doesn't leave a stale entry behind.

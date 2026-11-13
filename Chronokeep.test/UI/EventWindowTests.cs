@@ -1,3 +1,4 @@
+using Avalonia.VisualTree;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Chronokeep.Objects;
@@ -87,6 +88,19 @@ namespace Chronokeep.Test.UI
 
             Assert.Empty(Db.GetEvents());
             Assert.False(window.IsVisible);
+        }
+
+        [AvaloniaFact]
+        public async Task Change_event_lists_dates_written_out()
+        {
+            AddEvent("Spring Fling", date: "2026/06/15", makeCurrent: true);
+            ChangeEventWindow window = OpenChangeEvent();
+            await WaitUntil(() => Listed(window).Count == 1, because: "events to load");
+            ListBox events = Find<ListBox>(window, "EventList");
+
+            Control row = RowOf(events, events.ItemsSource!.Cast<Event>().Single());
+
+            Assert.Contains("June 15, 2026", row.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text));
         }
 
         private ChangeEventWindow OpenChangeEvent() => Show(ChangeEventWindow.NewWindow(MainWindow, Db));

@@ -104,6 +104,23 @@ namespace Chronokeep.Test.Database
         private string? RawBirthday(int participantId)
             => Scalar($"SELECT participant_birthday FROM participants WHERE participant_id={participantId};") as string;
 
+        [Theory]
+        [InlineData("en-US", "6/15/2026")]
+        [InlineData("en-GB", "15/06/2026")]
+        [InlineData("de-DE", "15.06.2026")]
+        [InlineData("fi-FI", "15.6.2026")]
+        public void Version75_RewritesEventDatesWrittenInTheComputersFormat(string culture, string stored)
+        {
+            Event e = AddEvent();
+            DowngradeTo75();
+            SetVersion(75);
+            Exec($"UPDATE events SET event_date='{stored}' WHERE event_id={e.Identifier};");
+
+            Timing.CultureScope.In(culture, () => Reopen());
+
+            Assert.Equal("2026/06/15", Scalar($"SELECT event_date FROM events WHERE event_id={e.Identifier};") as string);
+        }
+
         [Fact]
         public void Version75_RewritesParticipantBirthdatesAsYearMonthDay()
         {
@@ -301,6 +318,72 @@ namespace Chronokeep.Test.Database
             // New columns start with their defaults.
             Assert.Equal("", Assert.Single(db.GetParticipants(e.Identifier)).Division);
             Assert.True(db.GetDistance(d.Identifier)!.Upload);
+        }
+
+        /// <summary>
+        /// Undoes upgrade steps 62 down to the target, after DowngradeTo63. Steps 56 and 53 rebuild whole
+        /// tables, so databases older than 57 aren't built here.
+        /// </summary>
+        private void DowngradeTo(int target)
+        {
+            DowngradeTo63();
+            string[] undo =
+            [
+                // 62: alerts were keyed by bib.
+                "DROP TABLE sms_alert; DROP TABLE email_alert;" +
+                "CREATE TABLE email_alert(event_id INTEGER NOT NULL REFERENCES events(event_id), email_bib VARCHAR NOT NULL);" +
+                "CREATE TABLE sms_alert(event_id INTEGER NOT NULL REFERENCES events(event_id), sms_bib VARCHAR NOT NULL);",
+                // 61
+                "ALTER TABLE results_api DROP COLUMN api_web_url;",
+                // 60: no email alerts, and the older text alert table.
+                "DROP TABLE email_alert; DROP TABLE sms_alert;" +
+                "CREATE TABLE sms_alert(event_id INTEGER NOT NULL REFERENCES events(event_id), sms_bib INTEGER NOT NULL);",
+                // 59
+                "ALTER TABLE eventspecific DROP COLUMN eventspecific_apparel;",
+                // 58: no email ban list, and the older phone ban list.
+                "DROP TABLE email_ban_list; DROP TABLE sms_ban_list; CREATE TABLE sms_ban_list(banned_phone VARCHAR(100));",
+                // 57
+                "ALTER TABLE distances DROP COLUMN distance_sms_enabled; ALTER TABLE eventspecific DROP COLUMN eventspecific_sms_enabled;",
+            ];
+            for (int version = 62; version >= target; version--)
+            {
+                Exec(undo[62 - version]);
+            }
+        }
+
+        [Theory]
+        [InlineData(62)]
+        [InlineData(61)]
+        [InlineData(60)]
+        [InlineData(59)]
+        [InlineData(58)]
+        [InlineData(57)]
+        public void Versions_57_to_62_upgrade_to_current_and_keep_data(int version)
+        {
+            Event e = AddEvent();
+            Distance d = AddDistance(e.Identifier);
+            AddParticipant(e.Identifier, d, "1", first: "Ann");
+            Db.AddApi(new ApiObject(0, Constants.ApiConstants.CHRONOKEEP_RESULTS, "https://example.com/", "Results", "tok", ""));
+            Db.AddChipReads([NewRead(e.Identifier, "1001", 60)]);
+            DowngradeTo(version);
+            SetVersion(version);
+
+            SqLiteInterface db = Reopen();
+
+            Assert.Equal(CurrentVersion, StoredVersion());
+            Assert.Equal(e.Name, Assert.Single(db.GetEvents()).Name);
+            Participant ann = Assert.Single(db.GetParticipants(e.Identifier));
+            // Apparel arrived in step 59, so older databases start without it.
+            Assert.Equal(("1", "Ann", version >= 60 ? "M" : ""), (ann.Bib, ann.FirstName, ann.EventSpecific.Apparel));
+            Assert.Single(db.GetChipReads(e.Identifier));
+            Assert.Equal("Results", Assert.Single(db.GetAllApi()).Nickname);
+            Assert.False(db.GetDistance(d.Identifier)!.SmsEnabled);
+            // Every table and column later versions added is there.
+            Assert.True(ColumnExists("results_api", "api_web_url"));
+            Assert.True(ColumnExists("eventspecific", "eventspecific_apparel"));
+            Assert.True(ColumnExists("sms_alert", "eventspecific_id"));
+            Assert.True(TableExists("email_ban_list"));
+            Assert.True(TableExists("sms_subscriptions"));
         }
 
         [Fact]

@@ -45,6 +45,9 @@ public partial class ReaderSubPart : UserControl
     public ReaderSubPart(PortalReader reader, ChronokeepInterface readerInterface)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        IpBox.FilterTyping(IpValidation);
+        PortBox.FilterTyping(NumberValidation);
         this.reader = reader;
         this.readerInterface = readerInterface;
         NameBox.Text = reader.Name;

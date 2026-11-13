@@ -44,12 +44,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     HorizontalAlignment="Center">
 			<TextBox Name="IpBox"
                      Width="120"
-                     Margin="5"
-                     TextInput="IpValidation" />
+                     Margin="5" />
             <TextBox Name="PortBox"
                      Width="60"
-                     Margin="5"
-                     TextInput="NumberValidation" />
+                     Margin="5" />
 			<Button Name="SaveReaderButton"
                     Width="40"
                     Margin="5"

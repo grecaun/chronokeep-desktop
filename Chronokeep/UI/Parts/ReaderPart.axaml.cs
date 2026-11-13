@@ -52,6 +52,9 @@ public partial class ReaderPart : UserControl
         this.parent = parent;
         this.locations = locations;
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        ReaderIp.FilterTyping(IpValidation);
+        ReaderPort.FilterTyping(NumberValidation);
         Reader = sys;
         ComboBoxItem? current, selected = null;
         foreach (string systemIdVal in Readers.SYSTEM_NAMES.Keys)

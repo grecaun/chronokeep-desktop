@@ -209,7 +209,7 @@ public partial class ImportFileWindow : ChronokeepWindow
             await Task.Run(() =>
             {
                 ImportData data = importer.Data!;
-                int thisYear = DateTime.Parse(theEvent.Date).Year;
+                int thisYear = EventDates.Parse(theEvent.Date).Year;
                 Dictionary<string, Distance> divHashName = [];
                 Dictionary<int, Distance> divHashId = [];
                 List<Distance> distances = database.GetDistances(theEvent.Identifier);

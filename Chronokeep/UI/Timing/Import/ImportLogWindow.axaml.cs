@@ -186,8 +186,13 @@ public partial class ImportLogWindow : ChronokeepWindow
                         }
                         // Each time may or may not include its date. The first line is a read unless it's
                         // column names, so skip it when its time doesn't parse rather than failing the import.
+                        // A time without a date is on the event's day, read the same on every computer.
+                        string eventDay = EventDates.TryParse(theEvent.Date, out DateTime day) ? day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "";
                         bool TryReadTime(string value, out DateTime readTime) =>
-                            DateTime.TryParse(DateRegex().IsMatch(value) ? value : $"{theEvent.Date} {value}", out readTime);
+                            DateRegex().IsMatch(value)
+                                ? DateTime.TryParse(value, out readTime)
+                                : DateTime.TryParse($"{eventDay} {value.Trim()}", CultureInfo.InvariantCulture, DateTimeStyles.None, out readTime)
+                                    || DateTime.TryParse($"{eventDay} {value.Trim()}", out readTime);
                         if (TryReadTime(data.Headers[time], out DateTime date))
                         {
                             chipReads.Add(new ChipRead(theEvent.Identifier, locationId, data.Headers[chip], date));

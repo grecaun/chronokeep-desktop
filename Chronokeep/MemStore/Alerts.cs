@@ -35,7 +35,7 @@ namespace Chronokeep.MemStore
             database.AddEmailAlert(eventId, eventspecificId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -92,7 +92,7 @@ namespace Chronokeep.MemStore
             database.AddSmsAlert(eventId, eventspecificId, segmentId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -118,7 +118,7 @@ namespace Chronokeep.MemStore
             database.AddSmsSubscriptions(eventId, subscriptions);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -144,7 +144,7 @@ namespace Chronokeep.MemStore
             database.DeleteSmsSubscriptions(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)

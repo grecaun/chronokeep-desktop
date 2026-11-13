@@ -48,7 +48,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                          HorizontalAlignment="Center"/>
               <TextBox Name="MaxOccurrences"
                        GotFocus="SelectAll"
-                       TextInput="NumberValidation"
                        FontSize="16"
                        Margin="0,5"
                        VerticalContentAlignment="Center"/>

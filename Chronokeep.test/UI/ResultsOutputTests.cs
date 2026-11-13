@@ -1,3 +1,4 @@
+using Chronokeep.Helpers;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Chronokeep.IO;
@@ -302,6 +303,8 @@ namespace Chronokeep.Test.UI
             int header = csv.FindIndex(r => r.Length > 0 && r[0] == "Last Name");
             Dictionary<string, string> fran = Row(csv, header, r => r["First Name"] == "Fran");
             Assert.Equal(("01/02/1990", "F"), (fran["Date of Birth"], fran["Gender"]));
+            Assert.Equal(EventDates.ToMonthDayYear(Db.GetCurrentEvent()!.Date), csv[1][0]);
+            Assert.Matches(@"^\d{2}/\d{2}/\d{4}$", csv[1][0]);
             Assert.Equal("X", Row(csv, header, r => r["First Name"] == "Nico")["Gender"]);
             AssertGendersAreMfx(csv, header, "Gender");
         }

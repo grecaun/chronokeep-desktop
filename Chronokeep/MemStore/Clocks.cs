@@ -59,7 +59,7 @@ namespace Chronokeep.MemStore
             clock.Identifier = database.AddClock(clock);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return clock.Identifier;
+                memStoreLock.Enter();
                 try
                 {
                     clocks[clock.Identifier] = clock;
@@ -83,7 +83,7 @@ namespace Chronokeep.MemStore
             database.UpdateClock(clock);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     clocks[clock.Identifier] = clock;
@@ -106,7 +106,7 @@ namespace Chronokeep.MemStore
             database.RemoveClocks(iClocks);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Chronoclock clock in iClocks)

@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             int output = database.AddTimingLocation(tp);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     tp.Identifier = output;
@@ -64,7 +64,7 @@ namespace Chronokeep.MemStore
             List<TimingLocation> output = database.AddTimingLocations(locs);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (TimingLocation tp in locs)
@@ -154,7 +154,7 @@ namespace Chronokeep.MemStore
             database.RemoveTimingLocation(tp);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     locations.Remove(tp.Identifier);
@@ -177,7 +177,7 @@ namespace Chronokeep.MemStore
             database.RemoveTimingLocation(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     locations.Remove(identifier);
@@ -200,7 +200,7 @@ namespace Chronokeep.MemStore
             database.UpdateTimingLocation(tp);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (locations.TryGetValue(tp.Identifier, out TimingLocation? loc))

@@ -35,7 +35,7 @@ namespace Chronokeep.MemStore
             database.DeleteAlarm(alarm);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     alarms.RemoveAll(x => alarm.Bib.Equals(x.Bib, StringComparison.OrdinalIgnoreCase) && alarm.Chip.Equals(x.Chip, StringComparison.OrdinalIgnoreCase));
@@ -58,7 +58,7 @@ namespace Chronokeep.MemStore
             database.DeleteAlarms(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -111,7 +111,7 @@ namespace Chronokeep.MemStore
             alarm.Identifier = database.SaveAlarm(eventId, alarm);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return alarm.Identifier;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -141,7 +141,7 @@ namespace Chronokeep.MemStore
             output.AddRange(database.SaveAlarms(eventId, iAlarms));
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)

@@ -36,7 +36,7 @@ namespace Chronokeep.MemStore
             int output = database.AddSegment(seg);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     seg.Identifier = output;
@@ -64,7 +64,7 @@ namespace Chronokeep.MemStore
             List<Segment> output = database.AddSegments(segs);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Segment seg in output)
@@ -197,7 +197,7 @@ namespace Chronokeep.MemStore
             database.RemoveSegment(seg);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     segments.Remove(seg.Identifier);
@@ -220,7 +220,7 @@ namespace Chronokeep.MemStore
             database.RemoveSegment(identifier);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     segments.Remove(identifier);
@@ -243,7 +243,7 @@ namespace Chronokeep.MemStore
             database.RemoveSegments(segs);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Segment s in segs)
@@ -269,7 +269,7 @@ namespace Chronokeep.MemStore
             database.ResetSegments(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent != null && theEvent.Identifier == eventId)
@@ -295,7 +295,7 @@ namespace Chronokeep.MemStore
             database.UpdateSegment(seg);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (segments.TryGetValue(seg.Identifier, out Segment? oldSeg))
@@ -321,7 +321,7 @@ namespace Chronokeep.MemStore
             database.UpdateSegments(segs);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (Segment s in segs)

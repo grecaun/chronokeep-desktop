@@ -145,7 +145,7 @@ namespace Chronokeep.Timing.Interfaces
                     double voltVal = 0;
                     try
                     {
-                        voltVal = double.Parse(message[2..]);
+                        voltVal = double.Parse(message[2..], CultureInfo.InvariantCulture);
                     }
                     catch
                     {

@@ -47,7 +47,7 @@ namespace Chronokeep.IO.HtmlTemplates.Printables
             this.Write("</div>\n\t\t<div class='text-important table-h3'>Awards</div>\n\t\t<div class='text-important table-h4'>");
             
             #line 80 "/home/jasentin/Workspace/desktop/Chronokeep/IO/HtmlTemplates/Printables/AwardsPrintable.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(theEvent.Date));
+            this.Write(this.ToStringHelper.ToStringWithCulture(theEvent.LongDate));
             
             #line default
             #line hidden

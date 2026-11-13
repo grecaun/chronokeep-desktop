@@ -110,7 +110,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         if (theEvent != null)
         {
             EventName.Text = theEvent.Name;
-            EventDate.Text = theEvent.Date;
+            EventDate.Text = theEvent.LongDate;
         }
         page = new MinTimingPage(this, database);
         TheFrame.Content = page;
@@ -276,7 +276,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         if (theEvent != null)
         {
             EventName.Text = theEvent.Name;
-            EventDate.Text = theEvent.Date;
+            EventDate.Text = theEvent.LongDate;
         }
         page?.UpdateView();
     }
@@ -407,23 +407,17 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             message.Notified = true;
             UpdateReaderMessage(message);
         }
-        Thread newThread = new(() =>
+        // Queue the work for the UI thread without waiting on it. A thread blocked waiting on the UI
+        // can never finish once the window has closed, and would keep Chronokeep running.
+        Application.Current!.Dispatcher.Post(() =>
         {
             // show any dialog boxes that need to be shown due to importance
             foreach (ReaderMessage message in toShow)
             {
-                Application.Current!.Dispatcher.Invoke(delegate
-                {
-                    DialogBox.AsyncShow(message.DialogBoxString);
-                });
+                DialogBox.AsyncShow(message.DialogBoxString);
             }
-            // Let the announcer window know that it has new information.
-            Application.Current!.Dispatcher.Invoke(delegate
-            {
-                page?.UpdateView();
-            });
+            page?.UpdateView();
         });
-        newThread.Start();
     }
 
     public void SwitchPage(IMainPage iPage) { }

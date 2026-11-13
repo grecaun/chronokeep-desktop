@@ -99,10 +99,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      VerticalAlignment="Stretch">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid ColumnDefinitions="250,70,100">
+                        <Grid ColumnDefinitions="250,70,150">
                             <TextBlock Grid.Column="0" Margin="8,4" Text="{Binding Name}" x:DataType="objects:Event"/>
                             <TextBlock Grid.Column="1" Margin="8,4" Text="{Binding YearCode}" x:DataType="objects:Event"/>
-                            <TextBlock Grid.Column="2" Margin="8,4" Text="{Binding Date}" x:DataType="objects:Event"/>
+                            <TextBlock Grid.Column="2" Margin="8,4" Text="{Binding LongDate}" x:DataType="objects:Event"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

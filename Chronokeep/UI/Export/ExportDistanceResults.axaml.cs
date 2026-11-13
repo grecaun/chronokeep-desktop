@@ -550,7 +550,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         List<object[]> data = [];
         List<string> tmp =
         [
-            theEvent.Date,         // event date
+            EventDates.ToMonthDayYear(theEvent.Date), // event date, as MM/dd/yyyy like the birthdates
             "", "", "", "", "", "", "", "", ""
         ];
         for (int i = 0; i < segments.Count; i++)

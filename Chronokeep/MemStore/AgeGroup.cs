@@ -53,7 +53,7 @@ namespace Chronokeep.MemStore
             group.GroupId = database.AddAgeGroup(group);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return group.GroupId;
+                memStoreLock.Enter();
                 try
                 {
                     if (!ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? value))
@@ -83,7 +83,7 @@ namespace Chronokeep.MemStore
             List<AgeGroup> output = database.AddAgeGroups(groups);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return output;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (AgeGroup group in output)
@@ -184,7 +184,7 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroup(group);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))
@@ -211,7 +211,7 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroups(eventId, distanceId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;
@@ -239,7 +239,7 @@ namespace Chronokeep.MemStore
             database.RemoveAgeGroups(groups);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     foreach (AgeGroup group in groups)
@@ -269,7 +269,7 @@ namespace Chronokeep.MemStore
             database.ResetAgeGroups(eventId);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (theEvent == null || theEvent.Identifier != eventId) return;
@@ -294,7 +294,7 @@ namespace Chronokeep.MemStore
             database.UpdateAgeGroup(group);
             try
             {
-                if (!memStoreLock.TryEnter(LockTimeout)) return;
+                memStoreLock.Enter();
                 try
                 {
                     if (ageGroups.TryGetValue(group.DistanceId, out List<AgeGroup>? list))

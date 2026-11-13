@@ -164,7 +164,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             FontSize="16"
                             Margin="5,5,5,5"
                             KeyDown="KeyPressHandlerSingle"
-                            TextInput="ChipValidation"
                             GotFocus="SelectAll"
                             />
                     </DockPanel>
@@ -244,8 +243,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             Grid.Column="1"
                             Name="RangeStartChipBox" 
                             KeyDown="KeyPressHandlerRange" 
-                            TextChanged="UpdateEndChip" 
-                            TextInput="ChipValidation"
+                            TextChanged="UpdateEndChip"
                             GotFocus="SelectAll"
                             FontSize="16"
                             Margin="5,5,5,5" 

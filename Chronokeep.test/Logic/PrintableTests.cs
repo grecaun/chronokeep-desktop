@@ -320,6 +320,7 @@ namespace Chronokeep.Test.Logic
             var (results, dnf) = PrintableResults.Overall(Results(), e, []);
             string html = new ResultsPrintableOverall(e, results, dnf).TransformText();
             Assert.Contains("Spring Run", html);
+            Assert.Contains("June 15, 2026", html);
             Assert.Contains("Ann First", html);
             Assert.Contains("Bob Second", html);
             Assert.Contains("Dee Dropped", html);
@@ -331,6 +332,7 @@ namespace Chronokeep.Test.Logic
             Event e = PrintableData.TheEvent();
             var (results, dnf) = PrintableResults.ByGender(Results(), e, []);
             string html = new ResultsPrintableGender(e, results, dnf).TransformText();
+            Assert.Contains("June 15, 2026", html);
             Assert.Contains("Ann First", html);
             Assert.Contains("Bob Second", html);
         }
@@ -343,6 +345,7 @@ namespace Chronokeep.Test.Logic
                 [new AgeGroup(1, 1, 20, 29) { GroupId = 2 }, new AgeGroup(1, 1, 30, 39) { GroupId = 3 }], e);
             var (results, dnf) = PrintableResults.ByAgeGroup(Results(), e, []);
             string html = new ResultsPrintableAgeGroup(e, results, dnf, groups).TransformText();
+            Assert.Contains("June 15, 2026", html);
             Assert.Contains("Ann First", html);
             Assert.Contains("Women 20 - 29", html);
         }
@@ -353,6 +356,7 @@ namespace Chronokeep.Test.Logic
             Event e = PrintableData.TheEvent();
             var (groups, results) = PrintableResults.Awards(Results(), e, [], new AwardOptions { PrintCustom = false }, []);
             string html = new AwardsPrintable(e, groups, results).TransformText();
+            Assert.Contains("June 15, 2026", html);
             Assert.Contains("Women 20-29", html);
             Assert.Contains("Ann First", html);
             Assert.DoesNotContain("Dee Dropped", html);

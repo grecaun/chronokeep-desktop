@@ -527,14 +527,17 @@ namespace Chronokeep.Objects
             {
                 return -1;
             }
-            DateTime eventDateTime = Convert.ToDateTime(eventDate);
-            DateTime myDateTime = Convert.ToDateTime(Birthday);
+            // Both dates read the same on every computer (see EventDates and Birthdates).
+            if (!EventDates.TryParse(eventDate, out DateTime eventDateTime) || !Birthdates.TryParse(Birthday, out DateTime myDateTime))
+            {
+                return -1;
+            }
             int numYears = eventDateTime.Year - myDateTime.Year;
             if (eventDateTime.Month < myDateTime.Month || eventDateTime.Month == myDateTime.Month && eventDateTime.Day < myDateTime.Day)
             {
                 numYears--;
             }
-            return numYears;
+            return numYears < 0 ? -1 : numYears;
         }
 
         public bool IsUploaded()

@@ -1245,6 +1245,15 @@ namespace Chronokeep.Timing.Routines
             {
                 if (!dictionary.ParticipantEventSpecificDictionary.TryGetValue(result.EventSpecificId,
                         out Participant? person)) continue;
+                // Runners removed from registration keep their loops but take no place.
+                if (person.EventSpecific.IsRemoved)
+                {
+                    result.Place = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                    result.GenderPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                    result.AgePlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                    result.DivisionPlace = Constants.Timing.TIMERESULT_DUMMYPLACE;
+                    continue;
+                }
                 string gender = person.Gender.ToLower();
                 if (gender.Length < 1)
                 {
@@ -1275,6 +1284,7 @@ namespace Chronokeep.Timing.Routines
                     result.Place = placeResult.Place;
                     result.GenderPlace = placeResult.GenderPlace;
                     result.AgePlace = placeResult.AgePlace;
+                    result.DivisionPlace = placeResult.DivisionPlace;
                 }
                 // Change any TIMERESULT_STATUS_NONE to TIMERESULT_STATUS_PROCESSED
                 if (Constants.Timing.TIMERESULT_STATUS_NONE == result.Status)

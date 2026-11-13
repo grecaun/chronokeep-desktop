@@ -33,6 +33,10 @@ public partial class TagRangePart : UserControl
     public TagRangePart(ListBox correlationBox)
     {
         InitializeComponent();
+        // Filter typing before the box adds the text; a XAML TextInput handler runs too late to block it.
+        StartBib.FilterTyping(TypingFilters.DigitsOnly);
+        EndBib.FilterTyping(TypingFilters.DigitsOnly);
+        StartChip.FilterTyping(TypingFilters.DigitsOnly);
         int lastEndBib = 0, lastEndChip = 0;
         parent = correlationBox;
         if (correlationBox.Items.Count > 0)
@@ -115,19 +119,5 @@ public partial class TagRangePart : UserControl
     {
         TextBox src = (TextBox)e.Source!;
         src.SelectAll();
-    }
-
-    private void KeyPressHandler(object sender, KeyEventArgs e)
-    {
-        switch (e.Key)
-        {
-            case >= Key.D0 and <= Key.D9:
-            case >= Key.NumPad0 and <= Key.NumPad9:
-            case Key.Tab:
-                break;
-            default:
-                e.Handled = true;
-                break;
-        }
     }
 }

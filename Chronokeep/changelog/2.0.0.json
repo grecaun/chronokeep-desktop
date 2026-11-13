@@ -147,6 +147,26 @@
     "Fixed an issue where rewinding an Ipico reader never asked the reader to replay its reads.",
     "Fixed an issue where the Rewind window closed as soon as an Ipico rewind was asked about, instead of staying open and busy until the rewind finished.",
     "Fixed an issue where reads from an Ipico rewind weren't scored until another read came in.",
-    "Fixed an issue where an Ipico rewind could wait a long time on a reader that couldn't be reached or stopped sending."
+    "Fixed an issue where an Ipico rewind could wait a long time on a reader that couldn't be reached or stopped sending.",
+    "Fixed an issue where boxes meant for numbers, IP addresses or chips accepted any typing, including the reader IP and port, age group ages, distance, wave and rank, location occurrences, segment distances, award counts, chip numbers and Chip Tool ranges.",
+    "Fixed an issue where pressing Enter in the race start time box started the clock but didn't save the start time or recalculate results until the box lost focus.",
+    "Fixed an issue where the participant window opened from the timing results could stay open after closing Chronokeep, keeping the program running.",
+    "Event dates are now stored as year/month/day, the same as birthdates, so a database reads the same on every computer. The database upgrade rewrites existing event dates.",
+    "Printouts and the safe mode window show the event date written out, such as June 15, 2026.",
+    "Boston exports write the event date as MM/DD/YYYY, like their dates of birth.",
+    "Fixed an issue where event dates could be saved in a form that computers using a different date format, including the one that saved it, couldn't read, which broke start times, ages and results for that event.",
+    "Fixed an issue where RFID Ultra low battery warnings never appeared on computers that use a comma for decimals.",
+    "Fixed an issue where two-digit birth years such as 45 were read as 2045 instead of 1945, and where a birthdate after the event gave a negative age.",
+    "Participants removed from registration keep their results but no longer take an overall, gender, age group or division place, so the places of everyone else have no gaps.",
+    "Fixed an issue where a runner marked DNF after being placed kept their division place.",
+    "Fixed an issue where only a backyard ultra runner's latest loop showed their division place.",
+    "The Change Event list shows each event's date written out, such as June 15, 2026.",
+    "Fixed an issue where timing stopped scoring reads for good after one failed pass, or after the open event was deleted, until Chronokeep was restarted.",
+    "Fixed an issue where automatic result uploads stopped for good after one failed pass.",
+    "Fixed an issue where changes made while timing was busy for a long time were saved but didn't show until the event was reopened.",
+    "Fixed an issue where accented names in CSV files saved in the Windows encoding imported as garbled characters.",
+    "Fixed an issue where dates and decimal numbers imported from Excel files depended on the computer's date and number format.",
+    "Fixed an issue where a spreadsheet or CSV row with fewer columns than the header broke the import.",
+    "Fixed an issue where pasting into boxes meant for numbers, IP addresses or chips let any text in."
   ]
 }

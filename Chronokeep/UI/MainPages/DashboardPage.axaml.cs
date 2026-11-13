@@ -71,7 +71,7 @@ public partial class DashboardPage : UserControl, IMainPage
         RightPanel.IsVisible = true;
         EventNameTextBox.Text = theEvent.Name;
         EventYearCodeTextBox.Text = theEvent.YearCode;
-        EventDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
+        EventDatePicker.SelectedDate = EventDates.Parse(theEvent.Date);
         RankBox.Items.Clear();
         if (theEvent.EventType == Constants.Timing.EVENT_TYPE_BACKYARD_ULTRA)
         {
@@ -827,7 +827,7 @@ public partial class DashboardPage : UserControl, IMainPage
             }
             theEvent.Name = EventNameTextBox.Text!;
             theEvent.YearCode = EventYearCodeTextBox.Text!;
-            theEvent.Date = EventDatePicker.SelectedDate?.ToString("M/d/yyyy") ?? DateTime.Now.ToString("M/d/yyyy");
+            theEvent.Date = EventDates.From(EventDatePicker.SelectedDate ?? DateTime.Now);
             theEvent.RankedBy = RankBox.SelectedIndex switch
             {
                 1 => RankingType.Chip,

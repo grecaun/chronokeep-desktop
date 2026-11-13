@@ -172,9 +172,6 @@
     <Compile Update="UI\MainPages\Timing\DistanceStatsPage.axaml.cs">
       <DependentUpon>DistanceStatsPage.axaml</DependentUpon>
     </Compile>
-    <Compile Update="UI\Parts\MultipleEntryPart.axaml.cs">
-      <DependentUpon>MultipleEntryPart.axaml</DependentUpon>
-    </Compile>
     <Compile Update="UI\Parts\DistanceAlternatePart.axaml.cs">
       <DependentUpon>DistanceAlternatePart.axaml</DependentUpon>
     </Compile>
