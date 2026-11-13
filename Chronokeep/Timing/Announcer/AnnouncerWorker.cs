@@ -118,22 +118,19 @@ namespace Chronokeep.Timing.Announcer
             DateTime timeRightNow = DateTime.Now;
             foreach (ChipRead read in announcerReads)
             {
-                // Check to ensure we know the bib of this person
-                if (read.Bib != Constants.Timing.CHIPREAD_DUMMYBIB)
+                // Check to ensure we know the bib of this person. Bibs nobody is registered with are kept too,
+                // the announcer window decides whether to show them.
+                // Only work if we've not seen the bib before, or not in SeenWindow minutes (SeenWindow of 0 means only show once).
+                if (read.Bib != Constants.Timing.CHIPREAD_DUMMYBIB
+                    && (!BibSeen.TryGetValue(read.Bib, out DateTime lastSeen)
+                        || (Globals.SeenWindow != 0 && lastSeen.AddMinutes(Globals.SeenWindow).CompareTo(timeRightNow) < 0)))
                 {
-                    // Check if we've already seen the bib (or we haven't seen the bib in SeenWindow minutes (SeenWindow of 0 means only show once)).
-                    // Only work if we've not seen it before.
-                    if ((!BibSeen.TryGetValue(read.Bib, out DateTime lastSeen)
-                        || (Globals.SeenWindow != 0 && lastSeen.AddMinutes(Globals.SeenWindow).CompareTo(timeRightNow) < 0))
-                        && participantBibDictionary.TryGetValue(read.Bib, out Participant? part))
-                    {
-                        newParticipants = true;
-                        // Set rather than Add: a runner seen again after the seen window is already in the dictionary.
-                        BibSeen[read.Bib] = timeRightNow;
-                        Participants.Add(new AnnouncerParticipant(part, read.Seconds));
-                        // Mark this chipread as USED
-                        read.Status = Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED;
-                    }
+                    newParticipants = true;
+                    // Set rather than Add: a runner seen again after the seen window is already in the dictionary.
+                    BibSeen[read.Bib] = timeRightNow;
+                    Participants.Add(new AnnouncerParticipant(read.Bib, participantBibDictionary.GetValueOrDefault(read.Bib), read.Seconds));
+                    // Mark this chipread as USED
+                    read.Status = Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED;
                 }
                 // Don't clobber over ANNOUNCER_USED statuses.
                 if (read.Status != Constants.Timing.CHIPREAD_STATUS_ANNOUNCER_USED)

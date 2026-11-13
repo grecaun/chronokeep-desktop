@@ -17,16 +17,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
-using Chronokeep.Objects.ChronokeepRemote;
 using Chronokeep.Timing.Announcer;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 namespace Chronokeep.UI.Announcer;
 
@@ -36,6 +34,8 @@ public partial class AnnouncerWindow : ChronokeepWindow
     private readonly IdbInterface database;
 
     private readonly Event? theEvent;
+    private Dictionary<string, Participant>? participantsByBib;
+    private bool participantsReloaded;
 
     public AnnouncerWindow(IMainWindow window, IdbInterface database)
     {
@@ -47,7 +47,6 @@ public partial class AnnouncerWindow : ChronokeepWindow
         AnnouncerParticipant.TheEvent = theEvent;
         window.StartAnnouncerWorker();
         UpdateView();
-        UpdateTiming();
     }
 
     private void Window_Closing(object sender, WindowClosingEventArgs e)
@@ -57,72 +56,43 @@ public partial class AnnouncerWindow : ChronokeepWindow
         window.AnnouncerClosing();
     }
 
-    public void UpdateTiming()
-    {
-        if (theEvent == null) { return; }
-        List<RemoteReader> readers = database.GetRemoteReaders(theEvent.Identifier);
-        bool remoteAnnouncer = false;
-        foreach (RemoteReader _ in readers.Where(reader => reader.LocationId == Constants.Timing.LOCATION_ANNOUNCER))
-        {
-            remoteAnnouncer = true;
-        }
-        if (window.AnnouncerConnected() || remoteAnnouncer) return;
-        AnnouncerBox.IsVisible = false;
-        ResultsBox.IsVisible = true;
-        // Get our list of results to display.
-        List<TimeResult> results;
-        try
-        {
-            results = database.GetTimingResults(theEvent.Identifier);
-        }
-        catch (Exception)
-        {
-            Log.E("AnnouncerWindow", "Error getting results from database.");
-            results = [];
-        }
-        // Ensure results are sorted.
-        results.Sort(TimeResult.CompareBySystemTime);
-        results.RemoveAll((x) => TimeResult.IsNotFinish(x) || x.IsDnf());
-        DateTime cutoff = DateTime.Now.AddSeconds(-1 * Globals.AnnouncerWindow);
-        // Remove all result values where x.SystemTime is less than 0 (i.e. cutoff occurred after x.SystemTime)
-        results.RemoveAll((x) => DateTime.Compare(cutoff, x.SystemTime) > 0);
-        // Reverse all entries so the last person to cross the line is at the top.
-        results.Reverse();
-        // Remove old entries.
-        ResultsBox.ItemsSource = results;
-    }
+    public void UpdateTiming() => UpdateView();
 
+    private void ShowUnknownSwitch_IsCheckedChanged(object? sender, RoutedEventArgs e) => UpdateView();
+
+    /// <summary>Shows everyone read at the announcer location or crossing the finish line recently, newest first.</summary>
     public void UpdateView()
     {
         if (theEvent == null) { return; }
-        List<RemoteReader> readers = database.GetRemoteReaders(theEvent.Identifier);
-        bool remoteAnnouncer = false;
-        foreach (RemoteReader _ in readers.Where(reader => reader.LocationId == Constants.Timing.LOCATION_ANNOUNCER))
-        {
-            remoteAnnouncer = true;
-        }
-        // Check if we've got an announcer reader connected.
-        if (!window.AnnouncerConnected() && !remoteAnnouncer) return;
-        AnnouncerBox.IsVisible = true;
-        ResultsBox.IsVisible = false;
-        // Get our list of people to display. Remove anything older than 45 seconds.
-        List<AnnouncerParticipant> participants;
+        List<AnnouncerParticipant> announced = [];
+        List<TimeResult> results = [];
         try
         {
-            participants = AnnouncerWorker.GetList();
+            announced = AnnouncerWorker.GetList();
+            results = database.GetTimingResults(theEvent.Identifier);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Log.E("AnnouncerWindow", "Error getting participants from AnnouncerWorker.");
-            participants = [];
+            Log.E("UI.Announcer.AnnouncerWindow", $"Error getting announcer reads or results. {e}");
         }
-        participants.Sort((x1, x2) => x1.CompareTo(x2));
-        DateTime cutoff = DateTime.Now.AddSeconds(-1 * Globals.AnnouncerWindow);
-        // Remove all participant values where x.When is less than 0 (i.e. cutoff occurred after x.When)
-        participants.RemoveAll((x) => (DateTime.Compare(cutoff, x.When) > 0));
-        // Reverse all entries so the last person to cross the line is at the top.
-        participants.Reverse();
-        AnnouncerBox.ItemsSource = participants;
+        participantsReloaded = false;
+        AnnouncerBox.ItemsSource = AnnouncerParticipant.Merge(announced, results, FindParticipant,
+            DateTime.Now.AddSeconds(-1 * Globals.AnnouncerWindow), ShowUnknownSwitch.IsChecked == true);
+    }
+
+    private Participant? FindParticipant(string bib)
+    {
+        if (participantsByBib == null || (!participantsByBib.ContainsKey(bib) && !participantsReloaded))
+        {
+            // Someone registered after the window opened; reload at most once per refresh.
+            participantsReloaded = true;
+            participantsByBib = [];
+            foreach (Participant part in database.GetParticipants(theEvent!.Identifier))
+            {
+                participantsByBib.TryAdd(part.Bib, part);
+            }
+        }
+        return participantsByBib.GetValueOrDefault(bib);
     }
 
     protected override void SetMaximizeIcon()

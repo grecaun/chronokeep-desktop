@@ -179,6 +179,8 @@
     "The Manual Upload button on the timing page shows how many results have been uploaded so far.",
     "Fixed an issue where removing a participant from an event also removed them from every other event they were in.",
     "Fixed an issue where starting Chronokeep while another copy was open crashed with a closed window error instead of saying Chronokeep is already running.",
-    "Fixed an issue where Chronokeep stopped responding while participants downloaded from Chronokeep or Runsignup were being saved."
+    "Fixed an issue where Chronokeep stopped responding while participants downloaded from Chronokeep or Runsignup were being saved.",
+    "The announcer window shows runners read at the announcer location and runners crossing the finish line together in one list. A runner read at the announcer location who then finishes shows once.",
+    "Added a Show Unknown Participants switch to the announcer window. It lists bibs that were read but that nobody is registered with."
   ]
 }

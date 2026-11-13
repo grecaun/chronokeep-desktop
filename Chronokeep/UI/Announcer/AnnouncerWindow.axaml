@@ -51,11 +51,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </Style>
     </Window.Styles>
     <RelativePanel>
-        <StackPanel RelativePanel.AlignTopWithPanel="True"
-                    RelativePanel.AlignBottomWithPanel="True"
-                    RelativePanel.AlignRightWithPanel="True"
-                    RelativePanel.AlignLeftWithPanel="True">
-            <DataGrid Name="AnnouncerBox" IsVisible="False" BorderThickness="1">
+        <DockPanel RelativePanel.AlignTopWithPanel="True"
+                   RelativePanel.AlignBottomWithPanel="True"
+                   RelativePanel.AlignRightWithPanel="True"
+                   RelativePanel.AlignLeftWithPanel="True">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                <ToggleSwitch Name="ShowUnknownSwitch"
+                              VerticalContentAlignment="Center"
+                              OffContent=""
+                              OnContent=""
+                              Margin="0,-7,0,-7"
+                              IsCheckedChanged="ShowUnknownSwitch_IsCheckedChanged"/>
+                <Label Content="Show Unknown Participants" FontSize="15"/>
+            </StackPanel>
+            <DataGrid Name="AnnouncerBox" BorderThickness="1">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="When" Binding="{Binding AnnouncerWhen}" MinWidth="180" x:DataType="objects:AnnouncerParticipant"/>
                     <DataGridTextColumn Header="Distance" Binding="{Binding Distance}" MinWidth="180" x:DataType="objects:AnnouncerParticipant"/>
@@ -66,16 +75,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     <DataGridTextColumn Header="Comments" Binding="{Binding Comments}" MinWidth="100" x:DataType="objects:AnnouncerParticipant"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <DataGrid Name="ResultsBox" BorderThickness="1">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Distance" Binding="{Binding DistanceName}" MinWidth="180" x:DataType="objects:TimeResult"/>
-                    <DataGridTextColumn Header="Pl" Binding="{Binding PlaceStr}" MinWidth="80" x:DataType="objects:TimeResult"/>
-                    <DataGridTextColumn Header="Time" Binding="{Binding ChipTime}" MinWidth="150" x:DataType="objects:TimeResult"/>
-                    <DataGridTextColumn Header="Name" Binding="{Binding ParticipantName}" MinWidth="200" x:DataType="objects:TimeResult"/>
-                    <DataGridTextColumn Header="Age G" Binding="{Binding AgeGenderString}" MinWidth="100" x:DataType="objects:TimeResult"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </StackPanel>
+        </DockPanel>
         <Border RelativePanel.AlignTopWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 Width="400"
