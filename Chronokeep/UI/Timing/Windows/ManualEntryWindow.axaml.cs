@@ -198,12 +198,8 @@ public partial class ManualEntryWindow : ChronokeepWindow
     private void AddEntry()
     {
         Log.D("UI.Timing.ManualEntryWindow", "Manual entry detected.");
-        string bib;
-        try
-        {
-            bib = BibBox.Text!;
-        }
-        catch
+        string bib = BibBox.Text?.Trim() ?? "";
+        if (bib.Length < 1)
         {
             DialogBox.AsyncShow("Invalid bib value given.");
             return;

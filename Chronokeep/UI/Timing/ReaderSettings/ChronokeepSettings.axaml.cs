@@ -343,7 +343,6 @@ public partial class ChronokeepSettings : ChronokeepWindow
     private void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.Timing.ReaderSettings.ChronokeepSettings", "Save button clicked.");
-        saving = true;
         try
         {
             PortalSettingsHolder sett = new()
@@ -366,10 +365,13 @@ public partial class ChronokeepSettings : ChronokeepWindow
                 EnableNtfy = EnableNtfySwitch.IsChecked == true,
                 ScreenType = ScreenBox.SelectedItem != null ? (string)((ComboBoxItem)ScreenBox.SelectedItem).Tag! : "",
             };
+            // The window closes when the portal answers with the saved settings.
+            saving = true;
             reader.SendSetSettings(sett);
         }
         catch (Exception ex)
         {
+            saving = false;
             Log.E("UI.Timing.ReaderSettings.ChronokeepSettings", $"Error saving settings: {ex.Message}");
             DialogBox.AsyncShow("Error saving settings.");
         }

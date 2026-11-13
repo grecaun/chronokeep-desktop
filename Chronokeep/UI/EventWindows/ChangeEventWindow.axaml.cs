@@ -64,10 +64,8 @@ public partial class ChangeEventWindow : ChronokeepWindow
                 events.RemoveAll(x => !x.Name.Contains(SearchBox.Text, StringComparison.OrdinalIgnoreCase));
             }
             EventList.ItemsSource = events;
-            if (events.Count < 1)
-            {
-                ChangeButton.IsEnabled = false;
-            }
+            // Follow the list both ways, so clearing a search with no matches turns the button back on.
+            ChangeButton.IsEnabled = events.Count > 0;
         }
         catch (Exception)
         {

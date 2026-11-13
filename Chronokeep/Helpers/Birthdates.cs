@@ -75,6 +75,13 @@ namespace Chronokeep.Helpers
                 || DateTime.TryParse(trimmed, CultureInfo.CurrentCulture, DateTimeStyles.None, out date);
         }
 
+        /// <summary>
+        /// A stored birthdate as MM/dd/yyyy for files sent to other systems (Abbott WMM, Boston, UltraSignup)
+        /// that expect month/day/year. Empty when the birthdate isn't a date.
+        /// </summary>
+        public static string ToMonthDayYear(string? stored) =>
+            TryParse(stored, out DateTime date) ? date.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture) : "";
+
         /// <summary>A placeholder birthdate on January 1st of the given year, in the stored format.</summary>
         public static string JanuaryFirst(int year) => new DateTime(year, 1, 1).ToString(Format, CultureInfo.InvariantCulture);
     }

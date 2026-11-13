@@ -247,7 +247,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <StackPanel Height="45"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center">
-                    <Button Content="Close"
+                    <Button Name="DoneButton"
+                            Content="Close"
                             Click="CloseButton_Click"
                             Width="165"
                             Height="35"

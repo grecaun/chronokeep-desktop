@@ -38,6 +38,15 @@ namespace Chronokeep.Timing.Interfaces
         private Socket? streamSocket;
         private Socket? rewindSocket;
         private string ipadd = "";
+        // The reader replays its stored reads on this port after a replay_start command.
+        private int rewindPort = 10300;
+
+        /// <summary>Where to collect rewound reads from, instead of the reader's own address and rewind port.</summary>
+        internal void SetRewindAddress(string ipAddress, int port)
+        {
+            ipadd = ipAddress;
+            rewindPort = port;
+        }
 
 
         // private static readonly Regex voltage/connected/chipread/settinginfo/settingconfirmation/time/status/msg
@@ -226,16 +235,25 @@ namespace Chronokeep.Timing.Interfaces
             rewindSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
             {
-                rewindSocket.Connect(ipadd, 10300);
+                // Don't wait on a reader that can't be reached, and give up on one that goes quiet mid-replay.
+                IAsyncResult result = rewindSocket.BeginConnect(ipadd, rewindPort, null, null);
+                if (!result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+                {
+                    throw new TimeoutException("No answer from the rewind port.");
+                }
+                rewindSocket.EndConnect(result);
+                rewindSocket.ReceiveTimeout = 30000;
             }
             catch
             {
+                rewindSocket.Close();
                 Log.D("Timing.Interfaces.IpicoInterface", "Upable to connect to rewind socket...");
                 rewindSocket = null;
                 return;
             }
             Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- looking for messages");
             byte[] recvd = new byte[4112];
+            bool gotReads = false;
             try
             {
                 rewindSocket.Send(Encoding.ASCII.GetBytes("\n"));
@@ -244,7 +262,7 @@ namespace Chronokeep.Timing.Interfaces
                 {
                     string msg = Encoding.UTF8.GetString(recvd, 0, numRecvd);
                     Log.D("Timing.Interfaces.IpicoInterface", $"IpicoInterface -- Rewind -- message :{msg}");
-                    ParseMessages(msg, rewindSocket);
+                    gotReads |= ParseMessages(msg, rewindSocket).ContainsKey(MessageType.CHIPREAD);
                     numRecvd = rewindSocket.Receive(recvd);
                 }
             }
@@ -260,6 +278,11 @@ namespace Chronokeep.Timing.Interfaces
                 }
                 rewindSocket?.Close();
                 rewindSocket = null;
+                // The reads were saved straight to the database, so tell timing there's something new to score.
+                if (gotReads)
+                {
+                    window.NotifyTimingWorker();
+                }
             }
             Log.D("Timing.Interfaces.IpicoInterface", "IpicoInterface -- finished rewind");
         }

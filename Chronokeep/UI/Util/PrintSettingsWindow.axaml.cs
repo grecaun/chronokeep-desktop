@@ -35,15 +35,16 @@ public partial class PrintSettingsWindow : ChronokeepWindow
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        if (int.TryParse(TopMarginBox.Text, out int topMargin))
+        // Margins can't be negative and the page must have a size, so other values are ignored.
+        if (int.TryParse(TopMarginBox.Text, out int topMargin) && topMargin >= 0)
         {
             HtmlPrintableTemplate.TopMargin = topMargin;
         }
-        if (int.TryParse(LeftMarginBox.Text, out int leftMargin))
+        if (int.TryParse(LeftMarginBox.Text, out int leftMargin) && leftMargin >= 0)
         {
             HtmlPrintableTemplate.LeftMargin = leftMargin;
         }
-        if (double.TryParse(ScalingBox.Text, out double scaling))
+        if (double.TryParse(ScalingBox.Text, out double scaling) && scaling > 0)
         {
             HtmlPrintableTemplate.Scale = scaling;
         }

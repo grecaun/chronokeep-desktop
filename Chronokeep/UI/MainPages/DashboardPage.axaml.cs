@@ -320,13 +320,18 @@ public partial class DashboardPage : UserControl, IMainPage
         DeleteEvent,
     }
 
-    private static int Save_Event(Event oldEvent, IdbInterface loadFrom, IdbInterface saveTo)
+    /// <summary>Copies an event and everything in it from one database to another (Save Event and Import Event).</summary>
+    internal static int Save_Event(Event oldEvent, IdbInterface loadFrom, IdbInterface saveTo)
     {
         // Make some modifications, note that we cannot guarantee API compatibility between events.
+        // The other database doesn't have this one's APIs, so drop both the results and registration links.
         Event newEvent = new();
         newEvent.CopyAll(oldEvent);
         newEvent.ApiEventId = Constants.ApiConstants.NULL_EVENT_ID;
         newEvent.ApiId = Constants.ApiConstants.NULL_ID;
+        newEvent.RegistrationApiId = Constants.ApiConstants.NULL_ID;
+        newEvent.RegistrationRaceId = Constants.ApiConstants.NULL_EVENT_ID;
+        newEvent.RegistrationCommentFields = "";
         newEvent.Identifier = -1;
         saveTo.AddEvent(newEvent);
         newEvent.Identifier = saveTo.GetEventId(newEvent);
@@ -928,13 +933,13 @@ public partial class DashboardPage : UserControl, IMainPage
         if (mWindow.IsRegistrationRunning())
         {
             mWindow.StopRegistration();
-            RegistrationButton.Content = "Start Registration";
         }
         else
         {
             mWindow.StartRegistration();
-            RegistrationButton.Content = "Stop Registration";
         }
+        // Show what actually happened, so a start that fails doesn't look like it's running.
+        RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
     }
 
     private void RestartAnnouncerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

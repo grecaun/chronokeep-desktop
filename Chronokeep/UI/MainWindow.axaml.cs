@@ -426,6 +426,7 @@ namespace Chronokeep.UI
                 Log.D("UI.MainWindow", "AppSetting not set.");
                 // Program version was not set, thus this is an upgraded program.
                 ChangeLogWindow clw = ChangeLogWindow.NewWindow(this, database);
+                AddWindow(clw);
                 clw.Show();
             }
             else
@@ -451,6 +452,7 @@ namespace Chronokeep.UI
                         if (showChangelog is { Value: Constants.Settings.SETTING_TRUE })
                         {
                             ChangeLogWindow clw = ChangeLogWindow.NewWindow(this, database);
+                            AddWindow(clw);
                             clw.Show();
                         }
                     }

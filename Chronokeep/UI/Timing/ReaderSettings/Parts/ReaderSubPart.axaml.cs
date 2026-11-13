@@ -56,25 +56,7 @@ public partial class ReaderSubPart : UserControl
         PortBox.Text = reader.Port.ToString();
         AutoConnectSwitch.IsChecked = reader.AutoConnect;
         ConnectedSwitch.IsChecked = reader.Connected;
-        for (int ix = 0; ix < reader.Antennas.Length; ix++)
-        {
-            // TODO -- update border background with correct coloring
-            if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
-            {
-                AntennaPanel.Children.Add(new Border()
-                {
-                    Child = new TextBlock()
-                    {
-                        Text = (ix + 1).ToString(),
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    },
-                    Width = 30,
-                    Height = 30,
-                    CornerRadius = Avalonia.CornerRadius.Parse("15"),
-                });
-            }
-        }
+        ShowAntennas();
         loaded = true;
     }
 
@@ -84,29 +66,34 @@ public partial class ReaderSubPart : UserControl
         return reader.Name;
     }
 
+    /// <summary>Shows a circle for each antenna in use: green when connected, red when not.</summary>
+    private void ShowAntennas()
+    {
+        AntennaPanel.Children.Clear();
+        for (int ix = 0; ix < reader.Antennas.Length; ix++)
+        {
+            if (reader.Antennas[ix] == Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE) continue;
+            AntennaPanel.Children.Add(new Border
+            {
+                Child = new TextBlock()
+                {
+                    Text = (ix + 1).ToString(),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                },
+                Width = 30,
+                Height = 30,
+                CornerRadius = Avalonia.CornerRadius.Parse("15"),
+                Background = Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_CONNECTED == reader.Antennas[ix] ? Brush.Parse("Green") : Brush.Parse("Red"),
+            });
+        }
+    }
+
     public void UpdateAntennas(int[] antennas)
     {
         if (!loaded) return;
         reader.Antennas = antennas;
-        AntennaPanel.Children.Clear();
-        for (int ix = 0; ix < reader.Antennas.Length; ix++)
-        {
-            if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
-            {
-                AntennaPanel.Children.Add(new Border
-                {
-                    Child = new TextBlock()
-                    {
-                        Text = (ix + 1).ToString(),
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    },
-                    Width = 30,
-                    Height = 30,
-                    CornerRadius = Avalonia.CornerRadius.Parse("15"),
-                });
-            }
-        }
+        ShowAntennas();
     }
 
     public void UpdateReader(PortalReader iReader)
@@ -127,26 +114,7 @@ public partial class ReaderSubPart : UserControl
         AutoConnectSwitch.IsChecked = iReader.AutoConnect;
         ConnectedSwitch.IsChecked = iReader.Connected;
         ConnectedSwitch.IsEnabled = true;
-        AntennaPanel.Children.Clear();
-        for (int ix = 0; ix < iReader.Antennas.Length; ix++)
-        {
-            if (reader.Antennas[ix] != Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_NONE)
-            {
-                AntennaPanel.Children.Add(new Border()
-                {
-                    Child = new TextBlock()
-                    {
-                        Text = (ix + 1).ToString(),
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    },
-                    Width = 30,
-                    Height = 30,
-                    CornerRadius = Avalonia.CornerRadius.Parse("15"),
-                    Background = Constants.Readers.CHRONOKEEP_ANTENNA_STATUS_CONNECTED == reader.Antennas[ix] ? Brush.Parse("Green") : Brush.Parse("Red"),
-                });
-            }
-        }
+        ShowAntennas();
     }
 
     private void KindBox_ValueChanged(object? sender, SelectionChangedEventArgs e)
@@ -209,12 +177,19 @@ public partial class ReaderSubPart : UserControl
                 DialogBox.AsyncShow("Unknown kind specified. Unable to save.");
                 return;
         }
-        reader.IpAddress = !IpPattern().IsMatch(IpBox.Text!.Trim()) ? "" : IpBox.Text.Trim();
-        _ = uint.TryParse(PortBox.Text!.Trim(), out uint portNo);
-        if (portNo > 65535)
+        // Refuse an address or port the portal can't connect to rather than saving it blank.
+        string ip = IpBox.Text?.Trim() ?? "";
+        if (!IpPattern().IsMatch(ip))
         {
-            portNo = 0;
+            DialogBox.AsyncShow("IP address given not valid.");
+            return;
         }
+        if (!uint.TryParse(PortBox.Text?.Trim(), out uint portNo) || portNo is 0 or > 65535)
+        {
+            DialogBox.AsyncShow("Port given not valid.");
+            return;
+        }
+        reader.IpAddress = ip;
         reader.Port = portNo;
         reader.AutoConnect = AutoConnectSwitch.IsChecked == true;
 
@@ -223,7 +198,8 @@ public partial class ReaderSubPart : UserControl
 
     private void ConnectReader(object?sender, RoutedEventArgs e)
     {
-        if (reader.Reading)
+        // Follow the switch: off stops the reader, on starts it.
+        if (ConnectedSwitch.IsChecked != true)
         {
             readerInterface.SendStopReader(reader);
         }

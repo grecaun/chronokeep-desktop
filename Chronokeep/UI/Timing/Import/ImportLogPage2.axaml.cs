@@ -84,7 +84,8 @@ public partial class ImportLogPage2 : UserControl
     {
         Log.D("UI.Timing.ImportLog", "Import clicked.");
         List<string> repeats = RepeatHeaders();
-        if (repeats.Count < 1)
+        // Stop only when a column was chosen twice; this check was inverted, so a correct choice never imported.
+        if (repeats.Count > 0)
         {
             StringBuilder message = new("The following are repeats:\n");
             foreach (string s in repeats)

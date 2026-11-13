@@ -110,13 +110,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 </AutoCompleteBox.InnerLeftContent>
             </AutoCompleteBox>
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                <Button Content="Submit"
+                <Button Name="SubmitButton"
+                    Content="Submit"
                         Click="Submit_Click"
                         Margin="20,10,10,15"
                         Width="120"
                         FontSize="16"
                         Height="35"/>
-                <Button Content="Cancel"
+                <Button Name="CancelButton"
+                    Content="Cancel"
                         Click="Cancel_Click"
                         Margin="10,10,20,15"
                         Width="120"

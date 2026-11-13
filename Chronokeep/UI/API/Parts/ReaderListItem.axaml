@@ -69,13 +69,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                        VerticalContentAlignment="Center"
                        TextAlignment="Center"
                        Margin="5"/>
-        <Button Height="35"
+        <Button Name="RewindButton"
+                Height="35"
                 Width="35"
                 Margin="5"
                 Click="Rewind_Click">
             <PathIcon Data="{StaticResource rewind_regular}"/>
         </Button>
-        <Button Height="35"
+        <Button Name="DeleteButton"
+                Height="35"
                 Width="35"
                 Margin="5"
                 Click="Delete_Click">

@@ -263,7 +263,7 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.PlaySound = bool.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_VOLUME:
-                                                updSettings.Volume = double.Parse(set.Value);
+                                                updSettings.Volume = double.Parse(set.Value, CultureInfo.InvariantCulture);
                                                 break;
                                             case PortalSetting.SETTING_VOICE:
                                                 updSettings.Voice = set.Value switch
@@ -383,7 +383,7 @@ namespace Chronokeep.Timing.Interfaces
                                                 updSettings.PlaySound = bool.Parse(set.Value);
                                                 break;
                                             case PortalSetting.SETTING_VOLUME:
-                                                updSettings.Volume = double.Parse(set.Value);
+                                                updSettings.Volume = double.Parse(set.Value, CultureInfo.InvariantCulture);
                                                 break;
                                             case PortalSetting.SETTING_VOICE:
                                                 updSettings.Voice = set.Value switch
@@ -795,6 +795,15 @@ namespace Chronokeep.Timing.Interfaces
                     }
                 ]
             };
+            // Portals without a screen don't report a type, so only send one when there is one.
+            if (!string.IsNullOrEmpty(settings.ScreenType))
+            {
+                settingsReq.Settings.Add(new PortalSetting
+                {
+                    Name = PortalSetting.SETTING_SCREEN_TYPE,
+                    Value = settings.ScreenType,
+                });
+            }
             SendMessage(JsonSerializer.Serialize(settingsReq));
         }
 

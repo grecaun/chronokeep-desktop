@@ -34,6 +34,8 @@ public partial class ClockPart : UserControl
     private readonly Event theEvent;
 
     private bool IsLocked { get; set; }
+    // Set while the row shows what the clock reported, so that isn't sent back to the clock as a change.
+    private bool showingClock;
 
     public ClockPart(Chronoclock clock, ClockControl parent, Event theEvent)
     {
@@ -104,7 +106,9 @@ public partial class ClockPart : UserControl
         clock = GetUpdatedClock();
         if (info.Brightness > 0)
         {
+            showingClock = true;
             BrightnessBox.SelectedIndex = (int)(info.Brightness - 1);
+            showingClock = false;
         }
         UpdateLockStatus(info.LockCountUpDown);
         if (info.CountUpDownTimestamp > 0)
@@ -116,7 +120,9 @@ public partial class ClockPart : UserControl
         else if (theEvent.StartSeconds > 0 || theEvent.StartMilliseconds > 0)
         {
             CountDatePicker.SelectedDate = DateTime.Parse(theEvent.Date);
-            ChangeCountTimeBox(Constants.Timing.SecondsToTime(theEvent.StartMilliseconds >= 500 ? theEvent.StartSeconds + 1 : theEvent.StartSeconds));
+            // The time box takes exactly HH:mm:ss, so pad the hour for starts before 10:00.
+            long startSeconds = theEvent.StartMilliseconds >= 500 ? theEvent.StartSeconds + 1 : theEvent.StartSeconds;
+            ChangeCountTimeBox($"{startSeconds / 3600:D2}:{startSeconds % 3600 / 60:D2}:{startSeconds % 60:D2}");
             Log.D("UI.Timing.ClockControl.ClockListItem",
                 $"Time should be set to: {Constants.Timing.SecondsToTime(theEvent.StartSeconds)}");
         }
@@ -182,6 +188,9 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
+                // The clock didn't change, so show it as it was and let the user try again.
+                UpdateLockStatus(!IsLocked);
+                EnableConfig();
                 DialogBox.AsyncShow(ex.Message);
             }
         }
@@ -197,7 +206,7 @@ public partial class ClockPart : UserControl
         {
             Log.D("UI.Timing.ClockControl.ClockListItem", "BrightnessChanged");
             clock = GetUpdatedClock();
-            if (!BrightnessBox.IsEnabled) return;
+            if (!BrightnessBox.IsEnabled || showingClock) return;
             if (BrightnessBox.SelectedIndex < 0) return;
             DisableConfig();
             try
@@ -207,6 +216,7 @@ public partial class ClockPart : UserControl
             }
             catch (ApiException ex)
             {
+                EnableConfig();
                 DialogBox.AsyncShow(ex.Message);
             }
         }

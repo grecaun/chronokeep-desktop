@@ -21,6 +21,7 @@ using Avalonia.Interactivity;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System;
+using System.Globalization;
 
 namespace Chronokeep.UI.Timing.Windows;
 
@@ -62,10 +63,11 @@ public partial class SetTimeWindow : ChronokeepWindow
 
     private void Set_Click(object sender, RoutedEventArgs e)
     {
-        if (!DateTime.TryParse($"{SpecificDateBox.Text!.Replace('_', '0')} {SpecificTimeBox.Text!.Replace('_', '0')}", out DateTime alternateDate))
-        {
-            alternateDate = DateTime.Now;
-        }
+        // Use the picked date itself (not its displayed text) and read the time the same way in every culture.
+        DateTime alternateDate = DateTime.TryParseExact((SpecificTimeBox.Text ?? "").Replace('_', '0'), "HH:mm:ss.fff",
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time)
+            ? (SpecificDateBox.SelectedDate?.Date ?? DateTime.Today).Add(time.TimeOfDay)
+            : DateTime.Now;
         if (SetAllCheckBox.IsChecked == true)
         {
             parent.SetAllTimingSystemsToTime(alternateDate, NowTimeRadioButton.IsChecked == true);

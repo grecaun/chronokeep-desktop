@@ -134,11 +134,17 @@ public partial class SegmentsPage : UserControl, IMainPage
         UpdateDatabase();
         allSegments[mySegment.DistanceId].Remove(mySegment);
         database.RemoveSegment(mySegment);
+        updateTimingWorker = true;
         UpdateView();
     }
 
+    /// <summary>
+    /// Saves new segments and segments whose values differ from the database. Only an actual change
+    /// marks results for recalculation, so leaving the page without edits doesn't clear results.
+    /// </summary>
     private void UpdateDatabase()
     {
+        Dictionary<int, Segment> saved = database.GetSegments(theEvent!.Identifier).ToDictionary(s => s.Identifier);
         List<Segment> upSegments = [];
         List<Segment> newSegments = [];
         foreach (object? seg in SegmentsBox.Items)
@@ -150,16 +156,33 @@ public partial class SegmentsPage : UserControl, IMainPage
             {
                 newSegments.Add(thisSegment);
             }
-            else
+            else if (!saved.TryGetValue(thisSegment.Identifier, out Segment? old) || !SameValues(old, thisSegment))
             {
                 upSegments.Add(thisSegment);
             }
         }
         newSegments.RemoveAll(x => x.Occurrence < 0);
-        database.AddSegments(newSegments);
-        updateTimingWorker = true;
-        database.UpdateSegments(upSegments);
+        if (newSegments.Count > 0)
+        {
+            database.AddSegments(newSegments);
+            updateTimingWorker = true;
+        }
+        if (upSegments.Count > 0)
+        {
+            database.UpdateSegments(upSegments);
+            updateTimingWorker = true;
+        }
     }
+
+    private static bool SameValues(Segment one, Segment two) =>
+        one.Name == two.Name
+        && one.LocationId == two.LocationId
+        && one.Occurrence == two.Occurrence
+        && one.CumulativeDistance.Equals(two.CumulativeDistance)
+        && one.DistanceUnit == two.DistanceUnit
+        && one.DistanceId == two.DistanceId
+        && one.Gps == two.Gps
+        && one.MapLink == two.MapLink;
 
     public void KeyboardCtrlA() { }
 
@@ -217,6 +240,7 @@ public partial class SegmentsPage : UserControl, IMainPage
             UpdateDatabase();
         }
         database.RemoveSegments(allSegments[intoDistance]);
+        updateTimingWorker = true;
         allSegments[intoDistance].Clear();
         foreach (Segment newSeg in allSegments[fromDistance].Select(seg => new Segment(seg)
                  {

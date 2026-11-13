@@ -275,12 +275,22 @@ public partial class MinTimingPage : UserControl, IMainPage, ITimingPage
         List<TimingSystem> systems = mWindow.GetConnectedSystems();
         foreach (TimingSystem sys in systems)
         {
-            sys.SystemInterface?.SetTime(now ? DateTime.Now : time);
+            // Saved readers that aren't connected are listed too; skip them, and keep going if one fails.
+            try
+            {
+                if (sys.Status != SYSTEM_STATUS.CONNECTED) continue;
+                sys.SystemInterface?.SetTime(now ? DateTime.Now : time);
+            }
+            catch (Exception e)
+            {
+                Log.E("UI.MainPages.MinTimingPage", $"Error setting time on timing system via set all. {e.Message}");
+            }
         }
     }
 
     public void RemoveSystem(TimingSystem sys)
     {
+        database.RemoveTimingSystem(sys.SystemIdentifier);
         ReaderPart? removed = ReadersBox.Items.Cast<ReaderPart?>().FirstOrDefault(box => box!.Reader.SystemIdentifier == sys.SystemIdentifier && sys.Saved());
         ReadersBox.Items.Remove(removed);
         UpdateView();

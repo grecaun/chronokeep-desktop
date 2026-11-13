@@ -71,25 +71,33 @@ public partial class RemoteReadersWindow : ChronokeepWindow
     {
         try
         {
-            try
+            Dictionary<(int, string), RemoteReader> savedReaders = [];
+            foreach (RemoteReader reader in database.GetRemoteReaders(theEvent!.Identifier))
             {
-                Dictionary<(int, string), RemoteReader> savedReaders = [];
-                foreach (RemoteReader reader in database.GetRemoteReaders(theEvent!.Identifier))
-                {
-                    savedReaders[(reader.ApiiDentifier, reader.Name)] = reader;
-                }
-                // fetch all readers from the remote apis
-                foreach (ApiObject api in remoteApIs)
+                savedReaders[(reader.ApiiDentifier, reader.Name)] = reader;
+            }
+            // Fetch the readers from each remote API. One that can't be reached shouldn't hide the others.
+            List<string> errors = [];
+            foreach (ApiObject api in remoteApIs)
+            {
+                try
                 {
                     List<RemoteReader> readers = await api.GetReaders();
                     ApiListView.Items.Add(new ApiExpanderPart(api, readers, savedReaders, database, window));
                 }
+                catch (ApiException ex)
+                {
+                    errors.Add($"{api.Nickname}: {ex.Message}");
+                }
             }
-            catch (ApiException ex)
+            if (errors.Count > 0)
             {
-                DialogBox.AsyncShow(ex.Message);
-                Close();
-                return;
+                DialogBox.AsyncShow($"Unable to get readers from:\n\n{string.Join("\n", errors)}");
+                if (ApiListView.Items.Count == 0)
+                {
+                    Close();
+                    return;
+                }
             }
             LoadingPanel.IsVisible = false;
             ApiListView.IsVisible = true;

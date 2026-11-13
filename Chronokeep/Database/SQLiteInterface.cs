@@ -2126,7 +2126,8 @@ namespace Chronokeep.Database
         public List<ChipRead> GetChipReads(int eventId)
         {
             List<ChipRead> output = [];
-            Event theEvent = GetCurrentEvent()!;
+            // Use the event asked for, not whichever event is open; saving or importing reads another event.
+            if (GetEvent(eventId) is not Event theEvent) return output;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 91");
             if (!dbLock.TryEnter(3000))
             {
@@ -2150,7 +2151,8 @@ namespace Chronokeep.Database
         public List<ChipRead> GetUsefulChipReads(int eventId)
         {
             List<ChipRead> output = [];
-            Event theEvent = GetCurrentEvent()!;
+            // Use the event asked for, not whichever event is open; saving or importing reads another event.
+            if (GetEvent(eventId) is not Event theEvent) return output;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 92");
             if (!dbLock.TryEnter(3000))
             {
@@ -2174,7 +2176,8 @@ namespace Chronokeep.Database
         public List<ChipRead> GetAnnouncerChipReads(int eventId)
         {
             List<ChipRead> output = [];
-            Event theEvent = GetCurrentEvent()!;
+            // Use the event asked for, not whichever event is open; saving or importing reads another event.
+            if (GetEvent(eventId) is not Event theEvent) return output;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 133");
             if (!dbLock.TryEnter(3000))
             {
@@ -2198,7 +2201,8 @@ namespace Chronokeep.Database
         public List<ChipRead> GetAnnouncerUsedChipReads(int eventId)
         {
             List<ChipRead> output = [];
-            Event theEvent = GetCurrentEvent()!;
+            // Use the event asked for, not whichever event is open; saving or importing reads another event.
+            if (GetEvent(eventId) is not Event theEvent) return output;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 134");
             if (!dbLock.TryEnter(3000))
             {
@@ -2222,7 +2226,8 @@ namespace Chronokeep.Database
         public List<ChipRead> GetDnsChipReads(int eventId)
         {
             List<ChipRead> output = [];
-            Event theEvent = GetCurrentEvent()!;
+            // Use the event asked for, not whichever event is open; saving or importing reads another event.
+            if (GetEvent(eventId) is not Event theEvent) return output;
             Log.D("SQLiteInterface", "Attempting to grab Lock: ID 136");
             if (!dbLock.TryEnter(3000))
             {
@@ -2658,7 +2663,7 @@ namespace Chronokeep.Database
         {
             Dictionary<int, List<Participant>> output = [];
             List<Participant> parts = (distanceId == -1) ? GetParticipants(eventId) : GetParticipants(eventId, distanceId);
-            foreach (Participant person in parts)
+            foreach (Participant person in parts.Where(p => !p.EventSpecific.IsRemoved))
             {
                 if (!output.TryGetValue(person.Status, out List<Participant>? statusList))
                 {

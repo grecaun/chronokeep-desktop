@@ -192,6 +192,8 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         Log.D("UI.MainPages.ChipAssignmentPage", "Delete clicked.");
         List<BibChipAssociation> items = [];
         items.AddRange(BibChipList.SelectedItems.Cast<BibChipAssociation>());
+        // Nothing selected means nothing changed, so leaving the page shouldn't recalculate results.
+        if (items.Count < 1) return;
         database.RemoveBibChipAssociations(items);
         bibsChanged = true;
         UpdateView();
@@ -217,7 +219,10 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
         Log.D("UI.MainPages.ChipAssignmentPage", "Delete ignored clicked.");
         List<BibChipAssociation> items = [];
         items.AddRange(IgnoredChipList.SelectedItems.Cast<BibChipAssociation>());
+        if (items.Count < 1) return;
         database.RemoveBibChipAssociations(items);
+        // Timing reads the ignored chips from memory, so refresh it or deleted chips stay ignored.
+        Globals.UpdateIgnoredChips(database);
         bibsChanged = true;
         UpdateView();
     }
@@ -231,6 +236,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             () =>
             {
                 database.RemoveBibChipAssociations((List<BibChipAssociation>)IgnoredChipList.ItemsSource);
+                Globals.UpdateIgnoredChips(database);
                 bibsChanged = true;
                 UpdateView();
             }

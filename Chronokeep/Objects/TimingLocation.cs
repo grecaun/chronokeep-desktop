@@ -27,7 +27,7 @@ namespace Chronokeep.Objects
             EventIdentifier = eventIdentifier;
             Name = nameString;
             MaxOccurrences = 1;
-            IgnoreWithin = -1;
+            IgnoreWithin = Constants.Timing.DEFAULT_LOCATION_IGNORE_WITHIN;
         }
 
         public TimingLocation(int identifier, int eventIdentifier, string nameString)
@@ -36,7 +36,7 @@ namespace Chronokeep.Objects
             EventIdentifier = eventIdentifier;
             Name = nameString;
             MaxOccurrences = 1;
-            IgnoreWithin = -1;
+            IgnoreWithin = Constants.Timing.DEFAULT_LOCATION_IGNORE_WITHIN;
         }
 
         public TimingLocation(int id, int eventId, string name, int maxOcc, int ignore)

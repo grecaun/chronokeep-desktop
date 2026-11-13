@@ -131,7 +131,9 @@ namespace Chronokeep.Test.Network
             int port = ((System.Net.IPEndPoint)probe.LocalEndpoint).Port;
             probe.Stop();
             string url = $"http://127.0.0.1:{port}/";
-            using HttpClient client = new();
+            // If the port happens to be one HTTP.sys still holds from another test, the request hangs
+            // instead of being refused; a short timeout ends it the same way, as unreachable.
+            using HttpClient client = new() { Timeout = TimeSpan.FromSeconds(5) };
             string problem = await UpdateVerifier.Verify(client, $"{url}SHA256SUMS", $"{url}attestations/sha256:", "chronokeep.deb", WriteFile("chronokeep.deb", "abc"), CancellationToken.None);
             Assert.Contains("Unable to reach GitHub", problem);
         }

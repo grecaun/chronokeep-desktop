@@ -229,6 +229,9 @@ public partial class ImportFileWindow : ChronokeepWindow
                         string nameFromFile = id.NameFromFile.ToLower();
                         if (id.DistanceId == -1)
                         {
+                            // A file without a distance column puts everyone in the first distance on "Auto";
+                            // don't create an unused "Default Distance" for it.
+                            if (noDistance && distances.Count > 0) continue;
                             if (divHashName.TryGetValue(nameFromFile, out Distance? dist)) continue;
                             dist = new Distance(id.NameFromFile, theEvent.Identifier);
                             database.AddDistance(dist);
@@ -271,9 +274,17 @@ public partial class ImportFileWindow : ChronokeepWindow
                 importParticipants = [];
                 // new distances might have been added
                 distances = database.GetDistances(theEvent.Identifier);
+                // Rows without a distance go to the distance chosen for the file (only offered when the file
+                // has no distance column), or the first distance.
+                Distance defaultDistance = distances[0];
+                if (noDistance && fileDistances.Count > 0
+                    && divHashName.TryGetValue(fileDistances[0].NameFromFile.ToLower(), out Distance? chosen))
+                {
+                    defaultDistance = chosen;
+                }
                 for (int counter = 0; counter < numEntries; counter++)
                 {
-                    Distance thisDiv = distances[0];
+                    Distance thisDiv = defaultDistance;
                     if (data.Data[counter][keys[DISTANCE]].Length > 0)
                     {
                         string distName = data.Data[counter][keys[DISTANCE]].ToLower();
@@ -369,9 +380,12 @@ public partial class ImportFileWindow : ChronokeepWindow
                             && importParticipants[inner].Distance.Equals(part.Distance, StringComparison.OrdinalIgnoreCase))
                         {
                             // bib is an update, add to duplicates so we don't add it again,
-                            // then add to list of participants to update
+                            // then give the existing participant the new bib. The imported row has no
+                            // database ids, so saving it instead would update nothing.
                             duplicates.Add(importParticipants[inner]);
-                            updatedParticipants.Add(importParticipants[inner]);
+                            part.EventSpecific.Bib = importParticipants[inner].Bib;
+                            part.EventSpecific.Version += 1;
+                            updatedParticipants.Add(part);
                         }
                     }
                 }

@@ -73,7 +73,14 @@ namespace Chronokeep.Test.Network
             disposed = true;
             listener.Stop();
             listener.Close();
-            loop.Wait(TimeSpan.FromSeconds(2));
+            try
+            {
+                loop.Wait(TimeSpan.FromSeconds(2));
+            }
+            catch (AggregateException)
+            {
+                // A request still being answered when the test ended fails with the listener; nothing to clean up.
+            }
         }
     }
 

@@ -314,7 +314,25 @@ public partial class ExportDistanceResults : ChronokeepWindow
             Log.D("ExportDistanceResults", "Error saving abbot.");
         }
     }
-    private void SaveAbbotInternal(string distance, string fileName, string extension)
+    /// <summary>
+    /// The one-letter gender every one of these exports (RunSignup, UltraSignup, Boston, Abbott WMM) uses:
+    /// M, F or X. Events can label genders Man/Woman or Male/Female, so both map; a woman is always F,
+    /// never W. Anything else, such as Not Specified, is left blank.
+    /// </summary>
+    internal static string GenderCode(string gender)
+    {
+        if (gender.Equals("Man", StringComparison.OrdinalIgnoreCase) || gender.Equals("Male", StringComparison.OrdinalIgnoreCase))
+        {
+            return "M";
+        }
+        if (gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) || gender.Equals("Female", StringComparison.OrdinalIgnoreCase))
+        {
+            return "F";
+        }
+        return gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "";
+    }
+
+    internal void SaveAbbotInternal(string distance, string fileName, string extension)
     {
         string[] headers =
         [
@@ -326,7 +344,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             "start_num",    // bib
             "date_of_birth",// DD/MM/YYYY or MM/DD/YYYY
             "nationality",  // IOC Code, ISO-3 CODE or IAAF Code
-            "gender",       // M or F
+            "gender",       // M, F or X
             "finish_time",  // Chip time
             "place",        // overall
             "place_no_sex"  // gender place
@@ -448,13 +466,13 @@ public partial class ExportDistanceResults : ChronokeepWindow
             [
                 "",
                 "",
-                result.Last,
-                result.First,
+                result.First,   // first_name
+                result.Last,    // last_name
                 "",
                 result.Bib,
-                oPart.Birthdate,
+                Birthdates.ToMonthDayYear(oPart.Birthdate),
                 country,
-                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : "",
+                GenderCode(result.Gender),
                 result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
                 result.PlaceStr,
                 result.GenderPlaceStr
@@ -514,7 +532,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
     }
 
-    private void SaveBostonInternal(string distance, string fileName, string extension)
+    internal void SaveBostonInternal(string distance, string fileName, string extension)
     {
         Distance? dist = database.GetDistances(theEvent!.Identifier).FirstOrDefault(d => d.Name == distance);
         List<string> headers =
@@ -594,8 +612,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 result.First,
                 tPart.City,
                 tPart.State,
-                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
-                tPart.Birthdate,
+                GenderCode(result.Gender),
+                Birthdates.ToMonthDayYear(tPart.Birthdate),
                 result.Age(theEvent.Date).ToString(),
                 result.Time[..(result.Time.Length > 4 ? result.Time.Length - 4 : 0)],
                 result.ChipTime[..(result.ChipTime.Length > 4 ? result.ChipTime.Length -4 : 0)],
@@ -713,7 +731,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
     }
 
-    private void SaveUltraSignupInternal(string distance, string fileName)
+    internal void SaveUltraSignupInternal(string distance, string fileName)
     {
         string[] headers =
         [
@@ -774,9 +792,9 @@ public partial class ExportDistanceResults : ChronokeepWindow
                 result.ChipTime,
                 result.First,
                 result.Last,
-                result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
+                GenderCode(result.Gender),
                 result.Age(theEvent.Date),
-                yPart.Birthdate,
+                Birthdates.ToMonthDayYear(yPart.Birthdate),
                 result.Bib,
                 yPart.City,
                 yPart.State,
@@ -823,7 +841,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         exporter.ExportData(fileName);
     }
 
-    private void SaveRunSignupInternal(string distance, string fileName)
+    internal void SaveRunSignupInternal(string distance, string fileName)
     {
         string[] headers =
         [
@@ -855,7 +873,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
                         result.ChipTime,
                         result.First,
                         result.Last,
-                        result.Gender.Equals("Man", StringComparison.OrdinalIgnoreCase) ? "M" : result.Gender.Equals("Woman", StringComparison.OrdinalIgnoreCase) ? "F" : result.Gender.Equals("Non-Binary", StringComparison.OrdinalIgnoreCase) ? "X" : "",
+                        GenderCode(result.Gender),
                         result.Age(theEvent.Date),
                         result.Bib,
                         zPart.City,

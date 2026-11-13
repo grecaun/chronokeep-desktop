@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Chronokeep.Objects;
 using Chronokeep.Test.Database;
+using Chronokeep.UI.Util;
 
 namespace Chronokeep.Test.UI.Infrastructure
 {
@@ -98,7 +99,7 @@ namespace Chronokeep.Test.UI.Infrastructure
 
         /// <summary>
         /// Finds a named control in the control's name scope, failing the test if it is missing.
-        /// Controls a test needs get an x:Name in the app's XAML; there are no find-by-text helpers.
+        /// Controls a test needs get a Name in the app's XAML; there are no find-by-text helpers.
         /// </summary>
         protected static T Find<T>(Control root, string name) where T : Control
         {
@@ -117,8 +118,43 @@ namespace Chronokeep.Test.UI.Infrastructure
         /// <summary>Text of a ContentControl's content (buttons, labels) as shown.</summary>
         protected static string? ContentText(ContentControl control) => control.Content?.ToString();
 
+        /// <summary>
+        /// Lets the app's message and confirmation boxes open over the fake main window, where tests can
+        /// read and answer them. Without this they have no window to open over and never appear.
+        /// </summary>
+        protected void AllowDialogs()
+        {
+            ShowMainWindow();
+            global::Chronokeep.UI.MainWindow.MWindow = MainWindow;
+        }
+
+        /// <summary>The message boxes open over the main window, oldest first.</summary>
+        protected List<DialogBox> OpenDialogs() =>
+            [.. MainWindow.OwnedWindows.OfType<DialogBox>().Where(d => d.IsVisible)];
+
+        /// <summary>Waits for a message box whose text contains the given words and returns it.</summary>
+        protected async Task<DialogBox> WaitForDialog(string containing)
+        {
+            await WaitUntil(() => OpenDialogs().Any(d => DialogText(d).Contains(containing, StringComparison.OrdinalIgnoreCase)),
+                because: $"a message saying '{containing}' (open: {string.Join(" | ", OpenDialogs().Select(DialogText))})");
+            return OpenDialogs().Last(d => DialogText(d).Contains(containing, StringComparison.OrdinalIgnoreCase));
+        }
+
+        protected static string DialogText(DialogBox dialog) => Find<TextBlock>(dialog, "MessageBox").Text ?? "";
+
+        /// <summary>Presses Yes (the left button) or No (the right button) on a confirmation.</summary>
+        protected static void Answer(DialogBox dialog, bool yes) => Click(Find<Button>(dialog, yes ? "LeftButton" : "RightButton"));
+
         public override void Dispose()
         {
+            foreach (DialogBox dialog in MainWindow.OwnedWindows.OfType<DialogBox>().ToList())
+            {
+                dialog.Close();
+            }
+            if (global::Chronokeep.UI.MainWindow.MWindow == MainWindow)
+            {
+                global::Chronokeep.UI.MainWindow.MWindow = null;
+            }
             foreach (Window window in openWindows)
             {
                 try

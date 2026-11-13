@@ -155,6 +155,8 @@ public partial class RfidSettings : ChronokeepWindow
 
     private void SaveChip_Click(object? sender, RoutedEventArgs e)
     {
+        // Nothing to save until the reader reports its settings or the user picks one.
+        if (ChipBox.SelectedIndex < 0) return;
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save Chip button clicked.");
         char byteVal = ChipBox.SelectedIndex switch
         {
@@ -178,6 +180,8 @@ public partial class RfidSettings : ChronokeepWindow
 
     private void SaveGatingMode_Click(object? sender, RoutedEventArgs e)
     {
+        // Nothing to save until the reader reports its settings or the user picks one.
+        if (GatingModeBox.SelectedIndex < 0) return;
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save Gating Mode button clicked.");
         char byteVal = GatingModeBox.SelectedIndex switch
         {
@@ -200,6 +204,8 @@ public partial class RfidSettings : ChronokeepWindow
 
     private void SaveWhenBeep_Click(object? sender, RoutedEventArgs e)
     {
+        // Nothing to save until the reader reports its settings or the user picks one.
+        if (WhenBeepBox.SelectedIndex < 0) return;
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save When to Beep button clicked.");
         char byteVal = WhenBeepBox.SelectedIndex switch
         {
@@ -214,6 +220,8 @@ public partial class RfidSettings : ChronokeepWindow
 
     private void SaveVolume_Click(object? sender, RoutedEventArgs e)
     {
+        // Nothing to save until the reader reports its settings or the user picks one.
+        if (VolumeBox.SelectedIndex < 0) return;
         Log.D("UI.Timing.ReaderSettings.RFIDSettings", "Save Volume button clicked.");
         char byteVal = VolumeBox.SelectedIndex switch
         {
@@ -223,7 +231,7 @@ public partial class RfidSettings : ChronokeepWindow
                 (char)0x01,
             2 => // loud
                 (char)0x02,
-            _ => '0'
+            _ => (char)0x00
         };
         reader.SetBeeperVolume(byteVal);
     }

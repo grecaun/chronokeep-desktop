@@ -122,57 +122,28 @@ public partial class DistancesPage : UserControl, IMainPage
         {
             UpdateDatabase();
         }
-        // Check for and delete linked distances
-        List<Distance> allDistances = database.GetDistances(theEvent!.Identifier);
-        bool keepDeleting = true, ignoreParticipantCheck = false;
-        foreach (Distance d in allDistances)
-        {
-            if (!keepDeleting)
-            {
-                return;
-            }
-            if (d.LinkedDistance < 0 || d.LinkedDistance != distance.Identifier) continue;
-            if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, d.Identifier).Count > 0)
-            {
-                keepDeleting = false;
-                DialogBox.AsyncShow(
-                    "Distance has participants, continue?",
-                    "Yes",
-                    "No",
-                    () =>
-                    {
-                        keepDeleting = true;
-                        ignoreParticipantCheck = true;
-                        database.RemoveDistance(d);
-                    }
-                );
-            }
-            else
-            {
-                database.RemoveDistance(d);
-            }
-        }
-        if (!keepDeleting)
-        {
-            return;
-        }
-        if (!ignoreParticipantCheck && database.GetParticipants(theEvent.Identifier, distance.Identifier).Count > 0)
+        // A distance goes with the distances linked to it. Ask once if any of them has participants.
+        List<Distance> toRemove = [.. database.GetDistances(theEvent!.Identifier)
+            .Where(d => d.LinkedDistance >= 0 && d.LinkedDistance == distance.Identifier)];
+        toRemove.Add(distance);
+        if (toRemove.Any(d => database.GetParticipants(theEvent.Identifier, d.Identifier).Count > 0))
         {
             DialogBox.AsyncShow(
                 "Distance has participants, continue?",
                 "Yes",
                 "No",
-                () =>
-                {
-                    keepDeleting = true;
-                    ignoreParticipantCheck = true;
-                    database.RemoveDistance(distance);
-                }
+                () => RemoveDistances(toRemove)
             );
+            return;
         }
-        else
+        RemoveDistances(toRemove);
+    }
+
+    private void RemoveDistances(List<Distance> distances)
+    {
+        foreach (Distance d in distances)
         {
-            database.RemoveDistance(distance);
+            database.RemoveDistance(d);
         }
         updateTimingWorker = true;
         UpdateView();

@@ -131,7 +131,13 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
                         keys[item.HeaderBox.SelectedIndex] = item.Index;
                     }
                 }
+                if (keys[1] == 0 || keys[2] == 0)
+                {
+                    DialogBox.AsyncShow("Choose both a Bib and a Chip column.");
+                    return;
+                }
                 bool extraAssoc = Headers.IsChecked == false;
+                List<BibChipAssociation> conflicts = [];
                 await Task.Run(() =>
                 {
                     Dictionary<string, string> currentAssociations = database.GetBibChips(eventId).ToDictionary(x => x.Chip, x => x.Bib);
@@ -161,39 +167,36 @@ public partial class BibChipAssociationWindow : ChronokeepWindow
                             Log.E("UI.BibChipAssociationWindow", "One or more values not an integer.");
                         }
                     }
-                    // Check new associations against old ones.
-                    List<BibChipAssociation> conflicts = [];
+                    // Rows missing a bib or a chip can't link anything.
+                    items.RemoveAll(assoc => string.IsNullOrWhiteSpace(assoc.Bib) || string.IsNullOrWhiteSpace(assoc.Chip));
+                    // Chips already linked to a different bib need confirmation before they're replaced.
                     foreach (BibChipAssociation assoc in items)
                     {
-                        // Check to ensure we aren't trying to associate this chip with a different bib
-                        // when it already has one associated with it.
                         if (currentAssociations.TryGetValue(assoc.Chip, out string? oBib) && !oBib.Equals(assoc.Bib, StringComparison.OrdinalIgnoreCase))
                         {
                             conflicts.Add(assoc);
                         }
                     }
-                    // if there are conflicts, alter the user to them and verify clobbering
-                    if (conflicts.Count > 0)
-                    {
-                        StringBuilder error = new("There were conflicts found in the import file. Please confirm you want to clobber current values.");
-                        foreach (BibChipAssociation assoc in conflicts)
-                        {
-                            error.Append($"\nChip {assoc.Chip} - Bib {assoc.Bib}");
-                        }
-                        DialogBox.AsyncShow(
-                            error.ToString(),
-                            "Yes",
-                            "No",
-                            () =>
-                            {
-                                items.RemoveAll(conflicts.Contains);
-                            }
-                        );
-                    }
+                    items.RemoveAll(conflicts.Contains);
                     database.AddBibChipAssociation(eventId, items);
                 });
                 Log.D("UI.BibChipAssociationWindow", "All done with bib chip associations.");
                 ImportComplete = true;
+                if (conflicts.Count > 0)
+                {
+                    // The dialog doesn't wait, so the replacement happens from its Yes button.
+                    StringBuilder error = new("Some chips in the file are already linked to a different bib. Replace them with the file's bibs?");
+                    foreach (BibChipAssociation assoc in conflicts)
+                    {
+                        error.Append($"\nChip {assoc.Chip} - Bib {assoc.Bib}");
+                    }
+                    DialogBox.AsyncShow(
+                        error.ToString(),
+                        "Yes",
+                        "No",
+                        () => database.AddBibChipAssociation(eventId, conflicts)
+                    );
+                }
                 Close();
             }
             else

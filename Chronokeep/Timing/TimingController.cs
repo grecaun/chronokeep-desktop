@@ -122,7 +122,8 @@ namespace Chronokeep.Timing
                 // Marked running before the thread starts so two quick connects can't start two loops.
                 running = true;
             }
-            new Thread(Loop).Start();
+            // A background thread, so a loop still waiting on a reader after Shutdown() can't keep Chronokeep open.
+            new Thread(Loop) { IsBackground = true }.Start();
         }
 
         public void Shutdown()

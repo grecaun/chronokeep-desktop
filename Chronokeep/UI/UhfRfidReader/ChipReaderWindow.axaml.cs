@@ -35,7 +35,8 @@ public partial class ChipReaderWindow : ChronokeepWindow
 {
     private static Thread? readingThread;
     private static NewReader? reader;
-    private static int readNo = 1;
+    // Each tester window numbers its reads from 1.
+    private int readNo = 1;
     private RfidSerial? serial;
     private static ChipPersonWindow? personWindow;
     private readonly IdbInterface database;
@@ -63,6 +64,9 @@ public partial class ChipReaderWindow : ChronokeepWindow
     {
         return new ChipReaderWindow(window, database);
     }
+
+    /// <summary>The big-text info window, while it's open.</summary>
+    internal ChipPersonWindow? PersonWindow => personWindow;
 
     internal void PersonWindowClosing()
     {

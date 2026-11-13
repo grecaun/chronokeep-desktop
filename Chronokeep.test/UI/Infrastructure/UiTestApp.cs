@@ -18,7 +18,9 @@ namespace Chronokeep.Test.UI.Infrastructure
         private static readonly Uri BaseUri = new("avares://Chronokeep.test/");
 
         public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<UiTestApp>()
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = true })
+            // Real (Skia) text layout: the headless stand-in hangs laying out a message with a blank line in it.
+            .UseSkia()
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
             .ConfigureFonts(fontManager => fontManager.AddFontCollection(new ChronokeepFontCollection()));
 
         public override void Initialize()

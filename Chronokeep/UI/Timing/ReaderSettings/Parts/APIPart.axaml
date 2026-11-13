@@ -83,13 +83,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 						  Width="55"
 						  VerticalAlignment="Center"
 						  Margin="5,-7,-7,-7"/>
-			<Button Width="40"
+			<Button Name="SaveApiButton"
+                    Width="40"
                     Height="35"
                     Margin="5"
                     Click="SaveApi">
 				<PathIcon Data="{StaticResource save_regular}"/>
 			</Button>
-			<Button Width="40"
+			<Button Name="RemoveApiButton"
+                    Width="40"
                     Height="35"
                     Margin="5"
                     Click="DeleteApi">

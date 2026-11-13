@@ -24,6 +24,7 @@ using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.UI.Participants;
 
@@ -64,9 +65,11 @@ public partial class ChangeMultiParticipantWindow : ChronokeepWindow
     {
         Log.D("UI.Participants.ChangeMultiParticipantWindow", "Change clicked.");
         int distanceId = Convert.ToInt32(((ComboBoxItem)DistanceBox.SelectedItem!).Tag!);
-        foreach (Participant part in toChange)
+        foreach (Participant part in toChange.Where(part => part.EventSpecific.DistanceIdentifier != distanceId))
         {
             part.EventSpecific.DistanceIdentifier = distanceId;
+            // Mark it changed locally, as the participant window does, so an API download won't undo it.
+            part.EventSpecific.Version += 1;
         }
         database.UpdateParticipants(toChange);
         database.ResetTimingResultsEvent(theEvent!.Identifier);

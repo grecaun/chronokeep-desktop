@@ -120,7 +120,7 @@ namespace Chronokeep.MemStore
         {
             Dictionary<int, List<Participant>> output = [];
             List<Participant> dbParts = (distanceId == -1) ? GetParticipants(eventId) : GetParticipants(eventId, distanceId);
-            foreach (Participant person in dbParts)
+            foreach (Participant person in dbParts.Where(p => !p.EventSpecific.IsRemoved))
             {
                 if (!output.TryGetValue(person.Status, out List<Participant>? localParts))
                 {

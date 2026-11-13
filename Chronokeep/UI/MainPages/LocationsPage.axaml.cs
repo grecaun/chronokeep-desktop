@@ -87,29 +87,30 @@ public partial class LocationsPage : UserControl, IMainPage
     {
         foreach (LocationPart? locItem in LocationsBox.Items.Cast<LocationPart?>())
         {
-            locItem!.UpdateLocation();
+            // Each row reports what the user changed, so an unchanged page never recalculates or clears results.
+            (bool changed, bool timingChanged) = locItem!.UpdateLocation();
             switch (locItem.MyLocation.Identifier)
             {
-                case Constants.Timing.LOCATION_FINISH when theEvent!.FinishMaxOccurrences == locItem.MyLocation.MaxOccurrences
-                                                           && theEvent.FinishIgnoreWithin == locItem.MyLocation.IgnoreWithin:
+                case Constants.Timing.LOCATION_FINISH when !timingChanged:
                     continue;
                 case Constants.Timing.LOCATION_FINISH:
-                    theEvent.FinishMaxOccurrences = locItem.MyLocation.MaxOccurrences;
+                    theEvent!.FinishMaxOccurrences = locItem.MyLocation.MaxOccurrences;
                     theEvent.FinishIgnoreWithin = locItem.MyLocation.IgnoreWithin;
                     database.SetFinishOptions(theEvent);
                     break;
-                case Constants.Timing.LOCATION_START when theEvent!.StartWindow == locItem.MyLocation.IgnoreWithin
-                                                          && theEvent.StartMaxOccurrences == locItem.MyLocation.MaxOccurrences:
+                case Constants.Timing.LOCATION_START when !timingChanged:
                     continue;
                 case Constants.Timing.LOCATION_START:
-                    theEvent.StartWindow = locItem.MyLocation.IgnoreWithin;
+                    theEvent!.StartWindow = locItem.MyLocation.IgnoreWithin;
                     theEvent.StartMaxOccurrences = locItem.MyLocation.MaxOccurrences;
                     database.SetStartOptions(theEvent);
                     break;
                 default:
                 {
-                    if (!locItem.IsUpdated()) continue;
+                    if (!changed) continue;
                     database.UpdateTimingLocation(locItem.MyLocation);
+                    // A rename is saved, but only occurrence or ignore changes need results recalculated.
+                    if (!timingChanged) continue;
                     break;
                 }
             }
@@ -167,5 +168,9 @@ public partial class LocationsPage : UserControl, IMainPage
         UpdateView();
     }
 
-    private void ResetBtn_Click(object? sender, RoutedEventArgs e) { }
+    private void ResetBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        Log.D("UI.MainPages.LocationsPage", "Reset clicked.");
+        UpdateView();
+    }
 }

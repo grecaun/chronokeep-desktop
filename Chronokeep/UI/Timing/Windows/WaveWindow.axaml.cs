@@ -87,7 +87,10 @@ public partial class WaveWindow : ChronokeepWindow
             foreach (WavePart? wave in WaveList.Items.Cast<WavePart?>())
             {
                 int waveId = wave!.GetWave();
-                wave.SetTime(theEvent!.StartSeconds + waveTimes[waveId].seconds, theEvent.StartMilliseconds + waveTimes[waveId].milliseconds);
+                // Work in whole milliseconds so offsets like -0.5 seconds carry into the seconds correctly.
+                long timeOfDay = (theEvent!.StartSeconds * 1000) + theEvent.StartMilliseconds
+                    + (waveTimes[waveId].seconds * 1000) + waveTimes[waveId].milliseconds;
+                wave.SetTime(timeOfDay / 1000, (int)(timeOfDay % 1000));
             }
         }
         else
@@ -108,22 +111,12 @@ public partial class WaveWindow : ChronokeepWindow
             (int waveNo, long seconds, int milliseconds) = wave!.GetValues();
             if (TimeOfDayButton.IsChecked == true)
             {
-                if (seconds < 0)
-                {
-                    seconds = Math.Abs(seconds);
-                    milliseconds = Math.Abs(milliseconds);
-                    seconds -= theEvent!.StartSeconds;
-                    milliseconds -= theEvent.StartMilliseconds;
-                    seconds = milliseconds > 0 ? seconds + 1 : seconds;
-                    milliseconds = milliseconds > 0 ? milliseconds - 1000 : milliseconds;
-                }
-                else
-                {
-                    seconds -= theEvent!.StartSeconds;
-                    milliseconds -= theEvent.StartMilliseconds;
-                    seconds = milliseconds < 0 ? seconds - 1 : seconds;
-                    milliseconds = milliseconds < 0 ? milliseconds - 1000 : milliseconds;
-                }
+                // A time of day is always positive; the offset is it minus the race start, which can be
+                // negative. Working in whole milliseconds keeps seconds and milliseconds the same sign.
+                long offset = (Math.Abs(seconds) * 1000) + Math.Abs(milliseconds)
+                    - ((theEvent!.StartSeconds * 1000) + theEvent.StartMilliseconds);
+                seconds = offset / 1000;
+                milliseconds = (int)(offset % 1000);
             }
             database.SetWaveTimes(theEvent!.Identifier, waveNo, seconds, milliseconds);
         }

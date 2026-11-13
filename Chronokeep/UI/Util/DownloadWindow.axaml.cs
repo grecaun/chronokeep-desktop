@@ -49,9 +49,18 @@ namespace Chronokeep.UI.Util
         private CancellationTokenSource? cancellationToken;
 
         private readonly IMainWindow mWindow;
+        private readonly string attestationsUrl;
 
         public DownloadWindow(GithubRelease r, Updates.Version v, IMainWindow mWindow)
+            : this(r, v, mWindow, null, UpdateVerifier.AttestationsUrl)
         {
+        }
+
+        /// <param name="downloadFolder">Where to save the download instead of the usual place, or null for the usual place.</param>
+        /// <param name="attestationsUrl">Where to check the download was built by Chronokeep's release process.</param>
+        internal DownloadWindow(GithubRelease r, Updates.Version v, IMainWindow mWindow, string? downloadFolder, string attestationsUrl)
+        {
+            this.attestationsUrl = attestationsUrl;
             InitializeComponent();
             ChronokeepInitialize();
             Topmost = true;
@@ -65,9 +74,10 @@ namespace Chronokeep.UI.Util
             fileName = asset?.Name ?? "";
             checksumsUrl = UpdatePackage.ChecksumsUrl(r);
             Log.D("Updates.Check", $"Download URL - {uri}");
-            downloadUri = UpdateKind.WindowsInstaller == kind
-                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"chronokeep-setup-{version}.exe")
-                : Path.Combine(Path.GetTempPath(), fileName);
+            string installerName = UpdateKind.WindowsInstaller == kind ? $"chronokeep-setup-{version}.exe" : fileName;
+            downloadUri = Path.Combine(
+                downloadFolder ?? (UpdateKind.WindowsInstaller == kind ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Path.GetTempPath()),
+                installerName);
             Activate();
         }
 
@@ -158,7 +168,7 @@ namespace Chronokeep.UI.Util
                     }
                     // Don't offer to install anything that doesn't check out.
                     DownloadLabel.Text = $"Checking {version}";
-                    string problem = await UpdateVerifier.Verify(client, checksumsUrl, UpdateVerifier.AttestationsUrl, fileName, downloadUri, cancellationToken.Token);
+                    string problem = await UpdateVerifier.Verify(client, checksumsUrl, attestationsUrl, fileName, downloadUri, cancellationToken.Token);
                     if (problem.Length > 0)
                     {
                         Log.E("Updates.DownloadWindow", $"Update failed its check. {problem}");
@@ -326,7 +336,8 @@ namespace Chronokeep.UI.Util
             Log.D("Updates.DownloadWindow", "Looking for database file.");
             if (!Directory.Exists(dirPath)) return;
             if (!File.Exists(path)) return;
-            string backup = Path.Combine(dirPath, $"{DateTime.Now:yyyy-MM-dd}-backup-{MainWindow.DATABASE_FILE_NAME}");
+            // Include the time so a second backup on the same day doesn't fail on the first one's name.
+            string backup = Path.Combine(dirPath, $"{DateTime.Now:yyyy-MM-dd-HHmmss}-backup-{MainWindow.DATABASE_FILE_NAME}");
             try
             {
                 BackupBlock.Text = $"{BackupBlock.Text}\nBacking up database.";

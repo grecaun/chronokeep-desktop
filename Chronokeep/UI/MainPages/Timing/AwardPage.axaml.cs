@@ -131,7 +131,8 @@ public partial class AwardPage : UserControl, ISubPage
             int start = Convert.ToInt32(StartCustom.Text);
             int end = Convert.ToInt32(EndCustom.Text);
             string custom = CustomNameBox.Text!;
-            if (start > -1 || end < 101)
+            // Both ages must be within 0 to 100 and in order; "||" accepted almost anything.
+            if (start >= 0 && end <= 100 && start <= end)
             {
                 database.AddAgeGroup(
                     new AgeGroup(theEvent!.Identifier,
@@ -148,7 +149,7 @@ public partial class AwardPage : UserControl, ISubPage
             }
             else
             {
-                DialogBox.AsyncShow("Ages are not in the range of 0 to 100.");
+                DialogBox.AsyncShow("Ages must be from 0 to 100, with the start no later than the end.");
             }
         }
         catch (Exception ex)

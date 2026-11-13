@@ -54,7 +54,9 @@ public partial class LocationPart : UserControl
         }
         IgnoreWithinLabel.Text = labelLabel;
         IgnoreWithinLabel.Width = 120;
-        string ignStr = string.Format(TimeFormat, MyLocation.IgnoreWithin / 3600, (MyLocation.IgnoreWithin % 3600) / 60, MyLocation.IgnoreWithin % 60);
+        // New locations start at -1 (not set), which the time box can't show; it means the same as zero.
+        int ignore = Math.Max(0, MyLocation.IgnoreWithin);
+        string ignStr = string.Format(TimeFormat, ignore / 3600, (ignore % 3600) / 60, ignore % 60);
         IgnoreWithin.Text = ignStr;
         if (Constants.Timing.EVENT_TYPE_TIME != theEvent.EventType
             && !(Constants.Timing.LOCATION_START == MyLocation.Identifier && theEvent.CommonStartFinish))
@@ -73,34 +75,32 @@ public partial class LocationPart : UserControl
         Remove.IsVisible = false;
     }
 
-    public bool IsUpdated()
-    {
-        try
-        {
-            string[] parts = IgnoreWithin.Text!.Replace('_', '0').Split(':');
-            int hours = Convert.ToInt32(parts[0]), minutes = Convert.ToInt32(parts[1]), seconds = Convert.ToInt32(parts[2]);
-            return MyLocation.MaxOccurrences != Convert.ToInt32(MaxOccurrences) && MyLocation.IgnoreWithin != (hours * 3600) + (minutes * 60) + seconds;
-        }
-        catch
-        {
-            return true;
-        }
-    }
-
-    public void UpdateLocation()
+    /// <summary>
+    /// Copies the form into the location and says what changed. Changed covers any field; TimingChanged
+    /// only the max occurrences and ignore window, which change how reads are counted. A rename alone
+    /// doesn't need results recalculated. Invalid values change nothing.
+    /// </summary>
+    public (bool Changed, bool TimingChanged) UpdateLocation()
     {
         Log.D("UI.MainPages.LocationsPage", "Updating location.");
         try
         {
-            MyLocation.Name = LocationName.Text!;
-            MyLocation.MaxOccurrences = Convert.ToInt32(MaxOccurrences.Text);
+            string name = LocationName.Text ?? "";
+            int maxOccurrences = Convert.ToInt32(MaxOccurrences.Text);
             string[] parts = IgnoreWithin.Text!.Replace('_', '0').Split(':');
             int hours = Convert.ToInt32(parts[0]), minutes = Convert.ToInt32(parts[1]), seconds = Convert.ToInt32(parts[2]);
-            MyLocation.IgnoreWithin = (hours * 3600) + (minutes * 60) + seconds;
+            int ignoreWithin = (hours * 3600) + (minutes * 60) + seconds;
+            bool timingChanged = MyLocation.MaxOccurrences != maxOccurrences || Math.Max(0, MyLocation.IgnoreWithin) != ignoreWithin;
+            bool changed = timingChanged || MyLocation.Name != name;
+            MyLocation.Name = name;
+            MyLocation.MaxOccurrences = maxOccurrences;
+            MyLocation.IgnoreWithin = ignoreWithin;
+            return (changed, timingChanged);
         }
         catch
         {
             DialogBox.AsyncShow("Error with values given.");
+            return (false, false);
         }
     }
 

@@ -37,7 +37,8 @@ namespace Chronokeep.IO
                 outWriter.WriteLine(format, headers);
                 foreach (object[] line in data)
                 {
-                    outWriter.WriteLine(format, [.. line.Select(x => x.ToString())]);
+                    // Empty cells (such as a place for someone who hasn't finished) are written blank, as the Excel exporter does.
+                    outWriter.WriteLine(format, [.. line.Select(x => x?.ToString() ?? "")]);
                 }
             }
             // Let every user on the computer open or replace the export.

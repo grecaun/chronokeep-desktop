@@ -160,6 +160,20 @@ namespace Chronokeep.Objects
             Removed = other.Removed;
         }
 
+        /// <summary>
+        /// Copies the fields the participant editor doesn't show (check-in, owes, other, text alerts,
+        /// and the registration system's id and removed reason), so saving an edit keeps them.
+        /// </summary>
+        public void CopyFieldsNotInEditor(EventSpecific other)
+        {
+            CheckedIn = other.CheckedIn;
+            Owes = other.Owes;
+            Other = other.Other;
+            SmsEnabled = other.SmsEnabled;
+            ExternalId = other.ExternalId;
+            Removed = other.Removed;
+        }
+
         public bool Equals(EventSpecific other)
         {
             return EventIdentifier == other.EventIdentifier

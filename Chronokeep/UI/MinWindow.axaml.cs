@@ -64,6 +64,8 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
     {
         InitializeComponent();
         ChronokeepInitialize();
+        // Message boxes open over this window; without it they have nothing to open over and never show.
+        MainWindow.MWindow = this;
         // Check that no other instance of this program are running.
         if (!OneWindow.WaitOne(TimeSpan.Zero, true))
         {
@@ -189,30 +191,31 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
             };
     }
 
+    // Set once the user says Yes to exiting while timing is running.
+    private bool exitConfirmed;
+
     private void Window_Closing(object sender, WindowClosingEventArgs e)
     {
         if (database == null)
         {
             return;
         }
-        if (database.GetAppSetting(Settings.EXIT_NO_PROMPT)!.Value == Settings.SETTING_FALSE &&
+        if (!exitConfirmed && database.GetAppSetting(Settings.EXIT_NO_PROMPT)!.Value == Settings.SETTING_FALSE &&
             (BackgroundProcessesRunning()))
         {
-            bool allowClose = false;
+            // The question doesn't wait for an answer, so stay open and close again on Yes.
             DialogBox.AsyncShow(
                 "Are you sure you wish to exit?",
                 "Yes",
                 "No",
                 () =>
                 {
-                    allowClose = true;
+                    exitConfirmed = true;
+                    Close();
                 }
                 );
-            if (!allowClose)
-            {
-                e.Cancel = true;
-                return;
-            }
+            e.Cancel = true;
+            return;
         }
         Log.D("UI.MinWindow", "Window is closing!");
         try

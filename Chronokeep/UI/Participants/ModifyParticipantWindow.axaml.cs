@@ -150,7 +150,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         BibBox.Text = person.Bib;
         FirstBox.Text = person.FirstName;
         LastBox.Text = person.LastName;
-        BirthdayBox.SelectedDate = DateTime.Parse(person.Birthdate);
+        BirthdayBox.SelectedDate = Birthdates.TryParse(person.Birthdate, out DateTime birthday) ? birthday : null;
         AgeBox.Text = person.Age(theEvent.Date);
         GenderBox.Items.Clear();
         GenderBox.Items.Add(new ComboBoxItem
@@ -447,7 +447,9 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         Participant? newPart = FromFields();
         // Copy old Version values when modifying.
         if (newPart == null) return;
-        newPart.EventSpecific.Version = person!.EventSpecific.Version;
+        // Keep what this window doesn't show, such as check-in and text alerts, instead of resetting it.
+        newPart.EventSpecific.CopyFieldsNotInEditor(person!.EventSpecific);
+        newPart.EventSpecific.Version = person.EventSpecific.Version;
         newPart.EventSpecific.UploadedVersion = person.EventSpecific.UploadedVersion;
         Participant? offendingBib = null;
         // If bib isn't empty and isn't the dummy bib, offer to swap bibs.

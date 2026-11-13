@@ -26,6 +26,7 @@ using Chronokeep.Objects.ChronokeepRemote;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia.Interactivity;
 
 namespace Chronokeep.UI.API.Parts;
@@ -157,34 +158,37 @@ public partial class ReaderListItem : UserControl
             "Warning!\n\nThis will delete every read uploaded to the remote api. That data cannot be recoverred once deleted.",
             "Delete",
             "Cancel",
-            async void () =>
+            async void () => await DeleteRemoteReads());
+    }
+
+    /// <summary>Deletes this reader's reads in the chosen time range from the remote API.</summary>
+    internal async Task DeleteRemoteReads()
+    {
+        try
+        {
+            Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "User requests deletion.");
+            if (!DateTime.TryParse($"{StartDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
             {
-                try
-                {
-                    Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "User requests deletion.");
-                    if (!DateTime.TryParse($"{StartDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {StartTimeBox.Text!.Replace('_', '0')}", out DateTime startDate))
-                    {
-                        startDate = DateTime.Now;
-                    }
-                    if (!DateTime.TryParse($"{EndDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
-                    {
-                        endDate = DateTime.Now;
-                    }
-                    try
-                    {
-                        long count = await api.DeleteReads(reader, startDate, endDate);
-                        mWindow.UpdateTimingFromController();
-                        DialogBox.AsyncShow($"Successfully deleted\n\n{count}\n\nreads.");
-                    }
-                    catch (ApiException ex)
-                    {
-                        DialogBox.AsyncShow(ex.Message);
-                    }
-                }
-                catch (Exception)
-                {
-                    Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Error deleting reads.");
-                }
-            });
+                startDate = DateTime.Now;
+            }
+            if (!DateTime.TryParse($"{EndDatePicker.SelectedDate?.ToString("yyyy/M/d") ?? DateTime.Now.ToString("yyyy/M/d")} {EndTimeBox.Text!.Replace('_', '0')}", out DateTime endDate))
+            {
+                endDate = DateTime.Now;
+            }
+            try
+            {
+                long count = await api.DeleteReads(reader, startDate, endDate);
+                mWindow.UpdateTimingFromController();
+                DialogBox.AsyncShow($"Successfully deleted\n\n{count}\n\nreads.");
+            }
+            catch (ApiException ex)
+            {
+                DialogBox.AsyncShow(ex.Message);
+            }
+        }
+        catch (Exception)
+        {
+            Log.D("UI.API.RemoteReadersWindow.ReaderListItem", "Error deleting reads.");
+        }
     }
 }

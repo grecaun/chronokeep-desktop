@@ -26,6 +26,7 @@ using Chronokeep.UI.Parts;
 using Chronokeep.UI.Util;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chronokeep.UI.MainPages;
 
@@ -250,6 +251,14 @@ public partial class AgeGroupsPage : UserControl, IMainPage
         {
             divId = currentDistanceId;
         }
+        // Only rewrite the groups (and recalculate results when leaving) if they actually changed.
+        IEnumerable<(int, int)> Ranges(IEnumerable<AgeGroup> groups) => groups.Select(g => (g.StartAge, g.EndAge)).Order();
+        List<AgeGroup> savedGroups = database.GetAgeGroups(theEvent.Identifier, divId);
+        if (Ranges(savedGroups).SequenceEqual(Ranges(ageGroups)))
+        {
+            UpdateAgeGroupsList();
+            return;
+        }
         database.RemoveAgeGroups(theEvent.Identifier, divId);
         foreach (AgeGroup age in ageGroups)
         {
@@ -278,7 +287,9 @@ public partial class AgeGroupsPage : UserControl, IMainPage
     private void Distances_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         Log.D("UI.MainPages.AgeGroupsPage", "Distance changed.");
-        if (database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
+        // Save the distance being left, but not on the first selection when the page loads.
+        if (e.RemovedItems.Count > 0
+            && database.GetAppSetting(Constants.Settings.UPDATE_ON_PAGE_CHANGE)!.Value == Constants.Settings.SETTING_TRUE)
         {
             UpdateDatabase();
         }

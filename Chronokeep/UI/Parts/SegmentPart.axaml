@@ -89,7 +89,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     Margin="2,2,2,0"
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"/>
-        <Button Click="Remove_Click"
+        <Button Name="RemoveButton"
+                Click="Remove_Click"
                 Width="50"
                 Height="35"
                 Margin="2,2,2,0"

@@ -40,7 +40,10 @@ namespace Chronokeep.Helpers
             UnixFileMode.OtherRead | UnixFileMode.OtherWrite;
 
         /// <summary>The folder the database is kept in on this computer.</summary>
-        internal static string Data => GetDataFolder(CurrentPlatform());
+        internal static string Data => DataOverride ?? GetDataFolder(CurrentPlatform());
+
+        /// <summary>Used instead of the real data folder when set, so tests never touch it.</summary>
+        internal static string? DataOverride { get; set; }
 
         /// <summary>The folder error and crash logs are kept in on this computer.</summary>
         internal static string Logs => Path.Combine(Data, "logs");

@@ -18,12 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
 using Chronokeep.Timing.Interfaces;
 using Chronokeep.UI.Util;
 using System;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using Chronokeep.Constants;
 
 namespace Chronokeep.UI.Timing.Windows;
@@ -99,30 +100,38 @@ public partial class RewindWindow : ChronokeepWindow
         }
         if (system.Type is Readers.SYSTEM_IPICO or Readers.SYSTEM_IPICO_LITE)
         {
+            // Read the choice here: controls can't be read from the background task.
+            int reader = Reader1.IsChecked == true ? 1 : 2;
             DialogBox.AsyncShow(
                 "This process can take up to 3 minutes to complete. There is no guarantee that other processes will work properly while this is occuring. Are you sure you wish to proceed?",
                 "Yes",
                 "No",
-                () =>
+                async void () =>
                 {
-                    BackgroundWorker worker = new();
-                    worker.DoWork += (_, _) =>
+                    // Stay open and busy until the reader has finished replaying, then close.
+                    BusyIndicator.IsVisible = true;
+                    Rewind.IsEnabled = false;
+                    try
                     {
-                        system.SystemInterface!.Rewind(from, to, Reader1.IsChecked == true ? 1 : 2);
-                        ((IpicoInterface)system.SystemInterface).GetRewind();
-                    };
-                    worker.RunWorkerCompleted += (_, _) =>
+                        await Task.Run(() =>
+                        {
+                            system.SystemInterface!.Rewind(from, to, reader);
+                            ((IpicoInterface)system.SystemInterface).GetRewind();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.E("UI.Timing.Windows.RewindWindow", $"Error rewinding the reader. {ex.Message}");
+                    }
+                    finally
                     {
                         BusyIndicator.IsVisible = false;
-                    };
-                    BusyIndicator.IsVisible = true;
-                    worker.RunWorkerAsync();
+                        Close();
+                    }
                 });
+            return;
         }
-        else
-        {
-            system.SystemInterface!.Rewind(from, to);
-        }
+        system.SystemInterface!.Rewind(from, to);
         Close();
     }
 

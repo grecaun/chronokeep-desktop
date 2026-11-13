@@ -225,7 +225,8 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
             () =>
             {
                 List<ChipRead> readsToDelete = [];
-                if (UpdateListView.SelectedItems == null) return;
+                // Nothing selected means nothing to delete, so don't reset results.
+                if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
                 readsToDelete.AddRange(UpdateListView.SelectedItems.Cast<ChipRead>());
                 database.DeleteChipReads(readsToDelete);
                 database.ResetTimingResultsEvent(theEvent!.Identifier);
@@ -245,7 +246,8 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void IgnoreButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Ignore Button clicked.");
-        if (UpdateListView.SelectedItems == null) return;
+        // Nothing selected means nothing to change, so don't reset results or open the shift window.
+        if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -302,7 +304,8 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void ChangeDNS_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "ChangeDNS Button clicked.");
-        if (UpdateListView.SelectedItems == null) return;
+        // Nothing selected means nothing to change, so don't reset results or open the shift window.
+        if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -329,7 +332,8 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void ChangeDNF_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "ChangeDNF Button clicked.");
-        if (UpdateListView.SelectedItems == null) return;
+        // Nothing selected means nothing to change, so don't reset results or open the shift window.
+        if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
         List<ChipRead> newChipReads = [];
         foreach (ChipRead read in UpdateListView.SelectedItems)
         {
@@ -356,7 +360,8 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void Shift_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Shift button clicked.");
-        if (UpdateListView.SelectedItems == null) return;
+        // Nothing selected means nothing to change, so don't reset results or open the shift window.
+        if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
         List<ChipRead> localReads = [];
         localReads.AddRange(UpdateListView.SelectedItems.Cast<ChipRead>());
         EditRawReadsWindow editRawReadsWindow = new(parent, database, localReads);
@@ -366,9 +371,18 @@ public partial class TimingRawReadsPage : UserControl, ISubPage
     private void GlobalIgnore_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Log.D("UI.Timing.TimingRawReadsPage", "Ignore Chip Button clicked.");
-        if (UpdateListView.SelectedItems == null) return;
-        List<BibChipAssociation> bibChips = [];
-        bibChips.AddRange(from ChipRead read in UpdateListView.SelectedItems select new BibChipAssociation() { Bib = read.ChipNumber, Chip = read.ChipNumber, });
+        // Nothing selected means nothing to change, so don't reset results or open the shift window.
+        if (UpdateListView.SelectedItems == null || UpdateListView.SelectedItems.Count < 1) return;
+        // Only reads from a chip can be ignored by chip; manual entries have no chip number.
+        // Skip chips that are already ignored so the list doesn't fill with repeats.
+        HashSet<string> alreadyIgnored = [.. Globals.GetIgnoredChips().Select(c => c.Chip)];
+        List<BibChipAssociation> bibChips = [.. UpdateListView.SelectedItems.Cast<ChipRead>()
+            .Where(read => read.Type == Constants.Timing.CHIPREAD_TYPE_CHIP && read.ChipNumber.Trim().Length > 0)
+            .Select(read => read.ChipNumber.Trim())
+            .Distinct()
+            .Where(chip => !alreadyIgnored.Contains(chip))
+            .Select(chip => new BibChipAssociation { Bib = chip, Chip = chip })];
+        if (bibChips.Count < 1) return;
         database.AddBibChipAssociation(-1, bibChips);
         Globals.UpdateIgnoredChips(database);
     }

@@ -639,75 +639,78 @@ public partial class ParticipantsPage : UserControl, IMainPage
             });
             if (file is null) return;
             if (theEvent == null) return;
-            await Task.Run(() =>
-            {
-                Log.D("UI.MainPages.ParticipantsPage", $"Event has name {theEvent.Name} and date of {theEvent.Date} and finally has ID {theEvent.Identifier}");
-                List<Participant> parts = database.GetParticipants(theEvent.Identifier);
-                string[] headers = [
-                    "Bib",
-                    "Distance",
-                    "Status",
-                    "First",
-                    "Last",
-                    "Birthday",
-                    "Age",
-                    "Age Group",
-                    "Division",
-                    "Street",
-                    "Apartment",
-                    "City",
-                    "State",
-                    "Zip",
-                    "Country",
-                    "Phone",
-                    "Mobile",
-                    "Email",
-                    "Parent",
-                    "Gender",
-                    "Comments",
-                    "Other",
-                    "Owes",
-                    "Emergency Contact Name",
-                    "Emergency Contact Phone",
-                    "Anonymous",
-                    "Apparel" // new
-                ];
-                List<object[]> data = [];
-                data.AddRange(parts.Select(p => (object[])
-                [
-                    p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
-                    // Get rid of all the quote and newline characters.
-                    p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
-                ]));
-                IDataExporter? exporter;
-                string extension = Path.GetExtension(file.Name);
-                Log.D("UI.MainPages.ParticipantsPage", $"Extension is '{extension}'");
-                if (extension.Contains("xls", StringComparison.CurrentCulture))
-                {
-                    exporter = new ExcelExporter();
-                }
-                else
-                {
-                    StringBuilder format = new();
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        format.Append("\"{");
-                        format.Append(i);
-                        format.Append("}\",");
-                    }
-                    format.Remove(format.Length - 1, 1);
-                    Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
-                    exporter = new CsvExporter(format.ToString());
-                }
-                exporter.SetData(headers, data);
-                exporter.ExportData(file.TryGetLocalPath()!);
-            });
+            string path = file.TryGetLocalPath()!;
+            await Task.Run(() => WriteParticipants(database, theEvent, path));
             DialogBox.AsyncShow("File saved.");
         }
         catch (Exception)
         {
             Log.D("UI.MainPages.ParticipantsPage", "Error exporting participants.");
         }
+    }
+
+    /// <summary>Writes every participant in the event to an Excel file, or a CSV file when the path doesn't end in .xls(x).</summary>
+    internal static void WriteParticipants(IdbInterface database, Event theEvent, string path)
+    {
+        List<Participant> parts = database.GetParticipants(theEvent.Identifier);
+        string[] headers = [
+            "Bib",
+            "Distance",
+            "Status",
+            "First",
+            "Last",
+            "Birthday",
+            "Age",
+            "Age Group",
+            "Division",
+            "Street",
+            "Apartment",
+            "City",
+            "State",
+            "Zip",
+            "Country",
+            "Phone",
+            "Mobile",
+            "Email",
+            "Parent",
+            "Gender",
+            "Comments",
+            "Other",
+            "Owes",
+            "Emergency Contact Name",
+            "Emergency Contact Phone",
+            "Anonymous",
+            "Apparel" // new
+        ];
+        List<object[]> data = [];
+        data.AddRange(parts.Select(p => (object[])
+        [
+            p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
+            // Get rid of all the quote and newline characters.
+            p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
+        ]));
+        IDataExporter? exporter;
+        string extension = Path.GetExtension(path);
+        Log.D("UI.MainPages.ParticipantsPage", $"Extension is '{extension}'");
+        if (extension.Contains("xls", StringComparison.CurrentCulture))
+        {
+            exporter = new ExcelExporter();
+        }
+        else
+        {
+            StringBuilder format = new();
+            for (int i = 0; i < headers.Length; i++)
+            {
+                format.Append("\"{");
+                format.Append(i);
+                format.Append("}\",");
+            }
+            format.Remove(format.Length - 1, 1);
+            Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
+            exporter = new CsvExporter(format.ToString());
+        }
+        exporter.SetData(headers, data);
+        exporter.ExportData(path);
     }
 
     private void Upload_Click(object? sender, RoutedEventArgs e)
@@ -747,41 +750,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 DialogBox.AsyncShow("This will delete all participants loaded to the API and may cause issues. Proceed?",
                     "Yes",
                     "No",
-                    async () =>
-                    {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => {
-                            Delete.Content = "Working";
-                        });
-                        ApiObject? api = null;
-                        try
-                        {
-                            api = database.GetApi(theEvent!.ApiId);
-                            Log.D("UI.MainPages.ParticipantsPage", "API found.");
-                        }
-                        catch
-                        {
-                            Log.D("UI.MainPages.ParticipantsPage", "Error finding API.");
-                        }
-                        // Get the event id values. Exit if not valid.
-                        string[] eventIds = theEvent!.ApiEventId.Split(',');
-                        // Create a bool for checking if we've grabbed the APIController's lock so we release it later
-                        if (eventIds.Length == 2)
-                        {
-                            try
-                            {
-                                Log.D("UI.MainPages.ParticipantsPage", "Deleting participants from API.");
-                                await ApiHandlers.DeleteParticipants(api!, eventIds[0], eventIds[1]);
-                                await ApiHandlers.DeleteBibChips(api!, eventIds[0], eventIds[1]);
-                            }
-                            catch (ApiException ex)
-                            {
-                                DialogBox.AsyncShow(ex.Message);
-                            }
-                        }
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => {
-                            Delete.Content = "Delete Uploaded";
-                        });
-                    });
+                    async () => await DeleteUploaded());
                 return;
             }
             Log.D("UI.MainPages.ParticipantsPage", "Already deleting.");
@@ -789,6 +758,44 @@ public partial class ParticipantsPage : UserControl, IMainPage
         catch (Exception)
         {
             Log.D("UI.MainPages.ParticipantsPage", "Error deleting participants.");
+        }
+    }
+
+    /// <summary>Deletes the event's participants and bib/chip pairs from the linked results API.</summary>
+    internal async Task DeleteUploaded()
+    {
+        Delete.Content = "Working";
+        try
+        {
+            ApiObject? api = null;
+            try
+            {
+                api = database.GetApi(theEvent!.ApiId);
+            }
+            catch
+            {
+                Log.D("UI.MainPages.ParticipantsPage", "Error finding API.");
+            }
+            // Get the event id values. Exit if not valid or the API is gone.
+            string[] eventIds = theEvent!.ApiEventId.Split(',');
+            if (eventIds.Length == 2 && api != null)
+            {
+                await ApiHandlers.DeleteParticipants(api, eventIds[0], eventIds[1]);
+                await ApiHandlers.DeleteBibChips(api, eventIds[0], eventIds[1]);
+            }
+        }
+        catch (ApiException ex)
+        {
+            DialogBox.AsyncShow(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Log.E("UI.MainPages.ParticipantsPage", $"Error deleting uploaded participants: {ex.Message}");
+            DialogBox.AsyncShow("Unable to delete the uploaded participants.");
+        }
+        finally
+        {
+            Delete.Content = "Delete Uploaded";
         }
     }
 
@@ -810,22 +817,9 @@ public partial class ParticipantsPage : UserControl, IMainPage
     {
         if (!loaded) return;
         Log.D("UI.MainPages.ParticipantsPage", "Sort style changed.");
-        List<Participant> newParts = [.. allParticipants];
-        switch (((ComboBoxItem)SortBox.SelectedItem!).Content)
-        {
-            case "Name":
-                newParts.Sort(Participant.CompareByName);
-                break;
-            case "Bib":
-                newParts.Sort(Participant.CompareByBib);
-                break;
-            default:
-                newParts.Sort();
-                break;
-        }
-        ParticipantsList.SelectedItems.Clear();
-        ParticipantsList.ItemsSource = newParts;
-        Log.D("UI.MainPages.ParticipantsPage", "Done");
+        // UpdateView applies the distance filter, the sort and the search together; sorting the whole list
+        // here showed every distance even while one was selected.
+        UpdateView();
     }
 
     private void Modify_Click(object? sender, RoutedEventArgs e)
@@ -863,23 +857,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
         if (!loaded) return;
-        List<Participant> newList = [.. allParticipants];
-        switch (((ComboBoxItem)SortBox.SelectedItem!).Content)
-        {
-            case "Name":
-                newList.Sort(Participant.CompareByName);
-                break;
-            case "Bib":
-                newList.Sort(Participant.CompareByBib);
-                break;
-            default:
-                newList.Sort();
-                break;
-        }
-        string search = SearchBox != null ? SearchBox.Text!.Trim() : "";
-        newList.RemoveAll(x => x.IsNotMatch(search));
-        ParticipantsList.SelectedItems.Clear();
-        ParticipantsList.ItemsSource = newList;
+        // Search within the selected distance, with the chosen sort, by going through UpdateView.
+        UpdateView();
     }
 
     private void Remove_Click(object? sender, RoutedEventArgs e)

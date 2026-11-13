@@ -184,13 +184,22 @@ public partial class ImportLogWindow : ChronokeepWindow
                                 time = 4;
                             }
                         }
-                        bool dateIncluded = DateRegex().IsMatch(data.Headers[time]);
-                        DateTime date = !dateIncluded ? DateTime.Parse($"{theEvent.Date} {data.Headers[time]}") : DateTime.Parse(data.Headers[time]);
-                        chipReads.Add(new ChipRead(theEvent.Identifier, locationId, data.Headers[chip], date));
+                        // Each time may or may not include its date. The first line is a read unless it's
+                        // column names, so skip it when its time doesn't parse rather than failing the import.
+                        bool TryReadTime(string value, out DateTime readTime) =>
+                            DateTime.TryParse(DateRegex().IsMatch(value) ? value : $"{theEvent.Date} {value}", out readTime);
+                        if (TryReadTime(data.Headers[time], out DateTime date))
+                        {
+                            chipReads.Add(new ChipRead(theEvent.Identifier, locationId, data.Headers[chip], date));
+                        }
                         int numEntries = data.Data.Count;
                         for (int counter = 0; counter < numEntries; counter++)
                         {
-                            date = DateTime.Parse(!dateIncluded ? $"{theEvent.Date} {data.Data[counter][time]}" : data.Data[counter][time]);
+                            if (!TryReadTime(data.Data[counter][time], out date))
+                            {
+                                Log.E("UI.Timing.Import.ImportLogWindow", $"Skipping line with an unreadable time: {data.Data[counter][time]}");
+                                continue;
+                            }
                             chipReads.Add(new ChipRead(theEvent.Identifier, locationId, data.Data[counter][chip], date));
                         }
 

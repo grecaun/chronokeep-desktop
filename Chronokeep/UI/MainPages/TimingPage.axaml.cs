@@ -721,12 +721,11 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         try
         {
-            // Get API to upload.
-            if (theEvent!.ApiId < 0 && theEvent.ApiEventId.Length > 1)
+            // Get API to upload. Without a linked results API there is nothing to upload to.
+            if (theEvent!.ApiId < 0 || theEvent.ApiEventId.Length < 1 || database.GetApi(theEvent.ApiId) is not ApiObject api)
             {
                 return;
             }
-            ApiObject api = database.GetApi(theEvent.ApiId)!;
             string[] eventIds = theEvent.ApiEventId.Split(',');
             if (eventIds.Length != 2)
             {
@@ -742,10 +741,6 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             if (results.Count < 1)
             {
                 Log.D("UI.MainPages.TimingPage", "Nothing to upload.");
-                Application.Current!.Dispatcher.Invoke(delegate
-                {
-                    ManualApiButton.Content = "Manual Upload";
-                });
                 return;
             }
             // Upload results
@@ -754,14 +749,15 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 await ApiController.UploadResults(results, api, eventIds, database, null, null, theEvent);
             }
-            Application.Current!.Dispatcher.Invoke(delegate
-            {
-                ManualApiButton.Content = "Manual Upload";
-            });
         }
         catch (Exception)
         {
             Log.D("UI.MainPages.TimingPage", "Error uploading results.");
+        }
+        finally
+        {
+            // Every way out, including errors and an unlinked event, puts the button back so it can be used again.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => ManualApiButton.Content = "Manual Upload");
         }
     }
 
@@ -847,6 +843,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     private void OpenClock_Click(object? sender, RoutedEventArgs e)
     {
         ClockControl clockWindow = ClockControl.CreateWindow(mWindow, database);
+        mWindow.AddWindow(clockWindow);
         clockWindow.Show();
     }
 
@@ -1359,6 +1356,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         Log.D("UI.MainPages.TimingPage", "Modify SMS button clicked.");
         SmsWaveEnabledWindow smsWindow = new(mWindow, database);
+        mWindow.AddWindow(smsWindow);
         smsWindow.Show();
     }
 
@@ -1433,6 +1431,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         Log.D("UI.MainPages.TimingPage", "HTMLServerButton_Click");
         PrintSettingsWindow printWin = new();
+        mWindow.AddWindow(printWin);
         printWin.Show();
     }
 
@@ -1475,10 +1474,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
-            List<TimeResult> finishResults = database.GetFinishTimes(theEvent!.Identifier);
-            HtmlResultsTemplate template = new(theEvent, finishResults);
             string htmlPath = file.TryGetLocalPath()!;
-            await File.WriteAllTextAsync(htmlPath, template.TransformText());
+            await File.WriteAllTextAsync(htmlPath, ResultsHtml(database, theEvent!));
             // Let every user on the computer open or replace the file.
             ProgramFolders.ShareFile(htmlPath);
             DialogBox.AsyncShow("File saved.");
@@ -1488,6 +1485,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             Log.D("UI.MainPages.TimingPage", "Error creating HTML.");
         }
     }
+
+    /// <summary>The event's finish results as a standalone web page, as Create HTML saves it.</summary>
+    internal static string ResultsHtml(IdbInterface database, Event theEvent) =>
+        new HtmlResultsTemplate(theEvent, database.GetFinishTimes(theEvent.Identifier)).TransformText();
 
     private void Export_Click(object? sender, RoutedEventArgs e)
     {
@@ -1566,6 +1567,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     {
         Log.D("UI.MainPages.TimingPage", "Remote readers button clicked.");
         RemoteReadersWindow win = RemoteReadersWindow.CreateWindow(mWindow, database);
+        mWindow.AddWindow(win);
         win.Show();
     }
 
@@ -1587,6 +1589,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     private void ReaderMessageButton_Click(object? sender, RoutedEventArgs e)
     {
         ReaderNotificationWindow notificationWindow = ReaderNotificationWindow.NewWindow(mWindow);
+        mWindow.AddWindow(notificationWindow);
         notificationWindow.Show();
     }
 

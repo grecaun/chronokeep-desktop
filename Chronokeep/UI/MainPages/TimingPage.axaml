@@ -386,6 +386,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                         Margin="5,5,0,0"
                                         />
                                     <Button 
+                                        Name="AwardButton"
                                         Content="Awards"
                                         Click="Award_Click"
                                         Classes="tim"
@@ -420,6 +421,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         >
                         <StackPanel>
                             <Button
+                                Name="ExportButton"
                                 Content="Results" 
                                 Click="Export_Click"
                                 Classes="tim"
@@ -430,12 +432,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                     Grid.Column="0"
                                 >
                                     <Button
+                                        Name="BostonExportButton"
                                         Content="Boston" 
                                         Click="Export_BAA_Click"
                                         Classes="tim"
                                         Margin="0,5,5,0"
                                         />
                                     <Button
+                                        Name="AbbottExportButton"
                                         Content="Abbott" 
                                         Click="Export_Abbott_Click"
                                         Classes="tim"
@@ -446,12 +450,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                     Grid.Column="1"
                                     >
                                     <Button
+                                        Name="UltraSignupExportButton"
                                         Content="UltraSignup"
                                         Click="Export_US_Click"
                                         Classes="tim"
                                         Margin="0,5,5,0"
                                         />
                                     <Button
+                                        Name="RunSignupExportButton"
                                         Content="RunSignup"
                                         Click="Export_RunSignup_Click"
                                         Classes="tim"

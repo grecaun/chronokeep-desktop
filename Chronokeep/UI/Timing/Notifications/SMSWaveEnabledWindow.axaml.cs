@@ -49,7 +49,8 @@ public partial class SmsWaveEnabledWindow : ChronokeepWindow
         }
         foreach (Distance dist in database.GetDistances(theEvent1.Identifier))
         {
-            initialValues[dist.Wave] = dist.SmsEnabled;
+            // A wave shows on only when every distance in it has texts on.
+            initialValues[dist.Wave] = dist.SmsEnabled && initialValues.GetValueOrDefault(dist.Wave, true);
             if (!waveDistanceDictionary.TryGetValue(dist.Wave, out List<Distance>? oDistList))
             {
                 oDistList = [];
@@ -84,20 +85,15 @@ public partial class SmsWaveEnabledWindow : ChronokeepWindow
 
     private void Set_Click(object? sender, RoutedEventArgs e)
     {
+        // Bring every distance in each wave in line with the wave's switch, including waves whose distances differed.
         foreach (object? waveSms in WaveList.Items)
         {
             if (waveSms is not WaveSms wave) continue;
-            if (initialValues[wave.Wave] != wave.SmsEnabled)
+            if (!waveDistanceDictionary.TryGetValue(wave.Wave, out List<Distance>? tDistList)) continue;
+            foreach (Distance dist in tDistList.Where(dist => dist.SmsEnabled != wave.SmsEnabled))
             {
                 updatedValues[wave.Wave] = wave.SmsEnabled;
-            }
-        }
-        foreach (int wave in updatedValues.Keys)
-        {
-            if (!waveDistanceDictionary.TryGetValue(wave, out List<Distance>? tDistList)) continue;
-            foreach (Distance dist in tDistList)
-            {
-                dist.SmsEnabled = updatedValues[wave];
+                dist.SmsEnabled = wave.SmsEnabled;
                 database.UpdateDistance(dist);
             }
         }

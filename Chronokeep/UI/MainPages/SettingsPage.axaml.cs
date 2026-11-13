@@ -214,65 +214,60 @@ public partial class SettingsPage : UserControl, IMainPage
         }
     }
 
-    private async void ResetDB_Click(object? sender, RoutedEventArgs e)
+    // The confirmation dialog doesn't wait for an answer, so the reset runs from its Yes button.
+    // Checking a flag right after showing it meant the reset never ran.
+    private void ResetDB_Click(object? sender, RoutedEventArgs e)
     {
-        try
-        {
-            Log.D("UI.MainPages.SettingsPage", "Reset button clicked.");
-            bool yesClicked = false;
-            DialogBox.AsyncShow(
-                "This deletes all of the data stored in the database.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
-                "Yes",
-                "No",
-                () =>
-                {
-                    yesClicked = true;
-                });
-            if (!yesClicked) return;
-            ResetDb.IsEnabled = false;
-            await Task.Run(() =>
-            {
-                database.ResetDatabase();
-                Constants.Settings.SetupSettings(database);
-            });
-            UpdateView();
-            ResetDb.IsEnabled = true;
-            mWindow.UpdateStatus();
-        }
-        catch (Exception)
-        {
-            Log.D("UI.MainPages.SettingsPage", "Error resetting database.");
-        }
+        Log.D("UI.MainPages.SettingsPage", "Reset button clicked.");
+        DialogBox.AsyncShow(
+            "This deletes all of the data stored in the database.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
+            "Yes",
+            "No",
+            async () => await ResetDatabase(hard: false));
     }
 
-    private async void RebuildDB_Click(object? sender, RoutedEventArgs e)
+    private void RebuildDB_Click(object? sender, RoutedEventArgs e)
     {
+        Log.D("UI.MainPages.SettingsPage", "Rebuild button clicked.");
+        DialogBox.AsyncShow(
+            "This deletes all of the tables and values in the database, then rebuilds all of the tables.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
+            "Yes",
+            "No",
+            async () => await ResetDatabase(hard: true));
+    }
+
+    /// <summary>
+    /// Clears the database after the user confirms: a reset deletes the data, a hard reset (rebuild)
+    /// also drops and recreates the tables. Default settings are written back either way.
+    /// </summary>
+    internal async Task ResetDatabase(bool hard)
+    {
+        Button button = hard ? RebuildDb : ResetDb;
         try
         {
-            Log.D("UI.MainPages.SettingsPage", "Rebuild button clicked.");
-            bool yesClicked = false;
-            DialogBox.AsyncShow(
-                "This deletes all of the tables and values in the database, then rebuilds all of the tables.  You cannot recover any of the data in the database after this step.\n\nAre you sure you wish to continue?",
-                "Yes",
-                "No",
-                () =>
-                {
-                    yesClicked = true;
-                });
-            if (!yesClicked) return;
-            RebuildDb.IsEnabled = false;
+            button.IsEnabled = false;
             await Task.Run(() =>
             {
-                database.HardResetDatabase();
+                if (hard)
+                {
+                    database.HardResetDatabase();
+                }
+                else
+                {
+                    database.ResetDatabase();
+                }
                 Constants.Settings.SetupSettings(database);
             });
             UpdateView();
-            RebuildDb.IsEnabled = true;
             mWindow.UpdateStatus();
         }
         catch (Exception)
         {
-            Log.D("UI.MainPages.SettingsPage", "Error rebuilding database.");
+            Log.D("UI.MainPages.SettingsPage", hard ? "Error rebuilding database." : "Error resetting database.");
+        }
+        finally
+        {
+            button.IsEnabled = true;
         }
     }
 

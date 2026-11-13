@@ -41,7 +41,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                  FontSize="16"
                  VerticalAlignment="Center"
                  VerticalContentAlignment="Center"/>
-        <Button Grid.Column="2"
+        <Button Name="RemoveButton"
+                Grid.Column="2"
                 Click="Remove_Click"
                 Width="35"
                 Height="35"

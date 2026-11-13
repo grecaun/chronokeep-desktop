@@ -20,6 +20,7 @@ using Chronokeep.Helpers;
 using Chronokeep.Network.API;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -241,7 +242,7 @@ namespace Chronokeep.Objects
             try
             {
                 Dictionary<string, string> postContent = [];
-                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss");
+                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 using HttpClient client = GetHttpClient();
                 HttpRequestMessage request = new()
                 {
@@ -281,7 +282,7 @@ namespace Chronokeep.Objects
             try
             {
                 Dictionary<string, string> postContent = [];
-                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss");
+                postContent["DateTime"] = date.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 using HttpClient client = GetHttpClient();
                 HttpRequestMessage request = new()
                 {

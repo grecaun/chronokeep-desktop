@@ -72,6 +72,7 @@ public partial class AboutPage : UserControl, IMainPage
     {
         Log.D("UI.MainPages.AboutPage", "License click.");
         LicenseWindow newWin = new();
+        mWindow.AddWindow(newWin);
         newWin.Show();
     }
 
@@ -84,6 +85,7 @@ public partial class AboutPage : UserControl, IMainPage
     private void Changelog_Click(object? sender, RoutedEventArgs e)
     {
         ChangeLogWindow clw = ChangeLogWindow.NewWindow(mWindow, database);
+        mWindow.AddWindow(clw);
         clw.Show();
     }
 

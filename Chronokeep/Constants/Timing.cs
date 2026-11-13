@@ -82,6 +82,9 @@ namespace Chronokeep.Constants
 
         public const int EVENTSPECIFIC_DEFAULT_VERSION = 0;
 
+        // Seconds a new timing location ignores repeat reads of the same bib for (10 minutes).
+        public const int DEFAULT_LOCATION_IGNORE_WITHIN = 600;
+
         public const int COMMON_SEGMENTS_DISTANCEID = -1;
         public const int COMMON_AGEGROUPS_DISTANCEID = -1;
 
