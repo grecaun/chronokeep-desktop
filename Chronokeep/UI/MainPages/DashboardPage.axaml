@@ -225,6 +225,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 HorizontalAlignment="Stretch"
                 />
             <Button
+                Name="RunsignupLinkButton"
+                Content="Link to Runsignup"
+                Click="RunsignupLinkButton_Click"
+                Classes="dash"
+                Margin="0,5,0,5"
+                HorizontalAlignment="Stretch"
+                />
+            <Button
                 Name="TagTesterButton"
                 Content="Chip Tester"
                 Click="TagTesterButton_Click"

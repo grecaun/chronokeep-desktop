@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Fonts;
@@ -81,17 +82,24 @@ namespace Chronokeep
                         safeMode = true;
                     }
                 }
-                if (safeMode)
-                {
-                    desktop.MainWindow = new MinWindow();
-                }
-                else
-                {
-                    desktop.MainWindow = new MainWindow();
-                }
+                desktop.MainWindow = FirstWindow(safeMode, IsWindows && !SingleInstance.Claim(), () => desktop.Shutdown());
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        /// <summary>
+        /// The window the program opens with. When another copy is already running it opens only a
+        /// message saying so, which closes the program when dismissed, rather than a main window.
+        /// </summary>
+        internal static Window FirstWindow(bool safeMode, bool alreadyRunning, Action shutdown)
+        {
+            if (alreadyRunning)
+            {
+                Log.D("AppStartup", "Chronokeep is already running.");
+                return new UI.Util.DialogBox("Chronokeep is already running.", "OK", () => shutdown());
+            }
+            return safeMode ? new MinWindow() : new MainWindow();
         }
 
         [STAThread]

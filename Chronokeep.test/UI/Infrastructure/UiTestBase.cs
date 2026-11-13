@@ -185,6 +185,17 @@ namespace Chronokeep.Test.UI.Infrastructure
         /// <summary>Text of a ContentControl's content (buttons, labels) as shown.</summary>
         protected static string? ContentText(ContentControl control) => control.Content?.ToString();
 
+        /// <summary>Records every label a button shows from now on, such as the progress of an upload.</summary>
+        protected static List<string> LabelsOf(ContentControl control)
+        {
+            List<string> seen = [];
+            control.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == ContentControl.ContentProperty && e.NewValue?.ToString() is string text) seen.Add(text);
+            };
+            return seen;
+        }
+
         /// <summary>
         /// Lets the app's message and confirmation boxes open over the fake main window, where tests can
         /// read and answer them. Without this they have no window to open over and never appear.

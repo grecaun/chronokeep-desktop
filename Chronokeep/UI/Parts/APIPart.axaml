@@ -24,7 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Chronokeep.UI.Parts.ApiPart">
-    <Grid ColumnDefinitions="*,150,*,*,*,45">
+    <Grid ColumnDefinitions="*,150,*,*,*,Auto,45">
 	    <StackPanel Grid.Column="0">
 		    <TextBlock Text="Nickname"
                        FontSize="15"
@@ -54,7 +54,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                       SelectionChanged="APIType_SelectionChanged"/>
         </StackPanel>
         <StackPanel Grid.Column="2">
-		    <TextBlock Text="API URL"
+		    <TextBlock Name="ApiUrlLabel"
+                       Text="API URL"
                        FontSize="15"
                        Margin="10,5,0,5"
                        TextAlignment="Center"
@@ -69,7 +70,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      />
         </StackPanel>
         <StackPanel Grid.Column="3">
-		    <TextBlock Text="API Key"
+		    <TextBlock Name="ApiTokenLabel"
+                       Text="API Key"
                        FontSize="15"
                        Margin="10,5,0,5"
                        TextAlignment="Center"
@@ -96,8 +98,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                      VerticalContentAlignment="Center"
                      />
         </StackPanel>
-        <Button Name="RemoveButton"
+        <Button Name="TestButton"
                 Grid.Column="5"
+                Content="Test"
+                Click="Test_Click"
+                Height="38"
+                Margin="10,5,0,9"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                ToolTip.Tip="Check that this API can be reached with these values"/>
+        <Button Name="RemoveButton"
+                Grid.Column="6"
                 Click="Remove_Click"
                 Height="38"
                 Margin="0,5,0,9"

@@ -57,7 +57,7 @@ namespace Chronokeep.Test.MemStore
             Distance d = AddStoreDistance(e.Identifier);
             AddStoreParticipant(e.Identifier, d, "1", first: "Active");
             Participant removed = AddStoreParticipant(e.Identifier, d, "2", first: "Removed");
-            removed.EventSpecific.Removed = "cleared";
+            removed.EventSpecific.Removed = "removed_cleared";
             Store.UpdateParticipant(removed);
 
             DistanceStat stat = Assert.Single(Store.GetDistanceStats(e.Identifier));

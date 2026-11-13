@@ -349,7 +349,7 @@ namespace Chronokeep.Test.Timing
             foreach (int h in new[] { 0, 1, 2 }) Loop("1", h, 2400);
             foreach (int h in new[] { 0, 1 }) Loop("2", h, 2500);
             Participant p = Runner("1");
-            p.EventSpecific.Removed = "Refunded";
+            p.EventSpecific.Removed = "removed_removed";
             Db.UpdateParticipant(p);
 
             ProcessBackyard();

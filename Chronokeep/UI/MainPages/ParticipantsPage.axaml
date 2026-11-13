@@ -42,6 +42,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <Setter Property="CanUserResizeColumns" Value="True"/>
             <Setter Property="CanUserSortColumns" Value="False"/>
         </Style>
+        <!-- People removed in Runsignup, tinted the same as their results on the timing page. -->
+        <Style Selector="DataGridRow.removed">
+            <Setter Property="Background" Value="#40E53935"/>
+        </Style>
     </UserControl.Styles>
      <Grid ColumnDefinitions="*,250">
          <ScrollViewer
@@ -95,6 +99,42 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         Classes="part"
                         Margin="10,0,10,5"
                         />
+                    <TextBlock
+                        Name="ApiStatus"
+                        FontSize="14"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        Margin="10,0,10,5"
+                        IsVisible="False"
+                        />
+                </StackPanel>
+                <StackPanel
+                    Name="RunsignupPanel"
+                    IsVisible="False"
+                    >
+                    <TextBlock
+                        Text="Runsignup"
+                        FontSize="16"
+                        VerticalAlignment="Center"
+                        TextAlignment="Center"
+                        Margin="5,5,5,5"
+                        Padding="0,0,0,0"
+                        />
+                    <Button
+                        Name="RunsignupDownload"
+                        Content="Download"
+                        Click="RunsignupDownload_Click"
+                        Classes="part"
+                        Margin="10,0,10,5"
+                        />
+                    <TextBlock
+                        Name="RunsignupStatus"
+                        FontSize="14"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        Margin="10,0,10,5"
+                        IsVisible="False"
+                        />
                 </StackPanel>
                 <Button
                     Name="ConflictsBtn"
@@ -119,6 +159,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         SelectionChanged="DistanceBox_SelectionChanged"
                         />
                 </StackPanel>
+
                 <TextBlock 
                     Text="Sort By"
                     FontSize="16"
@@ -202,6 +243,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             <DataGridTextColumn FontSize="12" Header="Distance" Width="*" Binding="{Binding DistanceName}" x:DataType="objects:BibStats"/>
                             <DataGridTextColumn FontSize="12" Header="w/" Width="60" Binding="{Binding With}" x:DataType="objects:BibStats"/>
                             <DataGridTextColumn FontSize="12" Header="w/o" Width="60" Binding="{Binding Without}" x:DataType="objects:BibStats"/>
+                            <DataGridTextColumn FontSize="12" Header="Removed" Width="60" Binding="{Binding Removed}" x:DataType="objects:BibStats"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Expander>
@@ -212,6 +254,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                   SelectionMode="Extended"
                   Margin="3,0"
                   DoubleTapped="ParticipantsList_DoubleTapped"
+                  LoadingRow="ParticipantsList_LoadingRow"
                   >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Bib"

@@ -23,6 +23,8 @@ namespace Chronokeep.Objects
         public string? DistanceName { get; set; }
         public int With { get; set; }
         public int Without { get; set; }
+        /// <summary>People removed in Runsignup who still hold a bib: bibs to reclaim or watch for.</summary>
+        public int Removed { get; set; }
     }
 }
 

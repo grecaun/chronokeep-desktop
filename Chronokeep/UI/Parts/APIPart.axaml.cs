@@ -19,7 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Chronokeep.Helpers;
+using Chronokeep.Network.API;
+using Chronokeep.Network.Remote;
+using Chronokeep.Network.Runsignup;
+using System;
 using Chronokeep.Objects;
+using Chronokeep.Objects.Runsignup;
+using Chronokeep.UI.Util;
+using System.Threading.Tasks;
 using Chronokeep.UI.MainPages.Dashboard;
 
 namespace Chronokeep.UI.Parts;
@@ -28,6 +35,7 @@ public partial class ApiPart : UserControl
 {
     private readonly ApiPage page;
     public readonly ApiObject TheApi;
+    private string shownType = "";
 
     public ApiPart(ApiPage page, ApiObject api)
     {
@@ -51,7 +59,7 @@ public partial class ApiPart : UserControl
             ApiType.Items.Add(newItem);
         }
         ApiUrl.Text = api.Url;
-        ApiUrl.IsEnabled = Constants.ApiConstants.API_SELF_HOSTED[TheApi.Type];
+        ApiUrl.IsEnabled = Constants.ApiConstants.API_SELF_HOSTED[TheApi.Type] || api.IsRunsignup;
         ApiToken.Text = api.AuthToken;
         ApiWebUrl.Text = api.WebUrl;
         if (selected != null)
@@ -68,13 +76,14 @@ public partial class ApiPart : UserControl
     {
         Log.D("UI.MainPages.APIPage", "Updating api.");
         TheApi.Nickname = ApiNickname.Text!;
-        TheApi.Url = ApiUrl.Text!;
-        if (!TheApi.Url.EndsWith('/'))
+        TheApi.Type = (string)((ComboBoxItem)ApiType.SelectedItem!).Tag!;
+        TheApi.Url = (ApiUrl.Text ?? "").Trim();
+        // A Runsignup secret is stored in the URL column and must be kept exactly as typed.
+        if (!TheApi.IsRunsignup && !TheApi.Url.EndsWith('/'))
         {
             TheApi.Url += "/";
         }
-        TheApi.AuthToken = ApiToken.Text!;
-        TheApi.Type = (string)((ComboBoxItem)ApiType.SelectedItem!).Tag!;
+        TheApi.AuthToken = (ApiToken.Text ?? "").Trim();
         TheApi.WebUrl = ApiWebUrl.Text!;
         if (TheApi.WebUrl.Length > 0 && !TheApi.WebUrl.EndsWith('/'))
         {
@@ -88,6 +97,28 @@ public partial class ApiPart : UserControl
         // Ensure we've got something selected, and then change the URL if they've selected Chronokeep.
         if (ApiType.SelectedItem == null) return;
         string type = (string)((ComboBoxItem)ApiType.SelectedItem).Tag!;
+        bool runsignup = type == Constants.ApiConstants.RUNSIGNUP;
+        bool wasRunsignup = shownType == Constants.ApiConstants.RUNSIGNUP;
+        bool firstShow = shownType.Length == 0;
+        shownType = type;
+        ApiUrlLabel.Text = runsignup ? "API Secret" : "API URL";
+        ApiTokenLabel.Text = "API Key";
+        if (runsignup)
+        {
+            // The URL box holds the secret. Don't carry a URL over into it, or a secret into a URL.
+            if (!firstShow && !wasRunsignup)
+            {
+                ApiUrl.Text = "";
+            }
+            ApiUrl.IsEnabled = true;
+            ApiWebUrl.Text = "";
+            ApiWebUrl.IsEnabled = false;
+            return;
+        }
+        if (wasRunsignup)
+        {
+            ApiUrl.Text = "";
+        }
         if (!Constants.ApiConstants.API_SELF_HOSTED[type])
         {
             TheApi.Url = Constants.ApiConstants.API_URL[type];
@@ -107,6 +138,55 @@ public partial class ApiPart : UserControl
         {
             ApiWebUrl.Text = "";
             ApiWebUrl.IsEnabled = false;
+        }
+    }
+
+    private async void Test_Click(object? sender, RoutedEventArgs e)
+    {
+        await TestApi();
+    }
+
+    /// <summary>
+    /// Checks the typed values (not the saved ones) work by asking the API for something that needs
+    /// the key: Runsignup's account, the Chronokeep events, or the remote readers.
+    /// </summary>
+    internal async Task TestApi()
+    {
+        string type = (string)((ComboBoxItem)ApiType.SelectedItem!).Tag!;
+        string url = (ApiUrl.Text ?? "").Trim();
+        if (type != Constants.ApiConstants.RUNSIGNUP && !url.EndsWith('/'))
+        {
+            url += "/";
+        }
+        ApiObject typed = new(TheApi.Identifier, type, url, "", (ApiToken.Text ?? "").Trim(), "");
+        TestButton.IsEnabled = false;
+        try
+        {
+            string result;
+            if (type == Constants.ApiConstants.RUNSIGNUP)
+            {
+                RsuEntityInfo info = await RunsignupHandlers.GetEntityInfo(typed);
+                result = $"The Runsignup key works.\n\n{info.Describe()}";
+            }
+            else if (Constants.ApiConstants.API_REMOTE[type])
+            {
+                int readers = (await RemoteHandlers.GetReaders(typed)).Readers.Count;
+                result = $"The API works.\n\n{readers} remote reader{(readers == 1 ? "" : "s")} found.";
+            }
+            else
+            {
+                int events = (await ApiHandlers.GetEvents(typed)).Events.Count;
+                result = $"The API works.\n\n{events} event{(events == 1 ? "" : "s")} found.";
+            }
+            DialogBox.Show(result);
+        }
+        catch (Exception ex)
+        {
+            DialogBox.Show(ex.Message);
+        }
+        finally
+        {
+            TestButton.IsEnabled = true;
         }
     }
 

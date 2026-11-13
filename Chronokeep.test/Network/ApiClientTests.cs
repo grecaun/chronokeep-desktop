@@ -14,7 +14,12 @@ namespace Chronokeep.Test.Network
     /// </summary>
     public sealed class FakeApiServer : IDisposable
     {
-        public record Request(string Method, string Path, string? Authorization, string Body);
+        public record Request(string Method, string Path, string? Authorization, string Body)
+        {
+            /// <summary>The query string's values, decoded.</summary>
+            public Dictionary<string, string> Query { get; init; } = [];
+            public System.Collections.Specialized.NameValueCollection Headers { get; init; } = [];
+        }
 
         private readonly HttpListener listener = new();
         private readonly Task loop;
@@ -46,7 +51,11 @@ namespace Chronokeep.Test.Network
                 catch { return; }
                 using StreamReader reader = new(context.Request.InputStream, Encoding.UTF8);
                 Request request = new(context.Request.HttpMethod, context.Request.Url!.AbsolutePath.TrimStart('/'),
-                    context.Request.Headers["Authorization"], reader.ReadToEnd());
+                    context.Request.Headers["Authorization"], reader.ReadToEnd())
+                {
+                    Query = context.Request.QueryString.AllKeys.Where(k => k != null).ToDictionary(k => k!, k => context.Request.QueryString[k]!),
+                    Headers = new(context.Request.Headers),
+                };
                 lock (Requests)
                 {
                     Requests.Add(request);

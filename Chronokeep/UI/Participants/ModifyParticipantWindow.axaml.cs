@@ -225,6 +225,7 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         AnonymousBox.IsChecked = person.Anonymous;
         ApparelBox.Text = person.EventSpecific.Apparel;
         DivisionBox.Text = person.EventSpecific.Division;
+        ShowRegistrationState(person.EventSpecific);
         Add.Content = "Update";
         Done.Content = "Cancel";
         List<string> divisions = database.GetDivisions(theEvent.Identifier);
@@ -261,6 +262,43 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         divisions.RemoveAll(x => x.Trim().Length < 1);
         divisions.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
         DivisionBox.ItemsSource = divisions;
+    }
+
+    // Why Runsignup removed the person being edited ("transferred"), or "" when they never were.
+    private string removedReason = "";
+
+    /// <summary>
+    /// For someone Runsignup removed, shows why (Transferred, Deferred...) and a switch: on means
+    /// removed, off means reactivated (back in the race for good, later downloads won't remove them).
+    /// Anyone else sees nothing.
+    /// </summary>
+    private void ShowRegistrationState(EventSpecific entry)
+    {
+        removedReason = Constants.Registration.Reason(entry.Removed);
+        RemovedPanel.IsVisible = removedReason.Length > 0;
+        if (removedReason.Length == 0) return;
+        RemovedLabel.Text = Constants.Registration.Label(removedReason);
+        RemovedSwitch.IsChecked = entry.IsRemoved;
+        UpdateRemovedTip();
+    }
+
+    private void RemovedSwitch_IsCheckedChanged(object? sender, RoutedEventArgs e) => UpdateRemovedTip();
+
+    private void UpdateRemovedTip()
+    {
+        string label = Constants.Registration.Label(removedReason);
+        ToolTip.SetTip(RemovedPanel, RemovedSwitch.IsChecked == true
+            ? $"Removed in Runsignup: {label}. Switch off to put them back in the race."
+            : $"Put back in the race after being removed: {label}. Switch on to remove them again.");
+    }
+
+    /// <summary>The state the switch says, or the person's own when it isn't shown.</summary>
+    private string ChosenRegistrationState(EventSpecific original)
+    {
+        if (!RemovedPanel.IsVisible || removedReason.Length == 0) return original.Removed;
+        return RemovedSwitch.IsChecked == true
+            ? Constants.Registration.Removed(removedReason)
+            : Constants.Registration.Reactivated(removedReason);
     }
 
     private void ShowOtherGender()
@@ -446,6 +484,12 @@ public partial class ModifyParticipantWindow : ChronokeepWindow
         if (newPart == null) return;
         // Keep what this window doesn't show, such as check-in and text alerts, instead of resetting it.
         newPart.EventSpecific.CopyFieldsNotInEditor(person!.EventSpecific);
+        newPart.EventSpecific.Removed = ChosenRegistrationState(person.EventSpecific);
+        // Removing or reactivating someone changes who places, so results are worked out again.
+        if (newPart.EventSpecific.Removed != person.EventSpecific.Removed)
+        {
+            participantChanged = true;
+        }
         newPart.EventSpecific.Version = person.EventSpecific.Version;
         newPart.EventSpecific.UploadedVersion = person.EventSpecific.UploadedVersion;
         Participant? offendingBib = null;

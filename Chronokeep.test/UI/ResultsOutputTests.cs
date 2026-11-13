@@ -82,7 +82,7 @@ namespace Chronokeep.Test.UI
             Distance fiveK = AddDistance(e.Identifier, "5K");
             Runner(e, fiveK, "1", "Kept", Constants.Timing.EVENTSPECIFIC_FINISHED);
             Participant removed = Runner(e, fiveK, "2", "Gone", Constants.Timing.EVENTSPECIFIC_FINISHED);
-            removed.EventSpecific.Removed = "removed";
+            removed.EventSpecific.Removed = "removed_removed";
             Db.UpdateParticipant(removed);
             TimingPage timing = OpenTiming();
 

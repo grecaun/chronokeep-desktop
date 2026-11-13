@@ -207,6 +207,23 @@ namespace Chronokeep.Test.UI
         }
 
         [AvaloniaFact]
+        public async Task Download_saves_off_the_ui_thread()
+        {
+            (Event theEvent, _, _) = SeedTwoDistances();
+            LinkToFakeApi(theEvent);
+            server.Responder = _ => (HttpStatusCode.OK, ParticipantsJson([PersonJson("p1", "50", "Zed", "Zulu", "5K")]));
+            List<bool> onUiThread = [];
+            Chronokeep.Database.IdbInterface watched = ThreadWatchingDatabase.Wrap(Db, nameof(Chronokeep.Database.IdbInterface.AddParticipants),
+                () => onUiThread.Add(Avalonia.Threading.Dispatcher.UIThread.CheckAccess()));
+            ParticipantsPage page = new(MainWindow, watched);
+            Host(page);
+
+            await page.DownloadParticipants();
+
+            Assert.Equal([false], onUiThread);
+        }
+
+        [AvaloniaFact]
         public async Task Download_pages_through_results_fifty_at_a_time()
         {
             (Event theEvent, _, _) = SeedTwoDistances();
@@ -219,11 +236,17 @@ namespace Chronokeep.Test.UI
                     .Select(i => PersonJson($"p{pageNumber}-{i}", $"{pageNumber * 1000 + i}", $"First{i}", $"Page{pageNumber}", "5K"))));
             };
             ParticipantsPage page = await OpenPage();
+            List<string> labels = LabelsOf(Find<Button>(page, "Download"));
 
             await Download(page);
 
             Assert.Equal(2, server.Requests.Count(r => r.Path == "participants"));
             Assert.Equal(3 + 53, Db.GetParticipants(theEvent.Identifier).Count);
+            Assert.Equal(["Page 1", "Page 2", "Download"], labels.Distinct());
+            TextBlock status = Find<TextBlock>(page, "ApiStatus");
+            Assert.True(status.IsVisible);
+            Assert.Equal("53 participants downloaded", status.Text);
+            Assert.Empty(OpenDialogs());
         }
 
         [AvaloniaFact]
@@ -248,9 +271,14 @@ namespace Chronokeep.Test.UI
             ParticipantsPage page = await OpenPage();
             Button upload = Find<Button>(page, "Upload");
 
+            List<string> labels = LabelsOf(upload);
+
             Click(upload);
             await WaitUntil(() => server.Requests.Any(r => r.Path == "participants/add"), because: "the upload request");
-            await WaitUntil(() => ContentText(upload) != "Working", because: "the upload to finish");
+            await WaitUntil(() => ContentText(upload) == "Upload", because: "the upload to finish");
+
+            Assert.Contains("0 / 3", labels);
+            Assert.Equal("3 participants uploaded", Find<TextBlock>(page, "ApiStatus").Text);
 
             JsonElement body = JsonDocument.Parse(server.Requests.First(r => r.Path == "participants/add").Body).RootElement;
             Assert.Equal("spring-fling", body.GetProperty("slug").GetString());

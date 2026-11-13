@@ -41,6 +41,9 @@ namespace Chronokeep.Objects
         public string Nickname { get; set; } = nickname;
         public string AuthToken { get; set; } = authToken;
         public string WebUrl { get; set; } = webUrl;
+        /// <summary>A Runsignup API keeps its secret in the URL column; its key is the auth token.</summary>
+        public string Secret => Url;
+        public bool IsRunsignup => Type == Constants.ApiConstants.RUNSIGNUP;
 
         public async Task<List<RemoteReader>> GetReaders()
         {

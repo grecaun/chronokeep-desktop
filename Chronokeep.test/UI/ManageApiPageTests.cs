@@ -171,5 +171,144 @@ namespace Chronokeep.Test.UI
 
             Assert.IsType<DashboardPage>(Assert.Single(MainWindow.SwitchedPages));
         }
+
+        [AvaloniaFact]
+        public void Runsignup_rows_ask_for_a_key_and_secret()
+        {
+            AddApi(CHRONOKEEP_RESULTS, API_URL[CHRONOKEEP_RESULTS], webUrl: "https://results.example/");
+            ApiPart row = Assert.Single(Rows(OpenPage()));
+
+            SelectType(row, RUNSIGNUP);
+
+            Assert.Equal(("API Secret", "API Key"), (Find<TextBlock>(row, "ApiUrlLabel").Text, Find<TextBlock>(row, "ApiTokenLabel").Text));
+            TextBox secret = Find<TextBox>(row, "ApiUrl");
+            Assert.True(secret.IsEnabled);
+            Assert.Equal("", secret.Text);
+            Assert.False(Find<TextBox>(row, "ApiWebUrl").IsEnabled);
+
+            SelectType(row, CHRONOKEEP_RESULTS_SELF);
+            Assert.Equal("API URL", Find<TextBlock>(row, "ApiUrlLabel").Text);
+            Assert.Equal("", Find<TextBox>(row, "ApiUrl").Text);
+        }
+
+        [AvaloniaFact]
+        public void A_runsignup_secret_is_saved_exactly_as_typed()
+        {
+            AddApi(CHRONOKEEP_RESULTS, API_URL[CHRONOKEEP_RESULTS]);
+            ApiPage page = OpenPage();
+            ApiPart row = Assert.Single(Rows(page));
+            SelectType(row, RUNSIGNUP);
+            Find<TextBox>(row, "ApiUrl").Text = " s3cret ";
+            Find<TextBox>(row, "ApiToken").Text = "key123";
+
+            Click(Find<Button>(page, "UpdateBtn"));
+
+            ApiObject saved = Assert.Single(Db.GetAllApi());
+            Assert.Equal((RUNSIGNUP, "s3cret", "key123"), (saved.Type, saved.Secret, saved.AuthToken));
+            ApiPart reloaded = Assert.Single(Rows(page));
+            Assert.Equal("s3cret", Find<TextBox>(reloaded, "ApiUrl").Text);
+            Assert.True(Find<TextBox>(reloaded, "ApiUrl").IsEnabled);
+        }
+
+        [AvaloniaFact]
+        public async Task Test_says_who_the_runsignup_key_belongs_to()
+        {
+            using Network.FakeApiServer server = new() { ResponseBody = """{"entity_type":"partner","entity_name":"Fast Timing"}""" };
+            string savedBase = Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl;
+            Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl = server.Url;
+            try
+            {
+                AllowDialogs();
+                AddApi(RUNSIGNUP, "s3cret", token: "key123");
+                ApiPart row = Assert.Single(Rows(OpenPage()));
+
+                Click(Find<Button>(row, "TestButton"));
+
+                Assert.Contains("Partner: Fast Timing", DialogText(await WaitForDialog("Fast Timing")));
+                Assert.Equal("s3cret", server.Single().Headers["X-RSU-API-SECRET"]);
+            }
+            finally
+            {
+                Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl = savedBase;
+            }
+        }
+
+        [AvaloniaFact]
+        public void Every_api_row_has_a_test_button()
+        {
+            AddApi(CHRONOKEEP_RESULTS, API_URL[CHRONOKEEP_RESULTS], "Results");
+            AddApi(CHRONOKEEP_REMOTE_SELF, "https://remote.example/", "Remote", token: "r");
+            AddApi(RUNSIGNUP, "s3cret", "Runsignup", token: "key123");
+
+            List<ApiPart> rows = Rows(OpenPage());
+
+            Assert.Equal(3, rows.Count);
+            Assert.All(rows, row => Assert.True(Find<Button>(row, "TestButton").IsVisible));
+        }
+
+        [AvaloniaFact]
+        public async Task Test_checks_a_results_api_with_the_typed_values()
+        {
+            using Network.FakeApiServer server = new() { ResponseBody = """{"events":[{"slug":"a","name":"A"},{"slug":"b","name":"B"}]}""" };
+            AllowDialogs();
+            AddApi(CHRONOKEEP_RESULTS_SELF, "https://old.example/", token: "old");
+            ApiPart row = Assert.Single(Rows(OpenPage()));
+            Find<TextBox>(row, "ApiUrl").Text = server.Url.TrimEnd('/');
+            Find<TextBox>(row, "ApiToken").Text = "typed-token";
+
+            Click(Find<Button>(row, "TestButton"));
+
+            Assert.Contains("2 events found.", DialogText(await WaitForDialog("events found")));
+            Network.FakeApiServer.Request request = server.Single();
+            Assert.Equal(("event/my", "Bearer typed-token"), (request.Path, request.Authorization));
+        }
+
+        [AvaloniaFact]
+        public async Task Test_checks_a_remote_api()
+        {
+            using Network.FakeApiServer server = new() { ResponseBody = """{"readers":[{"name":"Finish"}]}""" };
+            AllowDialogs();
+            AddApi(CHRONOKEEP_REMOTE_SELF, server.Url, token: "r");
+            ApiPart row = Assert.Single(Rows(OpenPage()));
+
+            Click(Find<Button>(row, "TestButton"));
+
+            await WaitForDialog("1 remote reader found.");
+        }
+
+        [AvaloniaFact]
+        public async Task Test_says_why_an_api_failed()
+        {
+            using Network.FakeApiServer server = new() { Status = System.Net.HttpStatusCode.Unauthorized, ResponseBody = """{"message":"Bad token."}""" };
+            AllowDialogs();
+            AddApi(CHRONOKEEP_RESULTS_SELF, server.Url, token: "bad");
+            ApiPart row = Assert.Single(Rows(OpenPage()));
+
+            Click(Find<Button>(row, "TestButton"));
+
+            await WaitForDialog("Bad token.");
+        }
+
+        [AvaloniaFact]
+        public async Task Test_shows_why_a_runsignup_key_failed()
+        {
+            using Network.FakeApiServer server = new() { ResponseBody = """{"error":{"error_code":6,"error_msg":"Invalid API key."}}""" };
+            string savedBase = Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl;
+            Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl = server.Url;
+            try
+            {
+                AllowDialogs();
+                AddApi(RUNSIGNUP, "bad", token: "nope");
+                ApiPart row = Assert.Single(Rows(OpenPage()));
+
+                Click(Find<Button>(row, "TestButton"));
+
+                await WaitForDialog("Invalid API key.");
+            }
+            finally
+            {
+                Chronokeep.Network.Runsignup.RunsignupHandlers.BaseUrl = savedBase;
+            }
+        }
     }
 }

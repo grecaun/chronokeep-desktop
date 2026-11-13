@@ -369,10 +369,15 @@ namespace Chronokeep.Objects
         /// (tinted on the results page) but are never uploaded.
         /// </summary>
         public bool Removed { get; set; }
+        /// <summary>Why the registration system removed the participant, when <see cref="Removed"/>.</summary>
+        public string RemovedReason { get; set; } = "";
+        /// <summary>The results page tooltip for a removed participant's row; null for everyone else.</summary>
+        public string? RemovedTip => Removed ? $"Removed in Runsignup: {RemovedReason}" : null;
 
         public void SetParticipant(Participant p)
         {
             Removed = p.EventSpecific.IsRemoved;
+            RemovedReason = p.RemovedReason;
             ParticipantId = p.Identifier.ToString();
             Anonymous = p.Anonymous;
             RealDistanceName = p.EventSpecific.DistanceName;
@@ -387,6 +392,7 @@ namespace Chronokeep.Objects
         public void SetBlankParticipant()
         {
             Removed = false;
+            RemovedReason = "";
             ParticipantId = "";
             Anonymous = false;
             RealDistanceName = "";

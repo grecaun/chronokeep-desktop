@@ -64,11 +64,11 @@ namespace Chronokeep.Test.Database
             Assert.Equal("rsu-9001", read.EventSpecific.ExternalId);
             Assert.False(read.EventSpecific.IsRemoved);
 
-            read.EventSpecific.Removed = "transferred";
+            read.EventSpecific.Removed = "removed_transferred";
             Db.UpdateParticipant(read);
 
             Participant updated = Db.GetParticipantEventSpecific(e.Identifier, added.EventSpecific.Identifier)!;
-            Assert.Equal("transferred", updated.EventSpecific.Removed);
+            Assert.Equal("removed_transferred", updated.EventSpecific.Removed);
             Assert.True(updated.EventSpecific.IsRemoved);
             Assert.Equal("rsu-9001", updated.EventSpecific.ExternalId);
         }
@@ -158,7 +158,7 @@ namespace Chronokeep.Test.Database
             Distance d = AddDistance(e.Identifier);
             Participant active = AddParticipant(e.Identifier, d, "1", first: "Active");
             Participant removed = AddParticipant(e.Identifier, d, "2", first: "Removed");
-            removed.EventSpecific.Removed = "removed";
+            removed.EventSpecific.Removed = "removed_removed";
             Db.UpdateParticipant(removed);
             return (e, active, removed);
         }

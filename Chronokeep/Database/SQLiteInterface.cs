@@ -589,7 +589,7 @@ namespace Chronokeep.Database
                 connection.Open();
                 using (SQLiteTransaction? transaction = connection.BeginTransaction())
                 {
-                    Participants.RemoveEventSpecific(person.Identifier, connection);
+                    Participants.RemoveEventSpecific(person.EventSpecific.Identifier, connection);
                     transaction.Commit();
                 }
                 connection.Close();
@@ -616,7 +616,7 @@ namespace Chronokeep.Database
                 {
                     foreach (Participant p in participants)
                     {
-                        Participants.RemoveEventSpecific(p.Identifier, connection);
+                        Participants.RemoveEventSpecific(p.EventSpecific.Identifier, connection);
                     }
                     transaction.Commit();
                 }

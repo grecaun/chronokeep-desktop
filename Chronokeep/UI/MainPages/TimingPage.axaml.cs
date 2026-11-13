@@ -717,6 +717,9 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         return locItem.Content!.ToString()!;
     }
 
+    /// <summary>A manual upload is running; the button shows its progress instead of a fixed label.</summary>
+    private volatile bool manualUploading;
+
     private async void UploadResults()
     {
         try
@@ -747,7 +750,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             Log.D("UI.MainPages.TimingPage", $"Results count: {results.Count}");
             if (ApiController.GetUploadable(3000))
             {
-                await ApiController.UploadResults(results, api, eventIds, database, null, null, theEvent);
+                // Show how far along it is on the button, such as "250 / 1000".
+                int count = results.Count;
+                await ApiController.UploadResults(results, api, eventIds, database, null, null, theEvent,
+                    done => Avalonia.Threading.Dispatcher.UIThread.Post(() => ManualApiButton.Content = $"{done} / {count}"));
             }
         }
         catch (Exception)
@@ -757,6 +763,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         finally
         {
             // Every way out, including errors and an unlinked event, puts the button back so it can be used again.
+            manualUploading = false;
             Avalonia.Threading.Dispatcher.UIThread.Post(() => ManualApiButton.Content = "Manual Upload");
         }
     }
@@ -1260,9 +1267,10 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         try
         {
             Log.D("UI.MainPages.TimingPage", "Manual API clicked.");
-            if (ManualApiButton.Content!.ToString() != "Uploading")
+            if (!manualUploading)
             {
                 Log.D("UI.MainPages.TimingPage", "Uploading data.");
+                manualUploading = true;
                 ManualApiButton.Content = "Uploading";
                 await Task.Run(UploadResults);
                 return;

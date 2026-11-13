@@ -127,6 +127,38 @@ namespace Chronokeep.Test.UI
         }
 
         [AvaloniaFact]
+        public async Task Manual_upload_shows_how_many_results_have_gone()
+        {
+            using Network.FakeApiServer server = new();
+            server.Responder = request => (System.Net.HttpStatusCode.OK,
+                $$"""{"count":{{System.Text.Json.JsonDocument.Parse(request.Body).RootElement.GetProperty("results").GetArrayLength()}}}""");
+            Event theEvent = AddEvent(makeCurrent: true);
+            Db.SetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER, "XYZ");
+            theEvent.ApiId = Db.AddApi(new ApiObject(0, Constants.ApiConstants.CHRONOKEEP_RESULTS_SELF, server.Url, "Local", "tok", ""));
+            theEvent.ApiEventId = "race,2026";
+            Db.UpdateEvent(theEvent);
+            Distance d = AddDistance(theEvent.Identifier);
+            int count = Constants.Timing.API_LOOP_COUNT + 5;
+            for (int i = 1; i <= count; i++)
+            {
+                Participant p = AddParticipant(theEvent.Identifier, d, i.ToString(), first: $"R{i}");
+                Db.AddTimingResult(new TimeResult(theEvent.Identifier, Constants.Timing.TIMERESULT_DUMMYREAD, p.EventSpecific.Identifier,
+                    Constants.Timing.LOCATION_FINISH, Constants.Timing.SEGMENT_FINISH, 1, 1500 + i, 0, TimeResult.BibToIdentifier(i.ToString()),
+                    1500 + i, 0, DateTime.Now, i.ToString(), Constants.Timing.TIMERESULT_STATUS_PROCESSED, "") { Place = i });
+            }
+            Chronokeep.Timing.API.ApiController.SetUploadableTrue(1000);
+            TimingPage page = OpenTiming();
+            Button manual = Find<Button>(page, "ManualApiButton");
+            List<string> labels = LabelsOf(manual);
+
+            Click(manual);
+            await WaitUntil(() => labels.Count > 0 && ContentText(manual) == "Manual Upload", 10000, because: "the upload to finish");
+
+            Assert.Equal(["Uploading", $"0 / {count}", $"{Constants.Timing.API_LOOP_COUNT} / {count}", $"{count} / {count}", "Manual Upload"], labels.Distinct());
+            Assert.Empty(Db.GetNonUploadedResults(theEvent.Identifier));
+        }
+
+        [AvaloniaFact]
         public async Task Manual_upload_button_comes_back_when_there_is_nothing_to_upload_to()
         {
             AddEvent(makeCurrent: true);

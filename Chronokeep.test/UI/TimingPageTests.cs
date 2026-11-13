@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 using Chronokeep.Objects;
 using Chronokeep.Test.UI.Infrastructure;
 using Chronokeep.UI.MainPages;
@@ -83,6 +84,28 @@ namespace Chronokeep.Test.UI
             await WaitUntil(() => grid.ItemsSource!.Cast<TimeResult>().Count() == 2, because: "results to load");
 
             Assert.Equal(["1", "3"], grid.ItemsSource!.Cast<TimeResult>().Select(r => r.Bib).OrderBy(b => b));
+        }
+
+        [AvaloniaFact]
+        public async Task Removed_participants_results_are_tinted_with_the_reason()
+        {
+            (Event theEvent, Participant ann, Participant cat) = Seed();
+            cat.EventSpecific.Removed = "removed_transferred";
+            Db.UpdateParticipant(cat);
+            Db.AddTimingResults([FinishResult(theEvent, ann, 1500), FinishResult(theEvent, cat, 2400)]);
+
+            TimingPage page = OpenPage();
+            TimingResultsPage results = (TimingResultsPage)Find<ContentControl>(page, "TimingFrame").Content!;
+            ListBox grid = Find<ListBox>(results, "UpdateListView");
+            await WaitUntil(() => grid.ItemsSource!.Cast<TimeResult>().Count() == 2, because: "results to load");
+            await Settle(100);
+
+            Grid RowFor(string bib) => (Grid)((ListBoxItem)grid.ContainerFromItem(grid.ItemsSource!.Cast<TimeResult>().Single(r => r.Bib == bib))!)
+                .GetVisualDescendants().OfType<Grid>().First(g => g.Name == "ResultRow");
+            Assert.True(RowFor("3").Classes.Contains("removed"));
+            Assert.Equal("Removed in Runsignup: Transferred", ToolTip.GetTip(RowFor("3")));
+            Assert.False(RowFor("1").Classes.Contains("removed"));
+            Assert.Null(ToolTip.GetTip(RowFor("1")));
         }
 
         [AvaloniaFact]

@@ -188,6 +188,7 @@ namespace Chronokeep.Database.SQLite
                     )
                 {
                     Removed = part is { EventSpecific.IsRemoved: true },
+                    RemovedReason = part?.RemovedReason ?? "",
                 });
             }
             reader.Close();

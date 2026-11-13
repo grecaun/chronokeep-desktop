@@ -167,6 +167,18 @@
     "Fixed an issue where accented names in CSV files saved in the Windows encoding imported as garbled characters.",
     "Fixed an issue where dates and decimal numbers imported from Excel files depended on the computer's date and number format.",
     "Fixed an issue where a spreadsheet or CSV row with fewer columns than the header broke the import.",
-    "Fixed an issue where pasting into boxes meant for numbers, IP addresses or chips let any text in."
+    "Fixed an issue where pasting into boxes meant for numbers, IP addresses or chips let any text in.",
+    "Added Runsignup as an API type. Add it on the Manage API page with its API key and secret.",
+    "Added Link to Runsignup on the Dashboard. It links the event to a Runsignup race, sets the distance for each Runsignup event (or skips it), and chooses the race questions and fields copied into Comments for the announcer. When a race's name and date match the event, it's picked out ready to confirm. Only the race's events nearest the event's date are shown, since Runsignup lists every year's events.",
+    "Added a Runsignup Download button on the Participants page. It downloads this year's participants, with their apparel from the giveaway (such as Long Sleeve Shirt (Large)), registration add-ons (such as T-Shirt (Small)) and race store, and their chips, then shows how many were downloaded. Choices that say no, such as No shirt or None, are left out.",
+    "Participants removed in Runsignup are left out of the timing counts and result uploads. They stay on the Participants page and the results page, tinted red with the reason.",
+    "For participants removed in Runsignup, the participant window shows why (Transferred, Deferred, Cleared, Removed) with a switch beside the distance. Switching it off puts them back in the race, and later downloads won't remove them again.",
+    "The bib stats on the Participants page count removed participants who still hold a bib in a new Removed column.",
+    "Added a Test button to every API on the Manage API page. It checks the API can be reached with the values typed in.",
+    "The Participants page's Download and Upload buttons show their progress, such as Page 2 or 250 / 1000, instead of Working, and the number of participants downloaded or uploaded shows under them afterwards.",
+    "The Manual Upload button on the timing page shows how many results have been uploaded so far.",
+    "Fixed an issue where removing a participant from an event also removed them from every other event they were in.",
+    "Fixed an issue where starting Chronokeep while another copy was open crashed with a closed window error instead of saying Chronokeep is already running.",
+    "Fixed an issue where Chronokeep stopped responding while participants downloaded from Chronokeep or Runsignup were being saved."
   ]
 }

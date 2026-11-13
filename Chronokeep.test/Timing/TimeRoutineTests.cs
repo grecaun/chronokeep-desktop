@@ -130,7 +130,7 @@ namespace Chronokeep.Test.Timing
             foreach (int t in new[] { 500, 1000, 1500, 2000 }) ReadAt(Chip("1"), t);
             foreach (int t in new[] { 600, 1200, 1800 }) ReadAt(Chip("2"), t);
             Participant p = Runner("1");
-            p.EventSpecific.Removed = "Refunded";
+            p.EventSpecific.Removed = "removed_removed";
             Db.UpdateParticipant(p);
 
             ProcessTime();

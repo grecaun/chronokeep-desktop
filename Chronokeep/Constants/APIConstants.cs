@@ -29,6 +29,10 @@ namespace Chronokeep.Constants
         public const string CHRONOKEEP_REMOTE          = "CHRONOKEEP_REMOTE_V1";
         public const string CHRONOKEEP_REMOTE_SELF     = "CHRONOKEEP_REMOTE_V1_SELF";
 
+        /// <summary>Runsignup v2 credentials. The key goes in the token and the secret in the URL column.</summary>
+        public const string RUNSIGNUP                  = "RUNSIGNUP_V2";
+        public const string RUNSIGNUP_BASE_URL         = "https://api.runsignup.com/";
+
         public const int    NULL_ID         = -1;
         public const string NULL_EVENT_ID   = "";
 
@@ -42,7 +46,8 @@ namespace Chronokeep.Constants
             { CHRONOKEEP_RESULTS,       "Results" },
             { CHRONOKEEP_RESULTS_SELF,  "Results (SH)" },
             { CHRONOKEEP_REMOTE,        "Remote" },
-            { CHRONOKEEP_REMOTE_SELF,   "Remote (SH)" }
+            { CHRONOKEEP_REMOTE_SELF,   "Remote (SH)" },
+            { RUNSIGNUP,                "Runsignup" }
         };
 
         public static readonly Dictionary<string, bool> API_SELF_HOSTED = new()
@@ -50,7 +55,8 @@ namespace Chronokeep.Constants
             { CHRONOKEEP_RESULTS,       false },
             { CHRONOKEEP_RESULTS_SELF,  true },
             { CHRONOKEEP_REMOTE,        false },
-            { CHRONOKEEP_REMOTE_SELF,   true }
+            { CHRONOKEEP_REMOTE_SELF,   true },
+            { RUNSIGNUP,                false }
         };
 
         public static readonly Dictionary<string, string> API_URL = new()
@@ -58,7 +64,8 @@ namespace Chronokeep.Constants
             { CHRONOKEEP_RESULTS,       "https://api.chronokeep.com/" },
             { CHRONOKEEP_REMOTE,        "https://remote.chronokeep.com/" },
             { CHRONOKEEP_RESULTS_SELF,  "" },
-            { CHRONOKEEP_REMOTE_SELF,   "" }
+            { CHRONOKEEP_REMOTE_SELF,   "" },
+            { RUNSIGNUP,                "" }
         };
 
         public static readonly Dictionary<string, bool> API_RESULTS = new()
@@ -66,7 +73,8 @@ namespace Chronokeep.Constants
             { CHRONOKEEP_RESULTS,       true },
             { CHRONOKEEP_RESULTS_SELF,  true },
             { CHRONOKEEP_REMOTE,        false },
-            { CHRONOKEEP_REMOTE_SELF,   false }
+            { CHRONOKEEP_REMOTE_SELF,   false },
+            { RUNSIGNUP,                false }
         };
 
         public static readonly Dictionary<string, bool> API_REMOTE = new()
@@ -74,7 +82,18 @@ namespace Chronokeep.Constants
             { CHRONOKEEP_RESULTS,       false },
             { CHRONOKEEP_RESULTS_SELF,  false },
             { CHRONOKEEP_REMOTE,        true },
-            { CHRONOKEEP_REMOTE_SELF,   true }
+            { CHRONOKEEP_REMOTE_SELF,   true },
+            { RUNSIGNUP,                false }
+        };
+
+        /// <summary>APIs that participants are downloaded from (registration systems).</summary>
+        public static readonly Dictionary<string, bool> API_REGISTRATION = new()
+        {
+            { CHRONOKEEP_RESULTS,       false },
+            { CHRONOKEEP_RESULTS_SELF,  false },
+            { CHRONOKEEP_REMOTE,        false },
+            { CHRONOKEEP_REMOTE_SELF,   false },
+            { RUNSIGNUP,                true }
         };
     }
 }

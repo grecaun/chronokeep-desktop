@@ -521,6 +521,8 @@ namespace Chronokeep.Objects
         public string Comments => EventSpecific.Comments;
         public int Status { get => EventSpecific.Status; set => EventSpecific.Status = value; }
         public string Apparel => EventSpecific.Apparel;
+        /// <summary>Why the registration system removed this person ("Transferred"), or "" when they're in the race.</summary>
+        public string RemovedReason => EventSpecific.IsRemoved ? Constants.Registration.Label(Constants.Registration.Reason(EventSpecific.Removed)) : "";
 
         // Emergency Contact binding stuffs
         public string EcName { get; private set; }

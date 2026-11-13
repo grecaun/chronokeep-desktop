@@ -64,6 +64,10 @@ namespace Chronokeep.Timing.API
             }
         }
 
+        /// <summary>
+        /// Uploads results in batches. <paramref name="progress"/> is told how many of the results have
+        /// been worked through after each batch, out of results.Count.
+        /// </summary>
         public static async Task UploadResults(
             List<TimeResult> results,
             ApiObject api,
@@ -71,7 +75,8 @@ namespace Chronokeep.Timing.API
             IdbInterface database,
             ApiController? controller,
             IMainWindow? mainWindow,
-            Event theEvent
+            Event theEvent,
+            Action<int>? progress = null
             )
         {
             DateTime start = DateTime.SpecifyKind(EventDates.Parse(theEvent.Date), DateTimeKind.Local).AddSeconds(theEvent.StartSeconds).AddMilliseconds(theEvent.StartMilliseconds);
@@ -113,9 +118,11 @@ namespace Chronokeep.Timing.API
                 int loops = results.Count / Constants.Timing.API_LOOP_COUNT;
                 AddResultsResponse? response;
                 bool loopError = false;
+                progress?.Invoke(0);
                 for (int i = 0; i < loops; i += 1)
                 {
                     Log.D("API.APIController", $"Loop {i}");
+                    if (i > 0) progress?.Invoke(i * Constants.Timing.API_LOOP_COUNT);
                     // Change TimeResults to APIResults - breaking this up into chunks so we can
                     // properly update them with the UPLOADED field
                     List<ApiResult> upRes = [];
@@ -170,6 +177,7 @@ namespace Chronokeep.Timing.API
                 int leftovers = results.Count - (loops * Constants.Timing.API_LOOP_COUNT);
                 if (leftovers > 0 && !loopError)
                 {
+                    if (loops > 0) progress?.Invoke(loops * Constants.Timing.API_LOOP_COUNT);
                     response = null;
                     // Change TimeResults to APIResults
                     List<ApiResult> upRes = [];
@@ -227,6 +235,7 @@ namespace Chronokeep.Timing.API
                     }
                     Log.D("API.APIController", $"Upload finished. Count total: {total}");
                 }
+                if (!loopError) progress?.Invoke(results.Count);
                 if (!loopError && controller != null)
                 {
                     controller.Errors = 0;

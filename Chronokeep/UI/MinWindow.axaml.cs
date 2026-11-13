@@ -52,13 +52,6 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
 
     private readonly List<Window> openWindows = [];
 
-    // Set up a mutex that will be unique for this program to ensure we only ever have a single instance of it running.
-    // Allow for a debug version and non-debug version to run at the same time.
-#if DEBUG
-    private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep-debug");
-#else
-    private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
-#endif
 
     public MinWindow()
     {
@@ -66,14 +59,7 @@ public partial class MinWindow : ChronokeepWindow, IMainWindow
         ChronokeepInitialize();
         // Message boxes open over this window; without it they have nothing to open over and never show.
         MainWindow.MWindow = this;
-        // Check that no other instance of this program are running.
-        if (!OneWindow.WaitOne(TimeSpan.Zero, true))
-        {
-            DialogBox.AsyncShow("Chronokeep is already running.");
-            Close();
-            return;
-        }
-        OneWindow.ReleaseMutex();
+        // The app checks that no other copy is running before this window is made (see SingleInstance).
 
         string dirPath = ProgramFolders.Data;
         string path = Path.Combine(dirPath, MainWindow.DATABASE_FILE_NAME);

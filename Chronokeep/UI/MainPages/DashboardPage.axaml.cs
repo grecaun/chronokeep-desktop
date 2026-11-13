@@ -165,6 +165,7 @@ public partial class DashboardPage : UserControl, IMainPage
         {
             ApiLinkButton.Content = "Link to API Event";
         }
+        RunsignupLinkButton.Content = theEvent.IsRegistrationLinked ? "Edit Runsignup Link" : "Link to Runsignup";
         RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
         GenderBox.SelectedIndex = theEvent.UseMaleFemale ? 1 : 0;
         loaded = true;
@@ -917,6 +918,14 @@ public partial class DashboardPage : UserControl, IMainPage
             mWindow.AddWindow(apiWindow);
             apiWindow.ShowDialog((Window)mWindow);
         }
+    }
+
+    private void RunsignupLinkButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        Log.D("UI.DashboardPage", "Link/Edit Runsignup.");
+        if (UI.Runsignup.RunsignupLinkWindow.NewWindow(mWindow, database) is not { } linkWindow) return;
+        mWindow.AddWindow(linkWindow);
+        linkWindow.ShowDialog((Window)mWindow);
     }
 
     private void TagTesterButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

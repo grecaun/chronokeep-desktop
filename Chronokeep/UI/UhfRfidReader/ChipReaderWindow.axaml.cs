@@ -159,7 +159,8 @@ public partial class ChipReaderWindow : ChronokeepWindow
             BeautyBtn.IsVisible = true;
             BeautyBtn.Content = "Show Info Window";
             chipInfo.Add(new RfidInfo { DecNumber = 0 });
-            readingThread = new Thread(reader.Run);
+            // A background thread, so a reader left running can't keep Chronokeep from exiting.
+            readingThread = new Thread(reader.Run) { IsBackground = true, Name = "Chip Tester reader" };
             readingThread.Start();
         }
         else

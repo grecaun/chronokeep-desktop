@@ -29,6 +29,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <Style Selector="ListBoxItem:nth-child(2n+1)">
             <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
         </Style>
+        <!-- People removed in Runsignup keep their results here, tinted so they stand out. -->
+        <Style Selector="Grid.removed">
+            <Setter Property="Background" Value="#40E53935"/>
+        </Style>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource LightPrimaryColor}"/>
         </Style>
@@ -54,7 +58,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 >
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="objects:TimeResult">
-                        <Grid>
+                        <Grid Name="ResultRow"
+                              Classes.removed="{Binding Removed}"
+                              ToolTip.Tip="{Binding RemovedTip}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="90"/>  <!-- Location -->
                                 <ColumnDefinition Width="32"/>  <!-- Occurence -->

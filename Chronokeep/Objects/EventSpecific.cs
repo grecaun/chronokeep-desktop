@@ -133,9 +133,15 @@ namespace Chronokeep.Objects
         public int UploadedVersion { get; set; }
         /// <summary>The registration system's id for this entry, such as rsu-{registration_id}. Empty when entered locally.</summary>
         public string ExternalId { get; set; } = "";
-        /// <summary>Why the registration system removed this entry (cleared, removed, transferred, deferred). Empty when active.</summary>
+        /// <summary>
+        /// Whether the registration system removed this entry: empty or active is in the race,
+        /// removed_{reason} is out, and reactivated_{reason} was put back by hand.
+        /// See <see cref="Constants.Registration"/>.
+        /// </summary>
         public string Removed { get; set; } = "";
-        public bool IsRemoved => Removed.Length > 0;
+        public bool IsRemoved => Constants.Registration.IsRemoved(Removed);
+        /// <summary>Put back in the race by hand; later downloads won't remove it again.</summary>
+        public bool IsReactivated => Constants.Registration.IsReactivated(Removed);
 
         public void CopyFrom(EventSpecific other)
         {

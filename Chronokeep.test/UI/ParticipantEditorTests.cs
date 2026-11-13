@@ -163,7 +163,7 @@ namespace Chronokeep.Test.UI
             (Event e, Distance fiveK, _) = Seed();
             Participant grace = SeedPerson(e, fiveK);
             grace.EventSpecific.ExternalId = "rsu-9001";
-            grace.EventSpecific.Removed = "transferred";
+            grace.EventSpecific.Removed = "removed_transferred";
             Db.UpdateParticipant(grace);
             grace = Db.GetParticipantEventSpecific(e.Identifier, grace.EventSpecific.Identifier)!;
             ModifyParticipantWindow window = Open(grace);
@@ -174,7 +174,7 @@ namespace Chronokeep.Test.UI
             Participant saved = Assert.Single(Db.GetParticipants(e.Identifier));
             Assert.Equal("Edited locally", saved.Comments);
             Assert.Equal("rsu-9001", saved.EventSpecific.ExternalId);
-            Assert.Equal("transferred", saved.EventSpecific.Removed);
+            Assert.Equal("removed_transferred", saved.EventSpecific.Removed);
         }
 
         [AvaloniaFact]

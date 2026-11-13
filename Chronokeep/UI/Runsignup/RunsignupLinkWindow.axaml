@@ -1,0 +1,224 @@
+<!--
+/*
+Chronokeep Desktop - Race Scoring Software
+Copyright (C) 2026 James Sentinella
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:rsu="using:Chronokeep.Objects.Runsignup"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="450"
+        x:Class="Chronokeep.UI.Runsignup.RunsignupLinkWindow"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height"
+        Title="Link to Runsignup"
+        Topmost="True"
+        Closing="Window_Closing"
+        Width="460"
+        >
+    <Window.Styles>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        </Style>
+        <Style Selector="ListBoxItem:focus /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        </Style>
+        <Style Selector="ListBoxItem:pressed /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}"/>
+        </Style>
+    </Window.Styles>
+    <Grid RowDefinitions="auto,*">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                WindowDecorationProperties.ElementRole="TitleBar"
+                PointerPressed="OnTitleBarPointerPressed"
+                DoubleTapped="OnTitleBarDoubleTapped"
+                Name="ChronokeepToolBar"
+                >
+            <DockPanel Margin="0">
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button WindowDecorationProperties.ElementRole="CloseButton"
+                            Name="CloseButton"
+                            Click="OnClose"
+                            Classes="title close">
+                        <PathIcon Classes="title"
+                                  Data="{OnPlatform Linux={StaticResource close_linux_regular}, Default={StaticResource close_win_regular}}"
+                                  />
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Margin="10,10,10,10">
+            <TextBlock Name="StepTitle"
+                       Text="Select Runsignup API to use:"
+                       FontSize="16"
+                       TextAlignment="Center"
+                       Margin="0,0,0,5"/>
+            <!-- Step 1: which Runsignup account -->
+            <StackPanel Name="ApiStep">
+                <TextBlock Name="NoApiText"
+                           Text="Add a Runsignup API on the Manage API page first."
+                           FontSize="15"
+                           MaxWidth="300"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           IsVisible="False"
+                           Margin="0,5"/>
+                <ComboBox Name="ApiList"
+                          Width="250"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          Margin="0,5"/>
+            </StackPanel>
+            <!-- Step 2: which race -->
+            <StackPanel Name="RaceStep" IsVisible="False">
+                <TextBlock Name="RaceStatus"
+                           Text="Retrieving Races, Please Hold."
+                           FontSize="15"
+                           MaxWidth="400"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,10"/>
+                <Grid VerticalAlignment="Center" ColumnDefinitions="46,*">
+                    <PathIcon Grid.Column="0"
+                              Data="{StaticResource search_regular}"
+                              Margin="20,0,10,10"
+                              VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1"
+                             Name="RaceSearch"
+                             PlaceholderText="Search..."
+                             TextChanged="RaceSearch_TextChanged"
+                             Height="40"
+                             Margin="5,0,15,15"
+                             VerticalContentAlignment="Center"/>
+                </Grid>
+                <ListBox Name="RaceList"
+                         SelectionChanged="RaceList_SelectionChanged"
+                         DoubleTapped="RaceList_DoubleTapped"
+                         MaxHeight="220"
+                         Margin="4,0,4,5"
+                         VerticalAlignment="Stretch"
+                         HorizontalAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="rsu:RsuRace">
+                            <DockPanel>
+                                <TextBlock Margin="8,4" Text="{Binding}" TextWrapping="Wrap"/>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,5">
+                    <TextBlock Text="Race ID"
+                               FontSize="15"
+                               Width="100"
+                               VerticalAlignment="Center"
+                               TextAlignment="Right"
+                               Padding="0,0,5,0"/>
+                    <TextBox Name="RaceIdBox"
+                             FontSize="15"
+                             Width="180"
+                             VerticalAlignment="Center"
+                             HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </StackPanel>
+            <!-- Step 3: map each Runsignup event to a distance -->
+            <StackPanel Name="DistanceStep" IsVisible="False">
+                <TextBlock Name="DistanceNote"
+                           FontSize="15"
+                           MaxWidth="400"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           IsVisible="False"
+                           Margin="0,0,0,10"/>
+                <ScrollViewer MaxHeight="300">
+                    <StackPanel Name="DistanceRows"/>
+                </ScrollViewer>
+            </StackPanel>
+            <!-- Step 4: what goes in Comments -->
+            <StackPanel Name="CommentStep" IsVisible="False">
+                <TextBlock Name="CommentStatus"
+                           Text="Retrieving Questions, Please Hold."
+                           FontSize="15"
+                           MaxWidth="400"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,5"/>
+                <ScrollViewer MaxHeight="220">
+                    <StackPanel Name="CommentFieldList" Margin="10,0"/>
+                </ScrollViewer>
+                <TextBlock Text="Preview:"
+                           FontSize="16"
+                           TextAlignment="Center"
+                           Margin="0,10,0,5"/>
+                <TextBlock Name="CommentPreview"
+                           FontSize="15"
+                           MaxWidth="400"
+                           TextWrapping="Wrap"
+                           Margin="10,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,10,0,0">
+                <Button Name="UnlinkButton"
+                        Content="Unlink"
+                        Click="Unlink_Click"
+                        IsVisible="False"
+                        Height="35"
+                        Width="120"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,10,10"/>
+                <Button Name="BackButton"
+                        Content="Back"
+                        Click="Back_Click"
+                        IsVisible="False"
+                        Height="35"
+                        Width="120"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,10,10"/>
+                <Button Name="NextButton"
+                        Content="Next"
+                        Click="Next_Click"
+                        Height="35"
+                        Width="120"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,10,10"/>
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Click="Cancel_Click"
+                        Height="35"
+                        Width="120"
+                        VerticalAlignment="Bottom"
+                        Margin="10,0,0,10"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

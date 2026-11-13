@@ -26,6 +26,7 @@ using Chronokeep.Interfaces.IO;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.IO;
 using Chronokeep.Network.API;
+using Chronokeep.Network.Runsignup;
 using Chronokeep.Objects;
 using Chronokeep.Objects.ChronoKeepAPI;
 using Chronokeep.UI.Import;
@@ -83,6 +84,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     : database.GetParticipants(theEvent.Identifier, distanceId));
             });
             UpdateBibStats();
+            RunsignupPanel.IsVisible = theEvent.IsRegistrationLinked;
             if (SortBox.SelectedItem != null)
             {
                 switch (((ComboBoxItem)SortBox.SelectedItem).Content)
@@ -115,9 +117,11 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             conflicts.Clear();
             HashSet<(int, int)> conflictParticipantIdentifiers = [];
-            foreach (Participant outer in allParticipants)
+            // Removed entries (an old transfer, a changed bib) aren't conflicts with the people who replaced them.
+            List<Participant> inRace = [.. allParticipants.Where(p => !p.EventSpecific.IsRemoved)];
+            foreach (Participant outer in inRace)
             {
-                foreach (Participant inner in allParticipants)
+                foreach (Participant inner in inRace)
                 {
                     if (outer.Equals(inner)) continue;
                     // Check for bib conflicts
@@ -199,7 +203,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
     }
 
-    private async void DownloadParticipants()
+    /// <summary>Downloads from Chronokeep Results, showing the page on the button and the total under it.</summary>
+    internal async Task DownloadParticipants()
     {
         try
         {
@@ -222,6 +227,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 List<ApiPerson> newPersons = [];
                 do
                 {
+                    Download.Content = $"Page {page}";
                     GetParticipantsResponse response = await ApiHandlers.GetParticipants(api, eventIds[0], eventIds[1], 50, page);
                     newPersons.AddRange(response.Participants);
                     Log.D("UI.MainPages.ParticipantsPage", $"{response.Participants.Count} participants downloaded.");
@@ -232,200 +238,11 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     page++;
                 } while (true);
                 Log.D("UI.MainPages.ParticipantsPage", $"{newPersons.Count} total participants downloaded.");
-                // Key is (First, Last, Birthdate, Distance)
-                Dictionary<(string, string, string, string), Participant> partDictionary = [];
-                Dictionary<string, Participant> partEsDictionary = [];
-                Dictionary<string, Distance> distDictionary = [];
-                string uniqueId = "";
-                if (database.GetAppSetting(Constants.Settings.PROGRAM_UNIQUE_MODIFIER) is AppSetting programId)
-                {
-                    uniqueId = $"{programId.Value}-";
-                }
-                foreach (Participant p in database.GetParticipants(theEvent.Identifier))
-                {
-                    partDictionary[(p.FirstName, p.LastName, p.Birthdate, p.Distance.ToLower())] = p;
-                    partEsDictionary[$"{uniqueId}{p.EventSpecific.Identifier}"] = p;
-                }
-                foreach (Distance d in database.GetDistances(theEvent.Identifier))
-                {
-                    distDictionary[d.Name.ToLower()] = d;
-                }
-                List<Participant> partsToUpdate = [];
-                List<Participant> partsToAdd = [];
-                foreach (ApiPerson person in newPersons)
-                {
-                    person.Trim();
-                    person.FormatData();
-                    // A person must have a distance and they must have a first or last name.
-                    // All other values are optional.
-                    if (person.Distance.Length < 1 || (person.First.Length < 1 && person.Last.Length < 1))
-                    {
-                        continue;
-                    }
-                    if (!distDictionary.TryGetValue(person.Distance.ToLower(), out Distance? _))
-                    {
-                        Distance newDistance = new(person.Distance, theEvent.Identifier);
-                        newDistance.Identifier = database.AddDistance(newDistance);
-                        distDictionary.Add(newDistance.Name.ToLower(), newDistance);
-                    };
-                    if (partEsDictionary.TryGetValue(person.Identifier, out Participant? old) && old.IsSimilar(person))
-                    {
-                        // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
-                        // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length < 1 || old.EventSpecific.UploadedVersion < old.EventSpecific.Version)
-                        {
-                            continue;
-                        }
-                        Participant newPart = new(
-                            old.Identifier,
-                            person.First.Length > 0 ? person.First : old.FirstName,
-                            person.Last.Length > 0 ? person.Last : old.LastName,
-                            old.Street,
-                            old.City,
-                            old.State,
-                            old.Zip,
-                            person.Birthdate,
-                            new EventSpecific(
-                                old.EventSpecific.Identifier,
-                                theEvent.Identifier,
-                                distDictionary[person.Distance.ToLower()].Identifier,
-                                distDictionary[person.Distance.ToLower()].Name,
-                                person.Bib,
-                                old.EventSpecific.CheckedIn,
-                                old.EventSpecific.Comments,
-                                old.EventSpecific.Owes,
-                                old.EventSpecific.Other,
-                                old.EventSpecific.Status,
-                                old.EventSpecific.AgeGroupName,
-                                old.EventSpecific.AgeGroupId,
-                                person.Anonymous,
-                                person.SmsEnabled,
-                                person.Apparel,
-                                old.EventSpecific.Division,
-                                old.EventSpecific.Version,
-                                old.EventSpecific.UploadedVersion
-                            ),
-                            old.Email,
-                            old.Phone,
-                            person.Mobile.Length > 0 ? person.Mobile : old.Mobile,
-                            old.Parent,
-                            old.Country,
-                            old.Street2,
-                            person.Gender,
-                            old.EcName,
-                            old.EcPhone
-                        );
-                        // Check if the bib has changed
-                        if (old.Bib != null && old.Bib.Length > 0 && !old.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Add the old value so we can track it.
-                            old.Identifier = -1;
-                            partsToAdd.Add(old);
-                        }
-                        partsToUpdate.Add(newPart);
-                    }
-                    else if (partDictionary.TryGetValue((person.First, person.Last, person.Birthdate, person.Distance.ToLower()), out Participant? oldTwo))
-                    {
-                        // Only update if a bib exists, and it has not been updated in the software since it was uploaded.
-                        // Uploaded Version should equal Version, Version will be higher if it was updated after upload.
-                        if (person.Bib.Length <= 0 || oldTwo.EventSpecific.UploadedVersion < oldTwo.EventSpecific.Version)
-                        {
-                            continue;
-                        }
-                        Participant newPart = new(
-                            oldTwo.Identifier,
-                            person.First.Length > 0 ? person.First : oldTwo.FirstName,
-                            person.Last.Length > 0 ? person.Last : oldTwo.LastName,
-                            oldTwo.Street,
-                            oldTwo.City,
-                            oldTwo.State,
-                            oldTwo.Zip,
-                            person.Birthdate,
-                            new EventSpecific(
-                                oldTwo.EventSpecific.Identifier,
-                                theEvent.Identifier,
-                                distDictionary[person.Distance.ToLower()].Identifier,
-                                distDictionary[person.Distance.ToLower()].Name,
-                                person.Bib,
-                                oldTwo.EventSpecific.CheckedIn,
-                                oldTwo.EventSpecific.Comments,
-                                oldTwo.EventSpecific.Owes,
-                                oldTwo.EventSpecific.Other,
-                                oldTwo.EventSpecific.Status,
-                                oldTwo.EventSpecific.AgeGroupName,
-                                oldTwo.EventSpecific.AgeGroupId,
-                                person.Anonymous,
-                                person.SmsEnabled,
-                                person.Apparel,
-                                oldTwo.EventSpecific.Division,
-                                oldTwo.EventSpecific.Version,
-                                oldTwo.EventSpecific.UploadedVersion
-                            ),
-                            oldTwo.Email,
-                            oldTwo.Phone,
-                            person.Mobile.Length > 0 ? person.Mobile : oldTwo.Mobile,
-                            oldTwo.Parent,
-                            oldTwo.Country,
-                            oldTwo.Street2,
-                            person.Gender,
-                            oldTwo.EcName,
-                            oldTwo.EcPhone
-                        );
-                        // Check if the bib has changed
-                        if (oldTwo!.Bib.Length > 0 && !oldTwo.Bib.Equals(person.Bib, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Add the old value so we can track it.
-                            oldTwo.Identifier = -1;
-                            partsToAdd.Add(oldTwo);
-                        }
-                        partsToUpdate.Add(newPart);
-                    }
-                    else
-                    {
-                        partsToAdd.Add(
-                            new Participant(
-                                person.First,
-                                person.Last,
-                                "",
-                                "",
-                                "",
-                                "",
-                                person.Birthdate,
-                                new EventSpecific(
-                                    theEvent.Identifier,
-                                    distDictionary[person.Distance.ToLower()].Identifier,
-                                    distDictionary[person.Distance.ToLower()].Name,
-                                    person.Bib,
-                                    0,
-                                    "",
-                                    "",
-                                    "",
-                                    person.Anonymous,
-                                    person.SmsEnabled,
-                                    person.Apparel,
-                                    ""
-                                ),
-                                "",
-                                "",
-                                person.Mobile,
-                                "",
-                                "",
-                                "",
-                                person.Gender,
-                                "",
-                                ""
-                            )
-                        );
-                    }
-                }
-                if (partsToUpdate.Count > 0)
-                {
-                    database.UpdateParticipants(partsToUpdate);
-                }
-                if (partsToAdd.Count > 0)
-                {
-                    database.AddParticipants(partsToAdd);
-                }
+                // Merging and saving runs off the UI thread so the window stays usable.
+                Event downloadEvent = theEvent;
+                await Task.Run(() => ChronokeepParticipantSource.Download(database, downloadEvent, newPersons));
+                ApiStatus.Text = $"{newPersons.Count} participants downloaded";
+                ApiStatus.IsVisible = true;
             }
             catch (ApiException ex)
             {
@@ -442,7 +259,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
     }
 
-    private async void UploadParticipants()
+    /// <summary>Uploads to Chronokeep Results, showing how many have gone on the button and the total under it.</summary>
+    internal async Task UploadParticipants()
     {
         try
         {
@@ -459,8 +277,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Upload.Content = "Upload";
                 return;
             }
-            // Get results to upload.
-            List<Participant> participants = database.GetParticipants(theEvent.Identifier);
+            // Get results to upload. People removed in Runsignup aren't in the race, so they aren't sent.
+            List<Participant> participants = [.. database.GetParticipants(theEvent.Identifier).Where(p => !p.EventSpecific.IsRemoved)];
             List<BibChipAssociation> bibChips = database.GetBibChips(theEvent.Identifier);
             if (participants.Count < 1)
             {
@@ -485,6 +303,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 try
                 {
+                    Upload.Content = $"{i * Constants.Timing.API_LOOP_COUNT} / {upParticipants.Count}";
                     response = await ApiHandlers.UploadParticipants(api, eventIds[0], eventIds[1], upParticipants.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
                 }
                 catch (ApiException ex)
@@ -501,6 +320,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 try
                 {
+                    Upload.Content = $"{loops * Constants.Timing.API_LOOP_COUNT} / {upParticipants.Count}";
                     response = await ApiHandlers.UploadParticipants(api, eventIds[0], eventIds[1], upParticipants.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
                 }
                 catch (ApiException ex)
@@ -526,6 +346,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 try
                 {
+                    Upload.Content = $"Chips {i * Constants.Timing.API_LOOP_COUNT} / {upBibChips.Count}";
                     response = await ApiHandlers.UploadBibChips(api, eventIds[0], eventIds[1], upBibChips.GetRange(i * Constants.Timing.API_LOOP_COUNT, Constants.Timing.API_LOOP_COUNT));
                 }
                 catch (ApiException ex)
@@ -542,6 +363,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 try
                 {
+                    Upload.Content = $"Chips {loops * Constants.Timing.API_LOOP_COUNT} / {upBibChips.Count}";
                     response = await ApiHandlers.UploadBibChips(api, eventIds[0], eventIds[1], upBibChips.GetRange(loops * Constants.Timing.API_LOOP_COUNT, leftovers));
                 }
                 catch (ApiException ex)
@@ -554,6 +376,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
                 Log.D("UI.MainPages.TimingPage", $"Total: {total} Count: {response.Count}");
                 Log.D("UI.MainPages.TimingPage", $"Upload finished. Count total: {total}");
             }
+            ApiStatus.Text = $"{upParticipants.Count} participants uploaded";
+            ApiStatus.IsVisible = true;
             Upload.Content = "Upload";
         }
         catch (Exception)
@@ -713,30 +537,47 @@ public partial class ParticipantsPage : UserControl, IMainPage
         exporter.ExportData(path);
     }
 
-    private void Upload_Click(object? sender, RoutedEventArgs e)
+    // Set while a Chronokeep upload or download runs, since the buttons show progress rather than a fixed label.
+    private bool uploading, downloading;
+
+    private async void Upload_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.ParticipantsPage", "Upload clicked.");
-        if (Upload.Content!.ToString() != "Working")
+        if (uploading)
         {
-            Log.D("UI.MainPages.TimingPage", "Uploading data.");
-            Upload.Content = "Working";
-            UploadParticipants();
+            Log.D("UI.MainPages.ParticipantsPage", "Already uploading.");
             return;
         }
-        Log.D("UI.MainPages.ParticipantsPage", "Already uploading.");
+        uploading = true;
+        try
+        {
+            await UploadParticipants();
+        }
+        finally
+        {
+            uploading = false;
+            Upload.Content = "Upload";
+        }
     }
 
-    private void Download_Click(object? sender, RoutedEventArgs e)
+    private async void Download_Click(object? sender, RoutedEventArgs e)
     {
         Log.D("UI.MainPages.ParticipantsPage", "Download clicked.");
-        if (Download.Content!.ToString() != "Working")
+        if (downloading)
         {
-            Log.D("UI.MainPages.TimingPage", "Downloading data.");
-            Download.Content = "Working";
-            DownloadParticipants();
+            Log.D("UI.MainPages.ParticipantsPage", "Already downloading.");
             return;
         }
-        Log.D("UI.MainPages.ParticipantsPage", "Already downloading.");
+        downloading = true;
+        try
+        {
+            await DownloadParticipants();
+        }
+        finally
+        {
+            downloading = false;
+            Download.Content = "Download";
+        }
     }
 
     private async void Delete_Click(object? sender, RoutedEventArgs e)
@@ -913,14 +754,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     };
                     bibStats[divId] = bStats;
                 }
-                if (p.Bib.Length > 0)
-                {
-                    bStats.With += 1;
-                }
-                else
-                {
-                    bStats.Without += 1;
-                }
+                CountBib(bStats, p);
             }
         }
         else
@@ -937,14 +771,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     };
                     bibStats[p.EventSpecific.DistanceIdentifier] = bStats;
                 }
-                if (p.Bib.Length > 0)
-                {
-                    bStats.With += 1;
-                }
-                else
-                {
-                    bStats.Without += 1;
-                }
+                CountBib(bStats, p);
             }
         }
         BibStats totals = new()
@@ -959,6 +786,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             listStats.Add(b);
             totals.With += b.With;
             totals.Without += b.Without;
+            totals.Removed += b.Removed;
         }
         if (bibStats.Values.Count > 1)
         {
@@ -970,7 +798,86 @@ public partial class ParticipantsPage : UserControl, IMainPage
             ViewPanel.IsVisible = false;
         }
         StatsListView.ItemsSource = listStats;
-        StatsExpander.IsVisible = totals.Without > 0;
+        StatsExpander.IsVisible = totals.Without > 0 || totals.Removed > 0;
+        StatsListView.Columns[3].IsVisible = totals.Removed > 0;
+    }
+
+    /// <summary>
+    /// Counts a participant's bib. People removed in Runsignup only count when they still hold a bib,
+    /// in Removed, since that bib may need reclaiming or watching for.
+    /// </summary>
+    private static void CountBib(BibStats stats, Participant p)
+    {
+        if (p.EventSpecific.IsRemoved)
+        {
+            if (p.Bib.Length > 0) stats.Removed += 1;
+        }
+        else if (p.Bib.Length > 0)
+        {
+            stats.With += 1;
+        }
+        else
+        {
+            stats.Without += 1;
+        }
+    }
+
+    /// <summary>Tints people removed in Runsignup and says why, as the timing page does for their results.</summary>
+    private void ParticipantsList_LoadingRow(object? sender, DataGridRowEventArgs e)
+    {
+        bool removed = e.Row.DataContext is Participant { EventSpecific.IsRemoved: true };
+        e.Row.Classes.Set("removed", removed);
+        ToolTip.SetTip(e.Row, removed ? $"Removed in Runsignup: {((Participant)e.Row.DataContext!).RemovedReason}" : null);
+    }
+
+    private async void RunsignupDownload_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await DownloadFromRunsignup();
+        }
+        catch (Exception ex)
+        {
+            Log.E("UI.MainPages.ParticipantsPage", $"Error downloading from Runsignup: {ex.Message}");
+        }
+    }
+
+    private bool downloadingRunsignup;
+
+    /// <summary>
+    /// Downloads the linked Runsignup race. The button shows each step ("Page 2"), and the total
+    /// shows under it afterwards, with what changed in its tooltip.
+    /// </summary>
+    internal async Task DownloadFromRunsignup()
+    {
+        if (theEvent == null || !theEvent.IsRegistrationLinked || downloadingRunsignup) return;
+        downloadingRunsignup = true;
+        RunsignupDownload.Content = "Race";
+        try
+        {
+            // The download is async and does its saving off the UI thread, so the window stays usable.
+            // Steps can be reported from other threads, so they come back through the dispatcher.
+            RsuDownloadSummary summary = await Network.Runsignup.RunsignupDownload.Download(database, theEvent,
+                step => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (downloadingRunsignup) RunsignupDownload.Content = step;
+                }));
+            mWindow.NotifyTimingWorker();
+            RunsignupStatus.Text = $"{summary.Downloaded} participants downloaded";
+            ToolTip.SetTip(RunsignupStatus, summary.Describe());
+            RunsignupStatus.IsVisible = true;
+        }
+        catch (ApiException ex)
+        {
+            DialogBox.Show(ex.Message);
+        }
+        finally
+        {
+            downloadingRunsignup = false;
+            RunsignupDownload.Content = "Download";
+        }
+        UpdateDistancesBox();
+        UpdateView();
     }
 
     private void CondenseSwitch_IsCheckedChanged(object? sender, RoutedEventArgs e)

@@ -443,7 +443,7 @@ namespace Chronokeep.Test.Timing
         private void MarkRemoved(string bib)
         {
             Participant p = Runner(bib);
-            p.EventSpecific.Removed = "Transferred";
+            p.EventSpecific.Removed = "removed_transferred";
             Db.UpdateParticipant(p);
         }
 

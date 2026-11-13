@@ -59,7 +59,8 @@ namespace Chronokeep.Network
 
         private readonly Lock infoLock = new();
 
-        private bool keepAlive = true;
+        // Read by the listening thread and set by Stop on another, so it must not be cached.
+        private volatile bool keepAlive = true;
 
         // host is "*" in the app (any address, which needs a URL reservation on Windows);
         // tests use "localhost", which doesn't.
@@ -429,7 +430,8 @@ namespace Chronokeep.Network
             listener.Prefixes.Add($"http://{host}:{port}/");
             listener.Start();
 
-            serverThread = new Thread(Listen);
+            // A background thread, so a server that's still listening can't keep Chronokeep from exiting.
+            serverThread = new Thread(Listen) { IsBackground = true, Name = "Chronokeep web server" };
             serverThread.Start();
         }
     }

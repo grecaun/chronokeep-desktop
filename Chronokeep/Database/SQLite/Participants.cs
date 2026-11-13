@@ -169,12 +169,13 @@ namespace Chronokeep.Database.SQLite
             command.ExecuteNonQuery();
         }
 
-        internal static void RemoveEventSpecific(int identifier, SQLiteConnection connection)
+        /// <summary>Deletes one event entry. The person and their entries in other events are kept.</summary>
+        internal static void RemoveEventSpecific(int eventSpecificId, SQLiteConnection connection)
         {
             SQLiteCommand command = connection.CreateCommand();
-            command.CommandText = "DELETE FROM eventspecific WHERE participant_id=@0;";
+            command.CommandText = "DELETE FROM eventspecific WHERE eventspecific_id=@0;";
             command.Parameters.AddRange([
-                    new SQLiteParameter("@0", identifier) ]);
+                    new SQLiteParameter("@0", eventSpecificId) ]);
             command.ExecuteNonQuery();
         }
 

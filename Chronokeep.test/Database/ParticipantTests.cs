@@ -203,6 +203,22 @@ namespace Chronokeep.Test.Database
         }
 
         [Fact]
+        public void Removing_an_entry_keeps_the_same_persons_entries_in_other_events()
+        {
+            var lastYear = AddEvent("Race 2025", date: "2025/06/15");
+            var thisYear = AddEvent("Race 2026");
+            var old = AddParticipant(lastYear.Identifier, AddDistance(lastYear.Identifier), "1");
+            var current = AddParticipant(thisYear.Identifier, AddDistance(thisYear.Identifier), "1");
+            Assert.Equal(old.Identifier, current.Identifier);
+
+            Db.RemoveParticipantEntry(current);
+            Db.RemoveParticipantEntries([current]);
+
+            Assert.Empty(Db.GetParticipants(thisYear.Identifier));
+            Assert.Single(Db.GetParticipants(lastYear.Identifier));
+        }
+
+        [Fact]
         public void RemoveParticipantEntries_RemovesAllGiven()
         {
             var e = AddEvent();

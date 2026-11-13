@@ -95,13 +95,6 @@ namespace Chronokeep.UI
         // Set up a timer for updating the view
         private readonly DispatcherTimer timingUpdater = new();
 
-        // Set up a mutex that will be unique for this program to ensure we only ever have a single instance of it running.
-        // Allow for a debug version and non-debug version to run at the same time.
-#if DEBUG
-        private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep-debug");
-#else
-        private static readonly Mutex OneWindow = new(true, "{48ED48DE-6E1B-4F3B-8C5C-D0BAB5295366}-chronokeep");
-#endif
         private static bool WindowIsLoaded = false;
 
         public MainWindow()
@@ -111,25 +104,9 @@ namespace Chronokeep.UI
             MWindow = this;
 
 
-            // Check that no other instance of this program are running.
-            if (App.IsWindows)
-            {
-                if (!OneWindow.WaitOne(TimeSpan.Zero, true))
-                {
-                    DialogBox.Show("Chronokeep is already running.");
-                    try
-                    {
-                        Close();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.E("UI.MainWindow", $"Error trying to close the window on initialization. {e}");
-                    }
-                    return;
-                }
-                OneWindow.ReleaseMutex();
-            }
-            else
+            // On Windows the app checks that no other copy is running before this window is made
+            // (see SingleInstance), so this window never has to close itself before it's shown.
+            if (!App.IsWindows)
             {
                 Process[] processes = Process.GetProcesses();
                 Process currentProcess = Process.GetCurrentProcess();

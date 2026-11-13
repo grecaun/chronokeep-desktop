@@ -69,6 +69,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             FontSize="16"
                             Margin="0,5,15,5"
                             VerticalContentAlignment="Center"/>
+                <!-- Only for people Runsignup removed: the reason, and a switch to put them back in the race.
+                     Hidden for everyone else, so the row looks as it always has. -->
+                <StackPanel Name="RemovedPanel"
+                            DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            IsVisible="False">
+                    <TextBlock Name="RemovedLabel"
+                                FontSize="16"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"/>
+                    <ToggleSwitch Name="RemovedSwitch"
+                                    OnContent=""
+                                    OffContent=""
+                                    Margin="0,-7,15,-7"
+                                    VerticalContentAlignment="Center"
+                                    IsCheckedChanged="RemovedSwitch_IsCheckedChanged"/>
+                </StackPanel>
                 <ComboBox Name="DistanceBox"
                             FontSize="16"
                             Margin="0,5,15,5"
