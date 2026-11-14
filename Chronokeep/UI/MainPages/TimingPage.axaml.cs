@@ -115,7 +115,8 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
         timer.Tick += Timer_Tick;
         timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
 
-        string webAddress = $"localhost:{6933}";
+        // The web server's address on the network, so other computers and tablets can reach it, or this computer's own.
+        string webAddress = $"http://{LanAddress() ?? "localhost"}:{6933}";
         WebBlock.Text = webAddress;
         WebButton.NavigateUri = new Uri(webAddress);
         // Check for default IP address to give to our reader boxes for connections
@@ -127,9 +128,6 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             foreach (UnicastIPAddressInformation ipinfo in adapter.GetIPProperties().UnicastAddresses)
             {
                 if (ipinfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
-                webAddress = $"http://{ipinfo.Address.ToString()}:{6933}";
-                WebBlock.Text = webAddress;
-                WebButton.NavigateUri = new Uri(webAddress);
                 Log.D("UI.MainPages.TimingPage", $"IP Address :{ipinfo.Address}");
                 Log.D("UI.MainPages.TimingPage", $"IPv4 Mask  :{ipinfo.IPv4Mask}");
                 string[] ipParts = ipinfo.Address.ToString().Split('.');
@@ -546,6 +544,22 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
     public void DatasetChanged()
     {
         mWindow.NotifyTimingWorker();
+    }
+
+    /// <summary>
+    /// This computer's IPv4 address on a network with a gateway, wired first, then Wi-Fi; null if it isn't on one.
+    /// </summary>
+    private static string? LanAddress()
+    {
+        return NetworkInterface.GetAllNetworkInterfaces()
+            .Where(adapter => adapter.OperationalStatus == OperationalStatus.Up
+                && adapter.NetworkInterfaceType is NetworkInterfaceType.Ethernet or NetworkInterfaceType.Wireless80211
+                && adapter.GetIPProperties().GatewayAddresses.Count > 0)
+            .OrderBy(adapter => adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet ? 0 : 1)
+            .SelectMany(adapter => adapter.GetIPProperties().UnicastAddresses)
+            .Select(ipinfo => ipinfo.Address)
+            .FirstOrDefault(address => address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            ?.ToString();
     }
 
     private void Timer_Tick(object? sender, EventArgs e)
@@ -1424,7 +1438,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
             {
                 mWindow.StopHttpServer();
                 HttpServerButton.Content = "Start Web";
-                DialogBox.AsyncShow("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
+                DialogBox.AsyncShow(Network.HttpServer.SetupMessage, Network.HttpServer.SetupCommand);
                 WebPanel.IsVisible = false;
             }
         }

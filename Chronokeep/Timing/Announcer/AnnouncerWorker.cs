@@ -29,7 +29,9 @@ namespace Chronokeep.Timing.Announcer
     public class AnnouncerWorker
     {
         private readonly IdbInterface database;
-        private static AnnouncerWorker? announcer;
+        // The thread running the worker, so a new one can wait for it to stop first.
+        private static Thread? runThread;
+        private static readonly TimeSpan StopWait = TimeSpan.FromSeconds(10);
 
         private static readonly Semaphore Semaphore = new(0, 2);
         private static readonly Lock AnLock = new();
@@ -44,11 +46,37 @@ namespace Chronokeep.Timing.Announcer
             this.database = database;
         }
 
-        public static AnnouncerWorker NewAnnouncer(IdbInterface database)
+        /// <summary>
+        /// Starts the worker on its own thread. One that's already running is stopped first, and the new one
+        /// only starts once it has, so two workers never handle the same reads.
+        /// </summary>
+        /// <returns>False if the running worker didn't stop in time.</returns>
+        public static bool Start(IdbInterface database)
         {
-            announcer ??= new AnnouncerWorker(database);
-            quittingTime = false;
-            return announcer;
+            Thread? previous;
+            lock (AnLock)
+            {
+                quittingTime = true;
+                previous = runThread;
+            }
+            if (previous != null)
+            {
+                Notify();
+                if (!previous.Join(StopWait))
+                {
+                    Log.E("Timing.Announcer.AnnouncerWorker", "The running announcer worker didn't stop, so a new one wasn't started.");
+                    return false;
+                }
+            }
+            AnnouncerWorker worker = new(database);
+            lock (AnLock)
+            {
+                quittingTime = false;
+                // A background thread, so it can't keep Chronokeep running once the window has closed.
+                runThread = new Thread(worker.Run) { IsBackground = true, Name = "Chronokeep announcer" };
+                runThread.Start();
+            }
+            return true;
         }
 
         public static void Shutdown()

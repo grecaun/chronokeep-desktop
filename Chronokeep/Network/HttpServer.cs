@@ -35,6 +35,11 @@ namespace Chronokeep.Network
 {
     internal class HttpServer
     {
+        // Shown when the server can't start: Windows needs to allow listening on the port, and the firewall
+        // needs to let other computers in, since it doesn't ask for this kind of server.
+        internal const string SetupMessage = "Unable to start the web server. Please type this command in an elevated command prompt. It lets the web server listen, and lets other computers and tablets on the network reach it:";
+        internal const string SetupCommand = "netsh http add urlacl url=http://*:6933/ user=everyone & netsh advfirewall firewall add rule name=\"Chronokeep web\" dir=in action=allow protocol=TCP localport=6933";
+
         private Thread? serverThread;
         private HttpListener? listener;
         private int port;
@@ -177,6 +182,16 @@ namespace Chronokeep.Network
 
         private void Listen()
         {
+            // Loading everything can take a while for a big event, so it's done here rather than on the thread
+            // that started the server (usually the UI). Requests wait for it, since they're only taken after.
+            try
+            {
+                UpdateInformation();
+            }
+            catch (Exception ex)
+            {
+                Log.E("Network.HttpServer", $"Error loading information for the web server. {ex.Message}");
+            }
             while (keepAlive)
             {
                 try
@@ -544,7 +559,6 @@ namespace Chronokeep.Network
             database = iDatabase;
             port = iPort;
             keepAlive = true;
-            UpdateInformation();
 
             // Test to ensure we can listen.
             listener = new HttpListener();

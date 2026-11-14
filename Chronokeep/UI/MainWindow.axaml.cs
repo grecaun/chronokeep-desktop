@@ -81,9 +81,6 @@ namespace Chronokeep.UI
         private Thread? remoteThread;
         private RemoteReadsController? remoteController;
 
-        // Announcer objects
-        private AnnouncerWorker? announcerWorker;
-
         private readonly List<Window> openWindows = [];
 
         // Setting to allow the user to enter a mode where we can record DNS chips.
@@ -981,32 +978,53 @@ namespace Chronokeep.UI
             AnnouncerWorker.Notify();
         }
 
-        private void Announcer_Click(object sender, RoutedEventArgs e)
+        private async void Announcer_Click(object sender, RoutedEventArgs e)
         {
             Log.D("UI.MainWindow", "Announcer button clicked.");
-            if (AnnouncerOpen())
+            // Starting and stopping wait on locks and the web server, so none of it is done on the UI thread.
+            AnnouncerButton.IsEnabled = false;
+            try
             {
-                StopAnnouncer();
-                UpdateStatus();
-                return;
-            }
-            // The announcer is a page on the web server, so any computer or tablet on the network can show it.
-            if (httpServer == null)
-            {
-                try
+                bool serverStarted = await Task.Run(() =>
                 {
-                    StartHttpServer();
-                }
-                catch
+                    if (AnnouncerOpen())
+                    {
+                        StopAnnouncer();
+                        return true;
+                    }
+                    // The announcer is a page on the web server, so any computer or tablet on the network can show it.
+                    if (httpServer == null)
+                    {
+                        try
+                        {
+                            StartHttpServer();
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
+                    if (!AnnouncerWorker.Start(database!))
+                    {
+                        Dispatcher.UIThread.Post(() => DialogBox.AsyncShow("Something went wrong trying to start the announcer."));
+                    }
+                    return true;
+                });
+                if (!serverStarted)
                 {
                     StopHttpServer();
-                    DialogBox.AsyncShow("Unable to start the web server. Please type this command in an elevated command prompt:", "netsh http add urlacl url=http://*:6933/ user=everyone");
-                    return;
+                    DialogBox.AsyncShow(HttpServer.SetupMessage, HttpServer.SetupCommand);
                 }
             }
-            StartAnnouncerWorker();
-            UpdateStatus();
-            DialogBox.AsyncShow($"The announcer page is at http://localhost:{HttpServerPort}/announcer on this computer, or /announcer on the web address shown on the Timing page.");
+            catch (Exception ex)
+            {
+                Log.E("UI.MainWindow", $"Error turning the announcer on or off. {ex.Message}");
+            }
+            finally
+            {
+                AnnouncerButton.IsEnabled = true;
+                UpdateStatus();
+            }
         }
 
         public void NetworkUpdateResults()
@@ -1241,37 +1259,6 @@ namespace Chronokeep.UI
         {
             currentPage?.UpdateView();
             UpdateStatus();
-        }
-
-        public bool StartAnnouncerWorker()
-        {
-            if (database == null) return false;
-            if (announcerWorker != null)
-            {
-                AnnouncerWorker.Shutdown();
-                AnnouncerWorker.Notify();
-                if (AnnouncerWorker.Running())
-                {
-                    DialogBox.AsyncShow("Something went wrong trying to start the announcer worker.");
-                    return false;
-                }
-            }
-            announcerWorker = AnnouncerWorker.NewAnnouncer(database);
-            Thread announcerThread = new(announcerWorker.Run);
-            announcerThread.Start();
-            return true;
-        }
-
-        public bool StopAnnouncerWorker()
-        {
-            AnnouncerWorker.Shutdown();
-            AnnouncerWorker.Notify();
-            if (AnnouncerWorker.Running())
-            {
-                DialogBox.AsyncShow("Something went wrong trying to stop the announcer worker.");
-                return false;
-            }
-            return true;
         }
     }
 }

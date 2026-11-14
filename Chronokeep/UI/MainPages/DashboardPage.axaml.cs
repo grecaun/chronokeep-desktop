@@ -22,7 +22,6 @@ using Chronokeep.Database;
 using Chronokeep.Helpers;
 using Chronokeep.Interfaces.UI;
 using Chronokeep.Objects;
-using Chronokeep.Timing.Announcer;
 using Chronokeep.UI.API.Windows;
 using Chronokeep.UI.EventWindows;
 using Chronokeep.UI.MainPages.Dashboard;
@@ -168,14 +167,6 @@ public partial class DashboardPage : UserControl, IMainPage
         RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
         GenderBox.SelectedIndex = theEvent.UseMaleFemale ? 1 : 0;
         loaded = true;
-        if (mWindow.AnnouncerOpen())
-        {
-            RestartAnnouncerButton.IsEnabled = true;
-        }
-        else
-        {
-            RestartAnnouncerButton.IsEnabled = false;
-        }
     }
 
     private void DisableEditableFields()
@@ -948,11 +939,5 @@ public partial class DashboardPage : UserControl, IMainPage
         }
         // Show what actually happened, so a start that fails doesn't look like it's running.
         RegistrationButton.Content = mWindow.IsRegistrationRunning() ? "Stop Registration" : "Start Registration";
-    }
-
-    private void RestartAnnouncerButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        Log.D("UI.MainPages.DashboardPage", "Restart Announcer button clicked.");
-        mWindow.StartAnnouncerWorker();
     }
 }

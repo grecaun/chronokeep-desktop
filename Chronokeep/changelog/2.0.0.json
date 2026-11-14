@@ -183,6 +183,11 @@
     "The announcer is now a web page instead of a window, so any computer or tablet on the network can show it. The Announcer button turns it on and off, starting the web server if it isn't running. The page is at /announcer on the web address shown on the Timing page.",
     "The announcer page shows runners read at the announcer location and runners crossing the finish line together in one list, with how long ago each was first seen. A runner read at the announcer location who then finishes within the Repeat Window shows once, and with a Repeat Window of 0 each runner only shows once. The Time column shows their finish time once they've finished.",
     "The announcer page has a settings pane for making the text larger or smaller, choosing which columns show, showing unknown runners (bibs that were read but that nobody is registered with) and showing a running clock for each distance along the bottom. Settings are kept separately on each device.",
+    "Fixed an issue where the web address link on the Timing page didn't open, and showed localhost instead of the network address on computers connected by Wi-Fi.",
+    "Fixed an issue where turning the announcer on, or starting the web server, froze Chronokeep until it had started.",
+    "Fixed an issue where restarting the announcer could leave the old one running alongside the new one, so runners could be listed twice.",
+    "Removed the Restart Announcer Worker button from the Dashboard. Turning the announcer off and on again restarts it.",
+    "When the web server can't start, the command it shows now also adds a firewall rule, so other computers and tablets on the network can reach it.",
     "The announcer list is built once and shared by every device showing the announcer page, so having several open doesn't slow Chronokeep down.",
     "Anonymous runners show as Anonymous on the announcer page, without their city, state or comments."
   ]

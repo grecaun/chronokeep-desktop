@@ -62,8 +62,6 @@ namespace Chronokeep.Interfaces.UI
         // Announcer related calls.
         bool AnnouncerOpen();
         void StopAnnouncer();
-        bool StartAnnouncerWorker();
-        bool StopAnnouncerWorker();
 
         // API System related calls.
         void StartApiController();
