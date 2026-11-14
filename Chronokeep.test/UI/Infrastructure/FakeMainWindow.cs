@@ -96,13 +96,6 @@ namespace Chronokeep.Test.UI.Infrastructure
         // Announcer related calls.
         public bool AnnouncerOpen() => false;
         public void StopAnnouncer() { }
-        public int StartAnnouncerWorkerCalls { get; private set; }
-        public bool StartAnnouncerWorker()
-        {
-            StartAnnouncerWorkerCalls++;
-            return false;
-        }
-        public bool StopAnnouncerWorker() => false;
 
         // API System related calls.
         public int StartApiControllerCalls { get; private set; }

@@ -39,6 +39,11 @@ namespace Chronokeep.Test.Timing
 
         public override void Dispose()
         {
+            // Stop a worker a test started, before its database goes away.
+            Thread? running = (Thread?)typeof(AnnouncerWorker).GetField("runThread", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
+            AnnouncerWorker.Shutdown();
+            AnnouncerWorker.Notify();
+            running?.Join(TimeSpan.FromSeconds(10));
             Globals.SeenWindow = previousSeenWindow;
             Static<IList>("Participants").Clear();
             Static<IDictionary>("BibSeen").Clear();
@@ -136,6 +141,22 @@ namespace Chronokeep.Test.Timing
 
             Assert.Equal(["1", "1", "2"], AnnouncerWorker.GetList().Select(p => p.Bib).Order());
             Assert.DoesNotContain(Reads(), r => r.Status == TimingConstants.CHIPREAD_STATUS_NONE);
+        }
+
+        [Fact]
+        public void StartingAgain_WaitsForTheRunningWorkerToStop()
+        {
+            Assert.True(AnnouncerWorker.Start(Db));
+            Thread first = Static<Thread>("runThread");
+
+            Assert.True(AnnouncerWorker.Start(Db));
+            Thread second = Static<Thread>("runThread");
+
+            Assert.NotSame(first, second);
+            Assert.False(first.IsAlive);
+            Assert.True(second.IsAlive);
+            Assert.True(second.IsBackground);
+            Assert.True(AnnouncerWorker.Running());
         }
     }
 }

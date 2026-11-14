@@ -331,6 +331,19 @@ namespace Chronokeep.Test.UI
         }
 
         [AvaloniaFact]
+        public async Task Web_address_is_a_link_that_opens_in_a_browser()
+        {
+            Seed();
+            TimingPage page = OpenPage();
+            await Settle();
+
+            Uri link = Find<HyperlinkButton>(page, "WebButton").NavigateUri!;
+            Assert.Equal("http", link.Scheme);
+            Assert.Equal(6933, link.Port);
+            Assert.Equal(link.ToString().TrimEnd('/'), Find<TextBlock>(page, "WebBlock").Text);
+        }
+
+        [AvaloniaFact]
         public async Task Stop_web_stops_the_server_and_hides_its_address()
         {
             Seed();

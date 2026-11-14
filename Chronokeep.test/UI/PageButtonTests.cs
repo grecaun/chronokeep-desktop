@@ -222,17 +222,6 @@ namespace Chronokeep.Test.UI
         }
 
         [AvaloniaFact]
-        public void Restart_announcer_starts_the_announcer_worker()
-        {
-            SeedEvent();
-            DashboardPage page = OpenDashboard();
-
-            Click(Find<Button>(page, "RestartAnnouncerButton"));
-
-            Assert.Equal(1, MainWindow.StartAnnouncerWorkerCalls);
-        }
-
-        [AvaloniaFact]
         public void New_and_change_event_buttons_open_their_windows()
         {
             SeedEvent();
