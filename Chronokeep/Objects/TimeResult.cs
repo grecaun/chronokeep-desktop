@@ -306,7 +306,23 @@ namespace Chronokeep.Objects
         public int Type { get; private set; }
         public string Identifier => UnknownId;
         public string PrettyType => PrettyTypeStr();
-        public string PrettyGender => Gender == "Man" || Gender == "Male" ? "M" : Gender == "Woman" ? "W" : Gender == "Non-Binary" ? "X" : Gender == "Female" ? "F" : Gender == "Not Specified" || Gender.Equals("ns", StringComparison.OrdinalIgnoreCase) ? "" : Gender.Length <= 2 ? Gender : Gender[..2];
+        public string PrettyGender => ShortGender(Gender);
+
+        /// <summary>
+        /// The short code shown for a gender: M (man or male), W (woman), F (female) or X (non-binary), nothing
+        /// when it isn't specified, and otherwise its first two letters.
+        /// </summary>
+        public static string ShortGender(string? gender) => gender switch
+        {
+            null => "",
+            "Man" or "Male" => "M",
+            "Woman" => "W",
+            "Non-Binary" => "X",
+            "Female" => "F",
+            "Not Specified" => "",
+            _ when gender.Equals("ns", StringComparison.OrdinalIgnoreCase) => "",
+            _ => gender.Length <= 2 ? gender : gender[..2],
+        };
 
         private string PrettyTypeStr()
         {

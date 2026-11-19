@@ -31,6 +31,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Chronokeep.Timing.Interfaces
 {
@@ -40,6 +41,17 @@ namespace Chronokeep.Timing.Interfaces
         private readonly StringBuilder buffer = new();
         private RfidSettings? settingsWindow;
         private Socket? sock;
+        // Sends come from the timing loop, the windows and the status check timer.
+        private readonly object sendLock = new();
+
+        /// <summary>How long after connecting the reader is first asked whether it's reading.</summary>
+        internal TimeSpan StatusCheckDelay { get; set; } = TimeSpan.FromSeconds(2);
+        /// <summary>The reader is asked again once it's gone this long without a chip read or another status check.</summary>
+        internal TimeSpan StatusCheckInterval { get; set; } = TimeSpan.FromSeconds(30);
+        private Timer? statusTimer;
+        // Environment.TickCount64 when a chip read last arrived or the status was last asked for.
+        private long lastActivity;
+        private int firstStatusCheck;
 
         [GeneratedRegex(@"^V=.*")]
         private static partial Regex Voltage();
@@ -84,9 +96,44 @@ namespace Chronokeep.Timing.Interfaces
                 return null;
             }
             Log.D("Timing.Interfaces.RFIDUltraInterface", "connected. Returning socket.");
-            // Query current status of the reader
-            GetStatus();
+            StartStatusChecks();
             return output;
+        }
+
+        /// <summary>
+        /// Asks the reader whether it's reading shortly after connecting, once it has had a moment to send its
+        /// greeting, and then again whenever it has gone StatusCheckInterval without a chip read.
+        /// </summary>
+        private void StartStatusChecks()
+        {
+            StopStatusChecks();
+            Interlocked.Exchange(ref lastActivity, Environment.TickCount64);
+            Interlocked.Exchange(ref firstStatusCheck, 1);
+            // Check often enough to ask close to on time, but at most once a second.
+            TimeSpan period = TimeSpan.FromMilliseconds(Math.Clamp(StatusCheckInterval.TotalMilliseconds / 4, 10, 1000));
+            statusTimer = new Timer(_ => CheckStatus(), null, StatusCheckDelay, period);
+        }
+
+        private void CheckStatus()
+        {
+            bool first = Interlocked.Exchange(ref firstStatusCheck, 0) == 1;
+            long quietFor = Environment.TickCount64 - Interlocked.Read(ref lastActivity);
+            if (!first && quietFor < StatusCheckInterval.TotalMilliseconds) return;
+            try
+            {
+                GetStatus();
+            }
+            catch (Exception e)
+            {
+                // The connection is gone; the timing loop deals with that, so just stop asking.
+                Log.D("Timing.Interfaces.RFIDUltraInterface", $"Unable to ask the reader's status, stopping status checks. {e.Message}");
+                StopStatusChecks();
+            }
+        }
+
+        private void StopStatusChecks()
+        {
+            Interlocked.Exchange(ref statusTimer, null)?.Dispose();
         }
 
         public Dictionary<MessageType, List<string>> ParseMessages(string inMessage, Socket iSock)
@@ -110,6 +157,8 @@ namespace Chronokeep.Timing.Interfaces
                 // If "0,[...]" Chip read
                 if (ChipRead().IsMatch(message))
                 {
+                    // Hearing a read shows the reader is reading, so the next status check can wait.
+                    Interlocked.Exchange(ref lastActivity, Environment.TickCount64);
                     // Only add a chip read if it isn't on the ignore list.
                     string[] chipVals = message.Split(',');
                     string chip = chipVals[1].Trim();
@@ -405,6 +454,7 @@ namespace Chronokeep.Timing.Interfaces
 
         public void GetStatus()
         {
+            Interlocked.Exchange(ref lastActivity, Environment.TickCount64);
             SendMessage("?");
         }
 
@@ -423,7 +473,10 @@ namespace Chronokeep.Timing.Interfaces
             SendMessage("s");
         }
 
-        public void Disconnect() { }
+        public void Disconnect()
+        {
+            StopStatusChecks();
+        }
 
         /**
          * Changing settings on the Ultra 
@@ -818,7 +871,11 @@ namespace Chronokeep.Timing.Interfaces
             Log.D("Timing.Interfaces.RFIDUltraInterface", $"Sending message '{msg}'");
             // Latin1 sends every character from 0 to 255 as that same byte. Settings end with 0xFF
             // and IP addresses are sent as raw bytes, which ASCII would turn into '?'.
-            sock!.Send(Encoding.Latin1.GetBytes($"{msg}\n"));
+            byte[] bytes = Encoding.Latin1.GetBytes($"{msg}\n");
+            lock (sendLock)
+            {
+                sock!.Send(bytes);
+            }
         }
 
         public void SetMainSocket(Socket iSock)

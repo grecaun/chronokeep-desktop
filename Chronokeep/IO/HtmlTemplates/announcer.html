@@ -21,18 +21,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Announcer</title>
+    <script>
+        // Apply a chosen light or dark theme before the page is drawn, so it doesn't flash the other one.
+        try {
+            const theme = (JSON.parse(localStorage.getItem("chronokeep.announcer.settings")) || {}).theme;
+            if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        } catch { }
+    </script>
     <style>
         :root {
             --text-size: 22px;
             --bg: #ffffff; --fg: #1b1b1f; --muted: #6b6b75; --line: #d9d9e0;
             --stripe: #f4f4f7; --bar: #ececf1; --accent: #2f6fde; --panel: #ffffff; --shade: rgba(0, 0, 0, 0.35);
+            color-scheme: light dark;
         }
+        /* Dark follows the system unless light is chosen, or is chosen outright. */
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]) {
                 --bg: #16161a; --fg: #ececf1; --muted: #9a9aa5; --line: #34343c;
                 --stripe: #1e1e23; --bar: #222228; --accent: #6b9cf0; --panel: #1e1e23; --shade: rgba(0, 0, 0, 0.6);
             }
         }
+        :root[data-theme="dark"] {
+            --bg: #16161a; --fg: #ececf1; --muted: #9a9aa5; --line: #34343c;
+            --stripe: #1e1e23; --bar: #222228; --accent: #6b9cf0; --panel: #1e1e23; --shade: rgba(0, 0, 0, 0.6);
+            color-scheme: dark;
+        }
+        :root[data-theme="light"] { color-scheme: light; }
         * { box-sizing: border-box; }
         html, body { margin: 0; height: 100%; }
         body {
@@ -51,6 +66,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             border-radius: 6px; padding: 4px 12px; font-size: 16px; line-height: 1.4; cursor: pointer;
         }
         #settingsButton { font-size: 22px; padding: 2px 12px; }
+        /* Theme switch: system, light, dark. */
+        .theme { display: inline-flex; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+        .theme button {
+            border: none; border-radius: 0; padding: 6px 9px; background: var(--bg); color: var(--muted);
+            display: inline-flex; align-items: center; cursor: pointer;
+        }
+        .theme button + button { border-left: 1px solid var(--line); }
+        .theme button[aria-pressed="true"] { background: var(--stripe); color: var(--fg); }
+        header svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        #fullscreenButton { display: inline-flex; align-items: center; padding: 6px 10px; }
+        #fullscreenButton[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+        #fullscreenButton .compress, #fullscreenButton[aria-pressed="true"] .expand { display: none; }
+        #fullscreenButton[aria-pressed="true"] .compress { display: inline; }
+        /* Plays out of sight to keep phones awake where the wake lock isn't available. */
+        #awakeVideo { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
         main { flex: 1; overflow: auto; }
         table { width: 100%; border-collapse: collapse; font-size: var(--text-size); }
         th, td { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
@@ -98,6 +128,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     <header>
         <h1 id="eventName">Announcer</h1>
         <span id="status"></span>
+        <div class="theme" role="group" aria-label="Color theme">
+            <button type="button" data-theme-choice="system" title="Match system theme" aria-label="Match system theme">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+            </button>
+            <button type="button" data-theme-choice="light" title="Light theme" aria-label="Light theme">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            </button>
+            <button type="button" data-theme-choice="dark" title="Dark theme" aria-label="Dark theme">
+                <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+            </button>
+        </div>
+        <button class="icon" id="fullscreenButton" type="button" aria-pressed="false" aria-label="Full screen" title="Full screen, keeping the screen awake">
+            <svg class="expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <svg class="compress" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+        </button>
         <button class="icon" id="settingsButton" type="button" aria-label="Settings" title="Settings">&#9776;</button>
     </header>
     <main>
@@ -134,7 +179,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         ];
         const STORAGE_KEY = "chronokeep.announcer.settings";
         const TEXT_SIZES = { min: 12, max: 64, step: 2, normal: 22 };
-        const settings = Object.assign({ hiddenColumns: [], showUnknown: false, showClocks: true, hiddenClocks: [], textSize: TEXT_SIZES.normal }, load());
+        const settings = Object.assign({ hiddenColumns: [], showUnknown: false, showClocks: true, hiddenClocks: [], textSize: TEXT_SIZES.normal, theme: "system" }, load());
         let data = { runners: [], clocks: [] };
         let lastRunners = "";
         let clockOffset = 0;
@@ -185,6 +230,103 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         showClocks.onchange = () => { settings.showClocks = showClocks.checked; save(); renderClocks(); };
         document.getElementById("columnChoices").append(...COLUMNS.map(([key, title]) =>
             checkbox(title, !settings.hiddenColumns.includes(key), on => { toggleIn(settings.hiddenColumns, key, !on); renderRunners(); })));
+
+        // Theme switch: match the system, or always light or dark.
+        function setTheme(choice) {
+            settings.theme = choice === "light" || choice === "dark" ? choice : "system";
+            if (settings.theme === "system") delete document.documentElement.dataset.theme;
+            else document.documentElement.dataset.theme = settings.theme;
+            document.querySelectorAll("[data-theme-choice]").forEach(b =>
+                b.setAttribute("aria-pressed", String(b.dataset.themeChoice === settings.theme)));
+        }
+        setTheme(settings.theme);
+        document.querySelectorAll("[data-theme-choice]").forEach(b => {
+            b.onclick = () => { setTheme(b.dataset.themeChoice); save(); };
+        });
+
+        // Full screen, keeping the screen from dimming or locking while it's up. The browser's wake lock only
+        // works on secure pages (https or localhost), so elsewhere a tiny muted video plays out of sight, which
+        // phones also keep the screen on for. Where pages can't go full screen (iPhones), the button just keeps
+        // the screen awake.
+        const root = document.documentElement;
+        const canFullscreen = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+        const fullscreenButton = document.getElementById("fullscreenButton");
+        let keepingAwake = false;
+        let wakeLock = null;
+        let awake = null;
+        function fullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || null;
+        }
+        function awakeVideo() {
+            if (!awake) {
+                const canvas = el("canvas", { width: 2, height: 2 });
+                const draw = canvas.getContext("2d");
+                let frame = 0;
+                // The picture has to keep changing for the video to count as playing.
+                const paint = () => { draw.fillStyle = frame++ % 2 ? "#000000" : "#010101"; draw.fillRect(0, 0, 2, 2); };
+                paint();
+                const video = el("video", { id: "awakeVideo", muted: true, loop: true, playsInline: true });
+                video.setAttribute("muted", "");
+                video.setAttribute("playsinline", "");
+                video.setAttribute("aria-hidden", "true");
+                if (canvas.captureStream) video.srcObject = canvas.captureStream(1);
+                document.body.append(video);
+                awake = { video, paint, timer: null };
+            }
+            return awake;
+        }
+        async function startKeepingAwake() {
+            keepingAwake = true;
+            if ("wakeLock" in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request("screen");
+                    wakeLock.addEventListener("release", () => { wakeLock = null; });
+                    return;
+                } catch { }
+            }
+            const a = awakeVideo();
+            if (!a.timer) a.timer = setInterval(a.paint, 1000);
+            a.video.play().catch(() => { });
+        }
+        function stopKeepingAwake() {
+            keepingAwake = false;
+            if (wakeLock) { wakeLock.release().catch(() => { }); wakeLock = null; }
+            if (awake) { awake.video.pause(); clearInterval(awake.timer); awake.timer = null; }
+        }
+        function renderFullscreen() {
+            const on = canFullscreen ? !!fullscreenElement() : keepingAwake;
+            fullscreenButton.setAttribute("aria-pressed", String(on));
+            const label = canFullscreen
+                ? (on ? "Exit full screen" : "Full screen, keeping the screen awake")
+                : (on ? "Let the screen sleep" : "Keep the screen awake");
+            fullscreenButton.title = label;
+            fullscreenButton.setAttribute("aria-label", label);
+        }
+        fullscreenButton.onclick = async () => {
+            if (!canFullscreen) {
+                if (keepingAwake) stopKeepingAwake(); else await startKeepingAwake();
+            } else if (fullscreenElement()) {
+                await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+            } else {
+                // Both need the tap that asked for them, so start them together.
+                const going = (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+                startKeepingAwake();
+                try { await going; } catch { stopKeepingAwake(); }
+            }
+            renderFullscreen();
+        };
+        function fullscreenChanged() {
+            // Leaving full screen any way (button, Escape, swiping) lets the screen sleep again.
+            if (!fullscreenElement()) stopKeepingAwake();
+            renderFullscreen();
+        }
+        document.addEventListener("fullscreenchange", fullscreenChanged);
+        document.addEventListener("webkitfullscreenchange", fullscreenChanged);
+        // The wake lock is let go whenever the page is hidden, so take it again on coming back.
+        document.addEventListener("visibilitychange", () => {
+            if (keepingAwake && !wakeLock && document.visibilityState === "visible") startKeepingAwake();
+        });
+        renderFullscreen();
 
         function visibleColumns() {
             return COLUMNS.filter(([key]) => !settings.hiddenColumns.includes(key));

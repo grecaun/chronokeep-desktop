@@ -1307,7 +1307,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 return;
             }
             SendEmailsButton.Content = "Sending...";
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 HashSet<int> sentIDs = [];
                 List<int> idents = database.GetEmailAlerts(theEvent!.Identifier);
@@ -1325,12 +1325,13 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
                 int distances = database.GetDistances(theEvent.Identifier).Count(d => Constants.Timing.DISTANCE_NO_LINKED_ID == d.LinkedDistance);
                 GlobalVars.UpdateBannedEmails();
-                HttpClient client = new();
                 MailgunCredentials credentials = MailgunCredentials.GetCredentials(database);
                 if (!credentials.Valid())
                 {
                     return;
                 }
+                // One client for every email, so they share a connection, closed when it's disposed at the end.
+                using HttpClient client = new() { Timeout = TimeSpan.FromSeconds(30) };
                 string base64String = Convert.ToBase64String(Encoding.ASCII.GetBytes(
                     $"{credentials.Username}:{credentials.ApiKey}"));
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(@"Basic", base64String);
@@ -1340,7 +1341,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     if (part == null || result.EventSpecificId == Constants.Timing.EVENTSPECIFIC_UNKNOWN) continue;
                     if (part.Email.Length <= 0 || GlobalVars.BannedEmails.Contains(part.Email) ||
                         sentIDs.Contains(result.EventSpecificId)) continue;
-                    MultipartFormDataContent postData = new()
+                    using MultipartFormDataContent postData = new()
                     {
                         { new StringContent(credentials.From()), "from" },
                         { new StringContent(part.Email), "to" },
@@ -1355,11 +1356,19 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                     };
                     try
                     {
-                        client.PostAsync($"https://api.mailgun.net/v3/{credentials.Domain}/messages", postData);
+                        // Wait for each email, and only count it as sent once Mailgun takes it, so one that
+                        // fails is sent again next time.
+                        using HttpResponseMessage response = await client.PostAsync($"https://api.mailgun.net/v3/{credentials.Domain}/messages", postData);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            Log.E("UI.MainPages.TimingPage", $"Error sending email: {(int)response.StatusCode} {response.ReasonPhrase}");
+                            continue;
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        Log.E("UI.MainPages.TimingPage", "Error sending email.");
+                        Log.E("UI.MainPages.TimingPage", $"Error sending email: {ex.Message}");
+                        continue;
                     }
                     database.AddEmailAlert(theEvent.Identifier, result.EventSpecificId);
                 }

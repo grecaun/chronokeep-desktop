@@ -44,7 +44,8 @@ namespace Chronokeep.Objects
         private bool Hidden => person == null || person.Anonymous;
         public string ParticipantName => person == null ? "" : person.Anonymous ? "Anonymous" : $"{person.FirstName} {person.LastName}";
         public string CityState => Hidden ? "" : $"{person!.City} {person.State}";
-        public string AgeGender => person == null ? "" : TheEvent == null ? $"? {person.Gender}" : $"{person.Age(TheEvent.Date)} {person.Gender}";
+        // The gender is shown as its short code (see TimeResult.ShortGender), and left off when it isn't specified.
+        public string AgeGender => person == null ? "" : $"{(TheEvent == null ? "?" : person.Age(TheEvent.Date))} {TimeResult.ShortGender(person.Gender)}".TrimEnd();
         public string Comments => Hidden ? "" : person!.Comments;
 
         /// <summary>The runner's finish time, once they've finished in this pass; blank until then.</summary>

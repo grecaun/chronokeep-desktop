@@ -91,6 +91,32 @@ namespace Chronokeep.Test.UI
             Assert.Equal("Male", genders["Max"]);
         }
 
+        [AvaloniaFact]
+        public void Switching_genders_rebuilds_results_and_other_saves_keep_them()
+        {
+            (Event e, Distance d) = SeedEvent();
+            Participant max = AddParticipant(e.Identifier, d, "200", first: "Max", gender: "M");
+            Db.AddChipReads([NewRead(e.Identifier, "200", 1800)]);
+            int readId = Db.GetChipReads(e.Identifier).Single().ReadId;
+            Db.AddTimingResult(new TimeResult(e.Identifier, readId, max.EventSpecific.Identifier,
+                Constants.Timing.LOCATION_FINISH, Constants.Timing.SEGMENT_FINISH, 1, 1800, 0, "", 1800, 0,
+                DateTime.Now, "200", Constants.Timing.TIMERESULT_STATUS_NONE, ""));
+            string results = $"event_id={e.Identifier}";
+            DashboardPage page = OpenDashboard();
+
+            // Saving without touching the gender option leaves results alone.
+            Click(Find<Button>(page, "EditButton"));
+            Click(Find<Button>(page, "EditButton"));
+            Assert.Equal(1, Count("time_results", results));
+
+            // Results hold a copy of each runner's gender, so they're cleared for the timing worker to build again.
+            Click(Find<Button>(page, "EditButton"));
+            Find<ComboBox>(page, "GenderBox").SelectedIndex = 1;
+            Click(Find<Button>(page, "EditButton"));
+            Assert.Equal(0, Count("time_results", results));
+            Assert.Equal(2, MainWindow.NotifyTimingWorkerCalls);
+        }
+
         [AvaloniaTheory]
         [InlineData("de-DE")]
         [InlineData("en-GB")]

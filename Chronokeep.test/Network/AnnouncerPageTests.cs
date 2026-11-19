@@ -63,12 +63,12 @@ namespace Chronokeep.Test.Network
                 TimingConstants.LOCATION_FINISH, TimingConstants.SEGMENT_FINISH, 1, 1800, 0, "", 1800, 0, when, p.Bib, status, ""));
         }
 
-        private Participant Runner(string bib, string first, bool anonymous = false)
+        private Participant Runner(string bib, string first, bool anonymous = false, string gender = "F")
         {
             Participant? p = Db.AddParticipant(new Participant(
                 first, "Runner", "123 Main St", "Springfield", "OR", "97477", "01/02/1990",
                 new EventSpecific(theEvent.Identifier, fiveK.Identifier, fiveK.Name, bib, 0, $"Cheer for {first}", "", "", anonymous, false, "", ""),
-                "", "", "", "", "", "", "F", "", ""));
+                "", "", "", "", "", "", gender, "", ""));
             Assert.NotNull(p);
             return p;
         }
@@ -146,6 +146,25 @@ namespace Chronokeep.Test.Network
 
             Assert.Equal(["1"], Bibs(await Data()));
             Assert.Equal(["77", "1"], Bibs(await Data(unknown: true)));
+        }
+
+        [Fact]
+        public async Task Data_ShowsGenderAsItsShortCode()
+        {
+            Finish(Runner("21", "Woman", gender: "Woman"), 4);
+            Finish(Runner("22", "Man", gender: "Man"), 3);
+            Finish(Runner("23", "NonBinary", gender: "Non-Binary"), 2);
+            Finish(Runner("24", "Unspecified", gender: "Not Specified"), 1);
+
+            JsonElement data = await Data();
+            string AgeGender(string bib) => data.GetProperty("runners").EnumerateArray()
+                .Single(r => r.GetProperty("bib").GetString() == bib).GetProperty("ageGender").GetString()!;
+            string age = Runner("25", "Age").Age(theEvent.Date);
+            Assert.Equal($"{age} W", AgeGender("21"));
+            Assert.Equal($"{age} M", AgeGender("22"));
+            Assert.Equal($"{age} X", AgeGender("23"));
+            // No code, and no trailing space, when the gender isn't specified.
+            Assert.Equal(age, AgeGender("24"));
         }
 
         [Fact]

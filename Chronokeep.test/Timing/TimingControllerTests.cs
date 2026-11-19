@@ -44,11 +44,11 @@ namespace Chronokeep.Test.Timing
             Client.GetStream().Flush();
         }
 
-        /// <summary>Reads whatever the controller has sent so far (waits up to a second for something).</summary>
-        public string Received()
+        /// <summary>Reads whatever the controller has sent so far (waits up to a second, or the given time, for something).</summary>
+        public string Received(int timeoutMs = 1000)
         {
             var stream = Client.GetStream();
-            stream.ReadTimeout = 1000;
+            stream.ReadTimeout = timeoutMs;
             byte[] buf = new byte[1024];
             try
             {
@@ -146,7 +146,9 @@ namespace Chronokeep.Test.Timing
 
             Assert.Equal(SYSTEM_STATUS.CONNECTED, sys.Status);
             Assert.Same(sys, Assert.Single(controller.GetConnectedSystems()));
-            Assert.Equal("?\n", reader.Received());
+            // The status is asked for a couple of seconds after connecting, once the reader has said hello.
+            Assert.Equal("", reader.Received(timeoutMs: 1000));
+            Assert.Equal("?\n", reader.Received(timeoutMs: 3000));
         }
 
         [Fact]

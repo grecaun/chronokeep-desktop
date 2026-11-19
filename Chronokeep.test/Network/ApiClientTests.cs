@@ -141,6 +141,30 @@ namespace Chronokeep.Test.Network
         }
 
         [Fact]
+        public async Task Requests_AskTheServerToCloseTheConnection()
+        {
+            server.ResponseBody = "{\"events\":[]}";
+
+            await ApiHandlers.GetEvents(api);
+
+            // Each request has a client of its own, so the server shouldn't hold the connection open for another.
+            Assert.Equal("close", server.Single().Headers["Connection"], ignoreCase: true);
+        }
+
+        [Fact]
+        public void NewHttpClient_ClosesConnectionsAndAsksForJson()
+        {
+            using HttpClient client = Chronokeep.Network.Util.Helpers.NewHttpClient(TimeSpan.FromSeconds(7));
+            Assert.True(client.DefaultRequestHeaders.ConnectionClose);
+            Assert.Equal(TimeSpan.FromSeconds(7), client.Timeout);
+            Assert.Equal("application/json", Assert.Single(client.DefaultRequestHeaders.Accept).MediaType);
+
+            using HttpClient api = Chronokeep.Network.Util.Helpers.GetHttpClient();
+            Assert.True(api.DefaultRequestHeaders.ConnectionClose);
+            Assert.Equal(TimeSpan.FromSeconds(10), api.Timeout);
+        }
+
+        [Fact]
         public async Task GetEvents_SendsBearerTokenAndParsesEvents()
         {
             server.ResponseBody = "{\"events\":[{\"name\":\"Race\",\"slug\":\"race\"},{\"name\":\"Other\",\"slug\":\"other\"}]}";

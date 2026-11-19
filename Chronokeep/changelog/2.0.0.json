@@ -21,7 +21,11 @@
     "Releases now include Linux packages (.deb and .rpm) and a macOS disk image (.dmg), along with SHA256 checksums and GitHub build attestations to check downloads.",
     "Birthdates are now always stored as year/month/day (for example 1990/01/02), however they were entered or imported. Existing birthdates are converted when the database is upgraded, and participant records that only differed by how their birthdate was written are combined into one.",
     "New timing locations now ignore repeat reads of the same runner within 10 minutes by default. Existing locations keep their current setting.",
-    "Added database support for linking an event to a Runsignup race, choosing which distance each Runsignup event goes into, and tracking participants Runsignup has removed. Removed participants won't count toward the timing page totals and their results won't be uploaded."
+    "Added database support for linking an event to a Runsignup race, choosing which distance each Runsignup event goes into, and tracking participants Runsignup has removed. Removed participants won't count toward the timing page totals and their results won't be uploaded.",
+    "The announcer page has a light and dark theme switch in its title bar. It can match the device's setting or always use light or dark, and is remembered on each device.",
+    "The announcer page has a full screen button, which also keeps the screen from dimming or locking while it's full screen. On iPhones, where pages can't go full screen, the button just keeps the screen awake.",
+    "The announcer page shows gender as its short code, such as M, W or X, and leaves it off when it isn't specified.",
+    "Chronokeep now asks an RFID Ultra whether it's reading a couple of seconds after connecting, once the reader has had a moment to say hello, and again every 30 seconds that it hasn't sent a read, so the reading status shown stays up to date."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",
@@ -189,6 +193,9 @@
     "Removed the Restart Announcer Worker button from the Dashboard. Turning the announcer off and on again restarts it.",
     "When the web server can't start, the command it shows now also adds a firewall rule, so other computers and tablets on the network can reach it.",
     "The announcer list is built once and shared by every device showing the announcer page, so having several open doesn't slow Chronokeep down.",
-    "Anonymous runners show as Anonymous on the announcer page, without their city, state or comments."
+    "Anonymous runners show as Anonymous on the announcer page, without their city, state or comments.",
+    "Fixed an issue where switching an event between Man/Woman and Male/Female relabeled its participants but results kept showing the old gender until they were processed again.",
+    "Requests to the results and remote APIs, Runsignup, Chronoclocks, and the update check now ask the server to close the connection once it has replied, so servers aren't left holding connections open, especially on spotty connections.",
+    "Fixed an issue where emails sent from the Timing page weren't waited for, so a runner was marked as emailed even when the email failed and wasn't sent again. Failed emails are now logged and sent again the next time."
   ]
 }

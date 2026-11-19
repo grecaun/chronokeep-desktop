@@ -229,8 +229,8 @@ namespace Chronokeep.Updates
 
         private static HttpClient GetHttpClient()
         {
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // 100 seconds is HttpClient's own default, which this used before.
+            HttpClient client = Chronokeep.Network.Util.Helpers.NewHttpClient(TimeSpan.FromSeconds(100));
             client.DefaultRequestHeaders.UserAgent.TryParseAdd("Chronokeep Desktop Application");
             return client;
         }

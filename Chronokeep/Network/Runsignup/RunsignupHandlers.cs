@@ -162,11 +162,10 @@ namespace Chronokeep.Network.Runsignup
             await OneAtATime.WaitAsync().ConfigureAwait(false);
             try
             {
-                using HttpClient client = new() { Timeout = TimeSpan.FromSeconds(60) };
-                HttpRequestMessage request = new(HttpMethod.Get, url);
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                using HttpClient client = Chronokeep.Network.Util.Helpers.NewHttpClient(TimeSpan.FromSeconds(60));
+                using HttpRequestMessage request = new(HttpMethod.Get, url);
                 request.Headers.Add("X-RSU-API-SECRET", api.Secret);
-                HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
+                using HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
                 string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 JsonElement root;
                 try

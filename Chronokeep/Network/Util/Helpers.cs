@@ -24,10 +24,19 @@ namespace Chronokeep.Network.Util
 {
     internal static class Helpers
     {
-        internal static HttpClient GetHttpClient()
+        /// <summary>A client for the APIs, Chronoclock and remote reads: JSON replies, 10 second timeout.</summary>
+        internal static HttpClient GetHttpClient() => NewHttpClient(TimeSpan.FromSeconds(10));
+
+        /// <summary>
+        /// A client for a single request, to be disposed once it's done. It asks the server to close the connection
+        /// once it has replied, since nothing else will be sent on it. Otherwise the server keeps the connection open
+        /// waiting for another request until its own idle timeout, which it may never hear the end of on a spotty
+        /// connection. Disposing the client closes Chronokeep's side.
+        /// </summary>
+        internal static HttpClient NewHttpClient(TimeSpan timeout)
         {
-            HttpClient client = new();
-            client.Timeout = TimeSpan.FromSeconds(10);
+            HttpClient client = new() { Timeout = timeout };
+            client.DefaultRequestHeaders.ConnectionClose = true;
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             return client;

@@ -83,12 +83,7 @@ namespace Chronokeep.UI.Util
 
         private static HttpClient GetHttpClient()
         {
-            HttpClient client = new()
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpClient client = Chronokeep.Network.Util.Helpers.NewHttpClient(TimeSpan.FromSeconds(5));
             client.DefaultRequestHeaders.UserAgent.TryParseAdd("Chronokeep Desktop Application");
             return client;
         }

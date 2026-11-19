@@ -839,6 +839,9 @@ public partial class DashboardPage : UserControl, IMainPage
                     part.FormatData(useMaleFemale);
                 }
                 database.UpdateParticipants(participants);
+                // Results keep their own copy of each runner's gender, so build them again from the relabeled
+                // participants (the timing worker is told to below).
+                database.ResetTimingResultsEvent(theEvent.Identifier);
             }
             theEvent.UseMaleFemale = useMaleFemale;
             try
