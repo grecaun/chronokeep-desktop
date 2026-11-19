@@ -399,8 +399,8 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Chips.xlsx",
+                FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Chips.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -422,16 +422,7 @@ public partial class ChipAssignmentPage : UserControl, IMainPage
             }
             else
             {
-                StringBuilder format = new();
-                for (int i = 0; i < headers.Length; i++)
-                {
-                    format.Append("\"{");
-                    format.Append(i);
-                    format.Append("}\",");
-                }
-                format.Remove(format.Length - 1, 1);
-                Log.D("UI.MainPages.ChipAssignmentPage", $"The format is '{format}'");
-                exporter = new CsvExporter(format.ToString());
+                exporter = new CsvExporter();
             }
             exporter.SetData(headers, data);
             exporter.ExportData(file.TryGetLocalPath()!);

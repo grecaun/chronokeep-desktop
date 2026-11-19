@@ -56,6 +56,12 @@ namespace Chronokeep.Helpers
             Patterns = ["*.xlsx", "*.xls", "*.csv"],
         };
 
+        /// <summary>Excel, for saving exports. CSV is offered first; ExcelType is for picking files to import.</summary>
+        public static FilePickerFileType ExcelSaveType { get; } = new("Excel Files")
+        {
+            Patterns = ["*.xlsx"],
+        };
+
         public static FilePickerFileType LogType { get; } = new("Log Files")
         {
             Patterns = ["*.csv", "*.txt", "*.log"],

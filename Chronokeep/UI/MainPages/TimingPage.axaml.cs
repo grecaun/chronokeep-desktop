@@ -998,20 +998,11 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
 
                 locChipReads.Add(read);
             }
-            StringBuilder format = new();
-            for (int i = 0; i < headers.Length; i++)
-            {
-                format.Append("\"{");
-                format.Append(i);
-                format.Append("}\",");
-            }
-            format.Remove(format.Length - 1, 1);
-            Log.D("UI.MainPages.TimingPage", $"The format is '{format}'");
             if (locationReadDict.Keys.Count == 1)
             {
                 List<object[]> data = [];
                 data.AddRange(chipReads.Select(read => (object[])[read.Status, read.ChipNumber, read.Seconds, read.Milliseconds, read.TimeSeconds, read.TimeMilliseconds, read.Antenna, read.Reader, read.Box, read.LogId, read.Rssi, read.IsRewind, read.ReaderTime, read.StartTime, read.ReadBib, read.Type]));
-                CsvExporter exporter = new(format.ToString());
+                CsvExporter exporter = new();
                 exporter.SetData(headers, data);
                 exporter.ExportData(file.TryGetLocalPath()!);
             }
@@ -1022,7 +1013,7 @@ public partial class TimingPage : UserControl, IMainPage, ITimingPage
                 {
                     List<object[]> data = [];
                     data.AddRange(locationReadDict[key].Select(read => (object[])[read.Status, read.ChipNumber, read.Seconds, read.Milliseconds, read.TimeSeconds, read.TimeMilliseconds, read.Antenna, read.Reader, read.Box, read.LogId, read.Rssi, read.IsRewind, read.ReaderTime, read.StartTime, read.ReadBib, read.Type]));
-                    CsvExporter exporter = new(format.ToString());
+                    CsvExporter exporter = new();
                     exporter.SetData(headers, data);
                     string outFileName =
                         $"{Path.GetDirectoryName(file.TryGetLocalPath()!)}\\{FileSaveRegex().Replace(key.ToLower(), "")}-{file.Name}";

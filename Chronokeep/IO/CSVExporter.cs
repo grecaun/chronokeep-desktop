@@ -21,10 +21,17 @@ using Chronokeep.Interfaces.IO;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Chronokeep.IO
 {
-    internal class CsvExporter(string format) : IDataExporter
+    /// <summary>
+    /// Writes a CSV file the standard way (RFC 4180): values are separated by commas, a value is only quoted when
+    /// it holds a comma, a quote, a line break or starts or ends with a space, and quotes inside a quoted value are
+    /// doubled. Lines end with CRLF. The file is UTF-8 with a byte order mark, so Excel opening it directly reads
+    /// accented names correctly.
+    /// </summary>
+    internal class CsvExporter : IDataExporter
     {
         private string[] headers = [];
         private List<object[]> data = [];
@@ -33,16 +40,28 @@ namespace Chronokeep.IO
         {
             using (FileStream outFile = File.Create(path))
             {
-                using StreamWriter outWriter = new StreamWriter(outFile);
-                outWriter.WriteLine(format, headers);
+                using StreamWriter outWriter = new(outFile, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)) { NewLine = "\r\n" };
+                outWriter.WriteLine(Line(headers));
                 foreach (object[] line in data)
                 {
                     // Empty cells (such as a place for someone who hasn't finished) are written blank, as the Excel exporter does.
-                    outWriter.WriteLine(format, [.. line.Select(x => x?.ToString() ?? "")]);
+                    outWriter.WriteLine(Line(line.Select(x => x?.ToString() ?? "")));
                 }
             }
             // Let every user on the computer open or replace the export.
             ProgramFolders.ShareFile(path);
+        }
+
+        /// <summary>One CSV line: each value, quoted only if it needs to be, separated by commas.</summary>
+        internal static string Line(IEnumerable<string?> values) => string.Join(",", values.Select(Field));
+
+        /// <summary>One CSV value, quoted (with any quotes in it doubled) only if it needs to be.</summary>
+        internal static string Field(string? value)
+        {
+            value ??= "";
+            bool needsQuotes = value.Length > 0
+                && (value.IndexOfAny([',', '"', '\r', '\n']) >= 0 || char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[^1]));
+            return needsQuotes ? $"\"{value.Replace("\"", "\"\"")}\"" : value;
         }
 
         public Utils.FileType FileType()

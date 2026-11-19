@@ -102,6 +102,53 @@ namespace Chronokeep.Test.IO
         }
 
         [Fact]
+        public void QuotedValues_CanHoldLineBreaks()
+        {
+            var data = Import("Bib,Comments,Distance\n1,\"Says hi,\nthen leaves\",5K\n2,Quiet,10K\n");
+            Assert.Equal(2, data.Data.Count);
+            Assert.Equal(["", "1", "Says hi,\nthen leaves", "5K"], data.Data[0]);
+            Assert.Equal(["", "2", "Quiet", "10K"], data.Data[1]);
+        }
+
+        [Fact]
+        public void QuotedValues_CanHoldWindowsLineBreaksAndSeveralLines()
+        {
+            var data = Import("Bib,Comments\r\n1,\"one\r\ntwo\r\n\r\nfour\"\r\n2,next\r\n");
+            Assert.Equal(2, data.Data.Count);
+            Assert.Equal(["", "1", "one\ntwo\n\nfour"], data.Data[0]);
+            Assert.Equal(["", "2", "next"], data.Data[1]);
+        }
+
+        [Fact]
+        public void QuoteInsideAnUnquotedValue_IsJustPartOfIt()
+        {
+            // A stray quote mid-value (inches here) doesn't start a quoted value, so it can't swallow later rows.
+            var data = Import("Bib,Height,Name\n1,5'10\",Jane\n2,6',John\n");
+            Assert.Equal(2, data.Data.Count);
+            Assert.Equal(["", "1", "5'10\"", "Jane"], data.Data[0]);
+            Assert.Equal(["", "2", "6'", "John"], data.Data[1]);
+        }
+
+        [Fact]
+        public void UnclosedQuote_KeepsTheRestOfTheFileInThatValue()
+        {
+            var data = Import("Bib,Name\n1,\"Jane\n2,John\n");
+            Assert.Equal(["", "1", "Jane\n2,John"], Assert.Single(data.Data));
+        }
+
+        [Fact]
+        public void ByteOrderMark_IsNotPartOfTheFirstHeader()
+        {
+            string path = Path.Combine(Dir, "bom.csv");
+            File.WriteAllText(path, "Bib,Name\n1,José\n", new System.Text.UTF8Encoding(true));
+            CsvImporter importer = new(path);
+            importer.FetchHeaders();
+            importer.FetchData();
+            Assert.Equal(["", "Bib", "Name"], importer.Data!.Headers);
+            Assert.Equal(["", "1", "José"], importer.Data.Data[0]);
+        }
+
+        [Fact]
         public void GetDistanceNames_ReturnsDistinctTrimmedValues()
         {
             var data = Import("Bib,Distance\n1,5K\n2, 5K\n3,10K\n4,\n");
@@ -251,18 +298,68 @@ namespace Chronokeep.Test.IO
     public class ExporterTests : FileTestBase
     {
         [Fact]
-        public void CsvExporter_WritesHeaderAndRowsUsingFormat()
+        public void CsvExporter_QuotesOnlyValuesThatNeedIt()
         {
             string path = Path.Combine(Dir, "out.csv");
-            CsvExporter exporter = new("{0},\"{1}\",{2}");
-            exporter.SetData(["Bib", "Name", "Time"], [[1, "Runner, Jane", "0:25:00"], [2, "Walker, John", "0:26:00"]]);
+            CsvExporter exporter = new();
+            exporter.SetData(["Bib", "Name", "Time", "Note"],
+                [[1, "Runner, Jane", "0:25:00", "Said \"hi\""], [2, "John Walker", "0:26:00", null!]]);
 
             exporter.ExportData(path);
 
             Assert.Equal(
-                ["Bib,\"Name\",Time", "1,\"Runner, Jane\",0:25:00", "2,\"Walker, John\",0:26:00"],
-                File.ReadAllLines(path));
+                "Bib,Name,Time,Note\r\n" +
+                "1,\"Runner, Jane\",0:25:00,\"Said \"\"hi\"\"\"\r\n" +
+                "2,John Walker,0:26:00,\r\n",
+                File.ReadAllText(path));
             Assert.Equal(Helpers.Utils.FileType.CSV, exporter.FileType());
+        }
+
+        [Theory]
+        [InlineData("plain", "plain")]
+        [InlineData("", "")]
+        [InlineData(null, "")]
+        [InlineData("a,b", "\"a,b\"")]
+        [InlineData("say \"hi\"", "\"say \"\"hi\"\"\"")]
+        [InlineData("two\nlines", "\"two\nlines\"")]
+        [InlineData("back\rslash", "\"back\rslash\"")]
+        [InlineData(" padded", "\" padded\"")]
+        [InlineData("padded ", "\"padded \"")]
+        [InlineData("O'Brien", "O'Brien")]
+        public void CsvExporter_Field_QuotesAndDoublesQuotesOnlyWhenNeeded(string? value, string expected)
+        {
+            Assert.Equal(expected, CsvExporter.Field(value));
+        }
+
+        [Fact]
+        public void CsvExporter_OutputImportsBackUnchanged()
+        {
+            string path = Path.Combine(Dir, "round.csv");
+            CsvExporter exporter = new();
+            string[] row = ["7", "Runner, Jane", "Said \"hi\",\nthen left", "O'Brien", "José"];
+            exporter.SetData(["Bib", "Name", "Note", "Last", "Accent"], [[.. row], ["8", "Next", "", "", ""]]);
+            exporter.ExportData(path);
+
+            CsvImporter importer = new(path);
+            importer.FetchHeaders();
+            importer.FetchData();
+            Assert.Equal(["", "Bib", "Name", "Note", "Last", "Accent"], importer.Data!.Headers);
+            Assert.Equal(2, importer.Data.Data.Count);
+            Assert.Equal(["", .. row], importer.Data.Data[0]);
+            Assert.Equal("Next", importer.Data.Data[1][2]);
+        }
+
+        [Fact]
+        public void CsvExporter_WritesUtf8WithAByteOrderMark()
+        {
+            string path = Path.Combine(Dir, "bom.csv");
+            CsvExporter exporter = new();
+            exporter.SetData(["Name"], [["José"]]);
+            exporter.ExportData(path);
+
+            byte[] bytes = File.ReadAllBytes(path);
+            Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
+            Assert.Equal("Name\r\nJosé\r\n", new System.Text.UTF8Encoding(false).GetString(bytes[3..]));
         }
 
         [Fact]

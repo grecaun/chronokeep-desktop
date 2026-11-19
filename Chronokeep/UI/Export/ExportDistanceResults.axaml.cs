@@ -177,8 +177,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Boston.xlsx",
+                FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Boston.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -301,8 +301,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} AbbotWMM.xlsx",
+                FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} AbbotWMM.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -486,16 +486,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         else
         {
-            StringBuilder format = new();
-            for (int i = 0; i < headers.Length; i++)
-            {
-                format.Append("\"{");
-                format.Append(i);
-                format.Append("}\",");
-            }
-            format.Remove(format.Length - 1, 1);
-            Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-            exporter = new CsvExporter(format.ToString());
+            exporter = new CsvExporter();
         }
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
@@ -518,8 +509,8 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Boston.xlsx",
+                FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} {distance} Boston.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -632,16 +623,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
         }
         else
         {
-            StringBuilder format = new();
-            for (int i = 0; i < headers.Count; i++)
-            {
-                format.Append("\"{");
-                format.Append(i);
-                format.Append("}\",");
-            }
-            format.Remove(format.Length - 1, 1);
-            Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-            exporter = new CsvExporter(format.ToString());
+            exporter = new CsvExporter();
         }
         exporter.SetData([.. headers], data);
         exporter.ExportData(fileName);
@@ -827,16 +809,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
             data.Add(newLine);
         }
-        StringBuilder format = new();
-        for (int i = 0; i < headers.Length; i++)
-        {
-            format.Append("\"{");
-            format.Append(i);
-            format.Append("}\",");
-        }
-        format.Remove(format.Length - 1, 1);
-        Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-        CsvExporter exporter = new(format.ToString());
+        CsvExporter exporter = new();
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
     }
@@ -882,16 +855,7 @@ public partial class ExportDistanceResults : ChronokeepWindow
             }
         }
 
-        StringBuilder format = new();
-        for (int i = 0; i < headers.Length; i++)
-        {
-            format.Append("\"{");
-            format.Append(i);
-            format.Append("}\",");
-        }
-        format.Remove(format.Length - 1, 1);
-        Log.D("UI.Export.ExportDistanceResults", $"The format is '{format}'");
-        CsvExporter exporter = new(format.ToString());
+        CsvExporter exporter = new();
         exporter.SetData(headers, data);
         exporter.ExportData(fileName);
     }

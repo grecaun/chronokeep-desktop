@@ -463,8 +463,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                FileTypeChoices = [Utils.ExcelType],
-                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Entrants.xlsx",
+                FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Entrants.csv",
                 SuggestedStartLocation = startingFolder,
             });
             if (file is null) return;
@@ -516,8 +516,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
         data.AddRange(parts.Select(p => (object[])
         [
             p.Bib, p.Distance, p.EventSpecific.StatusStr, p.FirstName, p.LastName, p.Birthdate, p.Age(theEvent.Date), p.EventSpecific.AgeGroupName, p.EventSpecific.Division, p.Street, p.Street2, p.City, p.State, p.Zip, p.Country, p.Phone, p.Mobile, p.Email, p.Parent, p.Gender,
-            // Get rid of all the quote and newline characters.
-            p.Comments.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Other.Replace('\"', ' ').Replace('\n', ' ').Replace('\r', ' ').Replace('\'', ' '), p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
+            p.Comments, p.Other, p.Owes, p.EcName, p.EcPhone, p.PrettyAnonymous, p.Apparel,
         ]));
         IDataExporter? exporter;
         string extension = Path.GetExtension(path);
@@ -528,16 +527,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
         else
         {
-            StringBuilder format = new();
-            for (int i = 0; i < headers.Length; i++)
-            {
-                format.Append("\"{");
-                format.Append(i);
-                format.Append("}\",");
-            }
-            format.Remove(format.Length - 1, 1);
-            Log.D("UI.MainPages.ParticipantsPage", $"The format is '{format}'");
-            exporter = new CsvExporter(format.ToString());
+            exporter = new CsvExporter();
         }
         exporter.SetData(headers, data);
         exporter.ExportData(path);

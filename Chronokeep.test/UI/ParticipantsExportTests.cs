@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using ClosedXML.Excel;
+using Chronokeep.IO;
 using Chronokeep.Objects;
 using Chronokeep.Test.Network;
 using Chronokeep.Test.UI.Infrastructure;
@@ -40,8 +41,15 @@ namespace Chronokeep.Test.UI
             theEvent = Db.GetCurrentEvent()!;
         }
 
-        private static List<string[]> ReadCsv(string path) =>
-            [.. File.ReadAllLines(path).Select(line => line[1..^1].Split("\",\""))];
+        /// <summary>The file's rows, header first, read the way Chronokeep imports a CSV file.</summary>
+        private static List<string[]> ReadCsv(string path)
+        {
+            CsvImporter importer = new(path);
+            importer.FetchHeaders();
+            importer.FetchData();
+            // The importer adds a blank first column for its own use.
+            return [importer.Data!.Headers[1..], .. importer.Data.Data.Select(row => row[1..])];
+        }
 
         // ---- Export ----
 
@@ -67,17 +75,19 @@ namespace Chronokeep.Test.UI
         }
 
         [AvaloniaFact]
-        public void Csv_export_strips_quotes_and_line_breaks_from_comments()
+        public void Csv_export_keeps_quotes_commas_and_line_breaks_in_comments()
         {
             Seed();
             string path = Path.Combine(folder, "entrants.csv");
 
             ParticipantsPage.WriteParticipants(Db, theEvent, path);
 
+            // Kept as written, quoted the standard way, and read back by the importer.
             List<string[]> rows = ReadCsv(path);
             Assert.Equal(3, rows.Count);
             string comment = rows.Single(r => r[0] == "1")[Array.IndexOf(rows[0], "Comments")];
-            Assert.Equal("Says  hi , then leaves", comment);
+            Assert.Equal("Says \"hi\",\nthen leaves", comment);
+            Assert.Contains("\"Says \"\"hi\"\",\nthen leaves\"", File.ReadAllText(path));
         }
 
         [AvaloniaFact]

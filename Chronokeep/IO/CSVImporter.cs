@@ -58,7 +58,7 @@ namespace Chronokeep.IO
         public void FetchHeaders()
         {
             Log.D("IO.CSVImporter", "Getting headers from file.");
-            ProcessFirstLine(File.ReadLine()!);
+            ProcessFirstLine(ReadRecord()!);
         }
 
         protected void ProcessFirstLine(string line)
@@ -69,22 +69,47 @@ namespace Chronokeep.IO
         public void FetchData()
         {
             Log.D("IO.CSVImporter", "Getting data from file.");
-            while (File.ReadLine() is { } line)
+            while (ReadRecord() is { } record)
             {
-                Data!.AddData(ParseLine(line));
+                Data!.AddData(ParseLine(record));
             }
             Finish();
         }
 
         /// <summary>
-        /// Splits one CSV line into trimmed values. Commas inside double quotes are part of the value,
-        /// and a doubled quote ("") inside a quoted value is a literal quote.
+        /// Reads one row of the file. A quoted value can hold line breaks, so a row carries on over as many lines
+        /// as it takes to close its quotes; the line breaks inside it are kept as "\n". Returns null at the end.
+        /// </summary>
+        protected string? ReadRecord()
+        {
+            if (File.ReadLine() is not { } line) return null;
+            StringBuilder record = new(line);
+            while (Parse(record.ToString(), out _) && File.ReadLine() is { } next)
+            {
+                record.Append('\n').Append(next);
+            }
+            return record.ToString();
+        }
+
+        /// <summary>
+        /// Splits one CSV row into trimmed values, the standard way (RFC 4180): a value starting with a double quote
+        /// runs to the matching quote, so it can hold commas and line breaks, and a doubled quote ("") inside it is
+        /// a literal quote. A quote anywhere else in a value, like 5'10", is just part of the value.
         /// </summary>
         internal static string[] ParseLine(string line)
         {
-            List<string> values = [];
+            Parse(line, out List<string> values);
+            return [.. values];
+        }
+
+        /// <summary>Splits a row into values, and says whether it ends inside a quoted value that isn't closed yet.</summary>
+        private static bool Parse(string line, out List<string> values)
+        {
+            values = [];
             StringBuilder current = new();
             bool inQuotes = false;
+            // Whether the value so far is only whitespace, so a quote here starts a quoted value.
+            bool atValueStart = true;
             for (int i = 0; i < line.Length; i++)
             {
                 char c = line[i];
@@ -104,22 +129,26 @@ namespace Chronokeep.IO
                         current.Append(c);
                     }
                 }
-                else if (c == '"')
+                else if (c == '"' && atValueStart)
                 {
+                    current.Clear();
                     inQuotes = true;
+                    atValueStart = false;
                 }
                 else if (c == ',')
                 {
                     values.Add(current.ToString().Trim());
                     current.Clear();
+                    atValueStart = true;
                 }
                 else
                 {
                     current.Append(c);
+                    if (!char.IsWhiteSpace(c)) atValueStart = false;
                 }
             }
             values.Add(current.ToString().Trim());
-            return [.. values];
+            return inQuotes;
         }
 
         public void Finish()

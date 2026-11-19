@@ -146,8 +146,8 @@ public partial class ExportResults : ChronokeepWindow
                 }
                 IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    FileTypeChoices = [Utils.ExcelType],
-                    SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Results.xlsx",
+                    FileTypeChoices = [Utils.CsvType, Utils.ExcelSaveType],
+                    SuggestedFileName = $"{theEvent!.YearCode} {theEvent.Name} Results.csv",
                     SuggestedStartLocation = startingFolder,
                 });
                 if (file is not null)
@@ -602,16 +602,7 @@ public partial class ExportResults : ChronokeepWindow
         }
         else
         {
-            StringBuilder format = new();
-            for (int i = 0; i < headers.Length; i++)
-            {
-                format.Append("\"{");
-                format.Append(i);
-                format.Append("}\",");
-            }
-            format.Remove(format.Length - 1, 1);
-            Log.D("UI.Export.ExportResults", $"The format is '{format}'");
-            exporter = new CsvExporter(format.ToString());
+            exporter = new CsvExporter();
         }
         exporter.SetData(headers, data);
         exporter.ExportData(path);
