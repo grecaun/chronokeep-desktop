@@ -46,6 +46,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <Style Selector="DataGridRow.removed">
             <Setter Property="Background" Value="#40E53935"/>
         </Style>
+        <!-- Entries in a conflict (the same bib on different people, or one person with another bib or distance). -->
+        <Style Selector="DataGridRow.conflict">
+            <Setter Property="Background" Value="#40FFB300"/>
+        </Style>
     </UserControl.Styles>
      <Grid ColumnDefinitions="*,250">
          <ScrollViewer

@@ -25,7 +25,8 @@
     "The announcer page has a light and dark theme switch in its title bar. It can match the device's setting or always use light or dark, and is remembered on each device.",
     "The announcer page has a full screen button, which also keeps the screen from dimming or locking while it's full screen. On iPhones, where pages can't go full screen, the button just keeps the screen awake.",
     "The announcer page shows gender as its short code, such as M, W or X, and leaves it off when it isn't specified.",
-    "Chronokeep now asks an RFID Ultra whether it's reading a couple of seconds after connecting, once the reader has had a moment to say hello, and again every 30 seconds that it hasn't sent a read, so the reading status shown stays up to date."
+    "Chronokeep now asks an RFID Ultra whether it's reading a couple of seconds after connecting, once the reader has had a moment to say hello, and again every 30 seconds that it hasn't sent a read, so the reading status shown stays up to date.",
+    "Participants in a conflict (the same bib on different people, or one person with a different bib or distance) are tinted amber on the Participants page, with a note pointing to the Conflicts button."
   ],
   "fixes": [
     "Disabling the automatic downloading of remote reads no longer causes the program to freeze for a number of seconds.",

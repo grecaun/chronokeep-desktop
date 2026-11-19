@@ -49,6 +49,8 @@ public partial class ParticipantsPage : UserControl, IMainPage
     private readonly Event? theEvent;
     private List<Participant> allParticipants = [];
     private readonly List<Participant> conflicts = [];
+    // The event entries (EventSpecific identifiers) in a conflict, so their rows can be tinted.
+    private readonly HashSet<int> conflictEntries = [];
 
     private readonly bool loaded;
 
@@ -106,7 +108,6 @@ public partial class ParticipantsPage : UserControl, IMainPage
             }
             string search = SearchBox is { Text: not null } ? SearchBox.Text.Trim() : "";
             newList.RemoveAll(x => x.IsNotMatch(search));
-            ParticipantsList.ItemsSource = newList;
             if (theEvent.ApiId > 0 && theEvent.ApiEventId.Length > 1)
             {
                 ApiPanel.IsVisible = true;
@@ -115,6 +116,7 @@ public partial class ParticipantsPage : UserControl, IMainPage
             {
                 ApiPanel.IsVisible = false;
             }
+            // Conflicts are found before the list is shown so their rows can be tinted.
             conflicts.Clear();
             HashSet<(int, int)> conflictParticipantIdentifiers = [];
             // Removed entries (an old transfer, a changed bib) aren't conflicts with the people who replaced them.
@@ -141,6 +143,10 @@ public partial class ParticipantsPage : UserControl, IMainPage
                     }
                 }
             }
+            // By entry rather than object: filtering by distance loads its own copies of each participant.
+            conflictEntries.Clear();
+            conflictEntries.UnionWith(conflicts.Select(p => p.EventSpecific.Identifier));
+            ParticipantsList.ItemsSource = newList;
             if (conflicts.Count > 0)
             {
                 ConflictsBtn.Content = $"Conflicts - {conflicts.Count / 2}";
@@ -822,12 +828,20 @@ public partial class ParticipantsPage : UserControl, IMainPage
         }
     }
 
-    /// <summary>Tints people removed in Runsignup and says why, as the timing page does for their results.</summary>
+    /// <summary>
+    /// Tints people removed in Runsignup and says why, as the timing page does for their results, and tints
+    /// entries in a conflict. Removed people are never counted as conflicts.
+    /// </summary>
     private void ParticipantsList_LoadingRow(object? sender, DataGridRowEventArgs e)
     {
-        bool removed = e.Row.DataContext is Participant { EventSpecific.IsRemoved: true };
+        Participant? person = e.Row.DataContext as Participant;
+        bool removed = person is { EventSpecific.IsRemoved: true };
+        bool conflict = !removed && person != null && conflictEntries.Contains(person.EventSpecific.Identifier);
         e.Row.Classes.Set("removed", removed);
-        ToolTip.SetTip(e.Row, removed ? $"Removed in Runsignup: {((Participant)e.Row.DataContext!).RemovedReason}" : null);
+        e.Row.Classes.Set("conflict", conflict);
+        ToolTip.SetTip(e.Row, removed ? $"Removed in Runsignup: {person!.RemovedReason}"
+            : conflict ? "This entry conflicts with another. Use the Conflicts button to sort it out."
+            : null);
     }
 
     private async void RunsignupDownload_Click(object? sender, RoutedEventArgs e)
